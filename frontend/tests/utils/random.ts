@@ -1,8 +1,8 @@
-export const randomEmail = () =>
-  `test_${Math.random().toString(36).substring(7)}@example.com`
+const randomSuffix = () => crypto.randomUUID().replaceAll("-", "").slice(0, 10)
 
-export const randomTeamName = () =>
-  `Team ${Math.random().toString(36).substring(7)}`
+export const randomEmail = () => `test_${randomSuffix()}@example.com`
+
+export const randomTeamName = () => `Team ${randomSuffix()}`
 
 export const randomPassword = () => crypto.randomUUID().replaceAll("-", "")
 
