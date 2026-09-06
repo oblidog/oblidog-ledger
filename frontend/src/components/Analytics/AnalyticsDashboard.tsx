@@ -526,7 +526,7 @@ function CashflowChart({
   period: Period
 }) {
   return (
-    <Card className="min-w-0 gap-4 py-5">
+    <Card className="min-w-0 overflow-hidden gap-4 py-5">
       <CardHeader>
         <CardTitle>Payment schedule</CardTitle>
         <CardDescription>
@@ -877,7 +877,7 @@ function CategoryCostDonutCard({
           obligations are excluded and currencies are shown separately.
         </CardDescription>
       </CardHeader>
-      <CardContent className="min-w-0">
+      <CardContent className="min-w-0 overflow-hidden">
         {isLoading ? (
           <Skeleton className="h-72 w-full" />
         ) : isError || !data ? (
@@ -887,7 +887,7 @@ function CategoryCostDonutCard({
             No obligations in this period.
           </p>
         ) : (
-          <div className="grid gap-8 xl:grid-cols-2">
+          <div className="grid min-w-0 gap-8 xl:grid-cols-2">
             {summaries.map((summary) => {
               const chartConfig = Object.fromEntries(
                 summary.slices.map((slice) => [
@@ -988,7 +988,7 @@ function CategoryCostDonutCard({
                           </Pie>
                         </PieChart>
                       </ChartContainer>
-                      <ul className="grid gap-2 text-sm">
+                      <ul className="grid min-w-0 gap-2 text-sm">
                         {summary.slices.map((slice) => (
                           <li
                             className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"
