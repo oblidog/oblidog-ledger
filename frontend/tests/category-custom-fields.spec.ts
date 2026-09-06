@@ -181,7 +181,7 @@ test("shows the empty category custom-data history", async ({ page }) => {
   await customDataLink.click()
   await expect(
     page.getByText(
-      "No custom data records have been saved for this category yet.",
+      "No records were saved with schema version 1 for the selected date range.",
     ),
   ).toBeVisible()
 })
