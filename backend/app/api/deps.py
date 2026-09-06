@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
@@ -17,7 +17,12 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.core import security
-from app.core.capabilities import Capability, CapabilityDisabledError, ensure_capability
+from app.core.capabilities import (
+    Capability,
+    CapabilityDisabledError,
+    capability_for_request,
+    ensure_capability,
+)
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.domain import LedgerAccessRole
@@ -64,6 +69,16 @@ def require_capability(capability: Capability) -> Callable[[], None]:
             raise HTTPException(status_code=403, detail=str(exc)) from exc
 
     return dependency
+
+
+def enforce_demo_request_capabilities(request: Request) -> None:
+    capability = capability_for_request(method=request.method, path=request.url.path)
+    if capability is None:
+        return
+    try:
+        ensure_capability(capability)
+    except CapabilityDisabledError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
 def get_current_user(session: SessionDep, token: TokenDep) -> User:
@@ -196,4 +211,3 @@ def require_ledger_edit_access(
     )
     if ledger is None:
         raise HTTPException(status_code=404, detail="Ledger not found")
-    return ledger
