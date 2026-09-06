@@ -269,7 +269,7 @@ def update_category(
     except DuplicateCategoryError:
         raise HTTPException(status_code=409, detail="Category already exists")
     except DuplicateCategoryCodeError:
-        raise HTTPException(status_code=409, detail="Category already exists")
+        raise HTTPException(status_code=409, detail="Category code already exists")
     except InvalidCategoryCodeError:
         raise HTTPException(
             status_code=422,
