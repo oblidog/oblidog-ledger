@@ -111,6 +111,19 @@ class Settings(BaseSettings):
     SYSTEM_RUN_STALE_AFTER_MINUTES: int = 120
     SYSTEM_RUN_TIMEOUT_SECONDS: int = 3600
 
+    @model_validator(mode="after")
+    def _disable_demo_external_services(self) -> Self:
+        if self.ENVIRONMENT != "demo":
+            return self
+
+        self.SMTP_HOST = None
+        self.SMTP_USER = None
+        self.SMTP_PASSWORD = None
+        self.DROPBOX_API_KEY = None
+        self.LEGACY_IMPORT_MODE = TaskRunMode.DISABLED
+        self.LEGACY_IMPORT_LEDGER_ID = None
+        return self
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (
