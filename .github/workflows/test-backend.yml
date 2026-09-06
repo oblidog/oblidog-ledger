@@ -9,6 +9,9 @@ on:
       - opened
       - synchronize
 
+permissions:
+  contents: read
+
 env:
   PROJECT_NAME: Oblidog
   DOMAIN: localhost
