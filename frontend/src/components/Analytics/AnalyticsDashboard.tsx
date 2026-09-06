@@ -699,7 +699,7 @@ function CashflowCurrencyChart({
                   className="fill-foreground"
                   dataKey="amount"
                   fontSize={11}
-                  formatter={formatCompactNumber}
+                  formatter={(value) => formatCompactNumber(Number(value))}
                   position="top"
                 />
               )}
