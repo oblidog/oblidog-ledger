@@ -2,6 +2,15 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { AlertCircle, ArrowRight, BarChart3 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  XAxis,
+  YAxis,
+} from "recharts"
 
 import { AnalyticsService, CategoriesService } from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -15,6 +24,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,6 +39,18 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 
 type Period = { year: number; month: number }
+
+const paymentScheduleChartConfig = {
+  amount: { label: "Due", color: "var(--chart-1)" },
+} satisfies ChartConfig
+
+const periodTotalsChartConfig = {
+  amount: { label: "Total", color: "var(--chart-1)" },
+} satisfies ChartConfig
+
+const categoryHistoryChartConfig = {
+  amount: { label: "Amount", color: "var(--chart-3)" },
+} satisfies ChartConfig
 
 function currentPeriod(): Period {
   const now = new Date()
@@ -556,15 +583,16 @@ function CashflowCurrencyChart({
     ReturnType<typeof AnalyticsService.readRemainingPeriodCashflow>
   >["currency_summaries"][number]
 }) {
-  const maximum = chartMaximum(
-    summary.daily.map((point) => Number(point.amount)),
-  )
-  const chartHeight = 72
-  const chartBottom = 84
-  const chartLeft = 90
-  const chartWidth = 380
-  const tickValues = [maximum, maximum / 2, 0]
-  const labelEvery = Math.max(1, Math.ceil(summary.daily.length / 5))
+  const currency = summary.currency
+  const chartData = summary.daily.map((point) => ({
+    amount: Number(point.amount),
+    cumulative: Number(point.cumulative_amount),
+    date: point.due_date,
+    fill: point.is_overdue
+      ? "var(--destructive)"
+      : "var(--color-amount)",
+  }))
+  const showValueLabels = chartData.length <= 8
 
   return (
     <section className="min-w-0">
@@ -607,94 +635,87 @@ function CashflowCurrencyChart({
           No scheduled payments in this period.
         </p>
       ) : (
-        <div
-          className="mt-4 w-full min-w-0 max-w-full overflow-x-auto pb-2"
+        <ChartContainer
+          aria-label={`Scheduled payments for ${currency ?? "no currency"}`}
+          className="mt-4 h-64 w-full"
+          config={paymentScheduleChartConfig}
           data-testid="payment-schedule-chart"
         >
-          <svg
-            aria-label={`Scheduled payments for ${summary.currency ?? "no currency"}`}
-            className="h-56 min-w-150 w-full"
-            preserveAspectRatio="xMidYMid meet"
-            role="img"
-            viewBox="0 0 500 100"
+          <BarChart
+            accessibilityLayer
+            data={chartData}
+            margin={{ top: showValueLabels ? 24 : 8, right: 4, left: 0 }}
           >
-            <title>Scheduled unpaid amounts by due date</title>
-            <desc>
-              Bars show the amount due on each date. Hover a bar for its daily
-              and cumulative amounts.
-            </desc>
-            {tickValues.map((value, index) => {
-              const y = 12 + (index * chartHeight) / (tickValues.length - 1)
-              return (
-                <g key={value}>
-                  <line
-                    className="stroke-border"
-                    strokeDasharray={
-                      index === tickValues.length - 1 ? undefined : "2 2"
-                    }
-                    strokeWidth="0.5"
-                    x1={chartLeft}
-                    x2={chartLeft + chartWidth}
-                    y1={y}
-                    y2={y}
-                  />
-                  <text
-                    className="fill-muted-foreground"
-                    fontSize="6"
-                    textAnchor="end"
-                    x={chartLeft - 2}
-                    y={y + 1.5}
-                  >
-                    {formatCompactAmount(value, summary.currency)}
-                  </text>
-                </g>
-              )
-            })}
-            {summary.daily.map((point, index) => {
-              const slotWidth = chartWidth / summary.daily.length
-              const barWidth = Math.min(slotWidth * 0.62, 8)
-              const x =
-                chartLeft + slotWidth * index + (slotWidth - barWidth) / 2
-              const height = (Number(point.amount) / maximum) * chartHeight
-              const y = chartBottom - height
-              const showLabel =
-                index % labelEvery === 0 || index === summary.daily.length - 1
-              return (
-                <g key={point.due_date}>
-                  <rect
-                    className={
-                      point.is_overdue ? "fill-destructive" : "fill-primary"
-                    }
-                    height={height}
-                    rx="1"
-                    width={barWidth}
-                    x={x}
-                    y={y}
-                  >
-                    <title>
-                      {formatDueDate(point.due_date)}:{" "}
-                      {formatAmount(point.amount, summary.currency)} due;{" "}
-                      {formatAmount(point.cumulative_amount, summary.currency)}{" "}
-                      cumulative
-                    </title>
-                  </rect>
-                  {showLabel && (
-                    <text
-                      className="fill-muted-foreground"
-                      fontSize="6"
-                      textAnchor="middle"
-                      x={x + barWidth / 2}
-                      y="94"
-                    >
-                      {formatShortDueDate(point.due_date)}
-                    </text>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="date"
+              minTickGap={16}
+              tickFormatter={formatShortDueDate}
+              tickLine={false}
+              tickMargin={8}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                angle: -90,
+                fill: "var(--muted-foreground)",
+                position: "insideLeft",
+                value: "Amount",
+              }}
+              tickFormatter={formatCompactNumber}
+              tickLine={false}
+              width={60}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  formatter={(value) => (
+                    <div className="flex min-w-32 flex-1 items-center justify-between gap-4">
+                      <span className="text-muted-foreground">Due</span>
+                      <span className="font-mono font-medium tabular-nums">
+                        {formatAmount(String(value), currency)}
+                      </span>
+                    </div>
                   )}
-                </g>
-              )
-            })}
-          </svg>
-        </div>
+                  labelFormatter={(value, payload) => {
+                    const cumulative = payload[0]?.payload?.cumulative
+                    return (
+                      <div className="grid gap-1">
+                        <span>{formatDueDate(String(value))}</span>
+                        {cumulative !== undefined && (
+                          <span className="font-normal text-muted-foreground">
+                            {formatAmount(String(cumulative), currency)}{" "}
+                            cumulative
+                          </span>
+                        )}
+                      </div>
+                    )
+                  }}
+                />
+              }
+            />
+            <Bar dataKey="amount" maxBarSize={36} radius={[4, 4, 0, 0]}>
+              {chartData.map((point) => (
+                <Cell fill={point.fill} key={point.date} />
+              ))}
+              {showValueLabels && (
+                <LabelList
+                  className="fill-foreground"
+                  dataKey="amount"
+                  fontSize={11}
+                  formatter={(value) => formatCompactNumber(Number(value))}
+                  position="top"
+                />
+              )}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
       )}
+      <p className="mt-2 text-xs text-muted-foreground">
+        Tap, hover, or focus a bar for exact and cumulative amounts.
+      </p>
     </section>
   )
 }
@@ -714,11 +735,11 @@ function formatShortDueDate(value: string) {
   }).format(new Date(`${value}T00:00:00`))
 }
 
-function formatCompactAmount(amount: number, currency: string | null) {
-  return `${amount.toLocaleString("en-GB", {
-    maximumFractionDigits: 0,
+function formatCompactNumber(amount: number) {
+  return amount.toLocaleString("en-GB", {
+    maximumFractionDigits: 1,
     notation: "compact",
-  })}${currency ? ` ${currency}` : ""}`
+  })
 }
 
 function CategoryHistoryCard({
@@ -746,12 +767,30 @@ function CategoryHistoryCard({
 }) {
   const knownPoints =
     data?.points.filter((point) => point.state === "known") ?? []
-  const amounts =
-    data?.points.map((point) =>
-      point.state === "known" ? Number(point.current_amount) : 0,
-    ) ?? []
-  const maximum = Math.max(...amounts, 1)
   const currency = knownPoints[0]?.currency ?? null
+  const chartData =
+    data?.points.map((point) => {
+      const amount =
+        point.state === "known" ? Number(point.current_amount) : 0
+      return {
+        amount,
+        fill:
+          point.state === "unknown"
+            ? "var(--color-amber-500)"
+            : point.state === "missing"
+              ? "var(--muted)"
+              : "var(--color-amount)",
+        period: periodValue(point.period),
+        periodLabel: periodLabel(point.period),
+        state: point.state,
+        valueLabel:
+          point.state === "unknown"
+            ? "?"
+            : point.state === "missing"
+              ? "—"
+              : formatCompactNumber(amount),
+      }
+    }) ?? []
 
   return (
     <Card>
@@ -795,80 +834,88 @@ function CategoryHistoryCard({
         ) : isError || !data ? (
           <QueryState message="Category history could not be loaded." />
         ) : (
-          <div
-            className="w-full min-w-0 max-w-full overflow-x-auto pb-2"
-            data-testid="category-history-chart"
-          >
-            <div className="min-w-150">
-              <div className="flex h-56 items-end gap-3 border-b border-l px-3 pt-4">
-                {data.points.map((point, index) => {
-                  const amount = amounts[index]
-                  const value = amount ?? 0
-                  const stateLabel =
-                    point.state === "unknown"
-                      ? "Amount unknown"
-                      : point.state === "missing"
-                        ? "No obligation"
-                        : formatAmount(String(value), point.currency)
-                  return (
-                    <div
-                      className="group flex h-full min-w-16 flex-1 flex-col"
-                      key={periodValue(point.period)}
-                      title={stateLabel}
-                    >
-                      <div className="relative flex min-h-0 flex-1 flex-col justify-end">
-                        {point.state === "known" ? (
-                          <span
-                            className="min-h-1 rounded-t bg-chart-3/80 transition-colors group-hover:bg-chart-3"
-                            style={{
-                              height: `${Math.max((value / maximum) * 100, 1)}%`,
-                            }}
-                          />
-                        ) : (
-                          <span
-                            className={
-                              point.state === "unknown"
-                                ? "min-h-1 rounded-t bg-amber-500/70"
-                                : "min-h-1 rounded-t bg-muted"
-                            }
-                          />
-                        )}
-                      </div>
-                      <div className="mt-2 h-9 text-center text-xs">
-                        <span className="block text-muted-foreground">
-                          {periodLabel(point.period)}
-                        </span>
-                        {point.state !== "known" && (
-                          <span className="block text-amber-700 dark:text-amber-300">
-                            {point.state === "unknown" ? "unknown" : "missing"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                {currency ? `Amounts shown in ${currency}. ` : ""}Hover a bar
-                for the exact amount.
-              </p>
-            </div>
-          </div>
+          <>
+            <ChartContainer
+              aria-label="Category amount history"
+              className="h-64 w-full"
+              config={categoryHistoryChartConfig}
+              data-testid="category-history-chart"
+            >
+              <BarChart
+                accessibilityLayer
+                data={chartData}
+                margin={{ top: 28, right: 4, left: 0 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  axisLine={false}
+                  dataKey="periodLabel"
+                  interval={0}
+                  tickFormatter={formatMobilePeriodLabel}
+                  tickLine={false}
+                  tickMargin={8}
+                />
+                <YAxis
+                  axisLine={false}
+                  label={{
+                    angle: -90,
+                    fill: "var(--muted-foreground)",
+                    position: "insideLeft",
+                    value: "Amount",
+                  }}
+                  tickFormatter={formatCompactNumber}
+                  tickLine={false}
+                  width={60}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      formatter={(_value, _name, item) =>
+                        item.payload.state === "unknown"
+                          ? "Amount unknown"
+                          : item.payload.state === "missing"
+                            ? "No obligation"
+                            : formatAmount(
+                                String(item.payload.amount),
+                                currency,
+                              )
+                      }
+                      labelFormatter={(value) => String(value)}
+                    />
+                  }
+                />
+                <Bar
+                  dataKey="amount"
+                  maxBarSize={72}
+                  minPointSize={4}
+                  radius={[4, 4, 0, 0]}
+                >
+                  {chartData.map((point) => (
+                    <Cell fill={point.fill} key={point.period} />
+                  ))}
+                  <LabelList
+                    className="fill-foreground"
+                    dataKey="valueLabel"
+                    fontSize={11}
+                    position="top"
+                  />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {currency ? `Amounts shown in ${currency}. ` : ""}
+              Tap, hover, or focus a bar for the exact value.
+            </p>
+          </>
         )}
       </CardContent>
     </Card>
   )
 }
 
-function chartMaximum(values: number[]) {
-  const maximum = Math.max(...values, 1)
-  const desiredStep = maximum / 2
-  const magnitude = 10 ** Math.floor(Math.log10(desiredStep))
-  const normalized = desiredStep / magnitude
-  const step =
-    (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) *
-    magnitude
-  return step * 2
+function formatMobilePeriodLabel(value: string) {
+  return value.split(" ")[0]
 }
 
 function PeriodTotalsCard({
@@ -909,7 +956,7 @@ function PeriodTotalsCard({
             No known obligation amounts in this range.
           </p>
         ) : (
-          <div className="space-y-8 overflow-x-auto pb-2">
+          <div className="space-y-8">
             {Array.from(
               new Set(
                 data.points.flatMap((point) =>
@@ -925,50 +972,109 @@ function PeriodTotalsCard({
                 )
                 return Number(summary?.total_known_amount ?? 0)
               })
-              const maximum = Math.max(...amounts, 1)
+              const chartData = data.points.map((point, index) => ({
+                amount: amounts[index],
+                href: obligationsHref(ledgerId, point.period),
+                incomplete: !point.is_complete,
+                period: periodValue(point.period),
+                periodLabel: periodLabel(point.period),
+              }))
               return (
-                <div className="min-w-150" key={currency}>
+                <section key={currency}>
                   <h3 className="mb-3 text-sm font-medium">{currency}</h3>
-                  <div className="flex h-56 items-end gap-3 border-b border-l px-3 pt-4">
-                    {data.points.map((point, index) => (
-                      <a
-                        key={periodValue(point.period)}
-                        href={obligationsHref(ledgerId, point.period)}
-                        className="group flex h-full min-w-16 flex-1 flex-col"
-                        aria-label={`View obligations for ${periodLabel(point.period)}`}
-                        title={formatAmount(
-                          String(amounts[index]),
+                  <ChartContainer
+                    aria-label={`Obligation totals in ${currency}`}
+                    className="h-64 w-full"
+                    config={periodTotalsChartConfig}
+                    data-testid="period-totals-chart"
+                  >
+                    <BarChart
+                      accessibilityLayer
+                      data={chartData}
+                      margin={{ top: 28, right: 4, left: 0 }}
+                    >
+                      <CartesianGrid vertical={false} />
+                      <XAxis
+                        axisLine={false}
+                        dataKey="periodLabel"
+                        interval={0}
+                        tickFormatter={formatMobilePeriodLabel}
+                        tickLine={false}
+                        tickMargin={8}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        label={{
+                          angle: -90,
+                          fill: "var(--muted-foreground)",
+                          position: "insideLeft",
+                          value: "Total",
+                        }}
+                        tickFormatter={formatCompactNumber}
+                        tickLine={false}
+                        width={60}
+                      />
+                      <ChartTooltip
+                        cursor={false}
+                        content={
+                          <ChartTooltipContent
+                            formatter={(value, _name, item) => (
+                              <div className="grid gap-1">
+                                <span>
+                                  {formatAmount(
+                                    String(value),
+                                    currency === "No currency" ? null : currency,
+                                  )}
+                                </span>
+                                {item.payload.incomplete && (
+                                  <span className="text-amber-700 dark:text-amber-300">
+                                    Incomplete period
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            labelFormatter={(value) => String(value)}
+                          />
+                        }
+                      />
+                      <Bar
+                        className="cursor-pointer"
+                        dataKey="amount"
+                        maxBarSize={72}
+                        onClick={(entry) => {
+                          window.location.assign(String(entry.payload.href))
+                        }}
+                        radius={[4, 4, 0, 0]}
+                      >
+                        <LabelList
+                          className="fill-foreground"
+                          dataKey="amount"
+                          fontSize={11}
+                          formatter={(value) =>
+                            formatCompactNumber(Number(value))
+                          }
+                          position="top"
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                  <div className="sr-only">
+                    {chartData.map((point) => (
+                      <a href={point.href} key={point.period}>
+                        View obligations for {point.periodLabel}:{" "}
+                        {formatAmount(
+                          String(point.amount),
                           currency === "No currency" ? null : currency,
                         )}
-                      >
-                        <div className="relative flex min-h-0 flex-1 flex-col justify-end">
-                          <span className="absolute -top-5 inset-x-0 text-center text-xs font-medium opacity-0 transition-opacity group-hover:opacity-100">
-                            {formatAmount(
-                              String(amounts[index]),
-                              currency === "No currency" ? null : currency,
-                            )}
-                          </span>
-                          <span
-                            className="min-h-1 rounded-t bg-primary/80 transition-colors group-hover:bg-primary"
-                            style={{
-                              height: `${Math.max((amounts[index] / maximum) * 100, 1)}%`,
-                            }}
-                          />
-                        </div>
-                        <div className="mt-2 h-9 text-center text-xs">
-                          <span className="block text-muted-foreground">
-                            {periodLabel(point.period)}
-                          </span>
-                          {!point.is_complete && (
-                            <span className="block text-amber-700 dark:text-amber-300">
-                              incomplete
-                            </span>
-                          )}
-                        </div>
+                        {point.incomplete ? " (incomplete)" : ""}
                       </a>
                     ))}
                   </div>
-                </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Tap a bar to view the period. Hover or focus for the exact
+                    total.
+                  </p>
+                </section>
               )
             })}
           </div>
