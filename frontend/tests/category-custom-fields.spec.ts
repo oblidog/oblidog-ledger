@@ -154,7 +154,7 @@ test("shows the empty category custom-data history", async ({ page }) => {
   await createCategoryButton.click()
 
   await expect(
-    page.getByRole("button", {
+    page.getByRole("link", {
       name: `View custom data for ${categoryName}`,
     }),
   ).toHaveCount(0)
@@ -175,10 +175,10 @@ test("shows the empty category custom-data history", async ({ page }) => {
   ).toBeVisible()
 
   await page.getByRole("link", { name: "Back to categories" }).click()
-  const customDataButton = page.getByRole("button", {
+  const customDataLink = page.getByRole("link", {
     name: `View custom data for ${categoryName}`,
   })
-  await customDataButton.click()
+  await customDataLink.click()
   await expect(
     page.getByText(
       "No custom data records have been saved for this category yet.",
