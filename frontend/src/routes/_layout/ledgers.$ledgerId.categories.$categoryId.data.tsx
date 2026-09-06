@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, notFound } from "@tanstack/react-router"
 import { ArrowLeft, ArrowUpDown, Database, ListPlus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import {
   ApiError,
@@ -185,10 +185,6 @@ function CategoryDataHistory() {
     (schema) => schema.version === selectedVersion,
   )
 
-  useEffect(() => {
-    setPage(0)
-  }, [selectedVersion, search.from, search.to, search.sort])
-
   const queryFilters = {
     ledgerId,
     categoryId,
@@ -244,7 +240,6 @@ function CategoryDataHistory() {
     },
     enabled: Boolean(selectedSchema) && countQuery.isSuccess,
     retry: false,
-    placeholderData: (previousData) => previousData,
   })
 
   if (categoriesQuery.isSuccess && !category) throw notFound()
@@ -293,8 +288,10 @@ function CategoryDataHistory() {
   const pageEnd = Math.min((page + 1) * PAGE_SIZE, count)
   const canGoNext = pageEnd < count
 
-  const updateSearch = (patch: Record<string, unknown>) =>
+  const updateSearch = (patch: Record<string, unknown>) => {
+    setPage(0)
     navigate({ search: (current) => ({ ...current, ...patch }), replace: true })
+  }
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6">
