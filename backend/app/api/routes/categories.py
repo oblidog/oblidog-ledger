@@ -31,6 +31,7 @@ from app.schemas import (
     CategoryUpdate,
 )
 from app.use_cases import categories as category_use_cases
+from app.use_cases import category_data_records as category_data_record_use_cases
 from app.use_cases.exceptions import (
     CategoryDataSchemaNotFoundError,
     CategoryGroupArchivedError,
@@ -288,6 +289,7 @@ def read_category_data_records(
     *,
     session: SessionDep,
     category_id: uuid.UUID,
+    schema_version: int | None = Query(default=None, ge=1),
     observed_from: datetime | None = None,
     observed_to: datetime | None = None,
     limit: int = Query(default=100, ge=1, le=100),
@@ -295,24 +297,28 @@ def read_category_data_records(
     ledger: Ledger = Depends(require_ledger_view_access),
 ) -> CategoryDataRecordsPublic:
     try:
-        records = category_use_cases.list_category_data_records(
+        records = category_data_record_use_cases.list_category_data_records(
             session=session,
             ledger_id=ledger.id,
             category_id=category_id,
+            schema_version=schema_version,
             observed_from=observed_from,
             observed_to=observed_to,
             limit=limit,
             offset=offset,
         )
-        count = category_use_cases.count_category_data_records(
+        count = category_data_record_use_cases.count_category_data_records(
             session=session,
             ledger_id=ledger.id,
             category_id=category_id,
+            schema_version=schema_version,
             observed_from=observed_from,
             observed_to=observed_to,
         )
     except CategoryNotFoundError:
         raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryDataSchemaNotFoundError:
+        raise HTTPException(status_code=404, detail="Category data schema not found")
     return CategoryDataRecordsPublic(
         data=[_to_category_data_record_public(record) for record in records],
         count=count,
