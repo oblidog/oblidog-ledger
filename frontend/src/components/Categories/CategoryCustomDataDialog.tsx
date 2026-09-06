@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router"
 import { Database } from "lucide-react"
-import type { ReactNode } from "react"
 
 import type { CategoryPublic } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -13,11 +12,9 @@ import {
 export function CategoryCustomDataDialog({
   ledgerId,
   category,
-  trigger,
 }: {
   ledgerId: string
   category: CategoryPublic
-  trigger?: ReactNode
 }) {
   return (
     <Tooltip>
@@ -32,14 +29,8 @@ export function CategoryCustomDataDialog({
             to={"/ledgers/$ledgerId/categories/$categoryId/data" as never}
             params={{ ledgerId, categoryId: category.id } as never}
           >
-            {trigger || (
-              <>
-                <Database />
-                <span className="sr-only">
-                  View custom data for {category.name}
-                </span>
-              </>
-            )}
+            <Database />
+            <span className="sr-only">View custom data for {category.name}</span>
           </Link>
         </Button>
       </TooltipTrigger>
