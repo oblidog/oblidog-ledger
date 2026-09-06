@@ -210,6 +210,7 @@ test("renders schema-driven category history with versioning and formatters", as
 
   await page.getByRole("button", { name: "Newest first" }).click()
   await expect(page.getByRole("button", { name: "Oldest first" })).toBeVisible()
+  await expect(page.getByText("Showing 1–20 of 21")).toBeVisible()
 
   await page.getByRole("combobox", { name: "Schema version" }).click()
   await page.getByRole("option", { name: "Version 2" }).click()
