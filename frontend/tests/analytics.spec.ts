@@ -59,17 +59,21 @@ for (const width of [320, 375, 414]) {
     await page.goto(`/ledgers/${ledger.id}/analytics`)
 
     const charts = [
-      page.getByTestId("payment-schedule-chart"),
-      page.getByTestId("period-totals-chart"),
-      page.getByTestId("category-history-chart"),
+      {
+        axisLabel: "Amount",
+        chart: page.getByTestId("payment-schedule-chart"),
+      },
+      { axisLabel: "Total", chart: page.getByTestId("period-totals-chart") },
+      {
+        axisLabel: "Amount",
+        chart: page.getByTestId("category-history-chart"),
+      },
     ]
 
-    for (const chart of charts) {
+    for (const { axisLabel, chart } of charts) {
       await expect(chart).toBeVisible()
       await expect(chart.locator("svg")).toBeVisible()
-      await expect(
-        chart.locator(".recharts-yAxis text").first(),
-      ).toBeVisible()
+      await expect(chart.getByText(axisLabel, { exact: true })).toBeVisible()
       await expect
         .poll(() =>
           chart.evaluate(
