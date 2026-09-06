@@ -10,6 +10,7 @@ from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
 
 from app.core import security
+from app.core.capabilities import Capability, ensure_capability
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ def send_email(
     html_content: str = "",
     text_content: str = "",
 ) -> None:
+    ensure_capability(Capability.EMAIL)
     assert settings.emails_enabled, "no provided configuration for email variables"
     assert settings.EMAILS_FROM_EMAIL is not None
     message = Message(
