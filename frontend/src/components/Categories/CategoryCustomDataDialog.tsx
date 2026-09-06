@@ -29,8 +29,8 @@ export function CategoryCustomDataDialog({
           asChild
         >
           <Link
-            to="/ledgers/$ledgerId/categories/$categoryId/data"
-            params={{ ledgerId, categoryId: category.id }}
+            to={"/ledgers/$ledgerId/categories/$categoryId/data" as never}
+            params={{ ledgerId, categoryId: category.id } as never}
           >
             {trigger || (
               <>
