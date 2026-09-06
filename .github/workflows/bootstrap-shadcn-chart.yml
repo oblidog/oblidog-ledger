@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - name: Add chart component
-        run: bunx --bun shadcn@latest add chart --yes
+        run: yes n | bunx --bun shadcn@latest add chart --yes
         working-directory: frontend
       - name: Commit generated files
         run: |
