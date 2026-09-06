@@ -53,20 +53,32 @@ async function createCategoryHistoryFixture() {
 }
 
 for (const width of [320, 375, 414]) {
-  test(`keeps the Payment schedule chart contained at ${width}px`, async ({
+  test(`keeps analytics charts readable at ${width}px`, async ({
     page,
   }) => {
     const ledger = await createCategoryHistoryFixture()
     await page.setViewportSize({ width, height: 844 })
     await page.goto(`/ledgers/${ledger.id}/analytics`)
 
-    const chart = page.getByTestId("payment-schedule-chart")
-    await expect(chart).toBeVisible()
-    await expect
-      .poll(() =>
-        chart.evaluate((element) => element.scrollWidth > element.clientWidth),
-      )
-      .toBe(true)
+    const charts = [
+      page.getByTestId("payment-schedule-chart"),
+      page.getByTestId("period-totals-chart"),
+      page.getByTestId("category-history-chart"),
+    ]
+
+    for (const chart of charts) {
+      await expect(chart).toBeVisible()
+      await expect(chart.locator("svg")).toBeVisible()
+      await expect(chart.locator(".recharts-yAxis")).toBeVisible()
+      await expect
+        .poll(() =>
+          chart.evaluate(
+            (element) => element.scrollWidth <= element.clientWidth,
+          ),
+        )
+        .toBe(true)
+    }
+
     await expect
       .poll(() =>
         page.evaluate(
@@ -75,41 +87,11 @@ for (const width of [320, 375, 414]) {
       )
       .toBe(true)
 
-    await chart.evaluate((element) => {
-      element.scrollLeft = 100
-    })
-    await expect
-      .poll(() => chart.evaluate((element) => element.scrollLeft))
-      .toBeGreaterThan(0)
-  })
-
-  test(`keeps the Category History chart contained at ${width}px`, async ({
-    page,
-  }) => {
-    const ledger = await createCategoryHistoryFixture()
-    await page.setViewportSize({ width, height: 844 })
-    await page.goto(`/ledgers/${ledger.id}/analytics`)
-
-    const chart = page.getByTestId("category-history-chart")
-    await expect(chart).toBeVisible()
-    await expect
-      .poll(() =>
-        chart.evaluate((element) => element.scrollWidth > element.clientWidth),
-      )
-      .toBe(true)
-    await expect
-      .poll(() =>
-        page.evaluate(
-          () => document.documentElement.scrollWidth <= window.innerWidth,
-        ),
-      )
-      .toBe(true)
-
-    await chart.evaluate((element) => {
-      element.scrollLeft = 100
-    })
-    await expect
-      .poll(() => chart.evaluate((element) => element.scrollLeft))
-      .toBeGreaterThan(0)
+    await expect(
+      page.getByTestId("period-totals-chart").getByText("42"),
+    ).toBeVisible()
+    await expect(
+      page.getByTestId("category-history-chart").getByText("42"),
+    ).toBeVisible()
   })
 }
