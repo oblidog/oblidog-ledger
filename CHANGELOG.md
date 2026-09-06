@@ -1,3 +1,10 @@
+## v0.7.6 (2026-09-06)
+
+### Fix
+
+- **analytics**: make charts readable on mobile (#231)
+- **deps**: clean up dependency lockfiles (#228)
+
 ## v0.7.5 (2026-09-05)
 
 ### Fix
