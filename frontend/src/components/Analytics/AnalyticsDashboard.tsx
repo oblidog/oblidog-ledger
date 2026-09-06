@@ -7,12 +7,19 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Label,
   LabelList,
+  Pie,
+  PieChart,
   XAxis,
   YAxis,
 } from "recharts"
 
-import { AnalyticsService, CategoriesService } from "@/client"
+import {
+  AnalyticsService,
+  CategoriesService,
+  ObligationsService,
+} from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,6 +58,14 @@ const periodTotalsChartConfig = {
 const categoryHistoryChartConfig = {
   amount: { label: "Amount", color: "var(--chart-3)" },
 } satisfies ChartConfig
+
+const categoryCostColors = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+]
 
 function currentPeriod(): Period {
   const now = new Date()
@@ -152,6 +167,15 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
     queryFn: () => CategoriesService.readCategories({ ledgerId }),
     queryKey: ["categories", ledgerId],
   })
+  const obligations = useQuery({
+    queryFn: () =>
+      ObligationsService.readObligations({
+        ledgerId,
+        year: selectedPeriod.year,
+        month: selectedPeriod.month,
+      }),
+    queryKey: ["obligations", ledgerId, selectedPeriod],
+  })
 
   useEffect(() => {
     const availableCategories = categories.data?.data
@@ -252,6 +276,13 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
         isError={cashflow.isError}
         isLoading={cashflow.isLoading}
         ledgerId={ledgerId}
+        period={selectedPeriod}
+      />
+
+      <CategoryCostDonutCard
+        data={obligations.data}
+        isError={obligations.isError}
+        isLoading={obligations.isLoading}
         period={selectedPeriod}
       />
 
@@ -740,6 +771,263 @@ function formatCompactNumber(amount: number) {
     maximumFractionDigits: 1,
     notation: "compact",
   })
+}
+
+type CategoryCostSlice = {
+  amount: number
+  fill: string
+  key: string
+  name: string
+}
+
+type CategoryCostSummary = {
+  currency: string | null
+  slices: CategoryCostSlice[]
+  total: number
+  unknownAmountCount: number
+}
+
+function buildCategoryCostSummaries(
+  data: Awaited<ReturnType<typeof ObligationsService.readObligations>>,
+): CategoryCostSummary[] {
+  const amounts = new Map<
+    string | null,
+    Map<string, { amount: number; name: string }>
+  >()
+  const unknownAmounts = new Map<string | null, number>()
+
+  for (const obligation of data.data) {
+    if (obligation.lifecycle === "canceled") continue
+    if (obligation.current_amount === null) {
+      unknownAmounts.set(
+        obligation.currency,
+        (unknownAmounts.get(obligation.currency) ?? 0) + 1,
+      )
+      continue
+    }
+
+    const categories = amounts.get(obligation.currency) ?? new Map()
+    const category = categories.get(obligation.category_id)
+    categories.set(obligation.category_id, {
+      amount: (category?.amount ?? 0) + Number(obligation.current_amount),
+      name: obligation.name,
+    })
+    amounts.set(obligation.currency, categories)
+  }
+
+  const currencies = new Set([...amounts.keys(), ...unknownAmounts.keys()])
+  return [...currencies]
+    .sort((left, right) => (left ?? "").localeCompare(right ?? ""))
+    .map((currency) => {
+      const categories = [...(amounts.get(currency)?.entries() ?? [])]
+        .map(([key, category]) => ({ key, ...category }))
+        .filter((category) => category.amount > 0)
+        .sort((left, right) => right.amount - left.amount)
+      const visibleCategories =
+        categories.length > 6
+          ? [
+              ...categories.slice(0, 5),
+              {
+                amount: categories
+                  .slice(5)
+                  .reduce((sum, category) => sum + category.amount, 0),
+                key: "other",
+                name: "Other",
+              },
+            ]
+          : categories
+      const slices = visibleCategories.map((category, index) => ({
+        ...category,
+        fill:
+          category.key === "other"
+            ? "var(--muted-foreground)"
+            : categoryCostColors[index % categoryCostColors.length],
+      }))
+
+      return {
+        currency,
+        slices,
+        total: slices.reduce((sum, category) => sum + category.amount, 0),
+        unknownAmountCount: unknownAmounts.get(currency) ?? 0,
+      }
+    })
+}
+
+function CategoryCostDonutCard({
+  data,
+  isError,
+  isLoading,
+  period,
+}: {
+  data:
+    | Awaited<ReturnType<typeof ObligationsService.readObligations>>
+    | undefined
+  isError: boolean
+  isLoading: boolean
+  period: Period
+}) {
+  const summaries = data ? buildCategoryCostSummaries(data) : []
+
+  return (
+    <Card className="min-w-0 gap-4 py-5">
+      <CardHeader>
+        <CardTitle>Costs by category</CardTitle>
+        <CardDescription>
+          Known obligation amounts in {periodLabel(period)}. Canceled
+          obligations are excluded and currencies are shown separately.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="min-w-0">
+        {isLoading ? (
+          <Skeleton className="h-72 w-full" />
+        ) : isError || !data ? (
+          <QueryState message="Category costs could not be loaded." />
+        ) : summaries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No obligations in this period.
+          </p>
+        ) : (
+          <div className="grid gap-8 xl:grid-cols-2">
+            {summaries.map((summary) => {
+              const chartConfig = Object.fromEntries(
+                summary.slices.map((slice) => [
+                  slice.key,
+                  { color: slice.fill, label: slice.name },
+                ]),
+              ) as ChartConfig
+
+              return (
+                <section
+                  aria-label={`Category costs in ${summary.currency ?? "no currency"}`}
+                  className="min-w-0"
+                  key={summary.currency ?? "none"}
+                >
+                  <h3 className="mb-3 font-semibold">
+                    {summary.currency ?? "No currency"}
+                  </h3>
+                  {summary.slices.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No known positive amounts.
+                    </p>
+                  ) : (
+                    <div className="grid min-w-0 items-center gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,1fr)]">
+                      <ChartContainer
+                        aria-label={`Cost distribution for ${summary.currency ?? "no currency"}`}
+                        className="mx-auto h-60 w-full max-w-72"
+                        config={chartConfig}
+                        data-testid="category-cost-donut"
+                      >
+                        <PieChart accessibilityLayer>
+                          <ChartTooltip
+                            cursor={false}
+                            content={
+                              <ChartTooltipContent
+                                hideLabel
+                                formatter={(value, _name, item) => (
+                                  <div className="flex min-w-40 items-center justify-between gap-4">
+                                    <span className="text-muted-foreground">
+                                      {item.payload.name}
+                                    </span>
+                                    <span className="font-mono font-medium tabular-nums">
+                                      {formatAmount(
+                                        String(value),
+                                        summary.currency,
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+                              />
+                            }
+                          />
+                          <Pie
+                            data={summary.slices}
+                            dataKey="amount"
+                            innerRadius={58}
+                            nameKey="name"
+                            outerRadius={84}
+                            paddingAngle={2}
+                            strokeWidth={2}
+                          >
+                            {summary.slices.map((slice) => (
+                              <Cell fill={slice.fill} key={slice.key} />
+                            ))}
+                            <Label
+                              content={({ viewBox }) => {
+                                if (
+                                  !viewBox ||
+                                  !("cx" in viewBox) ||
+                                  !("cy" in viewBox)
+                                ) {
+                                  return null
+                                }
+                                return (
+                                  <text
+                                    dominantBaseline="middle"
+                                    textAnchor="middle"
+                                    x={viewBox.cx}
+                                    y={viewBox.cy}
+                                  >
+                                    <tspan
+                                      className="fill-foreground text-xl font-bold"
+                                      x={viewBox.cx}
+                                      y={viewBox.cy}
+                                    >
+                                      {formatCompactNumber(summary.total)}
+                                    </tspan>
+                                    <tspan
+                                      className="fill-muted-foreground text-xs"
+                                      x={viewBox.cx}
+                                      y={(viewBox.cy ?? 0) + 20}
+                                    >
+                                      {summary.currency ?? "No currency"}
+                                    </tspan>
+                                  </text>
+                                )
+                              }}
+                            />
+                          </Pie>
+                        </PieChart>
+                      </ChartContainer>
+                      <ul className="grid gap-2 text-sm">
+                        {summary.slices.map((slice) => (
+                          <li
+                            className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"
+                            key={slice.key}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="size-2.5 rounded-sm"
+                              style={{ backgroundColor: slice.fill }}
+                            />
+                            <span className="truncate">{slice.name}</span>
+                            <span className="font-mono text-xs tabular-nums">
+                              {formatAmount(
+                                String(slice.amount),
+                                summary.currency,
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {summary.unknownAmountCount > 0 && (
+                    <Badge
+                      className="mt-4 border-amber-500 text-amber-700 dark:text-amber-300"
+                      variant="outline"
+                    >
+                      {summary.unknownAmountCount} amount
+                      {summary.unknownAmountCount === 1 ? "" : "s"} unknown
+                    </Badge>
+                  )}
+                </section>
+              )
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 function CategoryHistoryCard({
