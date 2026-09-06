@@ -1,0 +1,21 @@
+name: Validate mobile analytics charts
+
+on:
+  push:
+    branches:
+      - fix/230-mobile-analytics-charts
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun ci
+        working-directory: frontend
+      - name: Check formatting and lint
+        run: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true ./
+        working-directory: frontend
+      - name: Build frontend
+        run: bun run build
+        working-directory: frontend
