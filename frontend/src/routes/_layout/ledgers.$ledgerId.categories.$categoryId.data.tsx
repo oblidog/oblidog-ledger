@@ -4,7 +4,12 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router"
 import { ArrowLeft, ArrowUpDown, Database, ListPlus } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { ApiError, CategoriesService } from "@/client"
+import {
+  ApiError,
+  CategoriesService,
+  type CategoryDataSchemaPublic,
+  client,
+} from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,6 +43,11 @@ type PropertySchema = {
   format?: string
   title?: string
   enum?: unknown[]
+}
+
+type CategoryDataSchemasResponse = {
+  data: CategoryDataSchemaPublic[]
+  count: number
 }
 
 export const Route = createFileRoute(
@@ -127,6 +137,27 @@ function dateEnd(value?: string) {
   return value ? new Date(`${value}T23:59:59.999`).toISOString() : undefined
 }
 
+async function readCategoryDataSchemas(ledgerId: string, categoryId: string) {
+  const response = await client.get({
+    responseType: "json",
+    security: [
+      {
+        key: "OAuth2PasswordBearer",
+        scheme: "bearer",
+        type: "http",
+      },
+    ],
+    throwOnError: true,
+    url: "/api/v1/ledgers/{ledger_id}/categories/{category_id}/data-schemas",
+    path: {
+      ledger_id: ledgerId,
+      category_id: categoryId,
+    },
+  })
+
+  return response.data as CategoryDataSchemasResponse
+}
+
 function CategoryDataHistory() {
   const { ledgerId, categoryId } = Route.useParams()
   const search = Route.useSearch()
@@ -142,7 +173,7 @@ function CategoryDataHistory() {
   const category = categoriesQuery.data?.data.find((item) => item.id === categoryId)
 
   const schemasQuery = useQuery({
-    queryFn: () => CategoriesService.readCategoryDataSchemas({ ledgerId, categoryId }),
+    queryFn: () => readCategoryDataSchemas(ledgerId, categoryId),
     queryKey: ["category-data-schemas", ledgerId, categoryId],
     enabled: categoriesQuery.isSuccess && Boolean(category),
     retry: false,
