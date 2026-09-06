@@ -67,7 +67,7 @@ for (const width of [320, 375, 414]) {
     for (const chart of charts) {
       await expect(chart).toBeVisible()
       await expect(chart.locator("svg")).toBeVisible()
-      await expect(chart.locator(".recharts-yAxis")).toBeVisible()
+      await expect(\n        chart.locator(".recharts-yAxis text").first(),\n      ).toBeVisible()
       await expect
         .poll(() =>
           chart.evaluate(
@@ -93,3 +93,4 @@ for (const width of [320, 375, 414]) {
     ).toBeVisible()
   })
 }
+
