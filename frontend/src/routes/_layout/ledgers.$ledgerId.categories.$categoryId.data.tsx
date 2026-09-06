@@ -33,7 +33,6 @@ import {
 
 const PAGE_SIZE = 20
 
-type SortOrder = "asc" | "desc"
 type PropertySchema = {
   type?: string
   format?: string
@@ -302,7 +301,7 @@ function CategoryDataHistory() {
         </CardHeader>
         <CardContent className="min-w-0 space-y-5">
           <div className="grid gap-3 md:grid-cols-4">
-            <label className="space-y-1 text-sm">
+            <div className="space-y-1 text-sm">
               <span className="font-medium">Schema version</span>
               <Select
                 value={String(selectedVersion)}
@@ -319,23 +318,29 @@ function CategoryDataHistory() {
                   ))}
                 </SelectContent>
               </Select>
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="font-medium">Observed from</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <label htmlFor="category-data-observed-from" className="font-medium">
+                Observed from
+              </label>
               <Input
+                id="category-data-observed-from"
                 type="date"
                 value={search.from ?? ""}
                 onChange={(event) => updateSearch({ from: event.target.value || undefined })}
               />
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="font-medium">Observed to</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <label htmlFor="category-data-observed-to" className="font-medium">
+                Observed to
+              </label>
               <Input
+                id="category-data-observed-to"
                 type="date"
                 value={search.to ?? ""}
                 onChange={(event) => updateSearch({ to: event.target.value || undefined })}
               />
-            </label>
+            </div>
             <div className="space-y-1 text-sm">
               <span className="font-medium">Observation order</span>
               <Button
