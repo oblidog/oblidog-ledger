@@ -211,3 +211,4 @@ def require_ledger_edit_access(
     )
     if ledger is None:
         raise HTTPException(status_code=404, detail="Ledger not found")
+    return ledger
