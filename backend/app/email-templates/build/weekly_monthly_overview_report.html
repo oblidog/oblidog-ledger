@@ -1,0 +1,24 @@
+<h1>{{ project_name }} - Weekly monthly overview</h1>
+<p>Period: <strong>{{ period }}</strong><br>Snapshot: {{ report_date }}</p>
+{% for ledger in ledgers %}
+<h2>{{ ledger.ledger_name }}</h2>
+{% if not ledger.currencies %}<p>No obligations in this period.</p>{% endif %}
+{% for item in ledger.currencies %}
+<h3>{{ item.currency or 'Unspecified currency' }}</h3>
+<ul>
+  <li>Total known: {{ item.total_known_amount }}{% if not item.total_is_complete %} <strong>(incomplete)</strong>{% endif %}</li>
+  <li>Paid known: {{ item.paid_known_amount }}</li>
+  <li>Remaining known: {{ item.remaining_known_amount }}</li>
+  <li>Ready: {{ item.ready_count }}, paid: {{ item.paid_count }}, not ready: {{ item.not_ready_count }}</li>
+  <li>Paid percentage: {{ item.paid_percentage if item.paid_percentage is not none else 'n/a' }}%</li>
+  <li>Overdue: {{ item.overdue_count }} / {{ item.overdue_known_amount }}</li>
+  <li>Unknown or unconfirmed values: {{ item.incomplete_count }}</li>
+  <li>Previous month known total: {{ item.previous_total_known_amount }}{% if not item.previous_total_is_complete %} <strong>(incomplete)</strong>{% endif %}</li>
+  <li>Change vs previous month: {{ item.total_change if item.total_change is not none else 'n/a (incomplete data)' }}</li>
+</ul>
+{% if item.upcoming %}
+<p><strong>Due in the next 7 days</strong></p>
+<ul>{% for obligation in item.upcoming %}<li>{{ obligation.due_date }} — {{ obligation.category_name }} — {{ obligation.amount if obligation.amount is not none else 'unknown amount' }} {{ item.currency or '' }}</li>{% endfor %}</ul>
+{% else %}<p>Due in the next 7 days: none</p>{% endif %}
+{% endfor %}
+{% endfor %}
