@@ -164,7 +164,7 @@ function CategoryDataHistory() {
         </CardHeader>
         <CardContent className="min-w-0 space-y-4">
           {recordsQuery.isLoading ? (
-            <div className="space-y-3" aria-label="Loading custom data">
+            <div className="space-y-3">
               <Skeleton className="h-28 w-full" />
               <Skeleton className="h-28 w-full" />
             </div>
