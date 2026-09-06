@@ -171,7 +171,7 @@ test("renders schema-driven category history with versioning and formatters", as
     .getByRole("link", { name: `View custom data for ${categoryName}` })
     .click()
 
-  await expect(page).toHaveURL(/\/categories\/[^/]+\/data$/)
+  await expect(page).toHaveURL(/\/categories\/[^/]+\/data\?sort=desc$/)
   await expect(
     page.getByRole("heading", { name: `Custom data history for ${categoryName}` }),
   ).toBeVisible()
@@ -192,7 +192,9 @@ test("renders schema-driven category history with versioning and formatters", as
   await expect(table.getByText("raw-name fallback").first()).toBeVisible()
   await expect(table.getByText("View details").first()).toBeVisible()
 
-  const formattedNumber = await page.evaluate(() => new Intl.NumberFormat().format(12345.67))
+  const formattedNumber = await page.evaluate(() =>
+    new Intl.NumberFormat().format(12345.67),
+  )
   await expect(table.getByText(formattedNumber).first()).toBeVisible()
   await expect(table).not.toContainText("2026-02-03T14:15:00Z")
 
@@ -206,10 +208,8 @@ test("renders schema-driven category history with versioning and formatters", as
   await expect(page.getByText("Showing 21–21 of 21")).toBeVisible()
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled()
 
-  await page.getByRole("button", { name: "Observation order" }).click()
-  await expect(page.getByRole("button", { name: "Observation order" })).toContainText(
-    "Oldest first",
-  )
+  await page.getByRole("button", { name: "Newest first" }).click()
+  await expect(page.getByRole("button", { name: "Oldest first" })).toBeVisible()
 
   await page.getByRole("combobox", { name: "Schema version" }).click()
   await page.getByRole("option", { name: "Version 2" }).click()
@@ -221,7 +221,9 @@ test("renders schema-driven category history with versioning and formatters", as
   await page.getByRole("option", { name: "Version 1" }).click()
   await expect(page).toHaveURL(/schema=1/)
   await expect(
-    page.getByText("No records were saved with schema version 1 for the selected date range."),
+    page.getByText(
+      "No records were saved with schema version 1 for the selected date range.",
+    ),
   ).toBeVisible()
 
   await page.getByRole("link", { name: "Manage custom fields" }).click()
