@@ -1,3 +1,9 @@
+## v0.7.7 (2026-09-06)
+
+### Refactor
+
+- **analytics**: add category cost donut (#235)
+
 ## v0.7.6 (2026-09-06)
 
 ### Fix
