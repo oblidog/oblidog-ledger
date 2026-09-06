@@ -152,9 +152,6 @@ class LegacyImportTask:
         )
 
         config = load_legacy_import_config(settings.LEGACY_IMPORT_CONFIG_PATH)
-        payment_book = load_legacy_import_config(settings.LEGACY_IMPORT_CONFIG_PATH)
-        from findog_legacy_adapter import load_payment_book_from_dropbox  # type: ignore[import-untyped]
-
         payment_book = load_payment_book_from_dropbox(
             settings.DROPBOX_API_KEY,
             config.excel_dropbox_path,
