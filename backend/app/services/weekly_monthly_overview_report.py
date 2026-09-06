@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
@@ -124,18 +123,37 @@ def _build_user_overviews(
     result: list[LedgerOverview] = []
 
     for ledger in ledgers:
-        obligations = list(
+        period_obligations = list(
             session.scalars(
                 select(Obligation)
                 .where(
                     Obligation.ledger_id == ledger.id,
-                    Obligation.period_year == period.year,
-                    Obligation.period_month == period.month,
                     Obligation.lifecycle != ObligationLifecycle.CANCELED,
+                    or_(
+                        (
+                            (Obligation.period_year == period.year)
+                            & (Obligation.period_month == period.month)
+                        ),
+                        (
+                            (Obligation.period_year == previous_period.year)
+                            & (Obligation.period_month == previous_period.month)
+                        ),
+                    ),
                 )
                 .options(joinedload(Obligation.category))
             ).unique()
         )
+        obligations = [
+            item
+            for item in period_obligations
+            if (item.period_year, item.period_month) == (period.year, period.month)
+        ]
+        previous_obligations = [
+            item
+            for item in period_obligations
+            if (item.period_year, item.period_month)
+            == (previous_period.year, previous_period.month)
+        ]
         payment = summarize_period_payment_progress(
             session=session, ledger_id=ledger.id, period=period
         )
@@ -145,7 +163,7 @@ def _build_user_overviews(
             from_period=previous_period,
             to_period=period,
         )
-        current_point, previous_point = totals.points[1], totals.points[0]
+        previous_point, current_point = totals.points
         current_totals = {
             item.currency: item.total_known_amount for item in current_point.currency_summaries
         }
@@ -156,24 +174,37 @@ def _build_user_overviews(
             item.currency: item.paid_known_amount for item in payment.amount_summaries
         }
         currencies = sorted(
-            {item.currency for item in obligations}
+            {item.currency for item in period_obligations}
             | set(current_totals)
             | set(previous_totals),
             key=lambda value: value or "",
         )
-        overviews = [
-            _summarize_currency(
-                obligations=[item for item in obligations if item.currency == currency],
-                currency=currency,
-                report_date=report_date,
-                current_total=current_totals.get(currency, Decimal("0.00")),
-                paid_total=paid_totals.get(currency, Decimal("0.00")),
-                previous_total=previous_totals.get(currency, Decimal("0.00")),
-                current_complete=current_point.is_complete,
-                previous_complete=previous_point.is_complete,
+        overviews = []
+        for currency in currencies:
+            current_currency_obligations = [
+                item for item in obligations if item.currency == currency
+            ]
+            previous_currency_obligations = [
+                item for item in previous_obligations if item.currency == currency
+            ]
+            overviews.append(
+                _summarize_currency(
+                    obligations=current_currency_obligations,
+                    currency=currency,
+                    report_date=report_date,
+                    current_total=current_totals.get(currency, Decimal("0.00")),
+                    paid_total=paid_totals.get(currency, Decimal("0.00")),
+                    previous_total=previous_totals.get(currency, Decimal("0.00")),
+                    current_complete=all(
+                        item.current_amount is not None
+                        for item in current_currency_obligations
+                    ),
+                    previous_complete=all(
+                        item.current_amount is not None
+                        for item in previous_currency_obligations
+                    ),
+                )
             )
-            for currency in currencies
-        ]
         result.append(LedgerOverview(ledger_name=ledger.name, currencies=overviews))
     return result
 
@@ -220,7 +251,9 @@ def _summarize_currency(
     ]
     upcoming.sort(key=lambda item: (item.due_date, item.category_name))
     incomplete_count = sum(
-        item.amount_state not in CONFIRMED_STATES
+        item.current_amount is None
+        or item.due_date is None
+        or item.amount_state not in CONFIRMED_STATES
         or item.due_date_state not in CONFIRMED_STATES
         for item in obligations
     )
