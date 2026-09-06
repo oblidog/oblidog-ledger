@@ -53,9 +53,7 @@ async function createCategoryHistoryFixture() {
 }
 
 for (const width of [320, 375, 414]) {
-  test(`keeps analytics charts readable at ${width}px`, async ({
-    page,
-  }) => {
+  test(`keeps analytics charts readable at ${width}px`, async ({ page }) => {
     const ledger = await createCategoryHistoryFixture()
     await page.setViewportSize({ width, height: 844 })
     await page.goto(`/ledgers/${ledger.id}/analytics`)
