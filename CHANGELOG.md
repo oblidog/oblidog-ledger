@@ -1,3 +1,9 @@
+## v0.7.8 (2026-09-06)
+
+### Fix
+
+- code scanning alert no. 1: Workflow does not contain permissions (#253)
+
 ## v0.7.7 (2026-09-06)
 
 ### Refactor
