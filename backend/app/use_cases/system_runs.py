@@ -23,6 +23,7 @@ from app.models import Ledger, SystemRun, SystemRunStep
 from app.services.daily_obligation_report import DailyObligationReport
 from app.services.legacy_import import load_legacy_import_config
 from app.services.scheduled_reports import ScheduledReport, deliver_scheduled_report
+from app.services.weekly_monthly_overview_report import WeeklyMonthlyOverviewReport
 from app.use_cases import legacy_import as legacy_import_use_cases
 from app.use_cases import obligations as obligation_use_cases
 
@@ -206,7 +207,10 @@ SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
     cast(SystemRunTask, LegacyImportTask()),
     cast(SystemRunTask, EnsureObligationsTask()),
     cast(SystemRunTask, EstimateObligationAmountsTask()),
-    cast(SystemRunTask, ScheduledReportsTask((DailyObligationReport(),))),
+    cast(
+        SystemRunTask,
+        ScheduledReportsTask((DailyObligationReport(), WeeklyMonthlyOverviewReport())),
+    ),
 )
 
 
