@@ -588,7 +588,9 @@ function CashflowCurrencyChart({
     amount: Number(point.amount),
     cumulative: Number(point.cumulative_amount),
     date: point.due_date,
-    fill: point.is_overdue ? "var(--destructive)" : "var(--color-amount)",
+    fill: point.is_overdue
+      ? "var(--destructive)"
+      : "var(--color-amount)",
   }))
   const showValueLabels = chartData.length <= 8
 
@@ -655,9 +657,15 @@ function CashflowCurrencyChart({
             />
             <YAxis
               axisLine={false}
+              label={{
+                angle: -90,
+                fill: "var(--muted-foreground)",
+                position: "insideLeft",
+                value: "Amount",
+              }}
               tickFormatter={formatCompactNumber}
               tickLine={false}
-              width={48}
+              width={60}
             />
             <ChartTooltip
               cursor={false}
@@ -762,7 +770,8 @@ function CategoryHistoryCard({
   const currency = knownPoints[0]?.currency ?? null
   const chartData =
     data?.points.map((point) => {
-      const amount = point.state === "known" ? Number(point.current_amount) : 0
+      const amount =
+        point.state === "known" ? Number(point.current_amount) : 0
       return {
         amount,
         fill:
@@ -848,9 +857,15 @@ function CategoryHistoryCard({
                 />
                 <YAxis
                   axisLine={false}
+                  label={{
+                    angle: -90,
+                    fill: "var(--muted-foreground)",
+                    position: "insideLeft",
+                    value: "Amount",
+                  }}
                   tickFormatter={formatCompactNumber}
                   tickLine={false}
-                  width={48}
+                  width={60}
                 />
                 <ChartTooltip
                   cursor={false}
@@ -989,9 +1004,15 @@ function PeriodTotalsCard({
                       />
                       <YAxis
                         axisLine={false}
+                        label={{
+                          angle: -90,
+                          fill: "var(--muted-foreground)",
+                          position: "insideLeft",
+                          value: "Total",
+                        }}
                         tickFormatter={formatCompactNumber}
                         tickLine={false}
-                        width={48}
+                        width={60}
                       />
                       <ChartTooltip
                         cursor={false}
@@ -1002,9 +1023,7 @@ function PeriodTotalsCard({
                                 <span>
                                   {formatAmount(
                                     String(value),
-                                    currency === "No currency"
-                                      ? null
-                                      : currency,
+                                    currency === "No currency" ? null : currency,
                                   )}
                                 </span>
                                 {item.payload.incomplete && (
