@@ -16,7 +16,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -155,7 +154,9 @@ function CategoryDataHistory() {
           <div className="mb-2 flex items-center gap-2">
             <Database className="size-5 text-primary" />
           </div>
-          <CardTitle>Custom data history for {category.name}</CardTitle>
+          <h1 className="leading-none font-semibold">
+            Custom data history for {category.name}
+          </h1>
           <CardDescription>
             {recordsQuery.isLoading
               ? "Loading records…"
