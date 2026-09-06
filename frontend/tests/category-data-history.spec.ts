@@ -216,7 +216,7 @@ test("renders schema-driven category history with versioning and formatters", as
   await page.getByRole("option", { name: "Version 2" }).click()
   await expect(page).toHaveURL(/schema=2/)
   await expect(page.getByRole("columnheader", { name: "Legacy reading" })).toBeVisible()
-  await expect(page.getByText("42")).toBeVisible()
+  await expect(page.getByRole("cell", { name: "42" })).toBeVisible()
 
   await page.getByRole("combobox", { name: "Schema version" }).click()
   await page.getByRole("option", { name: "Version 1" }).click()
