@@ -1,3 +1,5 @@
+import uuid
+from collections.abc import Generator
 from datetime import date
 from decimal import Decimal
 
@@ -15,7 +17,7 @@ DEMO_TEST_PASSWORD = "test-demo-password"
 
 
 @pytest.fixture(autouse=True)
-def cleanup_demo_data(db: Session):
+def cleanup_demo_data(db: Session) -> Generator[None, None, None]:
     def cleanup() -> None:
         user = db.scalar(select(User).where(User.email == DEMO_EMAIL))
         if user is None:
@@ -35,7 +37,7 @@ def cleanup_demo_data(db: Session):
 def _obligation(
     db: Session,
     *,
-    ledger_id,
+    ledger_id: uuid.UUID,
     code: str,
     year: int,
     month: int,
