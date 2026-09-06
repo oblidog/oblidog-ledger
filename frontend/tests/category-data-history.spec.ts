@@ -84,7 +84,7 @@ test("opens category data as a responsive paginated page", async ({ page }) => {
 
   await page.setViewportSize({ width: 320, height: 800 })
   await page
-    .getByRole("button", { name: `View custom data for ${categoryName}` })
+    .getByRole("link", { name: `View custom data for ${categoryName}` })
     .click()
 
   await expect(page).toHaveURL(/\/categories\/[^/]+\/data$/)
