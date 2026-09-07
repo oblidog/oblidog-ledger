@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     FRONTEND_HOST: str = "http://localhost:5173"
-    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    ENVIRONMENT: Literal["local", "staging", "demo", "production"] = "local"
 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
@@ -93,7 +93,9 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def emails_enabled(self) -> bool:
-        return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
+        return self.ENVIRONMENT != "demo" and bool(
+            self.SMTP_HOST and self.EMAILS_FROM_EMAIL
+        )
 
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr
@@ -108,6 +110,19 @@ class Settings(BaseSettings):
     BUSINESS_CALENDAR_COUNTRY: str = "PL"
     SYSTEM_RUN_STALE_AFTER_MINUTES: int = 120
     SYSTEM_RUN_TIMEOUT_SECONDS: int = 3600
+
+    @model_validator(mode="after")
+    def _disable_demo_external_services(self) -> Self:
+        if self.ENVIRONMENT != "demo":
+            return self
+
+        self.SMTP_HOST = None
+        self.SMTP_USER = None
+        self.SMTP_PASSWORD = None
+        self.DROPBOX_API_KEY = None
+        self.LEGACY_IMPORT_MODE = TaskRunMode.DISABLED
+        self.LEGACY_IMPORT_LEDGER_ID = None
+        return self
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
