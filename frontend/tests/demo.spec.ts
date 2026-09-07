@@ -47,3 +47,34 @@ test("shows the persistent demo banner and hides user settings", async ({ page }
   await page.getByTestId("user-menu").click()
   await expect(page.getByRole("menuitem", { name: "User Settings" })).toHaveCount(0)
 })
+
+test("hides restricted ledger navigation and redirects direct routes", async ({
+  page,
+}) => {
+  await mockDemoConfig(page)
+  await page.goto("/")
+
+  await page.getByTestId("ledger-switcher").click()
+  await expect(page.getByRole("menuitem", { name: "Ledger settings" })).toHaveCount(0)
+  await expect(page.getByRole("menuitem", { name: "System Run" })).toHaveCount(0)
+
+  const categoriesLink = page.getByRole("menuitem", { name: "Categories" })
+  const href = await categoriesLink.getAttribute("href")
+  const match = href?.match(/^\/ledgers\/([^/]+)\/categories$/)
+  expect(match).not.toBeNull()
+  const ledgerId = match![1]
+
+  await page.goto(`/ledgers/${ledgerId}/settings`)
+  await expect(page).toHaveURL(`/ledgers/${ledgerId}`)
+  await expect(page.getByTestId("demo-banner")).toBeVisible()
+  await expect(
+    page.evaluate(() => localStorage.getItem("access_token")),
+  ).resolves.not.toBeNull()
+
+  await page.goto(`/ledgers/${ledgerId}/system-run`)
+  await expect(page).toHaveURL(`/ledgers/${ledgerId}`)
+  await expect(page.getByTestId("demo-banner")).toBeVisible()
+  await expect(
+    page.evaluate(() => localStorage.getItem("access_token")),
+  ).resolves.not.toBeNull()
+})
