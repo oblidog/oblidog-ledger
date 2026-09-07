@@ -1,12 +1,16 @@
 SHELL := /bin/bash
 
-.PHONY: help cmt dev-b dev-f e2e e2e-down pre test cov lint fmt hooks refresh
+.PHONY: help cmt dev-b dev-f demo-up demo-down e2e e2e-down pre test cov lint fmt hooks refresh
+
+DEMO_COMPOSE := docker compose --env-file .env.demo -p oblidog-demo-local -f compose.yml -f compose.override.yml -f compose.demo.yml
 
 help:
 	@echo "Available targets:"
 	@echo "  make cmt    - run commitizen commit flow"
 	@echo "  make dev-b  - start backend with fastapi dev"
 	@echo "  make dev-f  - start frontend dev server"
+	@echo "  make demo-up - build and start the isolated local demo"
+	@echo "  make demo-down - stop the isolated local demo"
 	@echo "  make e2e    - run Playwright in an isolated Docker Compose project"
 	@echo "  make e2e-down - remove the isolated e2e project and its test database"
 	@echo "  make pre    - run pre-commit hooks on all files"
@@ -26,6 +30,13 @@ dev-b:
 
 dev-f:
 	bun run --filter frontend dev
+
+demo-up:
+	$(DEMO_COMPOSE) build backend frontend
+	$(DEMO_COMPOSE) up --detach --wait db prestart backend frontend demo-seed
+
+demo-down:
+	$(DEMO_COMPOSE) down
 
 e2e:
 	docker compose -p findog-e2e -f compose.e2e.yml up --build --detach --wait backend mailcatcher

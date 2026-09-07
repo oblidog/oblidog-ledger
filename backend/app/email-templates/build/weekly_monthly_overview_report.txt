@@ -1,0 +1,22 @@
+{{ project_name }} - Weekly monthly overview
+Period: {{ period }}
+Snapshot: {{ report_date }}
+
+{% for ledger in ledgers %}{{ ledger.ledger_name }}
+{% if not ledger.currencies %}  No obligations in this period.
+{% endif %}{% for item in ledger.currencies %}  Currency: {{ item.currency or 'unspecified' }}
+  Total known: {{ item.total_known_amount }}{% if not item.total_is_complete %} (incomplete){% endif %}
+  Paid known: {{ item.paid_known_amount }}
+  Remaining known: {{ item.remaining_known_amount }}
+  Obligations: ready={{ item.ready_count }}, paid={{ item.paid_count }}, not ready={{ item.not_ready_count }}
+  Paid percentage: {{ item.paid_percentage if item.paid_percentage is not none else 'n/a' }}%
+  Overdue: {{ item.overdue_count }} / {{ item.overdue_known_amount }}
+  Unknown or unconfirmed values: {{ item.incomplete_count }}
+  Previous month known total: {{ item.previous_total_known_amount }}{% if not item.previous_total_is_complete %} (incomplete){% endif %}
+  Change vs previous month: {{ item.total_change if item.total_change is not none else 'n/a (incomplete data)' }}
+{% if item.upcoming %}  Due in the next 7 days:
+{% for obligation in item.upcoming %}    - {{ obligation.due_date }}: {{ obligation.category_name }} — {{ obligation.amount if obligation.amount is not none else 'unknown amount' }} {{ item.currency or '' }}
+{% endfor %}{% else %}  Due in the next 7 days: none
+{% endif %}
+{% endfor %}
+{% endfor %}

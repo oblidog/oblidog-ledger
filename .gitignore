@@ -10,14 +10,9 @@ node_modules/
 .env
 .env.*
 !.env.production.example
+!.env.demo.example
 frontend/.env
 frontend/.env.*
 
 zzz.patch
 backend/config/legacy-import.yaml
-
-.env
-.env.*
-frontend/.env
-frontend/.env.*
-!.env.production.example
