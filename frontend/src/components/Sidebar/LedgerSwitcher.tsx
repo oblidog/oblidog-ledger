@@ -25,11 +25,14 @@ import {
 } from "@/components/ui/sidebar"
 import { useActiveLedger } from "@/hooks/useActiveLedger"
 import useAuth from "@/hooks/useAuth"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
 export function LedgerSwitcher() {
   const navigate = useNavigate()
   const { isMobile, setOpenMobile } = useSidebar()
   const { user: currentUser } = useAuth()
+  const { data: appConfig } = usePublicAppConfig()
+  const isDemo = appConfig?.is_demo === true
   const { activeLedger, activeLedgerId, isLoading, ledgers, setLastLedgerId } =
     useActiveLedger()
 
@@ -50,6 +53,7 @@ export function LedgerSwitcher() {
               size="lg"
               disabled={isLoading || ledgers.length === 0}
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              data-testid="ledger-switcher"
             >
               <BookOpen className="text-primary" />
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -85,15 +89,17 @@ export function LedgerSwitcher() {
             <DropdownMenuSeparator />
             {activeLedgerId && (
               <>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/ledgers/$ledgerId/settings"
-                    params={{ ledgerId: activeLedgerId }}
-                  >
-                    <Settings />
-                    Ledger settings
-                  </Link>
-                </DropdownMenuItem>
+                {!isDemo && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/ledgers/$ledgerId/settings"
+                      params={{ ledgerId: activeLedgerId }}
+                    >
+                      <Settings />
+                      Ledger settings
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link
                     to="/ledgers/$ledgerId/categories"
@@ -103,7 +109,7 @@ export function LedgerSwitcher() {
                     Categories
                   </Link>
                 </DropdownMenuItem>
-                {activeLedger?.owner_user_id === currentUser?.id ? (
+                {!isDemo && activeLedger?.owner_user_id === currentUser?.id ? (
                   <DropdownMenuItem asChild>
                     <Link
                       to="/ledgers/$ledgerId/system-run"
