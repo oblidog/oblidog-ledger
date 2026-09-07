@@ -425,6 +425,8 @@ def mark_obligation_ready(
     obligation.lifecycle = ObligationLifecycle.READY
     obligation.amount_state = ValueState.CONFIRMED
     obligation.due_date_state = ValueState.CONFIRMED
+    if obligation.issue_date is not None:
+        obligation.issue_date_state = ValueState.CONFIRMED
     session.commit()
     session.refresh(obligation)
     return obligation

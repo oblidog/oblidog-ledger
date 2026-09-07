@@ -10,7 +10,7 @@ field.
 | --- | --- | --- |
 | `DRAFT` | An obligation created for a future period; data collection has not started. | Yes |
 | `COLLECTING_DATA` | Payment data is being collected or corrected. | Yes |
-| `READY` | Amount and due date are confirmed; the obligation is ready to be paid. | No |
+| `READY` | Amount and due date are confirmed; issue date is also confirmed when present; the obligation is ready to be paid. | No |
 | `PAID` | The obligation has been marked as paid. | No |
 | `CANCELED` | The obligation was canceled and may be reopened. | No |
 | `ERROR` | An integration detected invalid or inconsistent obligation data and raised an alarm. It does not represent integration health. | No |
@@ -63,7 +63,7 @@ and `ERROR` cannot be changed through the ordinary `PATCH` endpoint.
 | `ensure_obligations_for_period` | — (creation) | Current period: `COLLECTING_DATA`; next period: `DRAFT` | Creates missing records with initial values; does not change existing ones |
 | `create_manual_obligation` | — (creation) | `COLLECTING_DATA`, or `READY` when `data_ready=true` | `lifecycle`, supplied manual values, their `*_state`/`*_source`, `effective_value_source`, and `notes` |
 | `update_manual_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied manual values, their `*_state`/`*_source`, `effective_value_source`, `notes`, and—after an actual draft change—`lifecycle` |
-| `mark_obligation_ready` | `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED` |
+| `mark_obligation_ready` | `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED`, and `issue_date_state=CONFIRMED` when `issue_date` is present |
 | `mark_obligation_paid` | `READY`; repeated calls for `PAID` are idempotent | `PAID` | On the first call: `lifecycle`, `paid_at=now(UTC)` |
 | `cancel_obligation` | `COLLECTING_DATA` | `CANCELED` | `lifecycle` |
 | `reopen_obligation` | `READY`, `PAID`, `CANCELED`, `ERROR` | `COLLECTING_DATA` | `lifecycle`, `paid_at=None`; does not change amount, dates, their states, or sources |
