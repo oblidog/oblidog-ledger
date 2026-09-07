@@ -77,15 +77,17 @@ function LedgerDetails() {
                 Categories
               </Link>
             </Button>
-            <Button variant="outline" size="icon" asChild>
-              <Link
-                to="/ledgers/$ledgerId/settings"
-                params={{ ledgerId }}
-                aria-label="Ledger settings"
-              >
-                <Settings />
-              </Link>
-            </Button>
+            {!appConfig?.is_demo && (
+              <Button variant="outline" size="icon" asChild>
+                <Link
+                  to="/ledgers/$ledgerId/settings"
+                  params={{ ledgerId }}
+                  aria-label="Ledger settings"
+                >
+                  <Settings />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
