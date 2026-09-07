@@ -144,6 +144,8 @@ def test_non_demo_behavior_remains_unchanged(
     )
 
     assert response.status_code == 200
+    assert response.json()["full_name"] == "Updated outside demo"
+    db.expire_all()
     refreshed = user_service.get_user_by_id(session=db, user_id=user.id)
     assert refreshed is not None
     assert refreshed.full_name == "Updated outside demo"
