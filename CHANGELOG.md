@@ -1,3 +1,19 @@
+## v0.8.0 (2026-09-07)
+
+### Feat
+
+- **demo**: add demo credentials and UI (#265)
+- **demo**: add backend security restrictions (#263)
+- **demo**: add reusable relative-date demo seed (#261)
+- **notifications**: add weekly monthly overview report (#254)
+- **categories**: render schema-driven data history table (#244)
+- **categories**: filter data records by schema version (#241)
+- **categories**: expose category data schema version history (#238)
+
+### Refactor
+
+- **categories**: move custom data history to dedicated page (#243)
+
 ## v0.7.9 (2026-09-07)
 
 ### Fix
