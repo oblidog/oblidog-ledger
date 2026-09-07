@@ -3,6 +3,7 @@ import {
   createFileRoute,
   Link,
   Outlet,
+  redirect,
   useLocation,
 } from "@tanstack/react-router"
 import { Play, Settings, Tags } from "lucide-react"
@@ -13,10 +14,24 @@ import { ObligationWorkspace } from "@/components/Obligations/ObligationWorkspac
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { fetchPublicAppConfig } from "@/config"
 import useAuth from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
+  beforeLoad: async ({ location, params }) => {
+    const appConfig = await fetchPublicAppConfig()
+    const restrictedDemoRoute =
+      location.pathname === `/ledgers/${params.ledgerId}/settings` ||
+      location.pathname === `/ledgers/${params.ledgerId}/system-run`
+
+    if (appConfig.is_demo && restrictedDemoRoute) {
+      throw redirect({
+        to: "/ledgers/$ledgerId",
+        params: { ledgerId: params.ledgerId },
+      })
+    }
+  },
   component: LedgerDetails,
   head: () => ({ meta: [{ title: "Ledger - Oblidog" }] }),
 })
