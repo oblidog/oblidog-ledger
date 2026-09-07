@@ -10,15 +10,9 @@ import ReactDOM from "react-dom/client"
 import { ApiError, client } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
+import { apiUrl } from "./config"
 import "./index.css"
 import { routeTree } from "./routeTree.gen"
-
-const apiUrl =
-  window.__OBLIDOG_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL
-
-if (!apiUrl) {
-  throw new Error("VITE_API_URL must be set in the runtime configuration")
-}
 
 client.setConfig({
   auth: () => localStorage.getItem("access_token") || undefined,
