@@ -1,7 +1,15 @@
 services:
+  adminer:
+    profiles:
+      - tools
+
   db:
     env_file: !override
       - .env.demo
+
+  mailcatcher:
+    profiles:
+      - tools
 
   prestart:
     env_file: !override
@@ -29,6 +37,14 @@ services:
   scheduler:
     profiles:
       - system-run-scheduler
+
+  proxy:
+    profiles:
+      - tools
+
+  playwright:
+    profiles:
+      - e2e
 
   demo-seed:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-demo-local}'
