@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 
 const demoConfig = {
   environment: "demo",
@@ -9,7 +9,7 @@ const demoConfig = {
   },
 }
 
-const mockDemoConfig = async (page: Parameters<typeof test>[0]["page"]) => {
+const mockDemoConfig = async (page: Page) => {
   await page.route("**/api/v1/utils/public-config", (route) =>
     route.fulfill({
       status: 200,
