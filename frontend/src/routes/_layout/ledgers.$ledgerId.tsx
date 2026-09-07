@@ -3,6 +3,7 @@ import {
   createFileRoute,
   Link,
   Outlet,
+  redirect,
   useLocation,
 } from "@tanstack/react-router"
 import { Play, Settings, Tags } from "lucide-react"
@@ -13,9 +14,24 @@ import { ObligationWorkspace } from "@/components/Obligations/ObligationWorkspac
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { fetchPublicAppConfig } from "@/config"
 import useAuth from "@/hooks/useAuth"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
+  beforeLoad: async ({ location, params }) => {
+    const appConfig = await fetchPublicAppConfig()
+    const restrictedDemoRoute =
+      location.pathname === `/ledgers/${params.ledgerId}/settings` ||
+      location.pathname === `/ledgers/${params.ledgerId}/system-run`
+
+    if (appConfig.is_demo && restrictedDemoRoute) {
+      throw redirect({
+        to: "/ledgers/$ledgerId",
+        params: { ledgerId: params.ledgerId },
+      })
+    }
+  },
   component: LedgerDetails,
   head: () => ({ meta: [{ title: "Ledger - Oblidog" }] }),
 })
@@ -25,6 +41,7 @@ function LedgerDetails() {
   const location = useLocation()
   const isWorkspace = location.pathname === `/ledgers/${ledgerId}`
   const { user: currentUser } = useAuth()
+  const { data: appConfig } = usePublicAppConfig()
   const { data: ledger } = useSuspenseQuery({
     queryFn: () => LedgersService.readLedger({ ledgerId }),
     queryKey: ["ledger", ledgerId],
@@ -58,7 +75,7 @@ function LedgerDetails() {
             </p>
           </div>
           <div className="hidden gap-2 md:flex">
-            {ledger.owner_user_id === currentUser?.id && (
+            {ledger.owner_user_id === currentUser?.id && !appConfig?.is_demo && (
               <Button variant="outline" asChild>
                 <Link to="/ledgers/$ledgerId/system-run" params={{ ledgerId }}>
                   <Play />
@@ -75,15 +92,17 @@ function LedgerDetails() {
                 Categories
               </Link>
             </Button>
-            <Button variant="outline" size="icon" asChild>
-              <Link
-                to="/ledgers/$ledgerId/settings"
-                params={{ ledgerId }}
-                aria-label="Ledger settings"
-              >
-                <Settings />
-              </Link>
-            </Button>
+            {!appConfig?.is_demo && (
+              <Button variant="outline" size="icon" asChild>
+                <Link
+                  to="/ledgers/$ledgerId/settings"
+                  params={{ ledgerId }}
+                  aria-label="Ledger settings"
+                >
+                  <Settings />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
