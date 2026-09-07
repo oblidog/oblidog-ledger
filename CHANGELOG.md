@@ -1,3 +1,9 @@
+## v0.7.9 (2026-09-07)
+
+### Fix
+
+- **obligations**: confirm issue date when marking ready (#264)
+
 ## v0.7.8 (2026-09-06)
 
 ### Fix
