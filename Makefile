@@ -33,7 +33,7 @@ dev-f:
 
 demo-up:
 	$(DEMO_COMPOSE) build backend frontend
-	$(DEMO_COMPOSE) up --detach --wait proxy db adminer prestart backend frontend mailcatcher demo-seed
+	$(DEMO_COMPOSE) up --detach --wait db prestart backend frontend demo-seed
 
 demo-down:
 	$(DEMO_COMPOSE) down
