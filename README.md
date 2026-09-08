@@ -81,9 +81,10 @@ The Python client is maintained separately in the
 [`oblidog-client-python`](https://github.com/oblidog/oblidog-client-python)
 repository and is generated from the Ledger OpenAPI specification.
 
-The proposed registry and monitoring of external integration instances are
-described in the [integration lifecycle design](docs/integration-lifecycle.md).
-This is a design for future implementation, not an available runtime feature.
+For registering external jobs and reporting their operational state using the
+existing ledger-scoped API keys, see the [integration registry API](docs/integration-api.md).
+The [integration lifecycle design](docs/integration-lifecycle.md) documents the
+model and the planned runner-adoption and monitoring-UI stages.
 
 ## Screenshots
 

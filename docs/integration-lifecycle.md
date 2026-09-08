@@ -1,8 +1,9 @@
 # Integration lifecycle and health design
 
-Status: design proposal for [#115](https://github.com/oblidog/oblidog-ledger/issues/115).
-This document defines the first implementation contract; the models, endpoints,
-runner reporting, and UI described below are not implemented by this change.
+Status: implementation contract for [#115](https://github.com/oblidog/oblidog-ledger/issues/115).
+The registry models, management/reporting endpoints and generated clients are
+implemented in stage 2; see [API usage](integration-api.md). External runner
+adoption and the monitoring UI remain follow-up stages.
 
 ## Decisions
 
@@ -74,6 +75,7 @@ separate `IntegrationState` or historical `IntegrationRun` table initially.
 | `run_timeout_seconds` | Positive monitoring deadline for a started run; suggested default: 1800 (30 minutes) |
 | `revision` | Nonnegative integer, initially zero; incremented on each accepted mutation |
 | `current_run_id`, `current_started_at`, `current_finished_at` | Latest accepted run UUID and server timestamps; null before first start; finish is null while unfinished |
+| `current_deadline_at` | Deadline captured at start from the configured timeout; null before first start and retained after completion |
 | `last_finished_at`, `last_result` | Latest accepted completion and `success` / `failure`; retained when another run starts |
 | `last_changes_detected` | Nullable boolean describing that completion; null when unknown, including failed runs |
 | `last_error_code`, `last_error_message` | Latest completion's error; cleared on success |
@@ -117,7 +119,8 @@ Expose independent derived fields:
 
 - `execution_state`: `never_run`, `running`, `timed_out`, or `finished`.
   An unfinished run is `timed_out` when the server time reaches
-  `current_started_at + run_timeout_seconds`.
+  `current_deadline_at`, captured as `current_started_at + run_timeout_seconds`
+  when the run starts. Later configuration changes apply only to future runs.
 - `is_stale`: for enabled instances, true when server time reaches
   `max(enabled_at, last_finished_at if present) + stale_after_seconds`.
   Starting or retrying a run does not reset this deadline. Disabled instances
@@ -173,7 +176,8 @@ API-key reporting bodies must not accept `ledger_id` or category associations.
 Unknown instances, associations to inaccessible categories, and cross-ledger
 lookups return 404. Invalid bodies or immutable-field edits return 422; duplicate
 keys, revision conflicts, disabled starts, and run conflicts return 409 with a
-stable machine-readable `detail.code`. Existing key authentication and missing
+stable machine-readable `detail.code`, described by the OpenAPI
+`IntegrationConflictResponse` schema and `IntegrationConflictCode` enum. Existing key authentication and missing
 scope handling remain 401/403. Preserve the existing demo integration capability
 gate for both management and reporting routes.
 
@@ -195,7 +199,7 @@ The start rules, evaluated atomically, are:
    A runner seeing it already finished must not execute it again.
 2. A different run requires an enabled instance and matching `expected_revision`.
    A different unfinished run inside its timeout produces `run_in_progress` (409).
-3. Otherwise accept the new run, set its server start time, clear its finish time,
+3. Otherwise accept the new run, set its server start time and deadline, clear its finish time,
    and increment revision. Retain the last completion and last success fields.
    A timed-out run may be superseded; this does not terminate its process.
 
