@@ -679,6 +679,28 @@ export const CategoryDataSchemaPublicSchema = {
     ]
 } as const;
 
+export const CategoryDataSchemasPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                $ref: '#/components/schemas/CategoryDataSchemaPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'data',
+        'count'
+    ],
+    title: 'CategoryDataSchemasPublic'
+} as const;
+
 export const CategoryGroupCreateSchema = {
     properties: {
         name: {
@@ -1263,6 +1285,514 @@ export const HTTPValidationErrorSchema = {
     },
     type: 'object',
     title: 'HTTPValidationError'
+} as const;
+
+export const IntegrationCreateSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            maxLength: 64,
+            pattern: '^[a-z][a-z0-9-]{0,63}$',
+            title: 'Key'
+        },
+        provider: {
+            type: 'string',
+            maxLength: 64,
+            pattern: '^[a-z][a-z0-9-]{0,63}$',
+            title: 'Provider'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            pattern: '\\S',
+            title: 'Name'
+        },
+        category_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            maxItems: 100,
+            title: 'Category Ids'
+        },
+        enabled: {
+            type: 'boolean',
+            title: 'Enabled',
+            default: true
+        },
+        stale_after_seconds: {
+            type: 'integer',
+            maximum: 2147483647,
+            exclusiveMinimum: 0,
+            title: 'Stale After Seconds',
+            default: 93600
+        },
+        run_timeout_seconds: {
+            type: 'integer',
+            maximum: 2147483647,
+            exclusiveMinimum: 0,
+            title: 'Run Timeout Seconds',
+            default: 1800
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'key',
+        'provider',
+        'name'
+    ],
+    title: 'IntegrationCreate'
+} as const;
+
+export const IntegrationExecutionStateSchema = {
+    type: 'string',
+    enum: [
+        'never_run',
+        'running',
+        'timed_out',
+        'finished'
+    ],
+    title: 'IntegrationExecutionState'
+} as const;
+
+export const IntegrationHealthSchema = {
+    type: 'string',
+    enum: [
+        'disabled',
+        'timed_out',
+        'stale',
+        'running',
+        'never_run',
+        'error',
+        'healthy'
+    ],
+    title: 'IntegrationHealth'
+} as const;
+
+export const IntegrationPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        ledger_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Ledger Id'
+        },
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        provider: {
+            type: 'string',
+            title: 'Provider'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        category_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            title: 'Category Ids'
+        },
+        enabled: {
+            type: 'boolean',
+            title: 'Enabled'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        },
+        enabled_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Enabled At'
+        },
+        stale_after_seconds: {
+            type: 'integer',
+            title: 'Stale After Seconds'
+        },
+        run_timeout_seconds: {
+            type: 'integer',
+            title: 'Run Timeout Seconds'
+        },
+        revision: {
+            type: 'integer',
+            title: 'Revision'
+        },
+        current_run_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Current Run Id'
+        },
+        current_started_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Current Started At'
+        },
+        current_finished_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Current Finished At'
+        },
+        last_finished_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Finished At'
+        },
+        last_result: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/IntegrationResult'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        last_changes_detected: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Changes Detected'
+        },
+        last_error_code: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Error Code'
+        },
+        last_error_message: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Error Message'
+        },
+        last_success_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Success At'
+        },
+        execution_state: {
+            $ref: '#/components/schemas/IntegrationExecutionState'
+        },
+        is_stale: {
+            type: 'boolean',
+            title: 'Is Stale'
+        },
+        health: {
+            $ref: '#/components/schemas/IntegrationHealth'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'ledger_id',
+        'key',
+        'provider',
+        'name',
+        'category_ids',
+        'enabled',
+        'created_at',
+        'updated_at',
+        'enabled_at',
+        'stale_after_seconds',
+        'run_timeout_seconds',
+        'revision',
+        'current_run_id',
+        'current_started_at',
+        'current_finished_at',
+        'last_finished_at',
+        'last_result',
+        'last_changes_detected',
+        'last_error_code',
+        'last_error_message',
+        'last_success_at',
+        'execution_state',
+        'is_stale',
+        'health'
+    ],
+    title: 'IntegrationPublic'
+} as const;
+
+export const IntegrationResultSchema = {
+    type: 'string',
+    enum: [
+        'success',
+        'failure'
+    ],
+    title: 'IntegrationResult'
+} as const;
+
+export const IntegrationRunErrorSchema = {
+    properties: {
+        code: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+            pattern: '^[a-z][a-z0-9_]*$',
+            title: 'Code'
+        },
+        message: {
+            type: 'string',
+            maxLength: 1000,
+            minLength: 1,
+            pattern: '\\S',
+            title: 'Message',
+            description: 'Sanitized summary only; never credentials, raw responses or tracebacks.'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'code',
+        'message'
+    ],
+    title: 'IntegrationRunError'
+} as const;
+
+export const IntegrationRunFinishSchema = {
+    properties: {
+        run_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Run Id'
+        },
+        result: {
+            $ref: '#/components/schemas/IntegrationResult'
+        },
+        changes_detected: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Changes Detected'
+        },
+        error: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/IntegrationRunError'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'run_id',
+        'result',
+        'changes_detected',
+        'error'
+    ],
+    title: 'IntegrationRunFinish'
+} as const;
+
+export const IntegrationRunStartSchema = {
+    properties: {
+        run_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Run Id'
+        },
+        expected_revision: {
+            type: 'integer',
+            maximum: 9223372036854776000,
+            minimum: 0,
+            title: 'Expected Revision'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'run_id',
+        'expected_revision'
+    ],
+    title: 'IntegrationRunStart'
+} as const;
+
+export const IntegrationUpdateSchema = {
+    properties: {
+        expected_revision: {
+            type: 'integer',
+            maximum: 9223372036854776000,
+            minimum: 0,
+            title: 'Expected Revision'
+        },
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1,
+                    pattern: '\\S'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        category_ids: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string',
+                        format: 'uuid'
+                    },
+                    type: 'array',
+                    maxItems: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Ids'
+        },
+        enabled: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Enabled'
+        },
+        stale_after_seconds: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2147483647,
+                    exclusiveMinimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Stale After Seconds'
+        },
+        run_timeout_seconds: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 2147483647,
+                    exclusiveMinimum: 0
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Run Timeout Seconds'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'expected_revision'
+    ],
+    title: 'IntegrationUpdate'
+} as const;
+
+export const IntegrationsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                $ref: '#/components/schemas/IntegrationPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'data',
+        'count'
+    ],
+    title: 'IntegrationsPublic'
 } as const;
 
 export const LedgerAccessRoleSchema = {
