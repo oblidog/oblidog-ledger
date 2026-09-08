@@ -89,7 +89,9 @@ timed-out run, its delayed finish is rejected. A late finish is accepted if its
 run is still current. Idempotency is limited to that retained current run.
 
 Conflicts return 409 with `detail.code`: `duplicate_key`, `revision_conflict`,
-`integration_disabled`, `run_in_progress`, or `run_conflict`. Unknown/cross-ledger
+`integration_disabled`, `run_in_progress`, or `run_conflict`. OpenAPI declares
+`IntegrationConflictResponse` and its `IntegrationConflictCode` enum on all
+registry write endpoints. Unknown/cross-ledger
 instances or categories return 404, malformed bodies return 422, and key
 failures/missing scopes retain the existing 401/403 behavior. All registry
 operations are disabled in demo mode.
@@ -101,7 +103,10 @@ operations are disabled in demo mode.
 `last_success_at` advances on every success, including a no-op, and survives
 subsequent failures. Success clears the previous error message.
 
-An unfinished run times out at `current_started_at + run_timeout_seconds`.
+An unfinished run times out at its stored `current_deadline_at`, calculated as
+`current_started_at + run_timeout_seconds` when that run starts. Changes to the
+configured timeout apply only to future runs; retries, disabling/re-enabling,
+and configuration edits never move the current deadline.
 `is_stale` becomes true at the later of `enabled_at` and `last_finished_at`, plus
 `stale_after_seconds`. Starts and retries do not reset that reporting deadline.
 Disabled instances are not stale; re-enabling starts a new reporting grace period.
@@ -118,7 +123,9 @@ not concurrent business writes. There is no run history or automatic alerting.
 
 ## Rollout
 
-Apply the normal Alembic migration before deploying this backend. Existing keys,
+Apply the normal Alembic migrations before deploying this backend. The deadline
+migration backfills previously started runs using the timeout stored at migration
+time; never-started instances keep a null deadline. Existing keys,
 observations, component sources and obligations are unchanged. No historic
 success is inferred from existing API-key usage. Register instances before
 opting runners into reporting through `OBLIDOG_INTEGRATION_KEY` in the later

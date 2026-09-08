@@ -14,6 +14,8 @@ from app.api.deps import (
 from app.core.capabilities import Capability
 from app.models import Ledger
 from app.schemas.integrations import (
+    IntegrationConflictDetail,
+    IntegrationConflictResponse,
     IntegrationCreate,
     IntegrationPublic,
     IntegrationsPublic,
@@ -39,7 +41,10 @@ def integration_errors(session: Session) -> Iterator[None]:
         raise HTTPException(status_code=404, detail="Integration or category not found")
     except use_cases.IntegrationConflictError as exc:
         session.rollback()
-        raise HTTPException(status_code=409, detail={"code": exc.code})
+        raise HTTPException(
+            status_code=409,
+            detail=IntegrationConflictDetail(code=exc.code).model_dump(mode="json"),
+        )
     except use_cases.IntegrationLimitsError:
         session.rollback()
         raise HTTPException(
@@ -68,6 +73,12 @@ def list_integrations(
     "/ledgers/{ledger_id}/integrations",
     response_model=IntegrationPublic,
     status_code=201,
+    responses={
+        409: {
+            "model": IntegrationConflictResponse,
+            "description": "Integration state or identity conflict",
+        }
+    },
 )
 def create_integration(
     *,
@@ -104,6 +115,12 @@ def get_integration(
 @router.patch(
     "/ledgers/{ledger_id}/integrations/{integration_id}",
     response_model=IntegrationPublic,
+    responses={
+        409: {
+            "model": IntegrationConflictResponse,
+            "description": "Integration state or revision conflict",
+        }
+    },
 )
 def update_integration(
     *,

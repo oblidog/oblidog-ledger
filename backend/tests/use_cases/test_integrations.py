@@ -325,3 +325,43 @@ def test_concurrent_starts_accept_only_one(db: Session, item: Integration) -> No
     db.expire_all()
     stored = uc.get_integration(session=db, ledger_id=ledger_id, key=key)
     assert stored.revision == 1
+
+
+def test_timeout_edit_cannot_revive_expired_run(
+    db: Session, item: Integration, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    item = start(db, item)
+    original_run = item.current_run_id
+    original_deadline = T0 + timedelta(minutes=30)
+    assert item.current_deadline_at == original_deadline
+    later = T0 + timedelta(minutes=31)
+    monkeypatch.setattr(uc, "get_datetime_utc", lambda: later)
+    assert uc.to_public(item).health == "timed_out"
+
+    # A new timeout is configuration for future starts, not a new lease for
+    # the old process. Re-enable and identical retries also retain its deadline.
+    item = update(db, item, run_timeout_seconds=3600, enabled=False)
+    item = update(db, item, enabled=True)
+    item = start(db, item, run_id=original_run, revision=0)
+    assert item.current_deadline_at == original_deadline
+    assert uc.to_public(item).health == "timed_out"
+
+    item = start(db, item)
+    assert item.current_run_id != original_run
+    assert item.current_deadline_at == later + timedelta(hours=1)
+    assert uc.to_public(item).health == "running"
+
+
+def test_finish_retains_deadline_and_future_timeout_edit_does_not_change_it(
+    db: Session, item: Integration, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    item = start(db, item)
+    original_deadline = item.current_deadline_at
+    monkeypatch.setattr(uc, "get_datetime_utc", lambda: T0 + timedelta(minutes=31))
+    item = finish(db, item)
+    item = update(db, item, run_timeout_seconds=60)
+    item = finish(db, item)
+    assert item.current_deadline_at == original_deadline
+    assert uc.to_public(item).health == "healthy"
+    item = start(db, item)
+    assert item.current_deadline_at == T0 + timedelta(minutes=32)

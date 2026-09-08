@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.domain import LedgerAccessRole
 from app.models import ApiKey, Ledger, User
+from app.schemas.integrations import IntegrationConflictResponse
 from app.use_cases import ledgers as ledger_uc
 from tests.utils.ledger_domain import create_category_tree
 from tests.utils.user import authentication_token_from_email, create_random_user
@@ -63,6 +64,7 @@ def test_shared_key_independent_instances_and_rotation(
     )
     assert response.status_code == 200
     assert response.json()["health"] == "running"
+    assert response.json()["current_deadline_at"] is not None
     response = client.post(
         f"{prefix}/nju-mario/finish",
         headers=api,
@@ -260,7 +262,8 @@ def test_conflicts_and_invalid_reports(
     )
     assert (
         response.status_code == 409
-        and response.json()["detail"]["code"] == "revision_conflict"
+        and IntegrationConflictResponse.model_validate(response.json()).detail.code
+        == "revision_conflict"
     )
     prefix = f"{settings.API_V1_STR}/integration/instances/nju-mario"
     run = str(uuid.uuid4())
@@ -309,7 +312,8 @@ def test_conflicts_and_invalid_reports(
     )
     assert (
         response.status_code == 409
-        and response.json()["detail"]["code"] == "run_conflict"
+        and IntegrationConflictResponse.model_validate(response.json()).detail.code
+        == "run_conflict"
     )
     assert client.get(prefix).status_code == 401
 

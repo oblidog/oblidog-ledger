@@ -1287,6 +1287,44 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
+export const IntegrationConflictCodeSchema = {
+    type: 'string',
+    enum: [
+        'duplicate_key',
+        'revision_conflict',
+        'integration_disabled',
+        'run_in_progress',
+        'run_conflict'
+    ],
+    title: 'IntegrationConflictCode'
+} as const;
+
+export const IntegrationConflictDetailSchema = {
+    properties: {
+        code: {
+            $ref: '#/components/schemas/IntegrationConflictCode'
+        }
+    },
+    type: 'object',
+    required: [
+        'code'
+    ],
+    title: 'IntegrationConflictDetail'
+} as const;
+
+export const IntegrationConflictResponseSchema = {
+    properties: {
+        detail: {
+            $ref: '#/components/schemas/IntegrationConflictDetail'
+        }
+    },
+    type: 'object',
+    required: [
+        'detail'
+    ],
+    title: 'IntegrationConflictResponse'
+} as const;
+
 export const IntegrationCreateSchema = {
     properties: {
         key: {
@@ -1466,6 +1504,18 @@ export const IntegrationPublicSchema = {
             ],
             title: 'Current Started At'
         },
+        current_deadline_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Current Deadline At'
+        },
         current_finished_at: {
             anyOf: [
                 {
@@ -1573,6 +1623,7 @@ export const IntegrationPublicSchema = {
         'revision',
         'current_run_id',
         'current_started_at',
+        'current_deadline_at',
         'current_finished_at',
         'last_finished_at',
         'last_result',

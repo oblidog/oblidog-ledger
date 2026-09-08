@@ -32,6 +32,10 @@ class Integration(Base):
         ),
         CheckConstraint("revision >= 0", name="ck_integration_revision"),
         CheckConstraint(
+            "(current_run_id IS NULL AND current_deadline_at IS NULL) OR (current_run_id IS NOT NULL AND current_deadline_at IS NOT NULL AND current_deadline_at > current_started_at)",
+            name="ck_integration_deadline",
+        ),
+        CheckConstraint(
             "NOT enabled OR enabled_at IS NOT NULL", name="ck_integration_enabled"
         ),
         CheckConstraint(
@@ -64,6 +68,9 @@ class Integration(Base):
     revision: Mapped[int] = mapped_column(BigInteger, default=0)
     current_run_id: Mapped[uuid.UUID | None]
     current_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    current_deadline_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     current_finished_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )

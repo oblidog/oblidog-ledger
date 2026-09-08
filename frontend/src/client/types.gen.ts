@@ -656,6 +656,25 @@ export type HttpValidationError = {
 };
 
 /**
+ * IntegrationConflictCode
+ */
+export type IntegrationConflictCode = 'duplicate_key' | 'revision_conflict' | 'integration_disabled' | 'run_in_progress' | 'run_conflict';
+
+/**
+ * IntegrationConflictDetail
+ */
+export type IntegrationConflictDetail = {
+    code: IntegrationConflictCode;
+};
+
+/**
+ * IntegrationConflictResponse
+ */
+export type IntegrationConflictResponse = {
+    detail: IntegrationConflictDetail;
+};
+
+/**
  * IntegrationCreate
  */
 export type IntegrationCreate = {
@@ -763,6 +782,10 @@ export type IntegrationPublic = {
      * Current Started At
      */
     current_started_at: string | null;
+    /**
+     * Current Deadline At
+     */
+    current_deadline_at: string | null;
     /**
      * Current Finished At
      */
@@ -3196,6 +3219,10 @@ export type IntegrationStartIntegrationRunData = {
 
 export type IntegrationStartIntegrationRunErrors = {
     /**
+     * Integration run conflict
+     */
+    409: IntegrationConflictResponse;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -3225,6 +3252,10 @@ export type IntegrationFinishIntegrationRunData = {
 };
 
 export type IntegrationFinishIntegrationRunErrors = {
+    /**
+     * Integration run conflict
+     */
+    409: IntegrationConflictResponse;
     /**
      * Validation Error
      */
@@ -3815,6 +3846,10 @@ export type IntegrationsCreateIntegrationData = {
 
 export type IntegrationsCreateIntegrationErrors = {
     /**
+     * Integration state or identity conflict
+     */
+    409: IntegrationConflictResponse;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -3882,6 +3917,10 @@ export type IntegrationsUpdateIntegrationData = {
 };
 
 export type IntegrationsUpdateIntegrationErrors = {
+    /**
+     * Integration state or revision conflict
+     */
+    409: IntegrationConflictResponse;
     /**
      * Validation Error
      */

@@ -5,6 +5,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
 
 from app.domain.integrations import (
+    IntegrationConflictCode,
     IntegrationExecutionState,
     IntegrationHealth,
     IntegrationResult,
@@ -103,6 +104,7 @@ class IntegrationPublic(BaseModel):
     revision: int
     current_run_id: uuid.UUID | None
     current_started_at: datetime | None
+    current_deadline_at: datetime | None
     current_finished_at: datetime | None
     last_finished_at: datetime | None
     last_result: IntegrationResult | None
@@ -118,3 +120,11 @@ class IntegrationPublic(BaseModel):
 class IntegrationsPublic(BaseModel):
     data: list[IntegrationPublic]
     count: int
+
+
+class IntegrationConflictDetail(BaseModel):
+    code: IntegrationConflictCode
+
+
+class IntegrationConflictResponse(BaseModel):
+    detail: IntegrationConflictDetail

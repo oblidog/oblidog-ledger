@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.domain.integrations import (
+    IntegrationConflictCode,
     IntegrationExecutionState,
     IntegrationHealth,
     IntegrationResult,
@@ -30,7 +31,7 @@ class IntegrationCategoryNotFoundError(Exception):
 
 
 class IntegrationConflictError(Exception):
-    def __init__(self, code: str) -> None:
+    def __init__(self, code: IntegrationConflictCode) -> None:
         self.code = code
         super().__init__(code)
 
@@ -44,8 +45,8 @@ def execution_state(item: Integration, now: datetime) -> IntegrationExecutionSta
         return IntegrationExecutionState.NEVER_RUN
     if item.current_finished_at is not None:
         return IntegrationExecutionState.FINISHED
-    assert item.current_started_at is not None
-    if now >= item.current_started_at + timedelta(seconds=item.run_timeout_seconds):
+    assert item.current_deadline_at is not None
+    if now >= item.current_deadline_at:
         return IntegrationExecutionState.TIMED_OUT
     return IntegrationExecutionState.RUNNING
 
@@ -183,7 +184,9 @@ def create_integration(
             getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
             == "uq_integration_ledger_key"
         ):
-            raise IntegrationConflictError("duplicate_key") from exc
+            raise IntegrationConflictError(
+                IntegrationConflictCode.DUPLICATE_KEY
+            ) from exc
         raise
     session.refresh(item)
     return item
@@ -200,14 +203,14 @@ def update_integration(
         session=session, ledger_id=ledger_id, integration_id=integration_id, lock=True
     )
     if item.revision != data.expected_revision:
-        raise IntegrationConflictError("revision_conflict")
+        raise IntegrationConflictError(IntegrationConflictCode.REVISION_CONFLICT)
     now = get_datetime_utc()
     changes = data.model_dump(
         exclude_unset=True, exclude={"expected_revision", "category_ids"}
     )
     if {"stale_after_seconds", "run_timeout_seconds"} & changes.keys():
         if execution_state(item, now) == IntegrationExecutionState.RUNNING:
-            raise IntegrationConflictError("run_in_progress")
+            raise IntegrationConflictError(IntegrationConflictCode.RUN_IN_PROGRESS)
     stale = (
         data.stale_after_seconds
         if data.stale_after_seconds is not None
@@ -243,14 +246,15 @@ def start_run(
         session.commit()  # Release the lock; retries never move timestamps.
         return item
     if not item.enabled:
-        raise IntegrationConflictError("integration_disabled")
+        raise IntegrationConflictError(IntegrationConflictCode.INTEGRATION_DISABLED)
     if item.revision != data.expected_revision:
-        raise IntegrationConflictError("revision_conflict")
+        raise IntegrationConflictError(IntegrationConflictCode.REVISION_CONFLICT)
     now = get_datetime_utc()
     if execution_state(item, now) == IntegrationExecutionState.RUNNING:
-        raise IntegrationConflictError("run_in_progress")
+        raise IntegrationConflictError(IntegrationConflictCode.RUN_IN_PROGRESS)
     item.current_run_id = data.run_id
     item.current_started_at = now
+    item.current_deadline_at = now + timedelta(seconds=item.run_timeout_seconds)
     item.current_finished_at = None
     item.updated_at = now
     item.revision += 1
@@ -264,7 +268,7 @@ def finish_run(
 ) -> Integration:
     item = get_integration(session=session, ledger_id=ledger_id, key=key, lock=True)
     if item.current_run_id != data.run_id:
-        raise IntegrationConflictError("run_conflict")
+        raise IntegrationConflictError(IntegrationConflictCode.RUN_CONFLICT)
     code = data.error.code if data.error else None
     message = data.error.message if data.error else None
     if item.current_finished_at is not None:
@@ -274,7 +278,7 @@ def finish_run(
             item.last_error_code,
             item.last_error_message,
         ) != (data.result, data.changes_detected, code, message):
-            raise IntegrationConflictError("run_conflict")
+            raise IntegrationConflictError(IntegrationConflictCode.RUN_CONFLICT)
         session.commit()
         return item
     now = get_datetime_utc()

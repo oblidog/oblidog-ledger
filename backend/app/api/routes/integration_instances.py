@@ -4,6 +4,7 @@ from app.api.deps import ApiContext, require_capability, require_scope
 from app.api.routes.integrations import integration_errors
 from app.core.capabilities import Capability
 from app.schemas.integrations import (
+    IntegrationConflictResponse,
     IntegrationKey,
     IntegrationPublic,
     IntegrationRunFinish,
@@ -32,7 +33,16 @@ def read_integration_instance(
         )
 
 
-@router.post("/{integration_key}/start", response_model=IntegrationPublic)
+@router.post(
+    "/{integration_key}/start",
+    response_model=IntegrationPublic,
+    responses={
+        409: {
+            "model": IntegrationConflictResponse,
+            "description": "Integration run conflict",
+        }
+    },
+)
 def start_integration_run(
     integration_key: IntegrationKey,
     data: IntegrationRunStart,
@@ -49,7 +59,16 @@ def start_integration_run(
         )
 
 
-@router.post("/{integration_key}/finish", response_model=IntegrationPublic)
+@router.post(
+    "/{integration_key}/finish",
+    response_model=IntegrationPublic,
+    responses={
+        409: {
+            "model": IntegrationConflictResponse,
+            "description": "Integration run conflict",
+        }
+    },
+)
 def finish_integration_run(
     integration_key: IntegrationKey,
     data: IntegrationRunFinish,
