@@ -12,6 +12,7 @@ from app.api.deps import (
 from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
 from app.models import Ledger, Obligation
 from app.schemas import (
+    CounterpartySummaryPublic,
     EnsuredObligationsPublic,
     ObligationComponentCreate,
     ObligationComponentPublic,
@@ -44,6 +45,12 @@ def to_obligation_public(obligation: Obligation) -> ObligationPublic:
         id=obligation.id,
         ledger_id=obligation.ledger_id,
         category_id=obligation.category_id,
+        counterparty_id=obligation.counterparty_id,
+        counterparty=(
+            CounterpartySummaryPublic.model_validate(obligation.counterparty)
+            if obligation.counterparty is not None
+            else None
+        ),
         category_code=obligation.category.code,
         key=obligation.business_key,
         name=obligation.category.name,
