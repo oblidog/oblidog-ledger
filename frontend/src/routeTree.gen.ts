@@ -21,8 +21,10 @@ import { Route as LayoutLedgersIndexRouteImport } from './routes/_layout/ledgers
 import { Route as LayoutLedgersLedgerIdRouteImport } from './routes/_layout/ledgers.$ledgerId'
 import { Route as LayoutLedgersLedgerIdAnalyticsRouteImport } from './routes/_layout/ledgers.$ledgerId.analytics'
 import { Route as LayoutLedgersLedgerIdCategoriesRouteImport } from './routes/_layout/ledgers.$ledgerId.categories'
+import { Route as LayoutLedgersLedgerIdIntegrationsRouteImport } from './routes/_layout/ledgers.$ledgerId.integrations'
 import { Route as LayoutLedgersLedgerIdSettingsRouteImport } from './routes/_layout/ledgers.$ledgerId.settings'
 import { Route as LayoutLedgersLedgerIdSystemRunRouteImport } from './routes/_layout/ledgers.$ledgerId.system-run'
+import { Route as LayoutLedgersLedgerIdIntegrationsIntegrationIdRouteImport } from './routes/_layout/ledgers.$ledgerId.integrations.$integrationId'
 import { Route as LayoutLedgersLedgerIdCategoriesCategoryIdCustomFieldsRouteImport } from './routes/_layout/ledgers.$ledgerId.categories.$categoryId.custom-fields'
 import { Route as LayoutLedgersLedgerIdCategoriesCategoryIdDataRouteImport } from './routes/_layout/ledgers.$ledgerId.categories.$categoryId.data'
 
@@ -87,6 +89,12 @@ const LayoutLedgersLedgerIdCategoriesRoute =
     path: '/categories',
     getParentRoute: () => LayoutLedgersLedgerIdRoute,
   } as any)
+const LayoutLedgersLedgerIdIntegrationsRoute =
+  LayoutLedgersLedgerIdIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => LayoutLedgersLedgerIdRoute,
+  } as any)
 const LayoutLedgersLedgerIdSettingsRoute =
   LayoutLedgersLedgerIdSettingsRouteImport.update({
     id: '/settings',
@@ -98,6 +106,12 @@ const LayoutLedgersLedgerIdSystemRunRoute =
     id: '/system-run',
     path: '/system-run',
     getParentRoute: () => LayoutLedgersLedgerIdRoute,
+  } as any)
+const LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute =
+  LayoutLedgersLedgerIdIntegrationsIntegrationIdRouteImport.update({
+    id: '/$integrationId',
+    path: '/$integrationId',
+    getParentRoute: () => LayoutLedgersLedgerIdIntegrationsRoute,
   } as any)
 const LayoutLedgersLedgerIdCategoriesCategoryIdCustomFieldsRoute =
   LayoutLedgersLedgerIdCategoriesCategoryIdCustomFieldsRouteImport.update({
@@ -124,8 +138,10 @@ export interface FileRoutesByFullPath {
   '/ledgers/': typeof LayoutLedgersIndexRoute
   '/ledgers/$ledgerId/analytics': typeof LayoutLedgersLedgerIdAnalyticsRoute
   '/ledgers/$ledgerId/categories': typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
+  '/ledgers/$ledgerId/integrations': typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   '/ledgers/$ledgerId/settings': typeof LayoutLedgersLedgerIdSettingsRoute
   '/ledgers/$ledgerId/system-run': typeof LayoutLedgersLedgerIdSystemRunRoute
+  '/ledgers/$ledgerId/integrations/$integrationId': typeof LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute
   '/ledgers/$ledgerId/categories/$categoryId/custom-fields': typeof LayoutLedgersLedgerIdCategoriesCategoryIdCustomFieldsRoute
   '/ledgers/$ledgerId/categories/$categoryId/data': typeof LayoutLedgersLedgerIdCategoriesCategoryIdDataRoute
 }
@@ -140,8 +156,10 @@ export interface FileRoutesByTo {
   '/ledgers': typeof LayoutLedgersIndexRoute
   '/ledgers/$ledgerId/analytics': typeof LayoutLedgersLedgerIdAnalyticsRoute
   '/ledgers/$ledgerId/categories': typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
+  '/ledgers/$ledgerId/integrations': typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   '/ledgers/$ledgerId/settings': typeof LayoutLedgersLedgerIdSettingsRoute
   '/ledgers/$ledgerId/system-run': typeof LayoutLedgersLedgerIdSystemRunRoute
+  '/ledgers/$ledgerId/integrations/$integrationId': typeof LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute
   '/ledgers/$ledgerId/categories/$categoryId/custom-fields': typeof LayoutLedgersLedgerIdCategoriesCategoryIdCustomFieldsRoute
   '/ledgers/$ledgerId/categories/$categoryId/data': typeof LayoutLedgersLedgerIdCategoriesCategoryIdDataRoute
 }
@@ -159,8 +177,10 @@ export interface FileRoutesById {
   '/_layout/ledgers/': typeof LayoutLedgersIndexRoute
   '/_layout/ledgers/$ledgerId/analytics': typeof LayoutLedgersLedgerIdAnalyticsRoute
   '/_layout/ledgers/$ledgerId/categories': typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
+  '/_layout/ledgers/$ledgerId/integrations': typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   '/_layout/ledgers/$ledgerId/settings': typeof LayoutLedgersLedgerIdSettingsRoute
   '/_layout/ledgers/$ledgerId/system-run': typeof LayoutLedgersLedgerIdSystemRunRoute
+  '/_layout/ledgers/$ledgerId/integrations/$integrationId': typeof LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute
   '/_layout/ledgers/$ledgerId/categories/$categoryId/custom-fields': typeof LayoutLedgersLedgerIdCategoriesCategoryIdCustomFieldsRoute
   '/_layout/ledgers/$ledgerId/categories/$categoryId/data': typeof LayoutLedgersLedgerIdCategoriesCategoryIdDataRoute
 }
@@ -178,8 +198,10 @@ export interface FileRouteTypes {
     | '/ledgers/'
     | '/ledgers/$ledgerId/analytics'
     | '/ledgers/$ledgerId/categories'
+    | '/ledgers/$ledgerId/integrations'
     | '/ledgers/$ledgerId/settings'
     | '/ledgers/$ledgerId/system-run'
+    | '/ledgers/$ledgerId/integrations/$integrationId'
     | '/ledgers/$ledgerId/categories/$categoryId/custom-fields'
     | '/ledgers/$ledgerId/categories/$categoryId/data'
   fileRoutesByTo: FileRoutesByTo
@@ -194,8 +216,10 @@ export interface FileRouteTypes {
     | '/ledgers'
     | '/ledgers/$ledgerId/analytics'
     | '/ledgers/$ledgerId/categories'
+    | '/ledgers/$ledgerId/integrations'
     | '/ledgers/$ledgerId/settings'
     | '/ledgers/$ledgerId/system-run'
+    | '/ledgers/$ledgerId/integrations/$integrationId'
     | '/ledgers/$ledgerId/categories/$categoryId/custom-fields'
     | '/ledgers/$ledgerId/categories/$categoryId/data'
   id:
@@ -212,8 +236,10 @@ export interface FileRouteTypes {
     | '/_layout/ledgers/'
     | '/_layout/ledgers/$ledgerId/analytics'
     | '/_layout/ledgers/$ledgerId/categories'
+    | '/_layout/ledgers/$ledgerId/integrations'
     | '/_layout/ledgers/$ledgerId/settings'
     | '/_layout/ledgers/$ledgerId/system-run'
+    | '/_layout/ledgers/$ledgerId/integrations/$integrationId'
     | '/_layout/ledgers/$ledgerId/categories/$categoryId/custom-fields'
     | '/_layout/ledgers/$ledgerId/categories/$categoryId/data'
   fileRoutesById: FileRoutesById
@@ -311,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLedgersLedgerIdCategoriesRouteImport
       parentRoute: typeof LayoutLedgersLedgerIdRoute
     }
+    '/_layout/ledgers/$ledgerId/integrations': {
+      id: '/_layout/ledgers/$ledgerId/integrations'
+      path: '/integrations'
+      fullPath: '/ledgers/$ledgerId/integrations'
+      preLoaderRoute: typeof LayoutLedgersLedgerIdIntegrationsRouteImport
+      parentRoute: typeof LayoutLedgersLedgerIdRoute
+    }
     '/_layout/ledgers/$ledgerId/settings': {
       id: '/_layout/ledgers/$ledgerId/settings'
       path: '/settings'
@@ -324,6 +357,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ledgers/$ledgerId/system-run'
       preLoaderRoute: typeof LayoutLedgersLedgerIdSystemRunRouteImport
       parentRoute: typeof LayoutLedgersLedgerIdRoute
+    }
+    '/_layout/ledgers/$ledgerId/integrations/$integrationId': {
+      id: '/_layout/ledgers/$ledgerId/integrations/$integrationId'
+      path: '/$integrationId'
+      fullPath: '/ledgers/$ledgerId/integrations/$integrationId'
+      preLoaderRoute: typeof LayoutLedgersLedgerIdIntegrationsIntegrationIdRouteImport
+      parentRoute: typeof LayoutLedgersLedgerIdIntegrationsRoute
     }
     '/_layout/ledgers/$ledgerId/categories/$categoryId/custom-fields': {
       id: '/_layout/ledgers/$ledgerId/categories/$categoryId/custom-fields'
@@ -360,9 +400,25 @@ const LayoutLedgersLedgerIdCategoriesRouteWithChildren =
     LayoutLedgersLedgerIdCategoriesRouteChildren,
   )
 
+interface LayoutLedgersLedgerIdIntegrationsRouteChildren {
+  LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute: typeof LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute
+}
+
+const LayoutLedgersLedgerIdIntegrationsRouteChildren: LayoutLedgersLedgerIdIntegrationsRouteChildren =
+  {
+    LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute:
+      LayoutLedgersLedgerIdIntegrationsIntegrationIdRoute,
+  }
+
+const LayoutLedgersLedgerIdIntegrationsRouteWithChildren =
+  LayoutLedgersLedgerIdIntegrationsRoute._addFileChildren(
+    LayoutLedgersLedgerIdIntegrationsRouteChildren,
+  )
+
 interface LayoutLedgersLedgerIdRouteChildren {
   LayoutLedgersLedgerIdAnalyticsRoute: typeof LayoutLedgersLedgerIdAnalyticsRoute
   LayoutLedgersLedgerIdCategoriesRoute: typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
+  LayoutLedgersLedgerIdIntegrationsRoute: typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   LayoutLedgersLedgerIdSettingsRoute: typeof LayoutLedgersLedgerIdSettingsRoute
   LayoutLedgersLedgerIdSystemRunRoute: typeof LayoutLedgersLedgerIdSystemRunRoute
 }
@@ -371,6 +427,8 @@ const LayoutLedgersLedgerIdRouteChildren: LayoutLedgersLedgerIdRouteChildren = {
   LayoutLedgersLedgerIdAnalyticsRoute: LayoutLedgersLedgerIdAnalyticsRoute,
   LayoutLedgersLedgerIdCategoriesRoute:
     LayoutLedgersLedgerIdCategoriesRouteWithChildren,
+  LayoutLedgersLedgerIdIntegrationsRoute:
+    LayoutLedgersLedgerIdIntegrationsRouteWithChildren,
   LayoutLedgersLedgerIdSettingsRoute: LayoutLedgersLedgerIdSettingsRoute,
   LayoutLedgersLedgerIdSystemRunRoute: LayoutLedgersLedgerIdSystemRunRoute,
 }

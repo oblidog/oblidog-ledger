@@ -174,6 +174,18 @@ export const LedgersService = {
     generated.LedgersService.updateLedgerMember<true>,
   ),
 }
+export const IntegrationsService = {
+  listIntegrations: request(
+    generated.IntegrationsService.listIntegrations<true>,
+  ),
+  getIntegration: request(generated.IntegrationsService.getIntegration<true>),
+  createIntegration: request(
+    generated.IntegrationsService.createIntegration<true>,
+  ),
+  updateIntegration: request(
+    generated.IntegrationsService.updateIntegration<true>,
+  ),
+}
 export const LoginService = {
   loginAccessToken: request(generated.LoginService.loginAccessToken<true>),
   recoverPassword: request(generated.LoginService.recoverPassword<true>),

@@ -2,8 +2,8 @@
 
 Status: implementation contract for [#115](https://github.com/oblidog/oblidog-ledger/issues/115).
 The registry models, management/reporting endpoints and generated clients are
-implemented in stage 2; see [API usage](integration-api.md). External runner
-adoption and the monitoring UI remain follow-up stages.
+implemented in stage 2; see [API usage](integration-api.md). Stage 4 adds the
+monitoring UI described below. External runner adoption remains stage 3.
 
 ## Decisions
 
@@ -242,6 +242,34 @@ deduplication or an audit trail without adding a separate retained run store.
 This protocol protects monitoring state; it does not fence business writes from
 a process that outlives its timeout. Retain the host execution lock and configure
 a process timeout independently.
+
+## Monitoring in the Ledger UI
+
+Open **Integrations** in the ledger sidebar (on mobile, open **More** first).
+The paginated list and individual detail pages refresh current health every
+15 seconds. A failed refresh explicitly marks the displayed data as potentially
+out of date. The detail page separates the latest execution from the last
+completed result, retained last success, and known/unknown change detection.
+It also shows overdue reporting, execution timeout, and the sanitized error
+summary supplied by the runner, rendered as plain text.
+
+The ledger owner can register an instance and configure its display name,
+category associations, enabled state, run timeout, and report-overdue threshold.
+The default limits are 1,800 seconds (30 minutes) per run and 93,600 seconds
+(26 hours) between completed reports. The timeout must be shorter than the
+report-overdue threshold. Instance key and provider cannot change after creation.
+Existing archived category associations remain visible and editable.
+
+Members, including editors, can inspect monitoring but cannot configure it.
+Demo mode hides the navigation and redirects direct monitoring URLs before
+fetching integration data, in addition to the server-side capability gate.
+An edit keeps the revision from when the form opened; background refreshes do
+not overwrite unsaved values. A revision conflict requires closing the form and
+reviewing the latest configuration before trying again.
+
+Create the instance before enabling reporting in its external runner. Disabling
+reporting does not stop a container or revoke its ledger API key. History,
+remote execution, and provider credentials are not managed by this page.
 
 ## Runner integration and failure handling
 

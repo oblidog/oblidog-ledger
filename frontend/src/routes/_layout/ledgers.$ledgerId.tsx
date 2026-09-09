@@ -23,7 +23,9 @@ export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
     const appConfig = await fetchPublicAppConfig()
     const restrictedDemoRoute =
       location.pathname === `/ledgers/${params.ledgerId}/settings` ||
-      location.pathname === `/ledgers/${params.ledgerId}/system-run`
+      location.pathname === `/ledgers/${params.ledgerId}/system-run` ||
+      location.pathname === `/ledgers/${params.ledgerId}/integrations` ||
+      location.pathname.startsWith(`/ledgers/${params.ledgerId}/integrations/`)
 
     if (appConfig.is_demo && restrictedDemoRoute) {
       throw redirect({
@@ -75,14 +77,18 @@ function LedgerDetails() {
             </p>
           </div>
           <div className="hidden gap-2 md:flex">
-            {ledger.owner_user_id === currentUser?.id && !appConfig?.is_demo && (
-              <Button variant="outline" asChild>
-                <Link to="/ledgers/$ledgerId/system-run" params={{ ledgerId }}>
-                  <Play />
-                  System Run
-                </Link>
-              </Button>
-            )}
+            {ledger.owner_user_id === currentUser?.id &&
+              !appConfig?.is_demo && (
+                <Button variant="outline" asChild>
+                  <Link
+                    to="/ledgers/$ledgerId/system-run"
+                    params={{ ledgerId }}
+                  >
+                    <Play />
+                    System Run
+                  </Link>
+                </Button>
+              )}
             <Button variant="outline" asChild>
               <Link to="/">Dashboard</Link>
             </Button>
