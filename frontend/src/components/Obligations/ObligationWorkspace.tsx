@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   Ban,
+  Building2,
   CircleCheck,
   CreditCard,
   EllipsisVertical,
-  Landmark,
   Pencil,
   Plus,
   RotateCcw,
@@ -37,6 +37,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
+import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
+import type { ObligationWithCounterparty } from "@/features/counterparties/api"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
@@ -180,6 +183,11 @@ function canMarkObligationPaid(obligation: ObligationPublic) {
 
 function canReopenObligation(obligation: ObligationPublic) {
   return ["ready", "paid", "canceled", "error"].includes(obligation.lifecycle)
+}
+
+function counterpartyFor(obligation: ObligationPublic) {
+  return (obligation as ObligationPublic & ObligationWithCounterparty)
+    .counterparty
 }
 
 export function ObligationWorkspace({
@@ -419,7 +427,9 @@ export function ObligationWorkspace({
             ? visibleObligations?.map((obligation) => (
                 <ObligationTile
                   key={obligation.key}
+                  ledgerId={ledgerId}
                   obligation={obligation}
+                  canEditCounterparty={canManageComponents}
                   onEdit={() => setEditingObligation(obligation)}
                   onCancel={() => cancel.mutate(obligation)}
                   onMarkPaid={() => markPaid.mutate(obligation)}
@@ -464,6 +474,19 @@ export function ObligationWorkspace({
                     >
                       {selected.data.effective_value_source}
                     </Badge>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <CounterpartyLogo counterparty={counterpartyFor(selected.data) ?? null} />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase text-muted-foreground">
+                      Counterparty
+                    </p>
+                    <p className="truncate font-medium">
+                      {counterpartyFor(selected.data)?.short_name ||
+                        counterpartyFor(selected.data)?.name ||
+                        "Not assigned"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -636,7 +659,9 @@ function paidDateLabel(paidAt: string | null) {
 }
 
 function ObligationTile({
+  ledgerId,
   obligation,
+  canEditCounterparty,
   onEdit,
   onCancel,
   onMarkPaid,
@@ -648,7 +673,9 @@ function ObligationTile({
   markingPaid,
   reopening,
 }: {
+  ledgerId: string
   obligation: ObligationPublic
+  canEditCounterparty: boolean
   onEdit: () => void
   onCancel: () => void
   onMarkPaid: () => void
@@ -671,6 +698,7 @@ function ObligationTile({
   const canMarkReady = canMarkObligationReady(obligation)
   const canEdit = canEditObligation(obligation)
   const canReopen = canReopenObligation(obligation)
+  const counterparty = counterpartyFor(obligation) ?? null
 
   return (
     <div
@@ -688,13 +716,11 @@ function ObligationTile({
           className="flex min-w-0 items-center gap-3 text-left"
           onClick={onSelect}
         >
-          <div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg border">
-            <Landmark className="size-5" aria-hidden="true" />
-          </div>
+          <CounterpartyLogo counterparty={counterparty} className="size-10" />
           <div className="min-w-0">
             <p className="truncate font-semibold">{obligation.name}</p>
             <p className="text-muted-foreground truncate text-xs">
-              {obligation.key}
+              {counterparty?.short_name || counterparty?.name || obligation.key}
             </p>
           </div>
         </button>
@@ -710,6 +736,18 @@ function ObligationTile({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {canEditCounterparty ? (
+              <ObligationCounterpartyDialog
+                ledgerId={ledgerId}
+                obligation={obligation}
+                trigger={
+                  <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                    <Building2 />
+                    Counterparty
+                  </DropdownMenuItem>
+                }
+              />
+            ) : null}
             {canMarkReady ? (
               <DropdownMenuItem disabled={markingReady} onSelect={onMarkReady}>
                 <CircleCheck />
