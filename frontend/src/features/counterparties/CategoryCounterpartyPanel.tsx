@@ -69,9 +69,12 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
                 <CounterpartyPicker
                   value={category.counterparty ?? null}
                   disabled={assignment.isPending}
-                  onChange={(counterparty) =>
-                    assignment.mutateAsync({ categoryId: category.id, counterparty })
-                  }
+                  onChange={async (counterparty) => {
+                    await assignment.mutateAsync({
+                      categoryId: category.id,
+                      counterparty,
+                    })
+                  }}
                 />
               </div>
             ))}
