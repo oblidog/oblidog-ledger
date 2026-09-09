@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CounterpartyCreate(BaseModel):
@@ -16,10 +16,16 @@ class CounterpartyCreate(BaseModel):
 class CounterpartyUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str = Field(min_length=1, max_length=255)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
     short_name: str | None = Field(default=None, max_length=255)
     logo_url: str | None = Field(default=None, max_length=2048)
     website_url: str | None = Field(default=None, max_length=2048)
+
+    @model_validator(mode="after")
+    def reject_null_name(self) -> "CounterpartyUpdate":
+        if "name" in self.model_fields_set and self.name is None:
+            raise ValueError("name cannot be null")
+        return self
 
 
 class CounterpartyAssignment(BaseModel):
