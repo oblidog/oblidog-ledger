@@ -22,6 +22,12 @@ class CounterpartyUpdate(BaseModel):
     website_url: str | None = Field(default=None, max_length=2048)
 
 
+class CounterpartyAssignment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    counterparty_id: uuid.UUID | None = None
+
+
 class CounterpartySummaryPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
