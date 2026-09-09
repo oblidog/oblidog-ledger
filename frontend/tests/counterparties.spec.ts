@@ -180,9 +180,12 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   }
   expect(obligationBody.counterparty_id).toBe(secondCounterparty.id)
 
-  await page
-    .getByRole("button", { name: `Actions for ${categoryName}` })
-    .click()
+  await page.reload()
+  const obligationActions = page.getByRole("button", {
+    name: `Actions for ${categoryName}`,
+  })
+  await expect(obligationActions).toBeVisible()
+  await obligationActions.click()
   await page.getByRole("menuitem", { name: "Counterparty" }).click()
   const clearDialog = page.getByRole("dialog")
   await clearDialog
