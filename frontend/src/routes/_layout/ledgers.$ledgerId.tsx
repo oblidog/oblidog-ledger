@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchPublicAppConfig } from "@/config"
+import { ObligationCounterpartyPanel } from "@/features/counterparties/ObligationCounterpartyPanel"
 import useAuth from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
@@ -118,6 +119,10 @@ function LedgerDetails() {
           canManageComponents={canManageComponents}
         />
       </Suspense>
+      <ObligationCounterpartyPanel
+        ledgerId={ledgerId}
+        canEdit={canManageComponents}
+      />
     </div>
   )
 }
