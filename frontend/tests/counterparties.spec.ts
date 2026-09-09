@@ -66,9 +66,9 @@ test("assigns and clears a category counterparty through autocomplete", async ({
 
   const categoryCard = page.getByTestId(`category-counterparty-${category!.id}`)
   const search = categoryCard.getByLabel("Search counterparty")
-  await search.fill(counterpartyName.slice(0, 8))
-  await expect(page.getByText(counterpartyName, { exact: true })).toBeVisible()
-  await page.getByText(counterpartyName, { exact: true }).click()
+  // Search by the unique full name; the picker displays short_name when present.
+  await search.fill(counterpartyName)
+  await categoryCard.getByRole("button", { name: "Enea", exact: true }).click()
 
   await expect(categoryCard.getByText("Enea", { exact: true })).toBeVisible()
   await expect(page.getByText("Category counterparty updated")).toBeVisible()
@@ -82,6 +82,17 @@ test("assigns and clears a category counterparty through autocomplete", async ({
   expect(assigned?.counterparty_id).toBe(counterparty.id)
 
   await categoryCard.getByRole("button", { name: "Clear counterparty" }).click()
-  await expect(categoryCard.getByLabel("Search counterparty")).toBeVisible()
-  await expect(page.getByText("Category counterparty updated")).toBeVisible()
+  await expect(
+    categoryCard.getByRole("button", { name: "Clear counterparty" }),
+  ).toHaveCount(0)
+  await expect(categoryCard.getByText(counterpartyName, { exact: true })).toHaveCount(0)
+
+  const clearedResponse = await readCategories()
+  expect(clearedResponse.ok()).toBeTruthy()
+  const clearedCategories = (await clearedResponse.json()) as {
+    data: Array<{ id: string; name: string; counterparty_id: string | null }>
+  }
+  const cleared = clearedCategories.data.find((item) => item.id === category!.id)
+  expect(cleared).toBeDefined()
+  expect(cleared?.counterparty_id).toBeNull()
 })
