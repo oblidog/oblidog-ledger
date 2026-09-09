@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test"
 
+import { apiUrl } from "../src/config"
+
 function uniqueName(prefix: string) {
   return `${prefix} ${Math.random().toString(36).slice(2, 8)}`
 }
@@ -33,25 +35,24 @@ test("assigns and clears a category counterparty through autocomplete", async ({
   await page.getByLabel("Code").fill("CPUI")
   await page.getByRole("button", { name: "Create category" }).click()
 
-  const counterparty = await page.evaluate(async (name) => {
-    const token = localStorage.getItem("access_token")
-    const response = await fetch("/api/v1/counterparties", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, short_name: "Enea" }),
-    })
-    if (!response.ok)
-      throw new Error(`Counterparty creation failed: ${response.status}`)
-    return (await response.json()) as { id: string; name: string }
-  }, counterpartyName)
+  const token = await page.evaluate(() => localStorage.getItem("access_token"))
+  const createResponse = await page.request.post(`${apiUrl}/api/v1/counterparties`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { name: counterpartyName, short_name: "Enea" },
+  })
+  expect(createResponse.ok()).toBeTruthy()
+  const counterparty = (await createResponse.json()) as { id: string; name: string }
 
-  const categoryCard = page
-    .locator("div.rounded-lg.border")
-    .filter({ hasText: categoryName })
-    .last()
+  const categoryCard = page.getByTestId(
+    `category-counterparty-${await page.evaluate(async ({ apiUrl, token, categoryName }) => {
+      const response = await fetch(`${apiUrl}/api/v1${window.location.pathname}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) throw new Error(`Categories read failed: ${response.status}`)
+      const body = await response.json()
+      return body.data.find((item: { name: string }) => item.name === categoryName).id
+    }, { apiUrl, token, categoryName })}`,
+  )
 
   const search = categoryCard.getByLabel("Search counterparty")
   await search.fill(counterpartyName.slice(0, 8))
@@ -61,14 +62,12 @@ test("assigns and clears a category counterparty through autocomplete", async ({
   await expect(categoryCard.getByText("Enea", { exact: true })).toBeVisible()
   await expect(page.getByText("Category counterparty updated")).toBeVisible()
 
-  const categoryResponse = await page.evaluate(async () => {
-    const token = localStorage.getItem("access_token")
-    const response = await fetch(`/api/v1${window.location.pathname}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (!response.ok) throw new Error(`Categories read failed: ${response.status}`)
-    return response.json()
-  })
+  const categoriesResponse = await page.request.get(
+    `${apiUrl}/api/v1${new URL(page.url()).pathname}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  )
+  expect(categoriesResponse.ok()).toBeTruthy()
+  const categoryResponse = await categoriesResponse.json()
   const assigned = categoryResponse.data.find(
     (item: { name: string }) => item.name === categoryName,
   )
