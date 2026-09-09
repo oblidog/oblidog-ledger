@@ -1,10 +1,11 @@
-from datetime import date
+import uuid
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domain import BillingPeriod, DataSourcePolicy
+from app.models import Category, Ledger
 from app.services import obligations as obligation_service
 from app.use_cases import categories as category_use_cases
 from app.use_cases import ledgers as ledger_use_cases
@@ -32,7 +33,7 @@ def _create_counterparty(
     return response.json()
 
 
-def _create_category(db: Session, *, owner_id: object) -> tuple[object, object]:
+def _create_category(db: Session, *, owner_id: uuid.UUID) -> tuple[Ledger, Category]:
     ledger = ledger_use_cases.create_ledger(
         session=db,
         owner_user_id=owner_id,
