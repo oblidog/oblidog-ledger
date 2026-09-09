@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -26,6 +27,11 @@ def _normalize_name(value: str) -> str:
     if not value:
         raise ValueError("name must not be empty")
     return value
+
+
+def _is_counterparty_name_conflict(exc: IntegrityError) -> bool:
+    constraint_name = getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+    return constraint_name == "uq_counterparty_name_lower"
 
 
 def get_counterparty(*, session: Session, counterparty_id: uuid.UUID) -> Counterparty:
@@ -86,7 +92,13 @@ def create_counterparty(
         website_url=website_url,
     )
     session.add(counterparty)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        if _is_counterparty_name_conflict(exc):
+            raise DuplicateCounterpartyError from exc
+        raise
     session.refresh(counterparty)
     return counterparty
 
@@ -95,26 +107,44 @@ def update_counterparty(
     *,
     session: Session,
     counterparty_id: uuid.UUID,
-    name: str,
-    short_name: str | None = None,
-    logo_url: str | None = None,
-    website_url: str | None = None,
+    **changes: Any,
 ) -> Counterparty:
+    allowed_fields = {"name", "short_name", "logo_url", "website_url"}
+    if unexpected := set(changes) - allowed_fields:
+        raise ValueError(f"Unsupported update fields: {', '.join(sorted(unexpected))}")
+
     counterparty = get_counterparty(session=session, counterparty_id=counterparty_id)
-    normalized_name = _normalize_name(name)
-    existing = session.scalar(
-        select(Counterparty.id).where(
-            func.lower(Counterparty.name) == normalized_name.lower(),
-            Counterparty.id != counterparty_id,
+
+    if "name" in changes:
+        name = changes["name"]
+        if name is None:
+            raise ValueError("name cannot be null")
+        normalized_name = _normalize_name(name)
+        existing = session.scalar(
+            select(Counterparty.id).where(
+                func.lower(Counterparty.name) == normalized_name.lower(),
+                Counterparty.id != counterparty_id,
+            )
         )
-    )
-    if existing is not None:
-        raise DuplicateCounterpartyError
-    counterparty.name = normalized_name
-    counterparty.short_name = short_name.strip() if short_name else None
-    counterparty.logo_url = logo_url
-    counterparty.website_url = website_url
-    session.commit()
+        if existing is not None:
+            raise DuplicateCounterpartyError
+        counterparty.name = normalized_name
+
+    if "short_name" in changes:
+        short_name = changes["short_name"]
+        counterparty.short_name = short_name.strip() if short_name else None
+    if "logo_url" in changes:
+        counterparty.logo_url = changes["logo_url"]
+    if "website_url" in changes:
+        counterparty.website_url = changes["website_url"]
+
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        if _is_counterparty_name_conflict(exc):
+            raise DuplicateCounterpartyError from exc
+        raise
     session.refresh(counterparty)
     return counterparty
 
