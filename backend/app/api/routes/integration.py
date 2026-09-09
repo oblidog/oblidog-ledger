@@ -10,6 +10,7 @@ from app.api.routes.categories import (
     _to_category_data_record_public,
     _to_category_data_schema_public,
 )
+from app.api.routes.integration_instances import router as instances_router
 from app.api.routes.obligations import (
     to_obligation_component_public,
     to_obligation_public,
@@ -42,6 +43,7 @@ from app.use_cases.exceptions import (
 )
 
 router = APIRouter(prefix="/integration", tags=["integration"])
+router.include_router(instances_router)
 
 
 @router.get(

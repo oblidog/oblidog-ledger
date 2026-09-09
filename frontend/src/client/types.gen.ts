@@ -346,6 +346,20 @@ export type CategoryDataSchemaPublic = {
 };
 
 /**
+ * CategoryDataSchemasPublic
+ */
+export type CategoryDataSchemasPublic = {
+    /**
+     * Data
+     */
+    data: Array<CategoryDataSchemaPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * CategoryGroupCreate
  */
 export type CategoryGroupCreate = {
@@ -639,6 +653,265 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * IntegrationConflictCode
+ */
+export type IntegrationConflictCode = 'duplicate_key' | 'revision_conflict' | 'integration_disabled' | 'run_in_progress' | 'run_conflict';
+
+/**
+ * IntegrationConflictDetail
+ */
+export type IntegrationConflictDetail = {
+    code: IntegrationConflictCode;
+};
+
+/**
+ * IntegrationConflictResponse
+ */
+export type IntegrationConflictResponse = {
+    detail: IntegrationConflictDetail;
+};
+
+/**
+ * IntegrationCreate
+ */
+export type IntegrationCreate = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category Ids
+     */
+    category_ids?: Array<string>;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Stale After Seconds
+     */
+    stale_after_seconds?: number;
+    /**
+     * Run Timeout Seconds
+     */
+    run_timeout_seconds?: number;
+};
+
+/**
+ * IntegrationExecutionState
+ */
+export type IntegrationExecutionState = 'never_run' | 'running' | 'timed_out' | 'finished';
+
+/**
+ * IntegrationHealth
+ */
+export type IntegrationHealth = 'disabled' | 'timed_out' | 'stale' | 'running' | 'never_run' | 'error' | 'healthy';
+
+/**
+ * IntegrationPublic
+ */
+export type IntegrationPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Ledger Id
+     */
+    ledger_id: string;
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category Ids
+     */
+    category_ids: Array<string>;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Enabled At
+     */
+    enabled_at: string | null;
+    /**
+     * Stale After Seconds
+     */
+    stale_after_seconds: number;
+    /**
+     * Run Timeout Seconds
+     */
+    run_timeout_seconds: number;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Current Run Id
+     */
+    current_run_id: string | null;
+    /**
+     * Current Started At
+     */
+    current_started_at: string | null;
+    /**
+     * Current Deadline At
+     */
+    current_deadline_at: string | null;
+    /**
+     * Current Finished At
+     */
+    current_finished_at: string | null;
+    /**
+     * Last Finished At
+     */
+    last_finished_at: string | null;
+    last_result: IntegrationResult | null;
+    /**
+     * Last Changes Detected
+     */
+    last_changes_detected: boolean | null;
+    /**
+     * Last Error Code
+     */
+    last_error_code: string | null;
+    /**
+     * Last Error Message
+     */
+    last_error_message: string | null;
+    /**
+     * Last Success At
+     */
+    last_success_at: string | null;
+    execution_state: IntegrationExecutionState;
+    /**
+     * Is Stale
+     */
+    is_stale: boolean;
+    health: IntegrationHealth;
+};
+
+/**
+ * IntegrationResult
+ */
+export type IntegrationResult = 'success' | 'failure';
+
+/**
+ * IntegrationRunError
+ */
+export type IntegrationRunError = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * Sanitized summary only; never credentials, raw responses or tracebacks.
+     */
+    message: string;
+};
+
+/**
+ * IntegrationRunFinish
+ */
+export type IntegrationRunFinish = {
+    /**
+     * Run Id
+     */
+    run_id: string;
+    result: IntegrationResult;
+    /**
+     * Changes Detected
+     */
+    changes_detected: boolean | null;
+    error: IntegrationRunError | null;
+};
+
+/**
+ * IntegrationRunStart
+ */
+export type IntegrationRunStart = {
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Expected Revision
+     */
+    expected_revision: number;
+};
+
+/**
+ * IntegrationUpdate
+ */
+export type IntegrationUpdate = {
+    /**
+     * Expected Revision
+     */
+    expected_revision: number;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Category Ids
+     */
+    category_ids?: Array<string> | null;
+    /**
+     * Enabled
+     */
+    enabled?: boolean | null;
+    /**
+     * Stale After Seconds
+     */
+    stale_after_seconds?: number | null;
+    /**
+     * Run Timeout Seconds
+     */
+    run_timeout_seconds?: number | null;
+};
+
+/**
+ * IntegrationsPublic
+ */
+export type IntegrationsPublic = {
+    /**
+     * Data
+     */
+    data: Array<IntegrationPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -2619,6 +2892,10 @@ export type CategoriesReadCategoryDataRecordsData = {
     };
     query?: {
         /**
+         * Schema Version
+         */
+        schema_version?: number | null;
+        /**
          * Observed From
          */
         observed_from?: string | null;
@@ -2825,6 +3102,176 @@ export type CategoriesRestoreCategoryResponses = {
 };
 
 export type CategoriesRestoreCategoryResponse = CategoriesRestoreCategoryResponses[keyof CategoriesRestoreCategoryResponses];
+
+export type CategoriesReadCategoryDataSchemasData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/data-schemas';
+};
+
+export type CategoriesReadCategoryDataSchemasErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CategoriesReadCategoryDataSchemasError = CategoriesReadCategoryDataSchemasErrors[keyof CategoriesReadCategoryDataSchemasErrors];
+
+export type CategoriesReadCategoryDataSchemasResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryDataSchemasPublic;
+};
+
+export type CategoriesReadCategoryDataSchemasResponse = CategoriesReadCategoryDataSchemasResponses[keyof CategoriesReadCategoryDataSchemasResponses];
+
+export type CategoriesReadCategoryDataSchemaVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Version
+         */
+        version: number;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/data-schemas/{version}';
+};
+
+export type CategoriesReadCategoryDataSchemaVersionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CategoriesReadCategoryDataSchemaVersionError = CategoriesReadCategoryDataSchemaVersionErrors[keyof CategoriesReadCategoryDataSchemaVersionErrors];
+
+export type CategoriesReadCategoryDataSchemaVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryDataSchemaPublic;
+};
+
+export type CategoriesReadCategoryDataSchemaVersionResponse = CategoriesReadCategoryDataSchemaVersionResponses[keyof CategoriesReadCategoryDataSchemaVersionResponses];
+
+export type IntegrationReadIntegrationInstanceData = {
+    body?: never;
+    path: {
+        /**
+         * Integration Key
+         */
+        integration_key: string;
+    };
+    query?: never;
+    url: '/api/v1/integration/instances/{integration_key}';
+};
+
+export type IntegrationReadIntegrationInstanceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationReadIntegrationInstanceError = IntegrationReadIntegrationInstanceErrors[keyof IntegrationReadIntegrationInstanceErrors];
+
+export type IntegrationReadIntegrationInstanceResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationPublic;
+};
+
+export type IntegrationReadIntegrationInstanceResponse = IntegrationReadIntegrationInstanceResponses[keyof IntegrationReadIntegrationInstanceResponses];
+
+export type IntegrationStartIntegrationRunData = {
+    body: IntegrationRunStart;
+    path: {
+        /**
+         * Integration Key
+         */
+        integration_key: string;
+    };
+    query?: never;
+    url: '/api/v1/integration/instances/{integration_key}/start';
+};
+
+export type IntegrationStartIntegrationRunErrors = {
+    /**
+     * Integration run conflict
+     */
+    409: IntegrationConflictResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationStartIntegrationRunError = IntegrationStartIntegrationRunErrors[keyof IntegrationStartIntegrationRunErrors];
+
+export type IntegrationStartIntegrationRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationPublic;
+};
+
+export type IntegrationStartIntegrationRunResponse = IntegrationStartIntegrationRunResponses[keyof IntegrationStartIntegrationRunResponses];
+
+export type IntegrationFinishIntegrationRunData = {
+    body: IntegrationRunFinish;
+    path: {
+        /**
+         * Integration Key
+         */
+        integration_key: string;
+    };
+    query?: never;
+    url: '/api/v1/integration/instances/{integration_key}/finish';
+};
+
+export type IntegrationFinishIntegrationRunErrors = {
+    /**
+     * Integration run conflict
+     */
+    409: IntegrationConflictResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationFinishIntegrationRunError = IntegrationFinishIntegrationRunErrors[keyof IntegrationFinishIntegrationRunErrors];
+
+export type IntegrationFinishIntegrationRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationPublic;
+};
+
+export type IntegrationFinishIntegrationRunResponse = IntegrationFinishIntegrationRunResponses[keyof IntegrationFinishIntegrationRunResponses];
 
 export type IntegrationReadLatestIntegrationCategoryDataRecordData = {
     body?: never;
@@ -3345,6 +3792,151 @@ export type IntegrationAppendIntegrationObligationNoteResponses = {
 };
 
 export type IntegrationAppendIntegrationObligationNoteResponse = IntegrationAppendIntegrationObligationNoteResponses[keyof IntegrationAppendIntegrationObligationNoteResponses];
+
+export type IntegrationsListIntegrationsData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/ledgers/{ledger_id}/integrations';
+};
+
+export type IntegrationsListIntegrationsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsListIntegrationsError = IntegrationsListIntegrationsErrors[keyof IntegrationsListIntegrationsErrors];
+
+export type IntegrationsListIntegrationsResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationsPublic;
+};
+
+export type IntegrationsListIntegrationsResponse = IntegrationsListIntegrationsResponses[keyof IntegrationsListIntegrationsResponses];
+
+export type IntegrationsCreateIntegrationData = {
+    body: IntegrationCreate;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/integrations';
+};
+
+export type IntegrationsCreateIntegrationErrors = {
+    /**
+     * Integration state or identity conflict
+     */
+    409: IntegrationConflictResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsCreateIntegrationError = IntegrationsCreateIntegrationErrors[keyof IntegrationsCreateIntegrationErrors];
+
+export type IntegrationsCreateIntegrationResponses = {
+    /**
+     * Successful Response
+     */
+    201: IntegrationPublic;
+};
+
+export type IntegrationsCreateIntegrationResponse = IntegrationsCreateIntegrationResponses[keyof IntegrationsCreateIntegrationResponses];
+
+export type IntegrationsGetIntegrationData = {
+    body?: never;
+    path: {
+        /**
+         * Integration Id
+         */
+        integration_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}';
+};
+
+export type IntegrationsGetIntegrationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsGetIntegrationError = IntegrationsGetIntegrationErrors[keyof IntegrationsGetIntegrationErrors];
+
+export type IntegrationsGetIntegrationResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationPublic;
+};
+
+export type IntegrationsGetIntegrationResponse = IntegrationsGetIntegrationResponses[keyof IntegrationsGetIntegrationResponses];
+
+export type IntegrationsUpdateIntegrationData = {
+    body: IntegrationUpdate;
+    path: {
+        /**
+         * Integration Id
+         */
+        integration_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}';
+};
+
+export type IntegrationsUpdateIntegrationErrors = {
+    /**
+     * Integration state or revision conflict
+     */
+    409: IntegrationConflictResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsUpdateIntegrationError = IntegrationsUpdateIntegrationErrors[keyof IntegrationsUpdateIntegrationErrors];
+
+export type IntegrationsUpdateIntegrationResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationPublic;
+};
+
+export type IntegrationsUpdateIntegrationResponse = IntegrationsUpdateIntegrationResponses[keyof IntegrationsUpdateIntegrationResponses];
 
 export type LegacyImportReadLegacyImportJobData = {
     body?: never;
