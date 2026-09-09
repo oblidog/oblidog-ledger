@@ -43,16 +43,15 @@ test("assigns and clears a category counterparty through autocomplete", async ({
       },
       body: JSON.stringify({ name, short_name: "Enea" }),
     })
-    if (!response.ok) throw new Error(`Counterparty creation failed: ${response.status}`)
+    if (!response.ok)
+      throw new Error(`Counterparty creation failed: ${response.status}`)
     return (await response.json()) as { id: string; name: string }
   }, counterpartyName)
 
   const categoryCard = page
-    .getByRole("heading", { name: "Counterparties" })
-    .locator("..")
-    .locator("..")
-    .getByText(categoryName, { exact: true })
-    .locator("../..")
+    .locator("div.rounded-lg.border")
+    .filter({ hasText: categoryName })
+    .last()
 
   const search = categoryCard.getByLabel("Search counterparty")
   await search.fill(counterpartyName.slice(0, 8))
@@ -64,7 +63,7 @@ test("assigns and clears a category counterparty through autocomplete", async ({
 
   const categoryResponse = await page.evaluate(async () => {
     const token = localStorage.getItem("access_token")
-    const response = await fetch(window.location.pathname.replace(/\/categories$/, "/categories"), {
+    const response = await fetch(`/api/v1${window.location.pathname}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!response.ok) throw new Error(`Categories read failed: ${response.status}`)
