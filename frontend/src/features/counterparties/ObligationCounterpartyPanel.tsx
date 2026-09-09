@@ -101,12 +101,12 @@ export function ObligationCounterpartyPanel({
                   <CounterpartyPicker
                     value={obligation.counterparty ?? null}
                     disabled={assignment.isPending}
-                    onChange={(counterparty) =>
-                      assignment.mutateAsync({
+                    onChange={async (counterparty) => {
+                      await assignment.mutateAsync({
                         obligationKey: obligation.key,
                         counterparty,
                       })
-                    }
+                    }}
                   />
                 ) : null}
               </div>
