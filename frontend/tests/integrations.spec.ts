@@ -250,9 +250,9 @@ test("polling preserves the edit snapshot and a revision conflict requires revie
   )
   await page.clock.fastForward(15_000)
   await refreshed
-  await expect(
-    page.getByRole("heading", { name: "Changed elsewhere" }),
-  ).toBeVisible()
+  // The modal intentionally hides the background from the accessibility tree.
+  // Inspect its DOM text to verify that polling still updated the detail page.
+  await expect(page.locator("h1")).toHaveText("Changed elsewhere")
   await expect(page.getByLabel("Name", { exact: true })).toHaveValue(
     "My unsaved name",
   )

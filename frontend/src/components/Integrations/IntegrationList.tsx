@@ -40,7 +40,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
   const isOwner = !!user && ledger.data?.owner_user_id === user.id
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Integrations</h1>
@@ -88,12 +88,12 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
           </CardContent>
         </Card>
       )}
-      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
         {integrations.data?.data.map((item) => (
           <Card key={item.id} className="min-w-0">
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <CardTitle className="min-w-0 break-words">
+            <CardHeader className="min-w-0 grid-cols-1">
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <CardTitle className="min-w-0 flex-1 leading-snug [overflow-wrap:anywhere]">
                   <Link
                     className="hover:underline"
                     to="/ledgers/$ledgerId/integrations/$integrationId"
