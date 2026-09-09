@@ -13,6 +13,7 @@ import CategoryWorkspace from "@/components/Categories/CategoryWorkspace"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { CategoryCounterpartyPanel } from "@/features/counterparties/CategoryCounterpartyPanel"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId/categories")({
   component: LedgerCategories,
@@ -53,6 +54,7 @@ function LedgerCategories() {
       <Suspense fallback={<CategoryWorkspaceSkeleton />}>
         <CategoryWorkspace ledgerId={ledgerId} />
       </Suspense>
+      <CategoryCounterpartyPanel ledgerId={ledgerId} />
     </div>
   )
 }
