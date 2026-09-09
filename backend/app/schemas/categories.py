@@ -26,7 +26,6 @@ class CategoryGroupUpdate(BaseModel):
 
 class CategoryCreate(BaseModel):
     category_group_id: uuid.UUID
-    counterparty_id: uuid.UUID | None = None
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
     code: str = Field(min_length=4, max_length=4, pattern=r"^[A-Z]{4}$")
@@ -41,7 +40,6 @@ class CategoryUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     category_group_id: uuid.UUID | None = None
-    counterparty_id: uuid.UUID | None = None
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
     data_source_policy: DataSourcePolicy
