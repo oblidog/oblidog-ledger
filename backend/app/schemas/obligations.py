@@ -12,6 +12,7 @@ from app.domain import (
     ValueState,
     due_date_range,
 )
+from app.schemas.counterparties import CounterpartySummaryPublic
 
 
 class BillingPeriodInput(BaseModel):
@@ -141,6 +142,8 @@ class ObligationPublic(BaseModel):
     id: uuid.UUID
     ledger_id: uuid.UUID
     category_id: uuid.UUID
+    counterparty_id: uuid.UUID | None
+    counterparty: CounterpartySummaryPublic | None
     category_code: str
     key: str
     name: str

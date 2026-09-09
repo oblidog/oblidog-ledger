@@ -31,6 +31,7 @@ from app.models.base import Base, get_datetime_utc
 
 if TYPE_CHECKING:
     from app.models.category import Category
+    from app.models.counterparty import Counterparty
     from app.models.ledger import Ledger
 
 
@@ -64,6 +65,12 @@ class Obligation(Base):
     )
     category_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, index=True
+    )
+    counterparty_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("counterparty.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     lifecycle: Mapped[ObligationLifecycle] = mapped_column(nullable=False)
@@ -108,6 +115,7 @@ class Obligation(Base):
         back_populates="obligations",
         overlaps="ledger,obligations",
     )
+    counterparty: Mapped[Counterparty | None] = relationship(back_populates="obligations")
     components: Mapped[list[ObligationComponent]] = relationship(
         back_populates="obligation", cascade="all, delete-orphan"
     )

@@ -32,6 +32,15 @@ from app.schemas.categories import (
     CategoryUpdate,
 )
 from app.schemas.common import Message, NewPassword, PasswordStr, Token, TokenPayload
+from app.schemas.counterparties import (
+    CounterpartiesPublic,
+    CounterpartyAssignment,
+    CounterpartyCreate,
+    CounterpartyPublic,
+    CounterpartySearchPublic,
+    CounterpartySummaryPublic,
+    CounterpartyUpdate,
+)
 from app.schemas.ledgers import (
     LedgerCreate,
     LedgerMemberPublic,
@@ -104,6 +113,13 @@ __all__ = [
     "CategoryGroupPublic",
     "CategoryGroupsPublic",
     "CategoryPublic",
+    "CounterpartiesPublic",
+    "CounterpartyAssignment",
+    "CounterpartyCreate",
+    "CounterpartyPublic",
+    "CounterpartySearchPublic",
+    "CounterpartySummaryPublic",
+    "CounterpartyUpdate",
     "LedgerCreate",
     "LedgerMemberPublic",
     "LedgerMemberUpdate",
