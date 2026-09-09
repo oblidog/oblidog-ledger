@@ -109,7 +109,7 @@ def update_counterparty(
         counterparty = counterparty_service.update_counterparty(
             session=session,
             counterparty_id=counterparty_id,
-            **counterparty_in.model_dump(),
+            **counterparty_in.model_dump(exclude_unset=True),
         )
     except counterparty_service.CounterpartyNotFoundError:
         raise HTTPException(status_code=404, detail="Counterparty not found")
