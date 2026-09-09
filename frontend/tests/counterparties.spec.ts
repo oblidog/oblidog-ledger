@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test"
 
-import { apiUrl } from "../src/config"
+const apiUrl = process.env.VITE_API_URL
+if (!apiUrl) {
+  throw new Error("VITE_API_URL is undefined")
+}
 
 function uniqueName(prefix: string) {
   return `${prefix} ${Math.random().toString(36).slice(2, 8)}`
@@ -36,6 +39,11 @@ test("assigns and clears a category counterparty through autocomplete", async ({
   await page.getByRole("button", { name: "Create category" }).click()
 
   const token = await page.evaluate(() => localStorage.getItem("access_token"))
+  if (!token) throw new Error("Missing access token")
+
+  const ledgerId = new URL(page.url()).pathname.split("/")[2]
+  if (!ledgerId) throw new Error("Unable to resolve ledger id")
+
   const createResponse = await page.request.post(`${apiUrl}/api/v1/counterparties`, {
     headers: { Authorization: `Bearer ${token}` },
     data: { name: counterpartyName, short_name: "Enea" },
@@ -43,17 +51,20 @@ test("assigns and clears a category counterparty through autocomplete", async ({
   expect(createResponse.ok()).toBeTruthy()
   const counterparty = (await createResponse.json()) as { id: string; name: string }
 
-  const categoryCard = page.getByTestId(
-    `category-counterparty-${await page.evaluate(async ({ apiUrl, token, categoryName }) => {
-      const response = await fetch(`${apiUrl}/api/v1${window.location.pathname}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!response.ok) throw new Error(`Categories read failed: ${response.status}`)
-      const body = await response.json()
-      return body.data.find((item: { name: string }) => item.name === categoryName).id
-    }, { apiUrl, token, categoryName })}`,
-  )
+  const readCategories = () =>
+    page.request.get(`${apiUrl}/api/v1/ledgers/${ledgerId}/categories`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
 
+  const categoriesResponse = await readCategories()
+  expect(categoriesResponse.ok()).toBeTruthy()
+  const categories = (await categoriesResponse.json()) as {
+    data: Array<{ id: string; name: string; counterparty_id: string | null }>
+  }
+  const category = categories.data.find((item) => item.name === categoryName)
+  expect(category).toBeTruthy()
+
+  const categoryCard = page.getByTestId(`category-counterparty-${category!.id}`)
   const search = categoryCard.getByLabel("Search counterparty")
   await search.fill(counterpartyName.slice(0, 8))
   await expect(page.getByText(counterpartyName, { exact: true })).toBeVisible()
@@ -62,16 +73,13 @@ test("assigns and clears a category counterparty through autocomplete", async ({
   await expect(categoryCard.getByText("Enea", { exact: true })).toBeVisible()
   await expect(page.getByText("Category counterparty updated")).toBeVisible()
 
-  const categoriesResponse = await page.request.get(
-    `${apiUrl}/api/v1${new URL(page.url()).pathname}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-  expect(categoriesResponse.ok()).toBeTruthy()
-  const categoryResponse = await categoriesResponse.json()
-  const assigned = categoryResponse.data.find(
-    (item: { name: string }) => item.name === categoryName,
-  )
-  expect(assigned.counterparty_id).toBe(counterparty.id)
+  const assignedResponse = await readCategories()
+  expect(assignedResponse.ok()).toBeTruthy()
+  const assignedCategories = (await assignedResponse.json()) as {
+    data: Array<{ id: string; name: string; counterparty_id: string | null }>
+  }
+  const assigned = assignedCategories.data.find((item) => item.name === categoryName)
+  expect(assigned?.counterparty_id).toBe(counterparty.id)
 
   await categoryCard.getByRole("button", { name: "Clear counterparty" }).click()
   await expect(categoryCard.getByLabel("Search counterparty")).toBeVisible()
