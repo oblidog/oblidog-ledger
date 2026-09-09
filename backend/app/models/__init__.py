@@ -6,6 +6,7 @@ from app.models.category import (
     CategoryDataSchema,
     CategoryGroup,
 )
+from app.models.counterparty import Counterparty
 from app.models.integration import Integration, IntegrationCategory
 from app.models.ledger import Ledger, LedgerMembership
 from app.models.legacy_import_job import LegacyImportJob
@@ -21,6 +22,7 @@ __all__ = [
     "CategoryDataRecord",
     "CategoryDataSchema",
     "CategoryGroup",
+    "Counterparty",
     "Integration",
     "IntegrationCategory",
     "Ledger",
