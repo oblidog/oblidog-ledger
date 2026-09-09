@@ -1,3 +1,50 @@
+## v0.11.0 (2026-09-09)
+
+### Feat
+
+- **frontend**: expose obligation counterparty assignments
+- **frontend**: expose category counterparty assignments
+- **frontend**: add obligation counterparty assignments
+- **frontend**: add category counterparty assignments
+- **frontend**: add counterparty autocomplete
+- **frontend**: add counterparty logo
+- **frontend**: add counterparty API helpers
+- **counterparties**: include counterparty in obligation responses
+- **counterparties**: expose counterparty on obligations
+- **counterparties**: export assignment schema
+- **counterparties**: add category and obligation assignments
+- **counterparties**: add assignment schema
+- **counterparties**: inherit category counterparty on obligation creation
+- **counterparties**: register counterparty routes
+- **counterparties**: export counterparty schemas
+- **counterparties**: implement counterparty API
+- **counterparties**: implement counterparty service
+- **counterparties**: expose category counterparty
+- **counterparties**: define counterparty schemas
+- **counterparties**: add counterparty migration
+- **counterparties**: link obligations to counterparty
+- **counterparties**: link categories to default counterparty
+- **counterparties**: export counterparty model
+- **counterparties**: add global counterparty model
+
+### Fix
+
+- **frontend**: avoid duplicate obligation labels in counterparty panel
+- **frontend**: avoid duplicate category labels in counterparty panel
+- **frontend**: correct counterparty test API URL
+- **frontend**: normalize obligation counterparty callback
+- **frontend**: normalize counterparty mutation callback
+- align counterparty model with case-insensitive uniqueness
+- enforce case-insensitive counterparty names
+- handle partial counterparty updates and name conflicts
+- preserve omitted counterparty fields on patch
+- make counterparty patch partial
+
+### Refactor
+
+- **frontend**: make Counterparty selection contextual (#296)
+- **counterparties**: assign category counterparty explicitly
+
 ## v0.10.0 (2026-09-09)
 
 ### Feat
