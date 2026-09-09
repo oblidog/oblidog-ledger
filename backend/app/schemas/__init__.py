@@ -34,6 +34,7 @@ from app.schemas.categories import (
 from app.schemas.common import Message, NewPassword, PasswordStr, Token, TokenPayload
 from app.schemas.counterparties import (
     CounterpartiesPublic,
+    CounterpartyAssignment,
     CounterpartyCreate,
     CounterpartyPublic,
     CounterpartySearchPublic,
@@ -113,6 +114,7 @@ __all__ = [
     "CategoryGroupsPublic",
     "CategoryPublic",
     "CounterpartiesPublic",
+    "CounterpartyAssignment",
     "CounterpartyCreate",
     "CounterpartyPublic",
     "CounterpartySearchPublic",
