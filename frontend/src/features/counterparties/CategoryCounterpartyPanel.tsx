@@ -59,13 +59,14 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {rows.map((category) => (
-              <div key={category.id} className="rounded-lg border p-3">
-                <div className="mb-3 flex items-baseline justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{category.name}</p>
-                    <p className="text-xs text-muted-foreground">{category.code}</p>
-                  </div>
-                </div>
+              <div
+                key={category.id}
+                data-testid={`category-counterparty-${category.id}`}
+                className="rounded-lg border p-3"
+              >
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Default for category code {category.code}
+                </p>
                 <CounterpartyPicker
                   value={category.counterparty ?? null}
                   disabled={assignment.isPending}
