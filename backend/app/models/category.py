@@ -26,6 +26,7 @@ from app.domain import BillingPeriod, Currency, DataSourcePolicy, RecurrenceUnit
 from app.models.base import Base, get_datetime_utc
 
 if TYPE_CHECKING:
+    from app.models.counterparty import Counterparty
     from app.models.ledger import Ledger
     from app.models.obligation import Obligation
 
@@ -97,6 +98,12 @@ class Category(Base):
     category_group_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, index=True
     )
+    counterparty_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("counterparty.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
@@ -129,6 +136,7 @@ class Category(Base):
         back_populates="categories",
         overlaps="ledger,categories",
     )
+    counterparty: Mapped[Counterparty | None] = relationship(back_populates="categories")
     obligations: Mapped[list[Obligation]] = relationship(
         back_populates="category",
         overlaps="ledger,obligations",

@@ -5,6 +5,7 @@ from app.api.routes import (
     analytics,
     categories,
     category_data_schemas,
+    counterparties,
     integration,
     integrations,
     ledgers,
@@ -22,6 +23,7 @@ api_router.include_router(ledgers.router)
 api_router.include_router(analytics.router)
 api_router.include_router(categories.router)
 api_router.include_router(category_data_schemas.router)
+api_router.include_router(counterparties.router)
 api_router.include_router(integration.router)
 api_router.include_router(integrations.router)
 api_router.include_router(legacy_import.router)

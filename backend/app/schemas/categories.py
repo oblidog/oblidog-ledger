@@ -11,6 +11,7 @@ from pydantic import (
 )
 
 from app.domain import Currency, DataSourcePolicy, RecurrenceUnit
+from app.schemas.counterparties import CounterpartySummaryPublic
 
 
 class CategoryGroupCreate(BaseModel):
@@ -70,6 +71,8 @@ class CategoryPublic(BaseModel):
     id: uuid.UUID
     ledger_id: uuid.UUID
     category_group_id: uuid.UUID
+    counterparty_id: uuid.UUID | None
+    counterparty: CounterpartySummaryPublic | None
     name: str
     description: str | None
     is_active: bool
