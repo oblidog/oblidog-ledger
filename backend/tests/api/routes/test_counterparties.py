@@ -1,11 +1,12 @@
 import uuid
 
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domain import BillingPeriod, DataSourcePolicy
-from app.models import Category, Ledger
+from app.models import Category, Counterparty, Ledger
 from app.services import obligations as obligation_service
 from app.use_cases import categories as category_use_cases
 from app.use_cases import ledgers as ledger_use_cases
@@ -95,6 +96,118 @@ def test_non_superuser_cannot_create_global_counterparty(
     )
 
     assert response.status_code == 403
+
+
+def test_counterparty_patch_preserves_omitted_metadata(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    original_name = f"Original {random_lower_string()}"
+    counterparty = _create_counterparty(
+        client,
+        superuser_token_headers,
+        name=original_name,
+    )
+    new_name = f"Renamed {random_lower_string()}"
+
+    response = client.patch(
+        f"{settings.API_V1_STR}/counterparties/{counterparty['id']}",
+        headers=superuser_token_headers,
+        json={"name": new_name},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["name"] == new_name
+    assert payload["short_name"] == original_name
+    assert payload["logo_url"] == counterparty["logo_url"]
+    assert payload["website_url"] == counterparty["website_url"]
+
+
+def test_counterparty_patch_can_update_and_clear_logo(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    counterparty = _create_counterparty(
+        client,
+        superuser_token_headers,
+        name=f"Logo {random_lower_string()}",
+    )
+    new_logo = "https://example.com/new-logo.svg"
+
+    updated = client.patch(
+        f"{settings.API_V1_STR}/counterparties/{counterparty['id']}",
+        headers=superuser_token_headers,
+        json={"logo_url": new_logo},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["logo_url"] == new_logo
+
+    cleared = client.patch(
+        f"{settings.API_V1_STR}/counterparties/{counterparty['id']}",
+        headers=superuser_token_headers,
+        json={"logo_url": None},
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["logo_url"] is None
+
+
+def test_counterparty_patch_rejects_null_name(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    counterparty = _create_counterparty(
+        client,
+        superuser_token_headers,
+        name=f"Named {random_lower_string()}",
+    )
+
+    response = client.patch(
+        f"{settings.API_V1_STR}/counterparties/{counterparty['id']}",
+        headers=superuser_token_headers,
+        json={"name": None},
+    )
+
+    assert response.status_code == 422
+
+
+def test_counterparty_names_are_case_insensitively_unique_in_database(
+    db: Session,
+) -> None:
+    suffix = random_lower_string()
+    first = Counterparty(name=f"Enea {suffix}")
+    db.add(first)
+    db.commit()
+
+    db.add(Counterparty(name=f"ENEA {suffix}"))
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        constraint_name = getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+        assert constraint_name == "uq_counterparty_name_lower"
+    else:
+        raise AssertionError("case-insensitive duplicate counterparty name was accepted")
+
+
+def test_counterparty_api_returns_conflict_for_case_insensitive_duplicate(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    suffix = random_lower_string()
+    _create_counterparty(
+        client,
+        superuser_token_headers,
+        name=f"Enea {suffix}",
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/counterparties",
+        headers=superuser_token_headers,
+        json={"name": f"ENEA {suffix}"},
+    )
+
+    assert response.status_code == 409
 
 
 def test_category_counterparty_is_copied_only_when_obligation_is_created(
