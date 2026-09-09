@@ -1,3 +1,10 @@
+## v0.9.0 (2026-09-09)
+
+### Feat
+
+- **integrations**: add monitoring and owner configuration UI (#283)
+- add integration registry and health reporting (#282)
+
 ## v0.8.0 (2026-09-07)
 
 ### Feat
