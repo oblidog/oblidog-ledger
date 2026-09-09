@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Building2 } from "lucide-react"
 
 import { ObligationsService } from "@/client"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
@@ -81,15 +80,17 @@ export function ObligationCounterpartyPanel({
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {rows.map((obligation) => (
-              <div key={obligation.key} className="rounded-lg border p-3">
+              <div
+                key={obligation.key}
+                data-testid={`obligation-counterparty-${obligation.key}`}
+                className="rounded-lg border p-3"
+              >
                 <div className="mb-3 flex items-start gap-3">
                   <CounterpartyLogo counterparty={obligation.counterparty ?? null} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium">{obligation.name}</p>
-                      <Badge variant="outline">{obligation.lifecycle}</Badge>
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground">{obligation.key}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {obligation.key} · {obligation.lifecycle}
+                    </p>
                     <p className="mt-1 truncate text-xs">
                       {obligation.counterparty?.short_name ||
                         obligation.counterparty?.name ||
