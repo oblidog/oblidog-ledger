@@ -57,11 +57,17 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await page.getByLabel("Name").fill(categoryName)
   await page.getByLabel("Code").fill("CPUI")
 
-  const categoryCounterpartySearch = page.getByRole("dialog").getByLabel("Search counterparty")
-  await categoryCounterpartySearch.fill(firstCounterpartyName)
-  await page.getByRole("dialog").getByRole("button", { name: "Enea", exact: true }).click()
-  await page.getByRole("button", { name: "Create category" }).click()
-  await expect(page.getByText("Category created")).toBeVisible()
+  const createCategoryDialog = page.getByRole("dialog")
+  await createCategoryDialog
+    .getByLabel("Search counterparty")
+    .fill(firstCounterpartyName)
+  await createCategoryDialog
+    .getByRole("button", { name: "Enea", exact: true })
+    .click()
+  await createCategoryDialog
+    .getByRole("button", { name: "Create category" })
+    .click()
+  await expect(createCategoryDialog).toBeHidden()
 
   const readCategories = () =>
     page.request.get(`${apiUrl}/api/v1/ledgers/${ledgerId}/categories`, {
@@ -76,33 +82,58 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   const category = categories.data.find((item) => item.name === categoryName)
   expect(category?.counterparty_id).toBe(firstCounterparty.id)
 
-  await page.getByRole("button", { name: `More actions for ${categoryName}` }).click()
+  await page
+    .getByRole("button", { name: `More actions for ${categoryName}` })
+    .click()
   await page.getByRole("menuitem", { name: "Edit category" }).click()
   const editDialog = page.getByRole("dialog")
-  await expect(editDialog.getByRole("button", { name: "Clear counterparty" })).toBeVisible()
+  await expect(
+    editDialog.getByRole("button", { name: "Clear counterparty" }),
+  ).toBeVisible()
   await editDialog.getByRole("button", { name: "Clear counterparty" }).click()
   await editDialog.getByRole("button", { name: "Save changes" }).click()
-  await expect(page.getByText("Category updated")).toBeVisible()
+  await expect(editDialog).toBeHidden()
 
   categoriesResponse = await readCategories()
   categories = (await categoriesResponse.json()) as {
     data: Array<{ id: string; name: string; counterparty_id: string | null }>
   }
-  expect(categories.data.find((item) => item.name === categoryName)?.counterparty_id).toBeNull()
+  expect(
+    categories.data.find((item) => item.name === categoryName)?.counterparty_id,
+  ).toBeNull()
 
-  await page.getByRole("button", { name: `More actions for ${categoryName}` }).click()
+  await page
+    .getByRole("button", { name: `More actions for ${categoryName}` })
+    .click()
   await page.getByRole("menuitem", { name: "Edit category" }).click()
   const reassignDialog = page.getByRole("dialog")
-  await reassignDialog.getByLabel("Search counterparty").fill(firstCounterpartyName)
-  await reassignDialog.getByRole("button", { name: "Enea", exact: true }).click()
+  await reassignDialog
+    .getByLabel("Search counterparty")
+    .fill(firstCounterpartyName)
+  await reassignDialog
+    .getByRole("button", { name: "Enea", exact: true })
+    .click()
   await reassignDialog.getByRole("button", { name: "Save changes" }).click()
-  await expect(page.getByText("Category updated")).toBeVisible()
+  await expect(reassignDialog).toBeHidden()
+
+  categoriesResponse = await readCategories()
+  categories = (await categoriesResponse.json()) as {
+    data: Array<{ id: string; name: string; counterparty_id: string | null }>
+  }
+  expect(
+    categories.data.find((item) => item.name === categoryName)?.counterparty_id,
+  ).toBe(firstCounterparty.id)
 
   await page.getByRole("link", { name: "Back to obligations" }).click()
   await page.getByRole("button", { name: "New obligation" }).click()
-  await page.getByLabel("Category").selectOption("CPUI")
-  await page.getByRole("button", { name: "Create obligation" }).click()
-  await expect(page.getByText("Obligation created")).toBeVisible()
+  const createObligationDialog = page.getByRole("dialog")
+  await createObligationDialog
+    .getByLabel("Category", { exact: true })
+    .selectOption("CPUI")
+  await createObligationDialog
+    .getByRole("button", { name: "Create obligation" })
+    .click()
+  await expect(createObligationDialog).toBeHidden()
 
   const obligationsResponse = await page.request.get(
     `${apiUrl}/api/v1/ledgers/${ledgerId}/obligations`,
@@ -120,13 +151,21 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   expect(obligation).toBeTruthy()
   expect(obligation?.counterparty_id).toBe(firstCounterparty.id)
 
-  await page.getByRole("button", { name: `Actions for ${categoryName}` }).click()
+  await page
+    .getByRole("button", { name: `Actions for ${categoryName}` })
+    .click()
   await page.getByRole("menuitem", { name: "Counterparty" }).click()
   const obligationCounterpartyDialog = page.getByRole("dialog")
-  await obligationCounterpartyDialog.getByLabel("Search counterparty").fill(secondCounterpartyName)
-  await obligationCounterpartyDialog.getByRole("button", { name: "Nju", exact: true }).click()
-  await obligationCounterpartyDialog.getByRole("button", { name: "Save" }).click()
-  await expect(page.getByText("Obligation counterparty updated")).toBeVisible()
+  await obligationCounterpartyDialog
+    .getByLabel("Search counterparty")
+    .fill(secondCounterpartyName)
+  await obligationCounterpartyDialog
+    .getByRole("button", { name: "Nju", exact: true })
+    .click()
+  await obligationCounterpartyDialog
+    .getByRole("button", { name: "Save" })
+    .click()
+  await expect(obligationCounterpartyDialog).toBeHidden()
 
   const readObligation = () =>
     page.request.get(
@@ -141,12 +180,16 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   }
   expect(obligationBody.counterparty_id).toBe(secondCounterparty.id)
 
-  await page.getByRole("button", { name: `Actions for ${categoryName}` }).click()
+  await page
+    .getByRole("button", { name: `Actions for ${categoryName}` })
+    .click()
   await page.getByRole("menuitem", { name: "Counterparty" }).click()
   const clearDialog = page.getByRole("dialog")
-  await clearDialog.getByRole("button", { name: "Clear counterparty" }).click()
+  await clearDialog
+    .getByRole("button", { name: "Clear counterparty" })
+    .click()
   await clearDialog.getByRole("button", { name: "Save" }).click()
-  await expect(page.getByText("Obligation counterparty updated")).toBeVisible()
+  await expect(clearDialog).toBeHidden()
 
   obligationResponse = await readObligation()
   obligationBody = (await obligationResponse.json()) as {
