@@ -25,9 +25,14 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
     )
     op.create_index(op.f("ix_counterparty_name"), "counterparty", ["name"], unique=False)
+    op.create_index(
+        "uq_counterparty_name_lower",
+        "counterparty",
+        [sa.text("lower(name)")],
+        unique=True,
+    )
 
     op.add_column(
         "category",
@@ -78,5 +83,6 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_category_counterparty_id"), table_name="category")
     op.drop_column("category", "counterparty_id")
 
+    op.drop_index("uq_counterparty_name_lower", table_name="counterparty")
     op.drop_index(op.f("ix_counterparty_name"), table_name="counterparty")
     op.drop_table("counterparty")
