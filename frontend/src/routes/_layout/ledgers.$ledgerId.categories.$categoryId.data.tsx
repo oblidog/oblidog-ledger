@@ -10,6 +10,10 @@ import {
   type CategoryDataSchemaPublic,
   client,
 } from "@/client"
+import {
+  type CategoryDataPropertySchema,
+  formatCategoryDataValue,
+} from "@/components/Categories/CategoryDataValue"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,13 +42,6 @@ import {
 
 const PAGE_SIZE = 20
 
-type PropertySchema = {
-  type?: string
-  format?: string
-  title?: string
-  enum?: unknown[]
-}
-
 type CategoryDataSchemasResponse = {
   data: CategoryDataSchemaPublic[]
   count: number
@@ -67,67 +64,6 @@ export const Route = createFileRoute(
   component: CategoryDataHistory,
   head: () => ({ meta: [{ title: "Category data - Oblidog" }] }),
 })
-
-function formatTimestamp(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value))
-}
-
-function formatCalendarDate(value: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-  if (!match) return value
-  const [, year, month, day] = match
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-    new Date(Number(year), Number(month) - 1, Number(day)),
-  )
-}
-
-function formatSchemaValue(value: unknown, schema: PropertySchema) {
-  if (value === null || value === undefined) return "—"
-
-  if (schema.enum?.includes(value)) {
-    return <Badge variant="outline">{String(value)}</Badge>
-  }
-
-  if (schema.type === "boolean" && typeof value === "boolean") {
-    return (
-      <Badge variant={value ? "secondary" : "outline"}>
-        {value ? "Yes" : "No"}
-      </Badge>
-    )
-  }
-
-  if (
-    (schema.type === "number" || schema.type === "integer") &&
-    typeof value === "number"
-  ) {
-    return new Intl.NumberFormat().format(value)
-  }
-
-  if (schema.type === "string" && schema.format === "date") {
-    return formatCalendarDate(String(value))
-  }
-
-  if (schema.type === "string" && schema.format === "date-time") {
-    return formatTimestamp(String(value))
-  }
-
-  if (typeof value === "object") {
-    const json = JSON.stringify(value)
-    return (
-      <details className="max-w-72 whitespace-normal">
-        <summary className="cursor-pointer text-sm font-medium">View details</summary>
-        <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">
-          {json}
-        </pre>
-      </details>
-    )
-  }
-
-  return String(value)
-}
 
 function dateStart(value?: string) {
   return value ? new Date(`${value}T00:00:00`).toISOString() : undefined
@@ -282,7 +218,7 @@ function CategoryDataHistory() {
 
   const properties = Object.entries(selectedSchema.schema?.properties ?? {}) as [
     string,
-    PropertySchema,
+    CategoryDataPropertySchema,
   ][]
   const pageStart = count === 0 ? 0 : page * PAGE_SIZE + 1
   const pageEnd = Math.min((page + 1) * PAGE_SIZE, count)
@@ -414,7 +350,10 @@ function CategoryDataHistory() {
                     {recordsQuery.data?.data.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell className="sticky left-0 z-10 bg-card font-medium">
-                          {formatTimestamp(record.observed_at)}
+                          {formatCategoryDataValue(record.observed_at, {
+                            type: "string",
+                            format: "date-time",
+                          })}
                         </TableCell>
                         <TableCell>{record.source || "—"}</TableCell>
                         <TableCell>
@@ -422,7 +361,10 @@ function CategoryDataHistory() {
                         </TableCell>
                         {properties.map(([name, schema]) => (
                           <TableCell key={name} className="max-w-80">
-                            {formatSchemaValue(record.data?.[name], schema)}
+                            {formatCategoryDataValue(
+                              record.data?.[name],
+                              schema,
+                            )}
                           </TableCell>
                         ))}
                       </TableRow>
