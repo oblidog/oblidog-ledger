@@ -1,4 +1,12 @@
 version: 2
+
+multi-ecosystem-groups:
+  playwright:
+    schedule:
+      interval: weekly
+    assignees: [wini83]
+    labels: [dependencies, internal]
+
 updates:
   # GitHub Actions
   - package-ecosystem: github-actions
@@ -44,6 +52,8 @@ updates:
         update-types: [minor, patch]
     ignore:
       - dependency-name: "@hey-api/openapi-ts"
+    patterns: ["@playwright/test"]
+    multi-ecosystem-group: playwright
   # Docker
   - package-ecosystem: docker
     directories:
@@ -60,6 +70,8 @@ updates:
     groups:
       non-major:
         update-types: [minor, patch]
+    patterns: ["playwright"]
+    multi-ecosystem-group: playwright
   # Docker Compose
   - package-ecosystem: docker-compose
     directory: /
