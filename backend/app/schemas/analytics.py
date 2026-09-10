@@ -18,6 +18,13 @@ class CurrencyPaymentSummaryPublic(BaseModel):
 
 
 class PeriodPaymentSummaryPublic(BaseModel):
+    """Payment progress across all non-canceled obligations in the period.
+
+    Amount summaries include known values from draft, collecting data, ready,
+    paid, and error obligations. Missing values are reported by
+    ``unknown_amount_count`` and excluded from amount totals.
+    """
+
     period: ObligationPeriodPublic
     total_obligation_count: int
     paid_obligation_count: int

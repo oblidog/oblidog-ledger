@@ -335,37 +335,74 @@ function PaymentProgressCard({
           <QueryState message="Payment progress could not be loaded." />
         ) : (
           <>
-            <p className="text-[28px] font-bold">
-              {formatPercentage(data.paid_percentage)}
-              {data.paid_percentage !== null && "%"}
-            </p>
-            <div
-              aria-label="Payment progress"
-              aria-valuemax={100}
-              aria-valuemin={0}
-              aria-valuenow={
-                data.paid_percentage === null
-                  ? undefined
-                  : Number(data.paid_percentage)
-              }
-              className="h-2 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{
-                  width: `${Math.min(Math.max(Number(data.paid_percentage ?? 0), 0), 100)}%`,
-                }}
-              />
-            </div>
+            {data.amount_summaries.length === 0 ? (
+              <div className="space-y-1">
+                <p className="text-[28px] font-bold">—</p>
+                <p className="text-sm font-medium">No known payable amount</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {data.amount_summaries.map((summary) => {
+                  const currencyLabel =
+                    summary.currency ?? "unspecified currency"
+                  const percentage = summary.paid_percentage
+
+                  return (
+                    <section
+                      aria-label={`Payment progress in ${currencyLabel}`}
+                      className="space-y-2"
+                      key={currencyLabel}
+                    >
+                      <p className="text-[28px] font-bold">
+                        {formatPercentage(percentage)}
+                        {percentage !== null && "%"}
+                      </p>
+                      <p className="text-sm font-medium">
+                        {formatAmount(
+                          summary.paid_known_amount,
+                          summary.currency,
+                        )}
+                        {" / "}
+                        {formatAmount(
+                          summary.total_known_amount,
+                          summary.currency,
+                        )}
+                      </p>
+                      <div
+                        aria-label={`Amount paid in ${currencyLabel}`}
+                        aria-valuemax={100}
+                        aria-valuemin={0}
+                        aria-valuenow={
+                          percentage === null ? undefined : Number(percentage)
+                        }
+                        className="h-2 overflow-hidden rounded-full bg-muted"
+                        role="progressbar"
+                      >
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{
+                            width: `${Math.min(Math.max(Number(percentage ?? 0), 0), 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </section>
+                  )
+                })}
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               {data.paid_obligation_count} of {data.total_obligation_count}{" "}
               obligations paid
             </p>
             {!data.is_complete && (
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                {data.unknown_amount_count} amount
-                {data.unknown_amount_count === 1 ? "" : "s"} unknown
+                {data.unknown_amount_count}{" "}
+                {data.unknown_amount_count === 1
+                  ? "obligation has"
+                  : "obligations have"}{" "}
+                an unknown amount and{" "}
+                {data.unknown_amount_count === 1 ? "is" : "are"} excluded from
+                amount totals
               </p>
             )}
             <Button className="mt-2 px-0" variant="link" size="sm" asChild>
@@ -619,9 +656,7 @@ function CashflowCurrencyChart({
     amount: Number(point.amount),
     cumulative: Number(point.cumulative_amount),
     date: point.due_date,
-    fill: point.is_overdue
-      ? "var(--destructive)"
-      : "var(--color-amount)",
+    fill: point.is_overdue ? "var(--destructive)" : "var(--color-amount)",
   }))
   const showValueLabels = chartData.length <= 8
 
@@ -1058,8 +1093,7 @@ function CategoryHistoryCard({
   const currency = knownPoints[0]?.currency ?? null
   const chartData =
     data?.points.map((point) => {
-      const amount =
-        point.state === "known" ? Number(point.current_amount) : 0
+      const amount = point.state === "known" ? Number(point.current_amount) : 0
       return {
         amount,
         fill:
@@ -1311,7 +1345,9 @@ function PeriodTotalsCard({
                                 <span>
                                   {formatAmount(
                                     String(value),
-                                    currency === "No currency" ? null : currency,
+                                    currency === "No currency"
+                                      ? null
+                                      : currency,
                                   )}
                                 </span>
                                 {item.payload.incomplete && (
