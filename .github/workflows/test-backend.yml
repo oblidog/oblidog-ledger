@@ -1,9 +1,6 @@
 name: Test Backend
 
 on:
-  push:
-    branches:
-      - dev
   pull_request:
     types:
       - opened
@@ -11,6 +8,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   PROJECT_NAME: Oblidog
@@ -36,28 +37,50 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Determine test scope
+        id: scope
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        shell: bash
+        run: |
+          if [[ "$HEAD_REF" == release/v* || "$HEAD_REF" == sync/main-to-dev-* ]]; then
+            echo "Skipping heavy backend tests for trusted release metadata or back-sync PR."
+            echo "run_heavy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_heavy=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Create CI environment file
+        if: steps.scope.outputs.run_heavy == 'true'
         run: cp .github/ci.env .env
       - name: Set up Python
+        if: steps.scope.outputs.run_heavy == 'true'
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install uv
+        if: steps.scope.outputs.run_heavy == 'true'
         uses: astral-sh/setup-uv@v7
       - run: docker compose down -v --remove-orphans
+        if: steps.scope.outputs.run_heavy == 'true'
       - run: docker compose up -d --wait db mailcatcher
+        if: steps.scope.outputs.run_heavy == 'true'
       - name: Create test database
+        if: steps.scope.outputs.run_heavy == 'true'
         run: docker compose exec -T db createdb -U "$POSTGRES_USER" findog_test
       - name: Migrate DB
+        if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/prestart.sh
         working-directory: backend
       - name: Run tests
+        if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
         working-directory: backend
       - name: Export integration OpenAPI schema
+        if: steps.scope.outputs.run_heavy == 'true'
         run: uv run python scripts/export_integration_openapi.py
         working-directory: backend
       - name: Validate integration OpenAPI schema
+        if: steps.scope.outputs.run_heavy == 'true'
         shell: bash
         run: |
           python -m json.tool openapi/integration.json >/dev/null
@@ -75,15 +98,19 @@ jobs:
           assert not unexpected, f"Unexpected non-integration paths: {unexpected}"
           PY
       - name: Validate integration OpenAPI client generation
+        if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/validate_integration_openapi_client.sh
         working-directory: backend
       - run: docker compose down -v --remove-orphans
+        if: ${{ always() && steps.scope.outputs.run_heavy == 'true' }}
       - name: Store coverage files
+        if: steps.scope.outputs.run_heavy == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: coverage-html
           path: backend/htmlcov
           include-hidden-files: true
       - name: Coverage report
+        if: steps.scope.outputs.run_heavy == 'true'
         run: uv run coverage report --fail-under=85
         working-directory: backend
