@@ -1,3 +1,13 @@
+## v0.12.0 (2026-09-10)
+
+### Feat
+
+- **frontend**: add Counterparty catalog management (#304)
+
+### Fix
+
+- **deps**: move shared options to Playwright update group (#322)
+
 ## v0.11.0 (2026-09-09)
 
 ### Feat
