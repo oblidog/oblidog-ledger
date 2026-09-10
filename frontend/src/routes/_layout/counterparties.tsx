@@ -102,7 +102,9 @@ function CounterpartyFormDialog({
         : createCounterparty(input)
     },
     onSuccess: () => {
-      showSuccessToast(editing ? "Counterparty updated" : "Counterparty created")
+      showSuccessToast(
+        editing ? "Counterparty updated" : "Counterparty created",
+      )
       setOpen(false)
       void queryClient.invalidateQueries({ queryKey: ["counterparties"] })
     },
@@ -123,7 +125,11 @@ function CounterpartyFormDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {editing ? (
-          <Button variant="ghost" size="icon" aria-label={`Edit ${counterparty!.name}`}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Edit ${counterparty!.name}`}
+          >
             <Pencil className="size-4" />
           </Button>
         ) : (
@@ -134,89 +140,148 @@ function CounterpartyFormDialog({
         )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit counterparty" : "Add counterparty"}</DialogTitle>
-          <DialogDescription>
-            Counterparties are shared across the whole Oblidog installation.
-          </DialogDescription>
-        </DialogHeader>
+        <form
+          className="grid min-w-0 gap-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!mutation.isPending) mutation.mutate()
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {editing ? "Edit counterparty" : "Add counterparty"}
+            </DialogTitle>
+            <DialogDescription>
+              Counterparties are shared across the whole Oblidog installation.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="flex items-center gap-3 rounded-lg border p-3">
-          <CounterpartyLogo counterparty={preview} className="size-12" />
-          <div className="min-w-0">
-            <p className="truncate font-medium">{form.shortName || form.name || "Preview"}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {form.websiteUrl || "No website"}
-            </p>
+          <div className="flex items-center gap-3 rounded-lg border p-3">
+            <CounterpartyLogo counterparty={preview} className="size-12" />
+            <div className="min-w-0">
+              <p className="truncate font-medium">
+                {form.shortName || form.name || "Preview"}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {form.websiteUrl || "No website"}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-2">
-            <Label htmlFor={`counterparty-name-${counterparty?.id ?? "new"}`}>Name *</Label>
-            <Input
-              id={`counterparty-name-${counterparty?.id ?? "new"}`}
-              value={form.name}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Enea S.A."
-              autoFocus
-            />
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor={`counterparty-name-${counterparty?.id ?? "new"}`}>
+                Name *
+              </Label>
+              <Input
+                id={`counterparty-name-${counterparty?.id ?? "new"}`}
+                value={form.name}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                placeholder="Enea S.A."
+                required
+                maxLength={255}
+                autoFocus
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label
+                htmlFor={`counterparty-short-name-${counterparty?.id ?? "new"}`}
+              >
+                Short name
+              </Label>
+              <Input
+                id={`counterparty-short-name-${counterparty?.id ?? "new"}`}
+                value={form.shortName}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    shortName: event.target.value,
+                  }))
+                }
+                placeholder="Enea"
+                maxLength={255}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label
+                htmlFor={`counterparty-logo-url-${counterparty?.id ?? "new"}`}
+              >
+                Logo URL
+              </Label>
+              <Input
+                id={`counterparty-logo-url-${counterparty?.id ?? "new"}`}
+                value={form.logoUrl}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    logoUrl: event.target.value,
+                  }))
+                }
+                placeholder="https://example.com/logo.svg"
+                type="url"
+                pattern="https?://.+"
+                title="Enter a full HTTP or HTTPS URL, for example https://example.com"
+                maxLength={2048}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label
+                htmlFor={`counterparty-website-url-${counterparty?.id ?? "new"}`}
+              >
+                Website URL
+              </Label>
+              <Input
+                id={`counterparty-website-url-${counterparty?.id ?? "new"}`}
+                value={form.websiteUrl}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    websiteUrl: event.target.value,
+                  }))
+                }
+                placeholder="https://www.enea.pl"
+                type="url"
+                pattern="https?://.+"
+                title="Enter a full HTTP or HTTPS URL, for example https://example.com"
+                maxLength={2048}
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor={`counterparty-short-name-${counterparty?.id ?? "new"}`}>Short name</Label>
-            <Input
-              id={`counterparty-short-name-${counterparty?.id ?? "new"}`}
-              value={form.shortName}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, shortName: event.target.value }))
-              }
-              placeholder="Enea"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor={`counterparty-logo-url-${counterparty?.id ?? "new"}`}>Logo URL</Label>
-            <Input
-              id={`counterparty-logo-url-${counterparty?.id ?? "new"}`}
-              value={form.logoUrl}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, logoUrl: event.target.value }))
-              }
-              placeholder="https://example.com/logo.svg"
-              type="url"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor={`counterparty-website-url-${counterparty?.id ?? "new"}`}>Website URL</Label>
-            <Input
-              id={`counterparty-website-url-${counterparty?.id ?? "new"}`}
-              value={form.websiteUrl}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, websiteUrl: event.target.value }))
-              }
-              placeholder="https://www.enea.pl"
-              type="url"
-            />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" disabled={mutation.isPending}>Cancel</Button>
-          </DialogClose>
-          <LoadingButton
-            loading={mutation.isPending}
-            disabled={!form.name.trim()}
-            onClick={() => mutation.mutate()}
-          >
-            {editing ? "Save changes" : "Create counterparty"}
-          </LoadingButton>
-        </DialogFooter>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={mutation.isPending}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+            <LoadingButton
+              loading={mutation.isPending}
+              disabled={!form.name.trim()}
+              type="submit"
+            >
+              {editing ? "Save changes" : "Create counterparty"}
+            </LoadingButton>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
 }
 
-function DeleteCounterpartyDialog({ counterparty }: { counterparty: Counterparty }) {
+function DeleteCounterpartyDialog({
+  counterparty,
+}: {
+  counterparty: Counterparty
+}) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -234,7 +299,11 @@ function DeleteCounterpartyDialog({ counterparty }: { counterparty: Counterparty
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={`Delete ${counterparty.name}`}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Delete ${counterparty.name}`}
+        >
           <Trash2 className="size-4" />
         </Button>
       </DialogTrigger>
@@ -242,12 +311,15 @@ function DeleteCounterpartyDialog({ counterparty }: { counterparty: Counterparty
         <DialogHeader>
           <DialogTitle>Delete counterparty?</DialogTitle>
           <DialogDescription>
-            Delete {counterparty.name} from the global catalog. Counterparties assigned to categories or obligations cannot be deleted.
+            Delete {counterparty.name} from the global catalog. Counterparties
+            assigned to categories or obligations cannot be deleted.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" disabled={mutation.isPending}>Cancel</Button>
+            <Button variant="outline" disabled={mutation.isPending}>
+              Cancel
+            </Button>
           </DialogClose>
           <LoadingButton
             variant="destructive"
@@ -306,14 +378,22 @@ function CounterpartiesAdmin() {
       {counterparties.isError ? (
         <div className="flex items-center gap-3 text-sm text-destructive">
           <span>Unable to load counterparties.</span>
-          <Button variant="outline" size="sm" onClick={() => void counterparties.refetch()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void counterparties.refetch()}
+          >
             Try again
           </Button>
         </div>
       ) : null}
-      {!counterparties.isLoading && !counterparties.isError && filtered.length === 0 ? (
+      {!counterparties.isLoading &&
+      !counterparties.isError &&
+      filtered.length === 0 ? (
         <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          {query ? "No counterparties match your search." : "No counterparties yet."}
+          {query
+            ? "No counterparties match your search."
+            : "No counterparties yet."}
         </p>
       ) : null}
 
@@ -329,7 +409,10 @@ function CounterpartiesAdmin() {
               <div className="flex min-w-0 items-center gap-2">
                 <p className="truncate font-semibold">{counterparty.name}</p>
                 {counterparty.short_name ? (
-                  <span className="shrink-0 rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  <span
+                    className="min-w-0 max-w-[50%] truncate rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                    title={counterparty.short_name}
+                  >
                     {counterparty.short_name}
                   </span>
                 ) : null}

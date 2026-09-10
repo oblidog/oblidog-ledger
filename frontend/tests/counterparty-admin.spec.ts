@@ -22,6 +22,18 @@ test("superuser can create, edit, search and delete counterparties", async ({
   const createDialog = page.getByRole("dialog")
   await createDialog.getByLabel("Name *").fill(name)
   await createDialog.getByLabel("Short name").fill("CP Test")
+  for (const invalidUrl of ["www.enea.pl", "ftp://example.com"]) {
+    await createDialog.getByLabel("Website URL").fill(invalidUrl)
+    await createDialog
+      .getByRole("button", { name: "Create counterparty" })
+      .click()
+    await expect(createDialog).toBeVisible()
+    expect(
+      await createDialog
+        .getByLabel("Website URL")
+        .evaluate((input: HTMLInputElement) => input.checkValidity()),
+    ).toBe(false)
+  }
   await createDialog
     .getByLabel("Website URL")
     .fill("https://example.com/counterparty")
@@ -44,9 +56,7 @@ test("superuser can create, edit, search and delete counterparties", async ({
   await page.getByLabel("Search counterparties").fill(updatedName)
   await expect(page.getByText(updatedName, { exact: true })).toBeVisible()
 
-  await page
-    .getByRole("button", { name: `Delete ${updatedName}` })
-    .click()
+  await page.getByRole("button", { name: `Delete ${updatedName}` }).click()
   const deleteDialog = page.getByRole("dialog")
   await deleteDialog.getByRole("button", { name: "Delete" }).click()
   await expect(deleteDialog).toBeHidden()
@@ -56,7 +66,9 @@ test("superuser can create, edit, search and delete counterparties", async ({
 test.describe("Counterparty catalog access control", () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  test("non-superuser cannot see or access counterparty catalog", async ({ page }) => {
+  test("non-superuser cannot see or access counterparty catalog", async ({
+    page,
+  }) => {
     const email = randomEmail()
     const password = randomPassword()
 
