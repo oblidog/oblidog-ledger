@@ -34,7 +34,7 @@ dev = [
     "ruff>=0.16.2,<1.0.0",
     "prek>=0.4.13,<1.0.0",
     "coverage>=7.15.4,<8.0.0",
-    "openapi-python-client==0.29.0",
+    "openapi-python-client==0.29.1",
     "types-pyyaml>=6.0.12.20260906,<7.0.0",
     "types-jsonschema>=4.26.0.20260518",
 ]
