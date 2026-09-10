@@ -1328,6 +1328,7 @@ function PeriodTotalsCard({
                       <Bar
                         className="cursor-pointer"
                         dataKey="amount"
+                        fill="var(--color-amount)"
                         maxBarSize={72}
                         onClick={(entry) => {
                           window.location.assign(String(entry.payload.href))
