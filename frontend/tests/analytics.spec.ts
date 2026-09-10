@@ -52,6 +52,37 @@ async function createCategoryHistoryFixture() {
   return ledger
 }
 
+async function periodTotalsBarFill(page: import("@playwright/test").Page) {
+  const chart = page.getByTestId("period-totals-chart")
+  const bar = chart.locator(".recharts-bar-rectangle path").first()
+
+  await expect(bar).toBeVisible()
+  await expect(bar).toHaveAttribute("fill", "var(--color-amount)")
+  await bar.hover()
+  await expect(chart.locator(".recharts-tooltip-wrapper")).toBeVisible()
+
+  return bar.evaluate((element) => getComputedStyle(element).fill)
+}
+
+test("uses a theme-aware color for period total bars", async ({ page }) => {
+  const ledger = await createCategoryHistoryFixture()
+
+  await page.addInitScript(() => localStorage.setItem("vite-ui-theme", "light"))
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  await expect(page.locator("html")).toHaveClass(/light/)
+  const lightFill = await periodTotalsBarFill(page)
+
+  await page.getByTestId("theme-button").click()
+  await page.getByTestId("dark-mode").click()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+  const darkFill = await periodTotalsBarFill(page)
+
+  expect(lightFill).not.toBe("rgb(0, 0, 0)")
+  expect(darkFill).not.toBe("rgb(0, 0, 0)")
+  expect(darkFill).not.toBe(lightFill)
+})
+
 for (const width of [320, 375, 414]) {
   test(`keeps analytics charts readable at ${width}px`, async ({ page }) => {
     const ledger = await createCategoryHistoryFixture()
