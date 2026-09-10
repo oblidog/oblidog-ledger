@@ -11,9 +11,9 @@ dependencies = [
     "pydantic>=2.13.5",
     "emails>=1.1.2,<2.0",
     "jinja2<4.0.0,>=3.1.4",
-    "alembic>=1.19.1,<2.0.0",
+    "alembic>=1.19.2,<2.0.0",
     "httpx<1.0.0,>=0.25.1",
-    "psycopg[binary]>=3.3.4,<4.0.0",
+    "psycopg[binary]>=3.3.5,<4.0.0",
     "sqlmodel<1.0.0,>=0.0.21",
     "pydantic-settings>=2.15.0,<3.0.0",
     "sentry-sdk[fastapi]>=2.68.1,<3.0.0",
@@ -35,7 +35,7 @@ dev = [
     "prek>=0.4.13,<1.0.0",
     "coverage>=7.15.4,<8.0.0",
     "openapi-python-client==0.29.0",
-    "types-pyyaml>=6.0.12.20250915,<7.0.0",
+    "types-pyyaml>=6.0.12.20260906,<7.0.0",
     "types-jsonschema>=4.26.0.20260518",
 ]
 

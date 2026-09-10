@@ -15,6 +15,24 @@ export type CounterpartySummary = {
   logo_url: string | null
 }
 
+export type Counterparty = CounterpartySummary & {
+  website_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type CounterpartyInput = {
+  name: string
+  short_name: string | null
+  logo_url: string | null
+  website_url: string | null
+}
+
+export type CounterpartyListResponse = {
+  data: Counterparty[]
+  count: number
+}
+
 export type CounterpartySearchResponse = {
   items: CounterpartySummary[]
 }
@@ -37,6 +55,59 @@ export type ObligationWithCounterparty = {
   due_date: string | null
   counterparty_id: string | null
   counterparty: CounterpartySummary | null
+}
+
+export async function listCounterparties() {
+  const response = await client.get({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/counterparties",
+  })
+
+  return response.data as CounterpartyListResponse
+}
+
+export async function createCounterparty(input: CounterpartyInput) {
+  const response = await client.post({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/counterparties",
+    body: input,
+    headers: { "Content-Type": "application/json" },
+  })
+
+  return response.data as Counterparty
+}
+
+export async function updateCounterparty(
+  counterpartyId: string,
+  input: Partial<CounterpartyInput>,
+) {
+  const response = await client.patch({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/counterparties/{counterparty_id}",
+    path: { counterparty_id: counterpartyId },
+    body: input,
+    headers: { "Content-Type": "application/json" },
+  })
+
+  return response.data as Counterparty
+}
+
+export async function deleteCounterparty(counterpartyId: string) {
+  const response = await client.delete({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/counterparties/{counterparty_id}",
+    path: { counterparty_id: counterpartyId },
+  })
+
+  return response.data
 }
 
 export async function searchCounterparties(query: string, limit = 10) {

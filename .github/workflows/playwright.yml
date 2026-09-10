@@ -68,6 +68,14 @@ jobs:
     - name: Create CI environment file
       run: cp .github/ci.env .env
     - uses: oven-sh/setup-bun@v2
+    - name: Verify Playwright package and Docker image versions match
+      run: |
+        package_version="$(bun -e 'const pkg = await Bun.file("frontend/package.json").json(); console.log(pkg.devDependencies["@playwright/test"].replace(/^[^0-9]*/, ""))')"
+        image_version="$(sed -n 's|^FROM mcr.microsoft.com/playwright:v\([^-]*\)-.*|\1|p' frontend/Dockerfile.playwright)"
+        if [ -z "$image_version" ] || [ "$package_version" != "$image_version" ]; then
+          echo "::error::Playwright package ($package_version) and Docker image ($image_version) versions must match"
+          exit 1
+        fi
     - uses: actions/setup-python@v7
       with:
         python-version: '3.12'

@@ -1,4 +1,16 @@
 version: 2
+
+multi-ecosystem-groups:
+  playwright:
+    schedule:
+      interval: weekly
+    target-branch: dev
+    open-pull-requests-limit: 3
+    assignees: [wini83]
+    commit-message:
+      prefix: "chore(deps)"
+    labels: [dependencies, internal]
+
 updates:
   # GitHub Actions
   - package-ecosystem: github-actions
@@ -33,17 +45,15 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    target-branch: dev
-    open-pull-requests-limit: 3
     assignees: [wini83]
-    commit-message:
-      prefix: "chore(deps)"
     labels: [dependencies, internal]
     groups:
       non-major:
         update-types: [minor, patch]
     ignore:
       - dependency-name: "@hey-api/openapi-ts"
+    patterns: ["@playwright/test"]
+    multi-ecosystem-group: playwright
   # Docker
   - package-ecosystem: docker
     directories:
@@ -51,15 +61,13 @@ updates:
       - /frontend
     schedule:
       interval: weekly
-    target-branch: dev
-    open-pull-requests-limit: 3
     assignees: [wini83]
-    commit-message:
-      prefix: "chore(deps)"
     labels: [dependencies, internal]
     groups:
       non-major:
         update-types: [minor, patch]
+    patterns: ["playwright"]
+    multi-ecosystem-group: playwright
   # Docker Compose
   - package-ecosystem: docker-compose
     directory: /
