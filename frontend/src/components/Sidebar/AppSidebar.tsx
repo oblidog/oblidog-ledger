@@ -1,4 +1,4 @@
-import { Plug, Users } from "lucide-react"
+import { Building2, Plug, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -34,7 +34,10 @@ export function AppSidebar() {
         ]
       : []),
     ...(currentUser?.is_superuser
-      ? [{ icon: Users, title: "Admin", path: "/admin" }]
+      ? [
+          { icon: Building2, title: "Counterparties", path: "/counterparties" },
+          { icon: Users, title: "Admin", path: "/admin" },
+        ]
       : []),
   ]
 
