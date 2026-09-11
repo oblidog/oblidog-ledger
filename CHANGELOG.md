@@ -1,3 +1,9 @@
+## v0.12.2 (2026-09-11)
+
+### Refactor
+
+- simplify integration model (#333)
+
 ## v0.12.1 (2026-09-11)
 
 ### Fix
