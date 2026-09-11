@@ -17,13 +17,13 @@ from app.api.routes.obligations import (
 )
 from app.domain import ObligationKey, ObligationLifecycle
 from app.schemas import (
-    CategoryDataRecordCreate,
     CategoryDataRecordPublic,
     CategoryDataRecordsPublic,
     CategoryDataSchemaPublic,
+    IntegrationCategoryDataRecordCreate,
+    IntegrationObligationComponentUpsert,
     ObligationComponentPublic,
     ObligationComponentsPublic,
-    ObligationComponentUpsert,
     ObligationIntegrationUpdate,
     ObligationNoteAppend,
     ObligationPublic,
@@ -97,7 +97,7 @@ def read_integration_category_data_records(
 
 @router.post("/category/data-records", response_model=CategoryDataRecordPublic)
 def create_integration_category_data_record(
-    category_data_in: CategoryDataRecordCreate,
+    category_data_in: IntegrationCategoryDataRecordCreate,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> CategoryDataRecordPublic:
     try:
@@ -107,7 +107,7 @@ def create_integration_category_data_record(
             category_id=context.category.id,
             observed_at=category_data_in.observed_at,
             data=category_data_in.data,
-            source=category_data_in.source,
+            source=context.integration.name,
             external_id=category_data_in.external_id,
         )
     except CategoryNotFoundError:
@@ -226,7 +226,7 @@ def read_integration_obligation_components(
 )
 def upsert_integration_obligation_component(
     obligation_key: str,
-    component_in: ObligationComponentUpsert,
+    component_in: IntegrationObligationComponentUpsert,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationComponentPublic:
     key = _parse_obligation_key(obligation_key)
@@ -236,6 +236,7 @@ def upsert_integration_obligation_component(
             session=context.session,
             ledger_id=context.ledger.id,
             key=key,
+            source=context.integration.name,
             **component_in.model_dump(),
         )
     except ObligationNotFoundError:

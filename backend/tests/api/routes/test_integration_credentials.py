@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -126,3 +127,77 @@ def test_credential_cannot_access_another_category_obligation(
         headers=connection_headers,
     )
     assert response.status_code == 404
+
+
+def test_integration_derives_category_data_and_component_source_from_context(
+    client: TestClient, db: Session
+) -> None:
+    created, _, ledger, category = _create_integration(client, db)
+    category_use_cases.set_category_data_schema(
+        session=db,
+        ledger_id=ledger.id,
+        category_id=category.id,
+        schema={
+            "type": "object",
+            "properties": {"reading": {"type": "number"}},
+            "required": ["reading"],
+        },
+    )
+    obligation = obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 8),
+    )
+    connection_headers = {"Authorization": f"Bearer {created['connection_key']}"}
+
+    rejected_data = client.post(
+        f"{settings.API_V1_STR}/integration/category/data-records",
+        headers=connection_headers,
+        json={
+            "observed_at": datetime(2026, 8, 1, tzinfo=UTC).isoformat(),
+            "data": {"reading": 10},
+            "source": "forged-source",
+        },
+    )
+    assert rejected_data.status_code == 422
+
+    category_data = client.post(
+        f"{settings.API_V1_STR}/integration/category/data-records",
+        headers=connection_headers,
+        json={
+            "observed_at": datetime(2026, 8, 1, tzinfo=UTC).isoformat(),
+            "data": {"reading": 10},
+            "external_id": "reading-1",
+        },
+    )
+    assert category_data.status_code == 200
+    assert category_data.json()["source"] == "Meter"
+
+    component_url = (
+        f"{settings.API_V1_STR}/integration/obligations/"
+        f"{obligation.business_key}/components/upsert"
+    )
+    rejected_component = client.put(
+        component_url,
+        headers=connection_headers,
+        json={
+            "type": "invoice",
+            "label": "August invoice",
+            "external_id": "FV/2026/08/12345",
+            "source": "forged-source",
+        },
+    )
+    assert rejected_component.status_code == 422
+
+    component = client.put(
+        component_url,
+        headers=connection_headers,
+        json={
+            "type": "invoice",
+            "label": "August invoice",
+            "external_id": "FV/2026/08/12345",
+        },
+    )
+    assert component.status_code == 200
+    assert component.json()["source"] == "Meter"

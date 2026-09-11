@@ -112,9 +112,9 @@ survive a reload, and can be discarded from either editing mode.
 
 ## Create an observation through the integration API
 
-Use a ledger-scoped API key with the `ledger:write` scope. Replace the example
-API key, category code, timestamp, fields, source, and external ID with your
-own values.
+Use the connection key of the integration assigned to the category. Replace the
+example API key, timestamp, fields, and external ID with your own values. The
+record source is assigned automatically from the authenticated integration.
 
 ```bash
 curl --silent --show-error --fail-with-body \
@@ -127,19 +127,18 @@ curl --silent --show-error --fail-with-body \
       "DK": "2026-08-24",
       "apartment_fee": 199.99
     },
-    "source": "meter-importer",
     "external_id": "flat-2026-08-24"
   }' \
-  "http://localhost:8000/api/v1/integration/categories/FLAT/data-records"
+  "http://localhost:8000/api/v1/integration/category/data-records"
 ```
 
 `observed_at` is the time at which the value was observed, rather than the time
 at which the request is sent. The `data` object must satisfy the active schema
 for the category.
 
-When both `source` and `external_id` are supplied, they form an idempotency
-identity for that category. Retrying the same request returns the existing
-record instead of creating a duplicate.
+The integration source and `external_id` form an idempotency identity for that
+category. Retrying the same request returns the existing record instead of
+creating a duplicate.
 
 ## Read observations
 

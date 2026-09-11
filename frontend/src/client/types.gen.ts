@@ -131,30 +131,6 @@ export type CategoryCreate = {
 };
 
 /**
- * CategoryDataRecordCreate
- */
-export type CategoryDataRecordCreate = {
-    /**
-     * Observed At
-     */
-    observed_at: string;
-    /**
-     * Data
-     */
-    data: {
-        [key: string]: unknown;
-    };
-    /**
-     * Source
-     */
-    source?: string | null;
-    /**
-     * External Id
-     */
-    external_id?: string | null;
-};
-
-/**
  * CategoryDataRecordPublic
  */
 export type CategoryDataRecordPublic = {
@@ -675,6 +651,28 @@ export type HttpValidationError = {
 };
 
 /**
+ * IntegrationCategoryDataRecordCreate
+ *
+ * A category observation submitted by its authenticated integration.
+ */
+export type IntegrationCategoryDataRecordCreate = {
+    /**
+     * Observed At
+     */
+    observed_at: string;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * External Id
+     */
+    external_id?: string | null;
+};
+
+/**
  * IntegrationConflictCode
  */
 export type IntegrationConflictCode = 'duplicate_key' | 'revision_conflict' | 'integration_disabled' | 'run_in_progress' | 'run_conflict';
@@ -769,6 +767,36 @@ export type IntegrationExecutionState = 'never_run' | 'running' | 'timed_out' | 
  * IntegrationHealth
  */
 export type IntegrationHealth = 'disabled' | 'timed_out' | 'stale' | 'running' | 'never_run' | 'error' | 'healthy';
+
+/**
+ * IntegrationObligationComponentUpsert
+ *
+ * An obligation component identified within its authenticated integration.
+ */
+export type IntegrationObligationComponentUpsert = {
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * External Id
+     */
+    external_id: string;
+    /**
+     * Amount
+     */
+    amount?: number | string | null;
+    /**
+     * Metadata
+     */
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
+};
 
 /**
  * IntegrationPublic
@@ -1596,6 +1624,12 @@ export type PeriodCashflowPublic = {
 
 /**
  * PeriodPaymentSummaryPublic
+ *
+ * Payment progress across all non-canceled obligations in the period.
+ *
+ * Amount summaries include known values from draft, collecting data, ready,
+ * paid, and error obligations. Missing values are reported by
+ * ``unknown_amount_count`` and excluded from amount totals.
  */
 export type PeriodPaymentSummaryPublic = {
     period: ObligationPeriodPublic;
@@ -3538,7 +3572,7 @@ export type IntegrationReadIntegrationCategoryDataRecordsResponses = {
 export type IntegrationReadIntegrationCategoryDataRecordsResponse = IntegrationReadIntegrationCategoryDataRecordsResponses[keyof IntegrationReadIntegrationCategoryDataRecordsResponses];
 
 export type IntegrationCreateIntegrationCategoryDataRecordData = {
-    body: CategoryDataRecordCreate;
+    body: IntegrationCategoryDataRecordCreate;
     path?: never;
     query?: never;
     url: '/api/v1/integration/category/data-records';
@@ -3707,7 +3741,7 @@ export type IntegrationReadIntegrationObligationComponentsResponses = {
 export type IntegrationReadIntegrationObligationComponentsResponse = IntegrationReadIntegrationObligationComponentsResponses[keyof IntegrationReadIntegrationObligationComponentsResponses];
 
 export type IntegrationUpsertIntegrationObligationComponentData = {
-    body: ObligationComponentUpsert;
+    body: IntegrationObligationComponentUpsert;
     path: {
         /**
          * Obligation Key
