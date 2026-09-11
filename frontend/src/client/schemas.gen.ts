@@ -260,54 +260,6 @@ export const CategoryCreateSchema = {
     title: 'CategoryCreate'
 } as const;
 
-export const CategoryDataRecordCreateSchema = {
-    properties: {
-        observed_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Observed At'
-        },
-        data: {
-            additionalProperties: true,
-            type: 'object',
-            title: 'Data'
-        },
-        source: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255,
-                    minLength: 1
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Source'
-        },
-        external_id: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255,
-                    minLength: 1
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'External Id'
-        }
-    },
-    additionalProperties: false,
-    type: 'object',
-    required: [
-        'observed_at',
-        'data'
-    ],
-    title: 'CategoryDataRecordCreate'
-} as const;
-
 export const CategoryDataRecordPublicSchema = {
     properties: {
         id: {
@@ -1347,6 +1299,42 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
+export const IntegrationCategoryDataRecordCreateSchema = {
+    properties: {
+        observed_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Observed At'
+        },
+        data: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Data'
+        },
+        external_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Id'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'observed_at',
+        'data'
+    ],
+    title: 'IntegrationCategoryDataRecordCreate',
+    description: 'A category observation submitted by its authenticated integration.'
+} as const;
+
 export const IntegrationConflictCodeSchema = {
     type: 'string',
     enum: [
@@ -1537,6 +1525,65 @@ export const IntegrationHealthSchema = {
         'healthy'
     ],
     title: 'IntegrationHealth'
+} as const;
+
+export const IntegrationObligationComponentUpsertSchema = {
+    properties: {
+        type: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+            title: 'Type'
+        },
+        label: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Label'
+        },
+        external_id: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'External Id'
+        },
+        amount: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Amount'
+        },
+        metadata: {
+            anyOf: [
+                {
+                    additionalProperties: true,
+                    type: 'object'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Metadata'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'type',
+        'label',
+        'external_id'
+    ],
+    title: 'IntegrationObligationComponentUpsert',
+    description: 'An obligation component identified within its authenticated integration.'
 } as const;
 
 export const IntegrationPublicSchema = {
@@ -3334,7 +3381,8 @@ export const PeriodPaymentSummaryPublicSchema = {
         'is_complete',
         'amount_summaries'
     ],
-    title: 'PeriodPaymentSummaryPublic'
+    title: 'PeriodPaymentSummaryPublic',
+    description: 'Payment progress across all non-canceled obligations in the period.\n\nAmount summaries include known values from draft, collecting data, ready,\npaid, and error obligations. Missing values are reported by\n``unknown_amount_count`` and excluded from amount totals.'
 } as const;
 
 export const RecurrenceUnitSchema = {

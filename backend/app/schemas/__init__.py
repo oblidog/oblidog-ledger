@@ -24,6 +24,7 @@ from app.schemas.categories import (
     CategoryGroupUpdate,
     CategoryPublic,
     CategoryUpdate,
+    IntegrationCategoryDataRecordCreate,
 )
 from app.schemas.common import Message, NewPassword, PasswordStr, Token, TokenPayload
 from app.schemas.counterparties import (
@@ -49,6 +50,7 @@ from app.schemas.legacy_import import LegacyImportJobPublic, LegacyImportPublic
 from app.schemas.obligations import (
     BillingPeriodInput,
     EnsuredObligationsPublic,
+    IntegrationObligationComponentUpsert,
     ObligationComponentCreate,
     ObligationComponentPublic,
     ObligationComponentsPublic,
@@ -93,6 +95,7 @@ __all__ = [
     "DailyCashflowPublic",
     "CategoryCreate",
     "CategoryDataRecordCreate",
+    "IntegrationCategoryDataRecordCreate",
     "CategoryDataRecordPublic",
     "CategoryDataRecordsPublic",
     "CategoryDataSchemaCreate",
@@ -128,6 +131,7 @@ __all__ = [
     "ObligationComponentsPublic",
     "ObligationComponentUpdate",
     "ObligationComponentUpsert",
+    "IntegrationObligationComponentUpsert",
     "ObligationIntegrationUpdate",
     "ObligationNoteAppend",
     "ObligationPeriodPublic",

@@ -96,6 +96,18 @@ class ObligationComponentUpsert(ObligationComponentCreate):
         return self
 
 
+class IntegrationObligationComponentUpsert(BaseModel):
+    """An obligation component identified within its authenticated integration."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: str = Field(min_length=1, max_length=64)
+    label: str = Field(min_length=1, max_length=255)
+    external_id: str = Field(min_length=1, max_length=255)
+    amount: Decimal | None = None
+    metadata: dict[str, object] | None = None
+
+
 class ObligationComponentPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -10,7 +10,7 @@ from app.api.routes.integration import router as integration_router
 from app.core.config import settings
 
 DATA_RECORD_SCHEMA_NAMES = (
-    "CategoryDataRecordCreate",
+    "IntegrationCategoryDataRecordCreate",
     "CategoryDataRecordPublic",
 )
 

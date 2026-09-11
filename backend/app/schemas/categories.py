@@ -101,6 +101,16 @@ class CategoryDataRecordCreate(BaseModel):
     external_id: str | None = Field(default=None, min_length=1, max_length=255)
 
 
+class IntegrationCategoryDataRecordCreate(BaseModel):
+    """A category observation submitted by its authenticated integration."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    observed_at: datetime
+    data: dict[str, Any]
+    external_id: str | None = Field(default=None, min_length=1, max_length=255)
+
+
 class CategoryDataRecordPublic(BaseModel):
     id: uuid.UUID
     schema_version: int
