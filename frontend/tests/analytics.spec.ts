@@ -121,15 +121,15 @@ for (const width of [320, 375, 414]) {
     await expect(donut).toBeVisible()
     await expect(donut.locator("svg")).toBeVisible()
     await expect(donut.locator(".recharts-sector")).toBeVisible()
-    await expect(categoryCosts.getByText("Water", { exact: true })).toBeVisible()
+    await expect(
+      categoryCosts.getByText("Water", { exact: true }),
+    ).toBeVisible()
     await expect(
       categoryCosts.getByText("42.00 PLN", { exact: true }),
     ).toBeVisible()
     await expect
       .poll(() =>
-        donut.evaluate(
-          (element) => element.scrollWidth <= element.clientWidth,
-        ),
+        donut.evaluate((element) => element.scrollWidth <= element.clientWidth),
       )
       .toBe(true)
 
@@ -149,3 +149,46 @@ for (const width of [320, 375, 414]) {
     ).toBeVisible()
   })
 }
+
+test("shows amount progress as the primary payment metric", async ({
+  page,
+}) => {
+  const ledger = await createCategoryHistoryFixture()
+  await page.route("**/analytics/period-summary?**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: {
+        period: {
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+        },
+        total_obligation_count: 2,
+        paid_obligation_count: 1,
+        paid_percentage: "50",
+        unknown_amount_count: 0,
+        is_complete: true,
+        amount_summaries: [
+          {
+            currency: "PLN",
+            total_known_amount: "100.00",
+            paid_known_amount: "10.00",
+            paid_percentage: "10",
+          },
+        ],
+      },
+    })
+  })
+
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  const progress = page.getByRole("region", {
+    name: "Payment progress in PLN",
+  })
+  await expect(progress.getByText("10%", { exact: true })).toBeVisible()
+  await expect(
+    progress.getByText("10.00 PLN / 100.00 PLN", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("1 of 2 obligations paid", { exact: true }),
+  ).toBeVisible()
+})

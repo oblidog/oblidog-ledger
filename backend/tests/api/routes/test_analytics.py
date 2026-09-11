@@ -199,6 +199,104 @@ def test_period_summary_keeps_unknown_amounts_and_currencies_separate(
     ]
 
 
+def test_period_summary_includes_known_draft_and_error_amounts(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    paid = _create_obligation(
+        db, ledger_id=ledger.id, code="PAID", amount=Decimal("10.00")
+    )
+    draft = _create_obligation(
+        db, ledger_id=ledger.id, code="DRFT", amount=Decimal("30.00")
+    )
+    error = _create_obligation(
+        db, ledger_id=ledger.id, code="ERRO", amount=Decimal("60.00")
+    )
+    obligation_use_cases.mark_obligation_paid(
+        session=db,
+        ledger_id=ledger.id,
+        key=ObligationKey.parse(paid.business_key),
+    )
+    draft.lifecycle = ObligationLifecycle.DRAFT
+    error.lifecycle = ObligationLifecycle.ERROR
+    db.commit()
+
+    response = client.get(_summary_url(ledger.id), headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["paid_obligation_count"] == 1
+    assert response.json()["total_obligation_count"] == 3
+    assert response.json()["paid_percentage"] == "33.33"
+    assert response.json()["amount_summaries"] == [
+        {
+            "currency": "PLN",
+            "total_known_amount": "100.00",
+            "paid_known_amount": "10.00",
+            "paid_percentage": "10",
+        }
+    ]
+
+
+def test_period_summary_excludes_missing_error_amount_from_amount_totals(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    known = _create_obligation(
+        db, ledger_id=ledger.id, code="KNWN", amount=Decimal("40.00")
+    )
+    unknown_error = _create_obligation(
+        db, ledger_id=ledger.id, code="UNKN", amount=None
+    )
+    known.lifecycle = ObligationLifecycle.READY
+    unknown_error.lifecycle = ObligationLifecycle.ERROR
+    db.commit()
+
+    response = client.get(_summary_url(ledger.id), headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["unknown_amount_count"] == 1
+    assert response.json()["is_complete"] is False
+    assert response.json()["amount_summaries"] == [
+        {
+            "currency": "PLN",
+            "total_known_amount": "40.00",
+            "paid_known_amount": "0.00",
+            "paid_percentage": "0",
+        }
+    ]
+
+
+def test_period_summary_returns_no_amount_percentage_for_zero_total(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    _create_obligation(db, ledger_id=ledger.id, code="ZERO", amount=Decimal("0.00"))
+
+    response = client.get(_summary_url(ledger.id), headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["amount_summaries"] == [
+        {
+            "currency": "PLN",
+            "total_known_amount": "0.00",
+            "paid_known_amount": "0.00",
+            "paid_percentage": None,
+        }
+    ]
+
+
 def test_period_summary_rounds_percentages_to_two_decimal_places(
     client: TestClient, db: Session
 ) -> None:
