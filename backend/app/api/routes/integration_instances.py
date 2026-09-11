@@ -5,7 +5,6 @@ from app.api.routes.integrations import integration_errors
 from app.core.capabilities import Capability
 from app.schemas.integrations import (
     IntegrationConflictResponse,
-    IntegrationKey,
     IntegrationPublic,
     IntegrationRunFinish,
     IntegrationRunStart,
@@ -13,28 +12,31 @@ from app.schemas.integrations import (
 from app.use_cases import integrations as use_cases
 
 router = APIRouter(
-    prefix="/instances",
     dependencies=[Depends(require_capability(Capability.INTEGRATIONS))],
 )
 
 
-@router.get("/{integration_key}", response_model=IntegrationPublic)
-def read_integration_instance(
-    integration_key: IntegrationKey,
+@router.get("/context", response_model=dict[str, object])
+def read_integration_context(
     context: ApiContext = Depends(require_scope("ledger:read")),
-) -> IntegrationPublic:
-    with integration_errors(context.session):
-        return use_cases.to_public(
-            use_cases.get_integration(
-                session=context.session,
-                ledger_id=context.ledger.id,
-                key=integration_key,
-            )
-        )
+) -> dict[str, object]:
+    return {
+        "integration": {
+            "id": str(context.integration.id),
+            "name": context.integration.name,
+            "enabled": context.integration.enabled,
+            "revision": context.integration.revision,
+        },
+        "category": {
+            "id": str(context.category.id),
+            "code": context.category.code,
+            "name": context.category.name,
+        },
+    }
 
 
 @router.post(
-    "/{integration_key}/start",
+    "/runs/start",
     response_model=IntegrationPublic,
     responses={
         409: {
@@ -44,7 +46,6 @@ def read_integration_instance(
     },
 )
 def start_integration_run(
-    integration_key: IntegrationKey,
     data: IntegrationRunStart,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> IntegrationPublic:
@@ -52,15 +53,14 @@ def start_integration_run(
         return use_cases.to_public(
             use_cases.start_run(
                 session=context.session,
-                ledger_id=context.ledger.id,
-                key=integration_key,
+                integration_id=context.integration.id,
                 data=data,
             )
         )
 
 
 @router.post(
-    "/{integration_key}/finish",
+    "/runs/finish",
     response_model=IntegrationPublic,
     responses={
         409: {
@@ -70,7 +70,6 @@ def start_integration_run(
     },
 )
 def finish_integration_run(
-    integration_key: IntegrationKey,
     data: IntegrationRunFinish,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> IntegrationPublic:
@@ -78,8 +77,7 @@ def finish_integration_run(
         return use_cases.to_public(
             use_cases.finish_run(
                 session=context.session,
-                ledger_id=context.ledger.id,
-                key=integration_key,
+                integration_id=context.integration.id,
                 data=data,
             )
         )

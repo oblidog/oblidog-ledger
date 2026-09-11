@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { ArrowLeft, RefreshCw, Settings } from "lucide-react"
 import { useState } from "react"
@@ -40,7 +40,9 @@ export function IntegrationDetails({
   integrationId: string
 }) {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [editing, setEditing] = useState<IntegrationPublic | null>(null)
+  const [newKey, setNewKey] = useState<string | null>(null)
   const ledger = useQuery({
     queryKey: ["ledger", ledgerId],
     queryFn: () => LedgersService.readLedger({ ledgerId }),
@@ -64,6 +66,31 @@ export function IntegrationDetails({
   const notFound =
     integration.error instanceof ApiError &&
     integration.error.response?.status === 404
+  const rotate = useMutation({
+    mutationFn: () =>
+      IntegrationsService.generateIntegrationCredential({
+        ledgerId,
+        integrationId,
+      }),
+    onSuccess: (result) => {
+      setNewKey(result.connection_key)
+      void queryClient.invalidateQueries({
+        queryKey: ["integration", ledgerId, integrationId],
+      })
+    },
+  })
+  const revoke = useMutation({
+    mutationFn: (credentialId: string) =>
+      IntegrationsService.revokeIntegrationCredential({
+        ledgerId,
+        integrationId,
+        credentialId,
+      }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({
+        queryKey: ["integration", ledgerId, integrationId],
+      }),
+  })
 
   return (
     <div className="min-w-0 space-y-6">
@@ -96,7 +123,7 @@ export function IntegrationDetails({
                 {item.name}
               </h1>
               <p className="break-all text-sm text-muted-foreground">
-                {item.provider} · {item.key}
+                Connection key managed on this integration
               </p>
               <HealthBadge health={item.health} />
             </div>
@@ -147,6 +174,61 @@ export function IntegrationDetails({
             </Alert>
           )}
           <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+            <Card className="min-w-0">
+              <CardHeader>
+                <CardTitle>Connection keys</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isOwner && (
+                  <Button
+                    onClick={() => rotate.mutate()}
+                    disabled={rotate.isPending}
+                  >
+                    Generate new key
+                  </Button>
+                )}
+                {newKey && (
+                  <Alert>
+                    <AlertTitle>Copy this connection key now</AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <code className="block break-all">{newKey}</code>
+                      <p>It will not be displayed again.</p>
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          void navigator.clipboard.writeText(
+                            `OBLIDOG_URL=${window.location.origin}\nOBLIDOG_API_KEY=${newKey}\n`,
+                          )
+                        }
+                      >
+                        Copy configuration
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {item.credentials.map((credential) => (
+                  <div
+                    key={credential.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+                  >
+                    <span>
+                      {credential.key_prefix}… · created{" "}
+                      {dateTime(credential.created_at)}
+                      {credential.revoked_at ? " · revoked" : ""}
+                    </span>
+                    {isOwner && !credential.revoked_at && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => revoke.mutate(credential.id)}
+                      >
+                        Revoke key
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
             <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>Last completed result</CardTitle>
@@ -265,19 +347,15 @@ export function IntegrationDetails({
                   </div>
                 ) : categories.isPending ? (
                   <p className="text-sm">Loading categories…</p>
-                ) : item.category_ids.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No categories assigned.
-                  </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {item.category_ids.map((id) => {
+                    {(() => {
                       const category = categories.data.data.find(
-                        (entry) => entry.id === id,
+                        (entry) => entry.id === item.category_id,
                       )
                       return (
                         <Badge
-                          key={id}
+                          key={item.category_id}
                           variant="outline"
                           className="max-w-full whitespace-normal break-all"
                         >
@@ -286,7 +364,7 @@ export function IntegrationDetails({
                             : "Unavailable category"}
                         </Badge>
                       )
-                    })}
+                    })()}
                   </div>
                 )}
               </CardContent>

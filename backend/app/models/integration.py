@@ -21,10 +21,10 @@ class Integration(Base):
     __tablename__ = "integration"
     __table_args__ = (
         UniqueConstraint("ledger_id", "id", name="uq_integration_ledger_id"),
-        UniqueConstraint("ledger_id", "key", name="uq_integration_ledger_key"),
-        CheckConstraint("key ~ '^[a-z][a-z0-9-]{0,63}$'", name="ck_integration_key"),
-        CheckConstraint(
-            "provider ~ '^[a-z][a-z0-9-]{0,63}$'", name="ck_integration_provider"
+        ForeignKeyConstraint(
+            ["ledger_id", "category_id"],
+            ["category.ledger_id", "category.id"],
+            ondelete="RESTRICT",
         ),
         CheckConstraint(
             "run_timeout_seconds > 0 AND stale_after_seconds > run_timeout_seconds",
@@ -52,8 +52,7 @@ class Integration(Base):
     ledger_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("ledger.id", ondelete="CASCADE"), index=True
     )
-    key: Mapped[str] = mapped_column(String(64))
-    provider: Mapped[str] = mapped_column(String(64))
+    category_id: Mapped[uuid.UUID] = mapped_column(index=True)
     name: Mapped[str] = mapped_column(String(255))
     enabled: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -80,29 +79,26 @@ class Integration(Base):
     last_error_code: Mapped[str | None] = mapped_column(String(64))
     last_error_message: Mapped[str | None] = mapped_column(String(1000))
     last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    category_links: Mapped[list[IntegrationCategory]] = relationship(
+    credentials: Mapped[list[IntegrationCredential]] = relationship(
         lazy="selectin", cascade="all, delete-orphan", passive_deletes=True
     )
 
-    @property
-    def category_ids(self) -> list[uuid.UUID]:
-        return sorted((link.category_id for link in self.category_links), key=str)
 
+class IntegrationCredential(Base):
+    __tablename__ = "integration_credential"
 
-class IntegrationCategory(Base):
-    __tablename__ = "integration_category"
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["ledger_id", "integration_id"],
-            ["integration.ledger_id", "integration.id"],
-            ondelete="CASCADE",
-        ),
-        ForeignKeyConstraint(
-            ["ledger_id", "category_id"],
-            ["category.ledger_id", "category.id"],
-            ondelete="CASCADE",
-        ),
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    integration_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("integration.id", ondelete="CASCADE"), index=True
     )
-    integration_id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
-    category_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, index=True)
-    ledger_id: Mapped[uuid.UUID]
+    created_by_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="RESTRICT"), index=True
+    )
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    key_prefix: Mapped[str] = mapped_column(String(32), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=get_datetime_utc
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

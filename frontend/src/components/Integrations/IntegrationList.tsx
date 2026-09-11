@@ -23,6 +23,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
   const { user } = useAuth()
   const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
+  const [connectionKey, setConnectionKey] = useState<string | null>(null)
   const ledger = useQuery({
     queryKey: ["ledger", ledgerId],
     queryFn: () => LedgersService.readLedger({ ledgerId }),
@@ -83,8 +84,36 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             {isOwner
-              ? "Add an instance here, then configure its runner to report using the instance key and this ledger’s API key."
+              ? "Add an integration here, then copy its connection key into the runner configuration."
               : "The ledger owner can register integrations here. Their status will appear after the runners start reporting."}
+          </CardContent>
+        </Card>
+      )}
+      {connectionKey && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Connection key</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-destructive">
+              Copy this key now. It will not be displayed again.
+            </p>
+            <code className="block break-all rounded-md border p-3 text-sm">
+              {connectionKey}
+            </code>
+            <Button
+              variant="outline"
+              onClick={() =>
+                void navigator.clipboard.writeText(
+                  `OBLIDOG_URL=${window.location.origin}\nOBLIDOG_API_KEY=${connectionKey}\n`,
+                )
+              }
+            >
+              Copy configuration
+            </Button>
+            <Button variant="ghost" onClick={() => setConnectionKey(null)}>
+              I copied the key
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -105,7 +134,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                 <HealthBadge health={item.health} />
               </div>
               <p className="break-all text-sm text-muted-foreground">
-                {item.provider} · {item.key}
+                Connection key managed on the integration page
               </p>
             </CardHeader>
             <CardContent>
@@ -167,12 +196,15 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
         <IntegrationForm
           ledgerId={ledgerId}
           onClose={() => setCreating(false)}
-          onSaved={(item) => {
+          onSaved={(item, key) => {
             setCreating(false)
-            void navigate({
-              to: "/ledgers/$ledgerId/integrations/$integrationId",
-              params: { ledgerId, integrationId: item.id },
-            })
+            setConnectionKey(key ?? null)
+            if (!key) {
+              void navigate({
+                to: "/ledgers/$ledgerId/integrations/$integrationId",
+                params: { ledgerId, integrationId: item.id },
+              })
+            }
           }}
         />
       )}

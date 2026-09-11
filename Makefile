@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help cmt dev-b dev-f demo-up demo-down e2e e2e-down pre test cov lint fmt hooks refresh
+.PHONY: help cmt dev-b dev-f demo-up demo-down e2e e2e-down pre test cov lint fmt hooks refresh clone-database
 
 DEMO_COMPOSE := docker compose --env-file .env.demo -p oblidog-demo-local -f compose.yml -f compose.override.yml -f compose.demo.yml
 
@@ -21,6 +21,7 @@ help:
 	@echo "  make hooks  - install git pre-commit and commit-msg hooks"
 	@echo "  make refresh - update dev and synchronize Bun and Python dependencies"
 	@echo "  make alembic - run alembic migrations to upgrade database schema"
+	@echo "  make clone-database CONFIRM_DATABASE=<target> - replace a configured target database from a source snapshot"
 
 cmt:
 	bash ./scripts/cz.sh commit
@@ -70,3 +71,8 @@ refresh:
 	git pull --ff-only origin dev
 	bun install --frozen-lockfile
 	uv sync
+
+clone-database:
+	@test -f scripts/clone-database.env || (echo "Missing scripts/clone-database.env; copy scripts/clone-database.env.example and fill it in." >&2; exit 2)
+	@test -n "$(CONFIRM_DATABASE)" || (echo "Set CONFIRM_DATABASE to the exact TARGET_DATABASE_NAME." >&2; exit 2)
+	docker run --rm --env-file scripts/clone-database.env -v "$(CURDIR):/workspace" -w /workspace postgres:18 bash ./scripts/clone-findog-test-db.sh --confirm-replace-database "$(CONFIRM_DATABASE)"

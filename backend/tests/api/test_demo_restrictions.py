@@ -48,10 +48,9 @@ def test_demo_settings_disable_external_service_configuration() -> None:
     assert demo_settings.LEGACY_IMPORT_MODE is TaskRunMode.DISABLED
 
 
+@pytest.mark.usefixtures("demo_environment")
 def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
-    client: TestClient,
-    db: Session,
-    demo_environment: None,
+    client: TestClient, db: Session
 ) -> None:
     user = create_random_user(db)
     headers = authentication_token_from_email(client=client, email=user.email, db=db)
@@ -61,17 +60,7 @@ def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
         name="Demo restriction test",
     )
 
-    api_key_response = client.post(
-        f"{settings.API_V1_STR}/ledgers/{ledger.id}/api-keys",
-        headers=headers,
-        json={"name": "blocked", "scopes": ["ledger:read"]},
-    )
-    assert api_key_response.status_code == 403
-    assert api_key_response.json() == {
-        "detail": "api_keys is disabled in demo environment"
-    }
-
-    integration_response = client.get(f"{settings.API_V1_STR}/integration/ledger")
+    integration_response = client.get(f"{settings.API_V1_STR}/integration/context")
     assert integration_response.status_code == 403
     assert integration_response.json() == {
         "detail": "integrations is disabled in demo environment"
@@ -106,10 +95,9 @@ def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
     }
 
 
+@pytest.mark.usefixtures("demo_environment")
 def test_demo_keeps_core_ledger_read_workflow_available(
-    client: TestClient,
-    db: Session,
-    demo_environment: None,
+    client: TestClient, db: Session
 ) -> None:
     user = create_random_user(db)
     headers = authentication_token_from_email(client=client, email=user.email, db=db)
@@ -151,6 +139,7 @@ def test_non_demo_behavior_remains_unchanged(
     assert refreshed.full_name == "Updated outside demo"
 
 
-def test_send_email_cannot_be_called_in_demo(demo_environment: None) -> None:
+@pytest.mark.usefixtures("demo_environment")
+def test_send_email_cannot_be_called_in_demo() -> None:
     with pytest.raises(CapabilityDisabledError, match="email is disabled"):
         send_email(email_to="recipient@example.com", subject="Blocked")

@@ -9,10 +9,17 @@ async function openCategoryAction(
   categoryName: string,
   action: string,
 ) {
-  await page
-    .getByRole("button", { name: `More actions for ${categoryName}` })
-    .click()
+  const actions = page.getByRole("button", {
+    name: `More actions for ${categoryName}`,
+  })
+  await expect(actions).toBeVisible()
+  await actions.click()
   await page.getByRole("menuitem", { name: action }).click()
+}
+
+async function backToCategories(page: Page) {
+  await page.getByRole("link", { name: "Back to categories" }).click()
+  await expect(page).toHaveURL(/\/categories$/)
 }
 
 async function openCategories(page: Page) {
@@ -70,7 +77,7 @@ test("manages category custom fields with the builder", async ({ page }) => {
     page.getByText("Custom fields saved as schema version 1"),
   ).toBeVisible()
 
-  await page.getByRole("link", { name: "Back to categories" }).click()
+  await backToCategories(page)
   await openCategoryAction(page, categoryName, "Manage custom fields")
   await expect(page.getByLabel("Field name")).toHaveValue("meter_reading_kwh")
   await page.getByLabel("Type").click()
@@ -98,7 +105,7 @@ test("manages category custom fields with the builder", async ({ page }) => {
     page.getByText("Custom fields saved as schema version 2"),
   ).toBeVisible()
 
-  await page.getByRole("link", { name: "Back to categories" }).click()
+  await backToCategories(page)
   await openCategoryAction(page, categoryName, "Manage custom fields")
   await page.getByRole("button", { name: "Remove" }).click()
   await expect(page.getByText("No custom fields configured yet.")).toBeVisible()

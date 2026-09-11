@@ -11,7 +11,7 @@ from app.domain.integrations import (
     IntegrationHealth,
     IntegrationResult,
 )
-from app.models import Category, Integration, IntegrationCategory
+from app.models import Category, Integration, IntegrationCredential
 from app.models.base import get_datetime_utc
 from app.schemas.integrations import (
     IntegrationCreate,
@@ -20,6 +20,7 @@ from app.schemas.integrations import (
     IntegrationRunStart,
     IntegrationUpdate,
 )
+from app.services import api_keys as credential_service
 
 
 class IntegrationNotFoundError(Exception):
@@ -91,17 +92,12 @@ def get_integration(
     session: Session,
     ledger_id: uuid.UUID,
     integration_id: uuid.UUID | None = None,
-    key: str | None = None,
     lock: bool = False,
 ) -> Integration:
-    if (integration_id is None) == (key is None):
-        raise ValueError("Supply exactly one integration identity")
+    if integration_id is None:
+        raise ValueError("Supply an integration identity")
     statement = select(Integration).where(Integration.ledger_id == ledger_id)
-    statement = (
-        statement.where(Integration.id == integration_id)
-        if integration_id is not None
-        else statement.where(Integration.key == key)
-    )
+    statement = statement.where(Integration.id == integration_id)
     if lock:
         statement = statement.with_for_update().execution_options(
             populate_existing=True
@@ -119,7 +115,7 @@ def list_integrations(
         session.scalars(
             select(Integration)
             .where(Integration.ledger_id == ledger_id)
-            .order_by(Integration.key)
+            .order_by(Integration.name, Integration.id)
             .limit(limit)
             .offset(offset)
         )
@@ -135,61 +131,44 @@ def list_integrations(
     return items, count
 
 
-def _validate_categories(
-    session: Session, ledger_id: uuid.UUID, category_ids: list[uuid.UUID]
-) -> None:
-    requested = set(category_ids)
-    found = set(
-        session.scalars(
-            select(Category.id).where(
-                Category.ledger_id == ledger_id, Category.id.in_(requested)
-            )
+def create_integration(
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    created_by_user_id: uuid.UUID,
+    data: IntegrationCreate,
+) -> tuple[Integration, IntegrationCredential, str]:
+    category = session.scalar(
+        select(Category.id).where(
+            Category.id == data.category_id, Category.ledger_id == ledger_id
         )
     )
-    if requested != found:
+    if category is None:
         raise IntegrationCategoryNotFoundError
-
-
-def _set_categories(item: Integration, category_ids: list[uuid.UUID]) -> None:
-    requested = set(category_ids)
-    item.category_links[:] = [
-        link for link in item.category_links if link.category_id in requested
-    ]
-    existing = {link.category_id for link in item.category_links}
-    item.category_links.extend(
-        IntegrationCategory(ledger_id=item.ledger_id, category_id=category_id)
-        for category_id in requested - existing
-    )
-
-
-def create_integration(
-    *, session: Session, ledger_id: uuid.UUID, data: IntegrationCreate
-) -> Integration:
-    _validate_categories(session, ledger_id, data.category_ids)
     now = get_datetime_utc()
     item = Integration(
         ledger_id=ledger_id,
-        **data.model_dump(exclude={"category_ids"}),
+        **data.model_dump(),
         created_at=now,
         updated_at=now,
-        enabled_at=now if data.enabled else None,
+        enabled_at=now,
     )
-    _set_categories(item, data.category_ids)
+    raw_key = credential_service.generate_api_key()
+    credential = IntegrationCredential(
+        created_by_user_id=created_by_user_id,
+        key_hash=credential_service.hash_api_key(raw_key),
+        key_prefix=credential_service.key_prefix(raw_key),
+    )
+    item.credentials.append(credential)
     session.add(item)
     try:
         session.commit()
-    except IntegrityError as exc:
+    except IntegrityError:
         session.rollback()
-        if (
-            getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
-            == "uq_integration_ledger_key"
-        ):
-            raise IntegrationConflictError(
-                IntegrationConflictCode.DUPLICATE_KEY
-            ) from exc
         raise
     session.refresh(item)
-    return item
+    session.refresh(credential)
+    return item, credential, raw_key
 
 
 def update_integration(
@@ -205,9 +184,7 @@ def update_integration(
     if item.revision != data.expected_revision:
         raise IntegrationConflictError(IntegrationConflictCode.REVISION_CONFLICT)
     now = get_datetime_utc()
-    changes = data.model_dump(
-        exclude_unset=True, exclude={"expected_revision", "category_ids"}
-    )
+    changes = data.model_dump(exclude_unset=True, exclude={"expected_revision"})
     if {"stale_after_seconds", "run_timeout_seconds"} & changes.keys():
         if execution_state(item, now) == IntegrationExecutionState.RUNNING:
             raise IntegrationConflictError(IntegrationConflictCode.RUN_IN_PROGRESS)
@@ -223,14 +200,10 @@ def update_integration(
     )
     if timeout >= stale:
         raise IntegrationLimitsError
-    if data.category_ids is not None:
-        _validate_categories(session, ledger_id, data.category_ids)
     if data.enabled is True and not item.enabled:
         item.enabled_at = now
     for field, value in changes.items():
         setattr(item, field, value)
-    if data.category_ids is not None:
-        _set_categories(item, data.category_ids)
     item.updated_at = now
     item.revision += 1
     session.commit()
@@ -239,9 +212,16 @@ def update_integration(
 
 
 def start_run(
-    *, session: Session, ledger_id: uuid.UUID, key: str, data: IntegrationRunStart
+    *, session: Session, integration_id: uuid.UUID, data: IntegrationRunStart
 ) -> Integration:
-    item = get_integration(session=session, ledger_id=ledger_id, key=key, lock=True)
+    item = session.scalar(
+        select(Integration)
+        .where(Integration.id == integration_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if item is None:
+        raise IntegrationNotFoundError
     if item.current_run_id == data.run_id:
         session.commit()  # Release the lock; retries never move timestamps.
         return item
@@ -264,9 +244,16 @@ def start_run(
 
 
 def finish_run(
-    *, session: Session, ledger_id: uuid.UUID, key: str, data: IntegrationRunFinish
+    *, session: Session, integration_id: uuid.UUID, data: IntegrationRunFinish
 ) -> Integration:
-    item = get_integration(session=session, ledger_id=ledger_id, key=key, lock=True)
+    item = session.scalar(
+        select(Integration)
+        .where(Integration.id == integration_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if item is None:
+        raise IntegrationNotFoundError
     if item.current_run_id != data.run_id:
         raise IntegrationConflictError(IntegrationConflictCode.RUN_CONFLICT)
     code = data.error.code if data.error else None

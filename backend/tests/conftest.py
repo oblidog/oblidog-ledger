@@ -13,11 +13,12 @@ from app.core.config import settings
 from app.core.db import init_db
 from app.main import app
 from app.models import (
-    ApiKey,
     Category,
     CategoryDataRecord,
     CategoryDataSchema,
     CategoryGroup,
+    Integration,
+    IntegrationCredential,
     Ledger,
     LedgerMembership,
     LegacyImportJob,
@@ -68,7 +69,8 @@ def run_test_migrations() -> None:
 def db() -> Generator[Session, None, None]:
     run_test_migrations()
     with TestingSessionLocal() as session:
-        session.execute(delete(ApiKey))
+        session.execute(delete(IntegrationCredential))
+        session.execute(delete(Integration))
         session.execute(delete(SystemRunStep))
         session.execute(delete(SystemRun))
         session.execute(delete(LegacyImportJob))
@@ -83,7 +85,8 @@ def db() -> Generator[Session, None, None]:
         session.commit()
         init_db(session)
         yield session
-        session.execute(delete(ApiKey))
+        session.execute(delete(IntegrationCredential))
+        session.execute(delete(Integration))
         session.execute(delete(SystemRunStep))
         session.execute(delete(SystemRun))
         session.execute(delete(LegacyImportJob))
