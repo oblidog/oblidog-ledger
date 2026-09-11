@@ -334,7 +334,7 @@ function DeleteCounterpartyDialog({
   )
 }
 
-function CounterpartiesAdmin() {
+export function CounterpartiesAdmin() {
   const [query, setQuery] = useState("")
   const counterparties = useQuery({
     queryKey: ["counterparties"],

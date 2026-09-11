@@ -8,6 +8,7 @@ import { columns, type UserTableData } from "@/components/Admin/columns"
 import { DataTable } from "@/components/Common/DataTable"
 import PendingUsers from "@/components/Pending/PendingUsers"
 import useAuth from "@/hooks/useAuth"
+import { CounterpartiesAdmin } from "@/routes/_layout/counterparties"
 
 function getUsersQueryOptions() {
   return {
@@ -67,12 +68,8 @@ function Admin() {
         </div>
         <AddUser />
       </div>
-      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Future payment-obligation domains and integration endpoints are not
-        implemented yet. This admin area currently covers private user
-        management only.
-      </div>
       <UsersTable />
+      <CounterpartiesAdmin />
     </div>
   )
 }

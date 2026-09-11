@@ -3,9 +3,21 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { Plus, RefreshCw } from "lucide-react"
 import { useState } from "react"
 
-import { IntegrationsService, LedgersService } from "@/client"
+import {
+  CategoriesService,
+  IntegrationsService,
+  LedgersService,
+} from "@/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import useAuth from "@/hooks/useAuth"
 import { IntegrationForm } from "./IntegrationForm"
 import {
@@ -38,7 +50,14 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
       }),
     refetchInterval: 15_000,
   })
+  const categories = useQuery({
+    queryKey: ["integration-categories", ledgerId],
+    queryFn: () => CategoriesService.readCategories({ ledgerId }),
+  })
   const isOwner = !!user && ledger.data?.owner_user_id === user.id
+  const categoryNames = new Map(
+    categories.data?.data.map((category) => [category.id, category.name]),
+  )
 
   return (
     <div className="min-w-0 space-y-6">
@@ -78,16 +97,14 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
       )}
       {integrations.isPending && <p role="status">Loading integrations…</p>}
       {integrations.data?.count === 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>No integrations yet</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed p-8 text-center">
+          <h2 className="font-semibold">No integrations yet</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             {isOwner
               ? "Add an integration here, then copy its connection key into the runner configuration."
               : "The ledger owner can register integrations here. Their status will appear after the runners start reporting."}
-          </CardContent>
-        </Card>
+          </p>
+        </div>
       )}
       {connectionKey && (
         <Card>
@@ -117,55 +134,68 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
           </CardContent>
         </Card>
       )}
-      <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
-        {integrations.data?.data.map((item) => (
-          <Card key={item.id} className="min-w-0">
-            <CardHeader className="min-w-0 grid-cols-1">
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <CardTitle className="min-w-0 flex-1 leading-snug [overflow-wrap:anywhere]">
-                  <Link
-                    className="hover:underline"
-                    to="/ledgers/$ledgerId/integrations/$integrationId"
-                    params={{ ledgerId, integrationId: item.id }}
-                  >
-                    {item.name}
-                  </Link>
-                </CardTitle>
-                <HealthBadge health={item.health} />
-              </div>
-              <p className="break-all text-sm text-muted-foreground">
-                Connection key managed on the integration page
-              </p>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">Last success</dt>
-                  <dd>
-                    {item.last_success_at
-                      ? dateTime(item.last_success_at)
-                      : "No success yet"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Last result</dt>
-                  <dd>{resultLabel(item)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">
-                    Changes in last result
-                  </dt>
-                  <dd>{changesLabel(item)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Last report</dt>
-                  <dd>{dateTime(item.last_finished_at)}</dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {integrations.data && integrations.data.count > 0 && (
+        <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>Integration</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last run</TableHead>
+                  <TableHead>Result</TableHead>
+                  <TableHead>Changes</TableHead>
+                  <TableHead className="w-24 text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {integrations.data.data.map((item) => (
+                  <TableRow key={item.id} className="group">
+                    <TableCell className="min-w-52">
+                      <Link
+                        className="font-medium hover:underline"
+                        to="/ledgers/$ledgerId/integrations/$integrationId"
+                        params={{ ledgerId, integrationId: item.id }}
+                      >
+                        {item.name}
+                      </Link>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {item.enabled ? "Enabled" : "Disabled"}
+                      </p>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {categoryNames.get(item.category_id) ?? item.category_id}
+                    </TableCell>
+                    <TableCell>
+                      <HealthBadge health={item.health} />
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                      {dateTime(item.last_finished_at)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {resultLabel(item)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {changesLabel(item)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link
+                          to="/ledgers/$ledgerId/integrations/$integrationId"
+                          params={{ ledgerId, integrationId: item.id }}
+                        >
+                          View
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
       {((integrations.data?.count ?? 0) > PAGE_SIZE || page > 0) && (
         <nav
           aria-label="Integration pages"
