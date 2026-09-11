@@ -1,3 +1,11 @@
+## v0.12.1 (2026-09-11)
+
+### Fix
+
+- **analytics**: show payment progress by amount (#329)
+- **analytics**: use theme color for period totals (#328)
+- **frontend**: humanize category date-time values (#327)
+
 ## v0.12.0 (2026-09-10)
 
 ### Feat
