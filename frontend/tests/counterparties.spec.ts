@@ -31,16 +31,25 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   if (!ledgerId) throw new Error("Unable to resolve ledger id")
 
   const createCounterparty = async (name: string, shortName: string) => {
-    const response = await page.request.post(`${apiUrl}/api/v1/counterparties`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { name, short_name: shortName },
-    })
+    const response = await page.request.post(
+      `${apiUrl}/api/v1/counterparties`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { name, short_name: shortName },
+      },
+    )
     expect(response.ok()).toBeTruthy()
     return (await response.json()) as { id: string; name: string }
   }
 
-  const firstCounterparty = await createCounterparty(firstCounterpartyName, "Enea")
-  const secondCounterparty = await createCounterparty(secondCounterpartyName, "Nju")
+  const firstCounterparty = await createCounterparty(
+    firstCounterpartyName,
+    "Enea",
+  )
+  const secondCounterparty = await createCounterparty(
+    secondCounterpartyName,
+    "Nju",
+  )
 
   await page
     .locator('[data-sidebar="sidebar"]')
@@ -188,9 +197,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await obligationActions.click()
   await page.getByRole("menuitem", { name: "Counterparty" }).click()
   const clearDialog = page.getByRole("dialog")
-  await clearDialog
-    .getByRole("button", { name: "Clear counterparty" })
-    .click()
+  await clearDialog.getByRole("button", { name: "Clear counterparty" }).click()
   await clearDialog.getByRole("button", { name: "Save" }).click()
   await expect(clearDialog).toBeHidden()
 

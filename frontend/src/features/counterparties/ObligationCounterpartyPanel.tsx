@@ -2,7 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Building2 } from "lucide-react"
 
 import { ObligationsService } from "@/client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -36,7 +42,13 @@ export function ObligationCounterpartyPanel({
         year: period.year,
         month: period.month,
       }),
-    queryKey: ["obligations", ledgerId, "counterparty-panel", period.year, period.month],
+    queryKey: [
+      "obligations",
+      ledgerId,
+      "counterparty-panel",
+      period.year,
+      period.month,
+    ],
   })
 
   const assignment = useMutation({
@@ -46,18 +58,26 @@ export function ObligationCounterpartyPanel({
     }: {
       obligationKey: string
       counterparty: CounterpartySummary | null
-    }) => assignObligationCounterparty(ledgerId, obligationKey, counterparty?.id ?? null),
+    }) =>
+      assignObligationCounterparty(
+        ledgerId,
+        obligationKey,
+        counterparty?.id ?? null,
+      ),
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, variables) => {
       showSuccessToast("Obligation counterparty updated")
-      void queryClient.invalidateQueries({ queryKey: ["obligations", ledgerId] })
+      void queryClient.invalidateQueries({
+        queryKey: ["obligations", ledgerId],
+      })
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, variables.obligationKey],
       })
     },
   })
 
-  const rows = (obligations.data?.data ?? []) as unknown as ObligationWithCounterparty[]
+  const rows = (obligations.data?.data ??
+    []) as unknown as ObligationWithCounterparty[]
 
   if (!rows.length && !obligations.isLoading) return null
 
@@ -69,14 +89,19 @@ export function ObligationCounterpartyPanel({
           <CardTitle>Counterparties this month</CardTitle>
         </div>
         <CardDescription>
-          Counterparties are stored on each obligation. You can override the category default without changing other periods.
+          Counterparties are stored on each obligation. You can override the
+          category default without changing other periods.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {obligations.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading counterparties…</p>
+          <p className="text-sm text-muted-foreground">
+            Loading counterparties…
+          </p>
         ) : obligations.isError ? (
-          <p className="text-sm text-destructive">Unable to load obligation counterparties.</p>
+          <p className="text-sm text-destructive">
+            Unable to load obligation counterparties.
+          </p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {rows.map((obligation) => (
@@ -86,7 +111,9 @@ export function ObligationCounterpartyPanel({
                 className="rounded-lg border p-3"
               >
                 <div className="mb-3 flex items-start gap-3">
-                  <CounterpartyLogo counterparty={obligation.counterparty ?? null} />
+                  <CounterpartyLogo
+                    counterparty={obligation.counterparty ?? null}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs text-muted-foreground">
                       {obligation.key} · {obligation.lifecycle}

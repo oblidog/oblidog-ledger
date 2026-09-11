@@ -2,7 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Building2 } from "lucide-react"
 
 import { CategoriesService } from "@/client"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -28,7 +34,12 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
     }: {
       categoryId: string
       counterparty: CounterpartySummary | null
-    }) => assignCategoryCounterparty(ledgerId, categoryId, counterparty?.id ?? null),
+    }) =>
+      assignCategoryCounterparty(
+        ledgerId,
+        categoryId,
+        counterparty?.id ?? null,
+      ),
     onError: handleError.bind(showErrorToast),
     onSuccess: () => {
       showSuccessToast("Category counterparty updated")
@@ -36,7 +47,8 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
     },
   })
 
-  const rows = (categories.data?.data ?? []) as unknown as CategoryWithCounterparty[]
+  const rows = (categories.data?.data ??
+    []) as unknown as CategoryWithCounterparty[]
 
   if (!rows.length && !categories.isLoading) return null
 
@@ -48,14 +60,17 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
           <CardTitle>Counterparties</CardTitle>
         </div>
         <CardDescription>
-          Choose the default counterparty copied to newly created obligations. Changing it does not rewrite existing obligations.
+          Choose the default counterparty copied to newly created obligations.
+          Changing it does not rewrite existing obligations.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {categories.isLoading ? (
           <p className="text-sm text-muted-foreground">Loading categories…</p>
         ) : categories.isError ? (
-          <p className="text-sm text-destructive">Unable to load category counterparties.</p>
+          <p className="text-sm text-destructive">
+            Unable to load category counterparties.
+          </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {rows.map((category) => (

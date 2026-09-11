@@ -1,4 +1,3 @@
-from app.models.api_key import ApiKey
 from app.models.base import Base
 from app.models.category import (
     Category,
@@ -7,7 +6,7 @@ from app.models.category import (
     CategoryGroup,
 )
 from app.models.counterparty import Counterparty
-from app.models.integration import Integration, IntegrationCategory
+from app.models.integration import Integration, IntegrationCredential
 from app.models.ledger import Ledger, LedgerMembership
 from app.models.legacy_import_job import LegacyImportJob
 from app.models.obligation import Obligation, ObligationComponent
@@ -17,14 +16,13 @@ from app.models.user import User
 
 __all__ = [
     "Base",
-    "ApiKey",
     "Category",
     "CategoryDataRecord",
     "CategoryDataSchema",
     "CategoryGroup",
     "Counterparty",
     "Integration",
-    "IntegrationCategory",
+    "IntegrationCredential",
     "Ledger",
     "LedgerMembership",
     "LegacyImportJob",

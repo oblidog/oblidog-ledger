@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { AnalyticsReadCategoryAmountHistoryData, AnalyticsReadCategoryAmountHistoryErrors, AnalyticsReadCategoryAmountHistoryResponses, AnalyticsReadObligationPeriodTotalsData, AnalyticsReadObligationPeriodTotalsErrors, AnalyticsReadObligationPeriodTotalsResponses, AnalyticsReadPeriodPaymentSummaryData, AnalyticsReadPeriodPaymentSummaryErrors, AnalyticsReadPeriodPaymentSummaryResponses, AnalyticsReadRemainingPeriodCashflowData, AnalyticsReadRemainingPeriodCashflowErrors, AnalyticsReadRemainingPeriodCashflowResponses, CategoriesArchiveCategoryData, CategoriesArchiveCategoryErrors, CategoriesArchiveCategoryGroupData, CategoriesArchiveCategoryGroupErrors, CategoriesArchiveCategoryGroupResponses, CategoriesArchiveCategoryResponses, CategoriesCreateCategoryData, CategoriesCreateCategoryDataSchemaData, CategoriesCreateCategoryDataSchemaErrors, CategoriesCreateCategoryDataSchemaResponses, CategoriesCreateCategoryErrors, CategoriesCreateCategoryGroupData, CategoriesCreateCategoryGroupErrors, CategoriesCreateCategoryGroupResponses, CategoriesCreateCategoryResponses, CategoriesReadCategoriesData, CategoriesReadCategoriesErrors, CategoriesReadCategoriesResponses, CategoriesReadCategoryDataRecordsData, CategoriesReadCategoryDataRecordsErrors, CategoriesReadCategoryDataRecordsResponses, CategoriesReadCategoryDataSchemaData, CategoriesReadCategoryDataSchemaErrors, CategoriesReadCategoryDataSchemaResponses, CategoriesReadCategoryDataSchemasData, CategoriesReadCategoryDataSchemasErrors, CategoriesReadCategoryDataSchemasResponses, CategoriesReadCategoryDataSchemaVersionData, CategoriesReadCategoryDataSchemaVersionErrors, CategoriesReadCategoryDataSchemaVersionResponses, CategoriesReadCategoryGroupsData, CategoriesReadCategoryGroupsErrors, CategoriesReadCategoryGroupsResponses, CategoriesReadLatestCategoryDataRecordData, CategoriesReadLatestCategoryDataRecordErrors, CategoriesReadLatestCategoryDataRecordResponses, CategoriesRestoreCategoryData, CategoriesRestoreCategoryErrors, CategoriesRestoreCategoryResponses, CategoriesUpdateCategoryData, CategoriesUpdateCategoryErrors, CategoriesUpdateCategoryGroupData, CategoriesUpdateCategoryGroupErrors, CategoriesUpdateCategoryGroupResponses, CategoriesUpdateCategoryResponses, IntegrationAppendIntegrationObligationNoteData, IntegrationAppendIntegrationObligationNoteErrors, IntegrationAppendIntegrationObligationNoteResponses, IntegrationCancelIntegrationObligationData, IntegrationCancelIntegrationObligationErrors, IntegrationCancelIntegrationObligationResponses, IntegrationCreateIntegrationCategoryDataRecordData, IntegrationCreateIntegrationCategoryDataRecordErrors, IntegrationCreateIntegrationCategoryDataRecordResponses, IntegrationFinishIntegrationRunData, IntegrationFinishIntegrationRunErrors, IntegrationFinishIntegrationRunResponses, IntegrationMarkIntegrationObligationErrorData, IntegrationMarkIntegrationObligationErrorErrors, IntegrationMarkIntegrationObligationErrorResponses, IntegrationMarkIntegrationObligationPaidData, IntegrationMarkIntegrationObligationPaidErrors, IntegrationMarkIntegrationObligationPaidResponses, IntegrationMarkIntegrationObligationReadyData, IntegrationMarkIntegrationObligationReadyErrors, IntegrationMarkIntegrationObligationReadyResponses, IntegrationReadIntegrationCategoryDataRecordsData, IntegrationReadIntegrationCategoryDataRecordsErrors, IntegrationReadIntegrationCategoryDataRecordsResponses, IntegrationReadIntegrationCategoryDataSchemaData, IntegrationReadIntegrationCategoryDataSchemaErrors, IntegrationReadIntegrationCategoryDataSchemaResponses, IntegrationReadIntegrationInstanceData, IntegrationReadIntegrationInstanceErrors, IntegrationReadIntegrationInstanceResponses, IntegrationReadIntegrationLedgerData, IntegrationReadIntegrationLedgerResponses, IntegrationReadIntegrationObligationComponentsData, IntegrationReadIntegrationObligationComponentsErrors, IntegrationReadIntegrationObligationComponentsResponses, IntegrationReadIntegrationObligationData, IntegrationReadIntegrationObligationErrors, IntegrationReadIntegrationObligationResponses, IntegrationReadIntegrationObligationsData, IntegrationReadIntegrationObligationsErrors, IntegrationReadIntegrationObligationsResponses, IntegrationReadLatestIntegrationCategoryDataRecordData, IntegrationReadLatestIntegrationCategoryDataRecordErrors, IntegrationReadLatestIntegrationCategoryDataRecordResponses, IntegrationReopenIntegrationObligationData, IntegrationReopenIntegrationObligationErrors, IntegrationReopenIntegrationObligationResponses, IntegrationsCreateIntegrationData, IntegrationsCreateIntegrationErrors, IntegrationsCreateIntegrationResponses, IntegrationsGetIntegrationData, IntegrationsGetIntegrationErrors, IntegrationsGetIntegrationResponses, IntegrationsListIntegrationsData, IntegrationsListIntegrationsErrors, IntegrationsListIntegrationsResponses, IntegrationStartIntegrationRunData, IntegrationStartIntegrationRunErrors, IntegrationStartIntegrationRunResponses, IntegrationsUpdateIntegrationData, IntegrationsUpdateIntegrationErrors, IntegrationsUpdateIntegrationResponses, IntegrationUpdateIntegrationLedgerData, IntegrationUpdateIntegrationLedgerErrors, IntegrationUpdateIntegrationLedgerResponses, IntegrationUpdateIntegrationObligationData, IntegrationUpdateIntegrationObligationErrors, IntegrationUpdateIntegrationObligationResponses, IntegrationUpsertIntegrationObligationComponentData, IntegrationUpsertIntegrationObligationComponentErrors, IntegrationUpsertIntegrationObligationComponentResponses, LedgersCreateApiKeyData, LedgersCreateApiKeyErrors, LedgersCreateApiKeyResponses, LedgersCreateLedgerData, LedgersCreateLedgerErrors, LedgersCreateLedgerResponses, LedgersDeleteAllCategoriesData, LedgersDeleteAllCategoriesErrors, LedgersDeleteAllCategoriesResponses, LedgersDeleteAllObligationsData, LedgersDeleteAllObligationsErrors, LedgersDeleteAllObligationsResponses, LedgersReadApiKeysData, LedgersReadApiKeysErrors, LedgersReadApiKeysResponses, LedgersReadLedgerData, LedgersReadLedgerErrors, LedgersReadLedgerMembersData, LedgersReadLedgerMembersErrors, LedgersReadLedgerMembersResponses, LedgersReadLedgerResponses, LedgersReadLedgersData, LedgersReadLedgersResponses, LedgersRemoveLedgerMemberData, LedgersRemoveLedgerMemberErrors, LedgersRemoveLedgerMemberResponses, LedgersRevokeApiKeyData, LedgersRevokeApiKeyErrors, LedgersRevokeApiKeyResponses, LedgersShareLedgerData, LedgersShareLedgerErrors, LedgersShareLedgerResponses, LedgersUpdateLedgerData, LedgersUpdateLedgerErrors, LedgersUpdateLedgerMemberData, LedgersUpdateLedgerMemberErrors, LedgersUpdateLedgerMemberResponses, LedgersUpdateLedgerResponses, LegacyImportReadLegacyImportJobData, LegacyImportReadLegacyImportJobErrors, LegacyImportReadLegacyImportJobResponses, LegacyImportStartLegacyImportData, LegacyImportStartLegacyImportErrors, LegacyImportStartLegacyImportResponses, LoginLoginAccessTokenData, LoginLoginAccessTokenErrors, LoginLoginAccessTokenResponses, LoginRecoverPasswordData, LoginRecoverPasswordErrors, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentErrors, LoginRecoverPasswordHtmlContentResponses, LoginRecoverPasswordResponses, LoginResetPasswordData, LoginResetPasswordErrors, LoginResetPasswordResponses, LoginTestTokenData, LoginTestTokenResponses, ObligationsAddObligationComponentData, ObligationsAddObligationComponentErrors, ObligationsAddObligationComponentResponses, ObligationsCancelObligationData, ObligationsCancelObligationErrors, ObligationsCancelObligationResponses, ObligationsCreateObligationData, ObligationsCreateObligationErrors, ObligationsCreateObligationResponses, ObligationsEnsureObligationsData, ObligationsEnsureObligationsErrors, ObligationsEnsureObligationsResponses, ObligationsMarkObligationPaidData, ObligationsMarkObligationPaidErrors, ObligationsMarkObligationPaidResponses, ObligationsMarkObligationReadyData, ObligationsMarkObligationReadyErrors, ObligationsMarkObligationReadyResponses, ObligationsReadObligationComponentsData, ObligationsReadObligationComponentsErrors, ObligationsReadObligationComponentsResponses, ObligationsReadObligationData, ObligationsReadObligationErrors, ObligationsReadObligationResponses, ObligationsReadObligationsData, ObligationsReadObligationsErrors, ObligationsReadObligationsResponses, ObligationsRemoveObligationComponentData, ObligationsRemoveObligationComponentErrors, ObligationsRemoveObligationComponentResponses, ObligationsReopenObligationData, ObligationsReopenObligationErrors, ObligationsReopenObligationResponses, ObligationsUpdateObligationComponentData, ObligationsUpdateObligationComponentErrors, ObligationsUpdateObligationComponentResponses, ObligationsUpdateObligationData, ObligationsUpdateObligationErrors, ObligationsUpdateObligationResponses, ObligationsUpsertObligationComponentData, ObligationsUpsertObligationComponentErrors, ObligationsUpsertObligationComponentResponses, SystemRunsReadSystemRunData, SystemRunsReadSystemRunErrors, SystemRunsReadSystemRunResponses, SystemRunsReadSystemRunsData, SystemRunsReadSystemRunsErrors, SystemRunsReadSystemRunsResponses, SystemRunsReadSystemRunTasksData, SystemRunsReadSystemRunTasksResponses, SystemRunsStartSystemRunData, SystemRunsStartSystemRunErrors, SystemRunsStartSystemRunResponses, UsersCreateUserData, UsersCreateUserErrors, UsersCreateUserResponses, UsersDeleteUserData, UsersDeleteUserErrors, UsersDeleteUserMeData, UsersDeleteUserMeResponses, UsersDeleteUserResponses, UsersReadUserByIdData, UsersReadUserByIdErrors, UsersReadUserByIdResponses, UsersReadUserMeData, UsersReadUserMeResponses, UsersReadUsersData, UsersReadUsersErrors, UsersReadUsersResponses, UsersUpdatePasswordMeData, UsersUpdatePasswordMeErrors, UsersUpdatePasswordMeResponses, UsersUpdateUserData, UsersUpdateUserErrors, UsersUpdateUserMeData, UsersUpdateUserMeErrors, UsersUpdateUserMeResponses, UsersUpdateUserResponses, UtilsHealthCheckData, UtilsHealthCheckResponses, UtilsTestEmailData, UtilsTestEmailErrors, UtilsTestEmailResponses } from './types.gen';
+import type { AnalyticsReadCategoryAmountHistoryData, AnalyticsReadCategoryAmountHistoryErrors, AnalyticsReadCategoryAmountHistoryResponses, AnalyticsReadObligationPeriodTotalsData, AnalyticsReadObligationPeriodTotalsErrors, AnalyticsReadObligationPeriodTotalsResponses, AnalyticsReadPeriodPaymentSummaryData, AnalyticsReadPeriodPaymentSummaryErrors, AnalyticsReadPeriodPaymentSummaryResponses, AnalyticsReadRemainingPeriodCashflowData, AnalyticsReadRemainingPeriodCashflowErrors, AnalyticsReadRemainingPeriodCashflowResponses, CategoriesArchiveCategoryData, CategoriesArchiveCategoryErrors, CategoriesArchiveCategoryGroupData, CategoriesArchiveCategoryGroupErrors, CategoriesArchiveCategoryGroupResponses, CategoriesArchiveCategoryResponses, CategoriesCreateCategoryData, CategoriesCreateCategoryDataSchemaData, CategoriesCreateCategoryDataSchemaErrors, CategoriesCreateCategoryDataSchemaResponses, CategoriesCreateCategoryErrors, CategoriesCreateCategoryGroupData, CategoriesCreateCategoryGroupErrors, CategoriesCreateCategoryGroupResponses, CategoriesCreateCategoryResponses, CategoriesReadCategoriesData, CategoriesReadCategoriesErrors, CategoriesReadCategoriesResponses, CategoriesReadCategoryDataRecordsData, CategoriesReadCategoryDataRecordsErrors, CategoriesReadCategoryDataRecordsResponses, CategoriesReadCategoryDataSchemaData, CategoriesReadCategoryDataSchemaErrors, CategoriesReadCategoryDataSchemaResponses, CategoriesReadCategoryDataSchemasData, CategoriesReadCategoryDataSchemasErrors, CategoriesReadCategoryDataSchemasResponses, CategoriesReadCategoryDataSchemaVersionData, CategoriesReadCategoryDataSchemaVersionErrors, CategoriesReadCategoryDataSchemaVersionResponses, CategoriesReadCategoryGroupsData, CategoriesReadCategoryGroupsErrors, CategoriesReadCategoryGroupsResponses, CategoriesReadLatestCategoryDataRecordData, CategoriesReadLatestCategoryDataRecordErrors, CategoriesReadLatestCategoryDataRecordResponses, CategoriesRestoreCategoryData, CategoriesRestoreCategoryErrors, CategoriesRestoreCategoryResponses, CategoriesUpdateCategoryData, CategoriesUpdateCategoryErrors, CategoriesUpdateCategoryGroupData, CategoriesUpdateCategoryGroupErrors, CategoriesUpdateCategoryGroupResponses, CategoriesUpdateCategoryResponses, CounterpartiesAssignCategoryCounterpartyData, CounterpartiesAssignCategoryCounterpartyErrors, CounterpartiesAssignCategoryCounterpartyResponses, CounterpartiesAssignObligationCounterpartyData, CounterpartiesAssignObligationCounterpartyErrors, CounterpartiesAssignObligationCounterpartyResponses, CounterpartiesCreateCounterpartyData, CounterpartiesCreateCounterpartyErrors, CounterpartiesCreateCounterpartyResponses, CounterpartiesDeleteCounterpartyData, CounterpartiesDeleteCounterpartyErrors, CounterpartiesDeleteCounterpartyResponses, CounterpartiesReadCounterpartiesData, CounterpartiesReadCounterpartiesResponses, CounterpartiesReadCounterpartyData, CounterpartiesReadCounterpartyErrors, CounterpartiesReadCounterpartyResponses, CounterpartiesReadObligationCounterpartyData, CounterpartiesReadObligationCounterpartyErrors, CounterpartiesReadObligationCounterpartyResponses, CounterpartiesSearchCounterpartiesData, CounterpartiesSearchCounterpartiesErrors, CounterpartiesSearchCounterpartiesResponses, CounterpartiesUpdateCounterpartyData, CounterpartiesUpdateCounterpartyErrors, CounterpartiesUpdateCounterpartyResponses, IntegrationAppendIntegrationObligationNoteData, IntegrationAppendIntegrationObligationNoteErrors, IntegrationAppendIntegrationObligationNoteResponses, IntegrationCancelIntegrationObligationData, IntegrationCancelIntegrationObligationErrors, IntegrationCancelIntegrationObligationResponses, IntegrationCreateIntegrationCategoryDataRecordData, IntegrationCreateIntegrationCategoryDataRecordErrors, IntegrationCreateIntegrationCategoryDataRecordResponses, IntegrationFinishIntegrationRunData, IntegrationFinishIntegrationRunErrors, IntegrationFinishIntegrationRunResponses, IntegrationMarkIntegrationObligationErrorData, IntegrationMarkIntegrationObligationErrorErrors, IntegrationMarkIntegrationObligationErrorResponses, IntegrationMarkIntegrationObligationPaidData, IntegrationMarkIntegrationObligationPaidErrors, IntegrationMarkIntegrationObligationPaidResponses, IntegrationMarkIntegrationObligationReadyData, IntegrationMarkIntegrationObligationReadyErrors, IntegrationMarkIntegrationObligationReadyResponses, IntegrationReadIntegrationCategoryDataRecordsData, IntegrationReadIntegrationCategoryDataRecordsErrors, IntegrationReadIntegrationCategoryDataRecordsResponses, IntegrationReadIntegrationCategoryDataSchemaData, IntegrationReadIntegrationCategoryDataSchemaResponses, IntegrationReadIntegrationContextData, IntegrationReadIntegrationContextResponses, IntegrationReadIntegrationObligationComponentsData, IntegrationReadIntegrationObligationComponentsErrors, IntegrationReadIntegrationObligationComponentsResponses, IntegrationReadIntegrationObligationData, IntegrationReadIntegrationObligationErrors, IntegrationReadIntegrationObligationResponses, IntegrationReadIntegrationObligationsData, IntegrationReadIntegrationObligationsErrors, IntegrationReadIntegrationObligationsResponses, IntegrationReadLatestIntegrationCategoryDataRecordData, IntegrationReadLatestIntegrationCategoryDataRecordResponses, IntegrationReopenIntegrationObligationData, IntegrationReopenIntegrationObligationErrors, IntegrationReopenIntegrationObligationResponses, IntegrationsCreateIntegrationData, IntegrationsCreateIntegrationErrors, IntegrationsCreateIntegrationResponses, IntegrationsGenerateIntegrationCredentialData, IntegrationsGenerateIntegrationCredentialErrors, IntegrationsGenerateIntegrationCredentialResponses, IntegrationsGetIntegrationData, IntegrationsGetIntegrationErrors, IntegrationsGetIntegrationResponses, IntegrationsListIntegrationsData, IntegrationsListIntegrationsErrors, IntegrationsListIntegrationsResponses, IntegrationsRevokeIntegrationCredentialData, IntegrationsRevokeIntegrationCredentialErrors, IntegrationsRevokeIntegrationCredentialResponses, IntegrationStartIntegrationRunData, IntegrationStartIntegrationRunErrors, IntegrationStartIntegrationRunResponses, IntegrationsUpdateIntegrationData, IntegrationsUpdateIntegrationErrors, IntegrationsUpdateIntegrationResponses, IntegrationUpdateIntegrationObligationData, IntegrationUpdateIntegrationObligationErrors, IntegrationUpdateIntegrationObligationResponses, IntegrationUpsertIntegrationObligationComponentData, IntegrationUpsertIntegrationObligationComponentErrors, IntegrationUpsertIntegrationObligationComponentResponses, LedgersCreateLedgerData, LedgersCreateLedgerErrors, LedgersCreateLedgerResponses, LedgersDeleteAllCategoriesData, LedgersDeleteAllCategoriesErrors, LedgersDeleteAllCategoriesResponses, LedgersDeleteAllObligationsData, LedgersDeleteAllObligationsErrors, LedgersDeleteAllObligationsResponses, LedgersReadLedgerData, LedgersReadLedgerErrors, LedgersReadLedgerMembersData, LedgersReadLedgerMembersErrors, LedgersReadLedgerMembersResponses, LedgersReadLedgerResponses, LedgersReadLedgersData, LedgersReadLedgersResponses, LedgersRemoveLedgerMemberData, LedgersRemoveLedgerMemberErrors, LedgersRemoveLedgerMemberResponses, LedgersShareLedgerData, LedgersShareLedgerErrors, LedgersShareLedgerResponses, LedgersUpdateLedgerData, LedgersUpdateLedgerErrors, LedgersUpdateLedgerMemberData, LedgersUpdateLedgerMemberErrors, LedgersUpdateLedgerMemberResponses, LedgersUpdateLedgerResponses, LegacyImportReadLegacyImportJobData, LegacyImportReadLegacyImportJobErrors, LegacyImportReadLegacyImportJobResponses, LegacyImportStartLegacyImportData, LegacyImportStartLegacyImportErrors, LegacyImportStartLegacyImportResponses, LoginLoginAccessTokenData, LoginLoginAccessTokenErrors, LoginLoginAccessTokenResponses, LoginRecoverPasswordData, LoginRecoverPasswordErrors, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentErrors, LoginRecoverPasswordHtmlContentResponses, LoginRecoverPasswordResponses, LoginResetPasswordData, LoginResetPasswordErrors, LoginResetPasswordResponses, LoginTestTokenData, LoginTestTokenResponses, ObligationsAddObligationComponentData, ObligationsAddObligationComponentErrors, ObligationsAddObligationComponentResponses, ObligationsCancelObligationData, ObligationsCancelObligationErrors, ObligationsCancelObligationResponses, ObligationsCreateObligationData, ObligationsCreateObligationErrors, ObligationsCreateObligationResponses, ObligationsEnsureObligationsData, ObligationsEnsureObligationsErrors, ObligationsEnsureObligationsResponses, ObligationsMarkObligationPaidData, ObligationsMarkObligationPaidErrors, ObligationsMarkObligationPaidResponses, ObligationsMarkObligationReadyData, ObligationsMarkObligationReadyErrors, ObligationsMarkObligationReadyResponses, ObligationsReadObligationComponentsData, ObligationsReadObligationComponentsErrors, ObligationsReadObligationComponentsResponses, ObligationsReadObligationData, ObligationsReadObligationErrors, ObligationsReadObligationResponses, ObligationsReadObligationsData, ObligationsReadObligationsErrors, ObligationsReadObligationsResponses, ObligationsRemoveObligationComponentData, ObligationsRemoveObligationComponentErrors, ObligationsRemoveObligationComponentResponses, ObligationsReopenObligationData, ObligationsReopenObligationErrors, ObligationsReopenObligationResponses, ObligationsUpdateObligationComponentData, ObligationsUpdateObligationComponentErrors, ObligationsUpdateObligationComponentResponses, ObligationsUpdateObligationData, ObligationsUpdateObligationErrors, ObligationsUpdateObligationResponses, ObligationsUpsertObligationComponentData, ObligationsUpsertObligationComponentErrors, ObligationsUpsertObligationComponentResponses, SystemRunsReadSystemRunData, SystemRunsReadSystemRunErrors, SystemRunsReadSystemRunResponses, SystemRunsReadSystemRunsData, SystemRunsReadSystemRunsErrors, SystemRunsReadSystemRunsResponses, SystemRunsReadSystemRunTasksData, SystemRunsReadSystemRunTasksResponses, SystemRunsStartSystemRunData, SystemRunsStartSystemRunErrors, SystemRunsStartSystemRunResponses, UsersCreateUserData, UsersCreateUserErrors, UsersCreateUserResponses, UsersDeleteUserData, UsersDeleteUserErrors, UsersDeleteUserMeData, UsersDeleteUserMeResponses, UsersDeleteUserResponses, UsersReadUserByIdData, UsersReadUserByIdErrors, UsersReadUserByIdResponses, UsersReadUserMeData, UsersReadUserMeResponses, UsersReadUsersData, UsersReadUsersErrors, UsersReadUsersResponses, UsersUpdatePasswordMeData, UsersUpdatePasswordMeErrors, UsersUpdatePasswordMeResponses, UsersUpdateUserData, UsersUpdateUserErrors, UsersUpdateUserMeData, UsersUpdateUserMeErrors, UsersUpdateUserMeResponses, UsersUpdateUserResponses, UtilsHealthCheckData, UtilsHealthCheckResponses, UtilsTestEmailData, UtilsTestEmailErrors, UtilsTestEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -105,58 +105,6 @@ export class LoginService {
 }
 
 export class LedgersService {
-    /**
-     * Read Api Keys
-     */
-    public static readApiKeys<ThrowOnError extends boolean = false>(options: Options<LedgersReadApiKeysData, ThrowOnError>): RequestResult<LedgersReadApiKeysResponses, LedgersReadApiKeysErrors, ThrowOnError> {
-        return (options.client ?? client).get<LedgersReadApiKeysResponses, LedgersReadApiKeysErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{
-                    key: 'OAuth2PasswordBearer',
-                    scheme: 'bearer',
-                    type: 'http'
-                }],
-            url: '/api/v1/ledgers/{ledger_id}/api-keys',
-            ...options
-        });
-    }
-
-    /**
-     * Create Api Key
-     */
-    public static createApiKey<ThrowOnError extends boolean = false>(options: Options<LedgersCreateApiKeyData, ThrowOnError>): RequestResult<LedgersCreateApiKeyResponses, LedgersCreateApiKeyErrors, ThrowOnError> {
-        return (options.client ?? client).post<LedgersCreateApiKeyResponses, LedgersCreateApiKeyErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{
-                    key: 'OAuth2PasswordBearer',
-                    scheme: 'bearer',
-                    type: 'http'
-                }],
-            url: '/api/v1/ledgers/{ledger_id}/api-keys',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-
-    /**
-     * Revoke Api Key
-     */
-    public static revokeApiKey<ThrowOnError extends boolean = false>(options: Options<LedgersRevokeApiKeyData, ThrowOnError>): RequestResult<LedgersRevokeApiKeyResponses, LedgersRevokeApiKeyErrors, ThrowOnError> {
-        return (options.client ?? client).delete<LedgersRevokeApiKeyResponses, LedgersRevokeApiKeyErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{
-                    key: 'OAuth2PasswordBearer',
-                    scheme: 'bearer',
-                    type: 'http'
-                }],
-            url: '/api/v1/ledgers/{ledger_id}/api-keys/{api_key_id}',
-            ...options
-        });
-    }
-
     /**
      * Read Ledgers
      */
@@ -907,19 +855,181 @@ export class AnalyticsService {
     }
 }
 
+export class CounterpartiesService {
+    /**
+     * Read Counterparties
+     */
+    public static readCounterparties<ThrowOnError extends boolean = false>(options?: Options<CounterpartiesReadCounterpartiesData, ThrowOnError>): RequestResult<CounterpartiesReadCounterpartiesResponses, unknown, ThrowOnError> {
+        return (options?.client ?? client).get<CounterpartiesReadCounterpartiesResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/counterparties',
+            ...options
+        });
+    }
+
+    /**
+     * Create Counterparty
+     */
+    public static createCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesCreateCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesCreateCounterpartyResponses, CounterpartiesCreateCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).post<CounterpartiesCreateCounterpartyResponses, CounterpartiesCreateCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/counterparties',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Search Counterparties
+     */
+    public static searchCounterparties<ThrowOnError extends boolean = false>(options?: Options<CounterpartiesSearchCounterpartiesData, ThrowOnError>): RequestResult<CounterpartiesSearchCounterpartiesResponses, CounterpartiesSearchCounterpartiesErrors, ThrowOnError> {
+        return (options?.client ?? client).get<CounterpartiesSearchCounterpartiesResponses, CounterpartiesSearchCounterpartiesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/counterparties/search',
+            ...options
+        });
+    }
+
+    /**
+     * Delete Counterparty
+     */
+    public static deleteCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesDeleteCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesDeleteCounterpartyResponses, CounterpartiesDeleteCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).delete<CounterpartiesDeleteCounterpartyResponses, CounterpartiesDeleteCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/counterparties/{counterparty_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Read Counterparty
+     */
+    public static readCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesReadCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesReadCounterpartyResponses, CounterpartiesReadCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).get<CounterpartiesReadCounterpartyResponses, CounterpartiesReadCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/counterparties/{counterparty_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Update Counterparty
+     */
+    public static updateCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesUpdateCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesUpdateCounterpartyResponses, CounterpartiesUpdateCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).patch<CounterpartiesUpdateCounterpartyResponses, CounterpartiesUpdateCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/counterparties/{counterparty_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Assign Category Counterparty
+     */
+    public static assignCategoryCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesAssignCategoryCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesAssignCategoryCounterpartyResponses, CounterpartiesAssignCategoryCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).patch<CounterpartiesAssignCategoryCounterpartyResponses, CounterpartiesAssignCategoryCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Obligation Counterparty
+     */
+    public static readObligationCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesReadObligationCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesReadObligationCounterpartyResponses, CounterpartiesReadObligationCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).get<CounterpartiesReadObligationCounterpartyResponses, CounterpartiesReadObligationCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/counterparty',
+            ...options
+        });
+    }
+
+    /**
+     * Assign Obligation Counterparty
+     */
+    public static assignObligationCounterparty<ThrowOnError extends boolean = false>(options: Options<CounterpartiesAssignObligationCounterpartyData, ThrowOnError>): RequestResult<CounterpartiesAssignObligationCounterpartyResponses, CounterpartiesAssignObligationCounterpartyErrors, ThrowOnError> {
+        return (options.client ?? client).patch<CounterpartiesAssignObligationCounterpartyResponses, CounterpartiesAssignObligationCounterpartyErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/counterparty',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
 export class IntegrationService {
     /**
-     * Read Integration Instance
+     * Read Integration Context
      */
-    public static readIntegrationInstance<ThrowOnError extends boolean = false>(options: Options<IntegrationReadIntegrationInstanceData, ThrowOnError>): RequestResult<IntegrationReadIntegrationInstanceResponses, IntegrationReadIntegrationInstanceErrors, ThrowOnError> {
-        return (options.client ?? client).get<IntegrationReadIntegrationInstanceResponses, IntegrationReadIntegrationInstanceErrors, ThrowOnError>({
+    public static readIntegrationContext<ThrowOnError extends boolean = false>(options?: Options<IntegrationReadIntegrationContextData, ThrowOnError>): RequestResult<IntegrationReadIntegrationContextResponses, unknown, ThrowOnError> {
+        return (options?.client ?? client).get<IntegrationReadIntegrationContextResponses, unknown, ThrowOnError>({
             responseType: 'json',
             security: [{
                     key: 'IntegrationApiKey',
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/instances/{integration_key}',
+            url: '/api/v1/integration/context',
             ...options
         });
     }
@@ -935,7 +1045,7 @@ export class IntegrationService {
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/instances/{integration_key}/start',
+            url: '/api/v1/integration/runs/start',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -955,7 +1065,7 @@ export class IntegrationService {
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/instances/{integration_key}/finish',
+            url: '/api/v1/integration/runs/finish',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -967,15 +1077,15 @@ export class IntegrationService {
     /**
      * Read Latest Integration Category Data Record
      */
-    public static readLatestIntegrationCategoryDataRecord<ThrowOnError extends boolean = false>(options: Options<IntegrationReadLatestIntegrationCategoryDataRecordData, ThrowOnError>): RequestResult<IntegrationReadLatestIntegrationCategoryDataRecordResponses, IntegrationReadLatestIntegrationCategoryDataRecordErrors, ThrowOnError> {
-        return (options.client ?? client).get<IntegrationReadLatestIntegrationCategoryDataRecordResponses, IntegrationReadLatestIntegrationCategoryDataRecordErrors, ThrowOnError>({
+    public static readLatestIntegrationCategoryDataRecord<ThrowOnError extends boolean = false>(options?: Options<IntegrationReadLatestIntegrationCategoryDataRecordData, ThrowOnError>): RequestResult<IntegrationReadLatestIntegrationCategoryDataRecordResponses, unknown, ThrowOnError> {
+        return (options?.client ?? client).get<IntegrationReadLatestIntegrationCategoryDataRecordResponses, unknown, ThrowOnError>({
             responseType: 'json',
             security: [{
                     key: 'IntegrationApiKey',
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/categories/{category_code}/data-records/latest',
+            url: '/api/v1/integration/category/data-records/latest',
             ...options
         });
     }
@@ -983,15 +1093,15 @@ export class IntegrationService {
     /**
      * Read Integration Category Data Records
      */
-    public static readIntegrationCategoryDataRecords<ThrowOnError extends boolean = false>(options: Options<IntegrationReadIntegrationCategoryDataRecordsData, ThrowOnError>): RequestResult<IntegrationReadIntegrationCategoryDataRecordsResponses, IntegrationReadIntegrationCategoryDataRecordsErrors, ThrowOnError> {
-        return (options.client ?? client).get<IntegrationReadIntegrationCategoryDataRecordsResponses, IntegrationReadIntegrationCategoryDataRecordsErrors, ThrowOnError>({
+    public static readIntegrationCategoryDataRecords<ThrowOnError extends boolean = false>(options?: Options<IntegrationReadIntegrationCategoryDataRecordsData, ThrowOnError>): RequestResult<IntegrationReadIntegrationCategoryDataRecordsResponses, IntegrationReadIntegrationCategoryDataRecordsErrors, ThrowOnError> {
+        return (options?.client ?? client).get<IntegrationReadIntegrationCategoryDataRecordsResponses, IntegrationReadIntegrationCategoryDataRecordsErrors, ThrowOnError>({
             responseType: 'json',
             security: [{
                     key: 'IntegrationApiKey',
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/categories/{category_code}/data-records',
+            url: '/api/v1/integration/category/data-records',
             ...options
         });
     }
@@ -1007,7 +1117,7 @@ export class IntegrationService {
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/categories/{category_code}/data-records',
+            url: '/api/v1/integration/category/data-records',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -1019,56 +1129,16 @@ export class IntegrationService {
     /**
      * Read Integration Category Data Schema
      */
-    public static readIntegrationCategoryDataSchema<ThrowOnError extends boolean = false>(options: Options<IntegrationReadIntegrationCategoryDataSchemaData, ThrowOnError>): RequestResult<IntegrationReadIntegrationCategoryDataSchemaResponses, IntegrationReadIntegrationCategoryDataSchemaErrors, ThrowOnError> {
-        return (options.client ?? client).get<IntegrationReadIntegrationCategoryDataSchemaResponses, IntegrationReadIntegrationCategoryDataSchemaErrors, ThrowOnError>({
+    public static readIntegrationCategoryDataSchema<ThrowOnError extends boolean = false>(options?: Options<IntegrationReadIntegrationCategoryDataSchemaData, ThrowOnError>): RequestResult<IntegrationReadIntegrationCategoryDataSchemaResponses, unknown, ThrowOnError> {
+        return (options?.client ?? client).get<IntegrationReadIntegrationCategoryDataSchemaResponses, unknown, ThrowOnError>({
             responseType: 'json',
             security: [{
                     key: 'IntegrationApiKey',
                     scheme: 'bearer',
                     type: 'http'
                 }],
-            url: '/api/v1/integration/categories/{category_code}/data-schema',
+            url: '/api/v1/integration/category/schema',
             ...options
-        });
-    }
-
-    /**
-     * Read Integration Ledger
-     *
-     * Return only the ledger selected by the authenticated API key.
-     */
-    public static readIntegrationLedger<ThrowOnError extends boolean = false>(options?: Options<IntegrationReadIntegrationLedgerData, ThrowOnError>): RequestResult<IntegrationReadIntegrationLedgerResponses, unknown, ThrowOnError> {
-        return (options?.client ?? client).get<IntegrationReadIntegrationLedgerResponses, unknown, ThrowOnError>({
-            responseType: 'json',
-            security: [{
-                    key: 'IntegrationApiKey',
-                    scheme: 'bearer',
-                    type: 'http'
-                }],
-            url: '/api/v1/integration/ledger',
-            ...options
-        });
-    }
-
-    /**
-     * Update Integration Ledger
-     *
-     * Update the key's ledger through the shared ledger use case.
-     */
-    public static updateIntegrationLedger<ThrowOnError extends boolean = false>(options: Options<IntegrationUpdateIntegrationLedgerData, ThrowOnError>): RequestResult<IntegrationUpdateIntegrationLedgerResponses, IntegrationUpdateIntegrationLedgerErrors, ThrowOnError> {
-        return (options.client ?? client).patch<IntegrationUpdateIntegrationLedgerResponses, IntegrationUpdateIntegrationLedgerErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{
-                    key: 'IntegrationApiKey',
-                    scheme: 'bearer',
-                    type: 'http'
-                }],
-            url: '/api/v1/integration/ledger',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
         });
     }
 
@@ -1331,6 +1401,38 @@ export class IntegrationsService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+
+    /**
+     * Generate Integration Credential
+     */
+    public static generateIntegrationCredential<ThrowOnError extends boolean = false>(options: Options<IntegrationsGenerateIntegrationCredentialData, ThrowOnError>): RequestResult<IntegrationsGenerateIntegrationCredentialResponses, IntegrationsGenerateIntegrationCredentialErrors, ThrowOnError> {
+        return (options.client ?? client).post<IntegrationsGenerateIntegrationCredentialResponses, IntegrationsGenerateIntegrationCredentialErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}/credentials',
+            ...options
+        });
+    }
+
+    /**
+     * Revoke Integration Credential
+     */
+    public static revokeIntegrationCredential<ThrowOnError extends boolean = false>(options: Options<IntegrationsRevokeIntegrationCredentialData, ThrowOnError>): RequestResult<IntegrationsRevokeIntegrationCredentialResponses, IntegrationsRevokeIntegrationCredentialErrors, ThrowOnError> {
+        return (options.client ?? client).delete<IntegrationsRevokeIntegrationCredentialResponses, IntegrationsRevokeIntegrationCredentialErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{
+                    key: 'OAuth2PasswordBearer',
+                    scheme: 'bearer',
+                    type: 'http'
+                }],
+            url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}/credentials/{credential_id}',
+            ...options
         });
     }
 }

@@ -11,7 +11,6 @@ from app.domain.integrations import (
     IntegrationResult,
 )
 
-IntegrationKey = Annotated[str, Field(pattern=r"^[a-z][a-z0-9-]{0,63}$", max_length=64)]
 PositiveSeconds = Annotated[int, Field(strict=True, gt=0, le=2147483647)]
 Revision = Annotated[int, Field(strict=True, ge=0, le=9223372036854775807)]
 IntegrationName = Annotated[str, Field(min_length=1, max_length=255, pattern=r"\S")]
@@ -19,28 +18,14 @@ IntegrationName = Annotated[str, Field(min_length=1, max_length=255, pattern=r"\
 
 class IntegrationCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    key: IntegrationKey
-    provider: IntegrationKey
     name: IntegrationName
-    category_ids: list[uuid.UUID] = Field(default_factory=list, max_length=100)
-    enabled: StrictBool = True
-    stale_after_seconds: PositiveSeconds = 93600
-    run_timeout_seconds: PositiveSeconds = 1800
-
-    @model_validator(mode="after")
-    def validate_limits(self) -> Self:
-        if self.run_timeout_seconds >= self.stale_after_seconds:
-            raise ValueError(
-                "run_timeout_seconds must be less than stale_after_seconds"
-            )
-        return self
+    category_id: uuid.UUID
 
 
 class IntegrationUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     expected_revision: Revision
     name: IntegrationName | None = None
-    category_ids: list[uuid.UUID] | None = Field(default=None, max_length=100)
     enabled: StrictBool | None = None
     stale_after_seconds: PositiveSeconds | None = None
     run_timeout_seconds: PositiveSeconds | None = None
@@ -91,10 +76,9 @@ class IntegrationPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     ledger_id: uuid.UUID
-    key: str
-    provider: str
     name: str
-    category_ids: list[uuid.UUID]
+    category_id: uuid.UUID
+    credentials: list["IntegrationCredentialPublic"]
     enabled: bool
     created_at: datetime
     updated_at: datetime
@@ -120,6 +104,35 @@ class IntegrationPublic(BaseModel):
 class IntegrationsPublic(BaseModel):
     data: list[IntegrationPublic]
     count: int
+
+
+class IntegrationCredentialPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    key_prefix: str
+    created_at: datetime
+    last_used_at: datetime | None
+    expires_at: datetime | None
+    revoked_at: datetime | None
+
+
+class IntegrationCreated(BaseModel):
+    integration: IntegrationPublic
+    credential: IntegrationCredentialPublic
+    connection_key: str
+
+
+class IntegrationCredentialCreated(BaseModel):
+    credential: IntegrationCredentialPublic
+    connection_key: str
+
+
+class IntegrationContextPublic(BaseModel):
+    integration: dict[str, object]
+    category: dict[str, object]
+
+
+IntegrationPublic.model_rebuild()
 
 
 class IntegrationConflictDetail(BaseModel):

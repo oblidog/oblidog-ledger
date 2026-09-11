@@ -37,9 +37,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import type { ObligationWithCounterparty } from "@/features/counterparties/api"
 import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
-import type { ObligationWithCounterparty } from "@/features/counterparties/api"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
@@ -477,7 +477,9 @@ export function ObligationWorkspace({
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <CounterpartyLogo counterparty={counterpartyFor(selected.data) ?? null} />
+                  <CounterpartyLogo
+                    counterparty={counterpartyFor(selected.data) ?? null}
+                  />
                   <div className="min-w-0">
                     <p className="text-xs font-medium uppercase text-muted-foreground">
                       Counterparty
@@ -741,7 +743,9 @@ function ObligationTile({
                 ledgerId={ledgerId}
                 obligation={obligation}
                 trigger={
-                  <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                  <DropdownMenuItem
+                    onSelect={(event) => event.preventDefault()}
+                  >
                     <Building2 />
                     Counterparty
                   </DropdownMenuItem>

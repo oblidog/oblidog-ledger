@@ -30,7 +30,9 @@ export function CategoryCustomDataDialog({
             params={{ ledgerId, categoryId: category.id } as never}
           >
             <Database />
-            <span className="sr-only">View custom data for {category.name}</span>
+            <span className="sr-only">
+              View custom data for {category.name}
+            </span>
           </Link>
         </Button>
       </TooltipTrigger>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { ArrowLeft, RefreshCw, Settings } from "lucide-react"
 import { useState } from "react"
@@ -12,7 +12,6 @@ import {
   LedgersService,
 } from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import useAuth from "@/hooks/useAuth"
@@ -32,6 +31,15 @@ const executionLabels: Record<IntegrationExecutionState, string> = {
   finished: "Finished",
 }
 
+function runDuration(startedAt: string | null, finishedAt: string | null) {
+  if (!startedAt || !finishedAt) return null
+  const seconds = Math.max(
+    0,
+    (new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000,
+  )
+  return `${seconds.toFixed(1)} s`
+}
+
 export function IntegrationDetails({
   ledgerId,
   integrationId,
@@ -40,7 +48,9 @@ export function IntegrationDetails({
   integrationId: string
 }) {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [editing, setEditing] = useState<IntegrationPublic | null>(null)
+  const [newKey, setNewKey] = useState<string | null>(null)
   const ledger = useQuery({
     queryKey: ["ledger", ledgerId],
     queryFn: () => LedgersService.readLedger({ ledgerId }),
@@ -60,10 +70,38 @@ export function IntegrationDetails({
       CategoriesService.readCategories({ ledgerId, includeArchived: true }),
   })
   const item = integration.data
+  const category = categories.data?.data.find(
+    (entry) => entry.id === item?.category_id,
+  )
   const isOwner = !!user && ledger.data?.owner_user_id === user.id
   const notFound =
     integration.error instanceof ApiError &&
     integration.error.response?.status === 404
+  const rotate = useMutation({
+    mutationFn: () =>
+      IntegrationsService.generateIntegrationCredential({
+        ledgerId,
+        integrationId,
+      }),
+    onSuccess: (result) => {
+      setNewKey(result.connection_key)
+      void queryClient.invalidateQueries({
+        queryKey: ["integration", ledgerId, integrationId],
+      })
+    },
+  })
+  const revoke = useMutation({
+    mutationFn: (credentialId: string) =>
+      IntegrationsService.revokeIntegrationCredential({
+        ledgerId,
+        integrationId,
+        credentialId,
+      }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({
+        queryKey: ["integration", ledgerId, integrationId],
+      }),
+  })
 
   return (
     <div className="min-w-0 space-y-6">
@@ -96,7 +134,15 @@ export function IntegrationDetails({
                 {item.name}
               </h1>
               <p className="break-all text-sm text-muted-foreground">
-                {item.provider} · {item.key}
+                {category
+                  ? `Category: ${category.name} / ${category.code}`
+                  : "Category unavailable"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Last successful run:{" "}
+                {item.last_success_at
+                  ? dateTime(item.last_success_at)
+                  : "Never"}
               </p>
               <HealthBadge health={item.health} />
             </div>
@@ -147,33 +193,97 @@ export function IntegrationDetails({
             </Alert>
           )}
           <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-            <Card className="min-w-0">
+            <Card className="min-w-0 lg:order-3">
               <CardHeader>
-                <CardTitle>Last completed result</CardTitle>
+                <CardTitle>Connection</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {item.credentials.some((credential) => !credential.revoked_at)
+                    ? "Connection key active"
+                    : "No active connection key"}
+                </p>
+                {isOwner && (
+                  <Button
+                    onClick={() => rotate.mutate()}
+                    disabled={rotate.isPending}
+                  >
+                    Generate new key
+                  </Button>
+                )}
+                {newKey && (
+                  <Alert>
+                    <AlertTitle>Copy this connection key now</AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <code className="block break-all">{newKey}</code>
+                      <p>It will not be displayed again.</p>
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          void navigator.clipboard.writeText(
+                            `OBLIDOG_URL=${window.location.origin}\nOBLIDOG_API_KEY=${newKey}\n`,
+                          )
+                        }
+                      >
+                        Copy configuration
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {item.credentials.map((credential) => (
+                  <div
+                    key={credential.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+                  >
+                    <span>
+                      {credential.key_prefix}… · created{" "}
+                      {dateTime(credential.created_at)}
+                      {credential.revoked_at ? " · revoked" : ""}
+                    </span>
+                    {isOwner && !credential.revoked_at && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => revoke.mutate(credential.id)}
+                      >
+                        Revoke key
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <Card className="min-w-0 lg:order-1">
+              <CardHeader>
+                <CardTitle>Latest run</CardTitle>
               </CardHeader>
               <CardContent>
-                <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-muted-foreground">Result</dt>
-                    <dd>{resultLabel(item)}</dd>
+                <div className="flex items-start gap-3">
+                  <span
+                    className={
+                      item.last_result === "failure"
+                        ? "text-destructive"
+                        : "text-emerald-600"
+                    }
+                    aria-hidden="true"
+                  >
+                    {item.last_result === "failure" ? "✕" : "✓"}
+                  </span>
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-medium">{resultLabel(item)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {changesLabel(item)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {dateTime(item.last_finished_at)}
+                      {runDuration(
+                        item.current_started_at,
+                        item.current_finished_at,
+                      ) &&
+                        ` · Duration: ${runDuration(item.current_started_at, item.current_finished_at)}`}
+                    </p>
                   </div>
-                  <div>
-                    <dt className="text-muted-foreground">Changes</dt>
-                    <dd>{changesLabel(item)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Completed at</dt>
-                    <dd>{dateTime(item.last_finished_at)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Last success</dt>
-                    <dd>
-                      {item.last_success_at
-                        ? dateTime(item.last_success_at)
-                        : "No success yet"}
-                    </dd>
-                  </div>
-                </dl>
+                </div>
                 {item.last_error_message && (
                   <Alert variant="destructive" className="mt-4 min-w-0">
                     <AlertTitle className="break-all">
@@ -189,35 +299,72 @@ export function IntegrationDetails({
                 )}
               </CardContent>
             </Card>
-            <Card className="min-w-0">
+            <details className="min-w-0 lg:order-2">
+              <summary className="cursor-pointer rounded-lg border px-4 py-3 text-sm font-medium hover:bg-muted/50">
+                Show technical details
+              </summary>
+              <Card className="mt-2">
+                <CardHeader>
+                  <CardTitle>Technical details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <dl className="grid gap-4 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-muted-foreground">Execution</dt>
+                      <dd>{executionLabels[item.execution_state]}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Started at</dt>
+                      <dd>{dateTime(item.current_started_at)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Deadline</dt>
+                      <dd>{dateTime(item.current_deadline_at)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Finished at</dt>
+                      <dd>{dateTime(item.current_finished_at)}</dd>
+                    </div>
+                    <div className="min-w-0 sm:col-span-2">
+                      <dt className="text-muted-foreground">Run ID</dt>
+                      <dd className="break-all font-mono">
+                        {item.current_run_id ?? "No run yet"}
+                      </dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            </details>
+            <Card className="min-w-0 lg:order-4">
               <CardHeader>
-                <CardTitle>Latest run</CardTitle>
+                <CardTitle>Recent activity</CardTitle>
               </CardHeader>
               <CardContent>
-                <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-muted-foreground">Execution</dt>
-                    <dd>{executionLabels[item.execution_state]}</dd>
+                {item.last_finished_at ? (
+                  <div className="flex items-center gap-3 border-b py-2 text-sm last:border-0">
+                    <span
+                      className={
+                        item.last_result === "failure"
+                          ? "text-destructive"
+                          : "text-emerald-600"
+                      }
+                      aria-hidden="true"
+                    >
+                      {item.last_result === "failure" ? "✕" : "✓"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {dateTime(item.last_finished_at)}
+                    </span>
+                    <span>{resultLabel(item)}</span>
+                    <span className="text-muted-foreground">
+                      {changesLabel(item)}
+                    </span>
                   </div>
-                  <div>
-                    <dt className="text-muted-foreground">Started at</dt>
-                    <dd>{dateTime(item.current_started_at)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Deadline</dt>
-                    <dd>{dateTime(item.current_deadline_at)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Finished at</dt>
-                    <dd>{dateTime(item.current_finished_at)}</dd>
-                  </div>
-                  <div className="min-w-0 sm:col-span-2">
-                    <dt className="text-muted-foreground">Run ID</dt>
-                    <dd className="break-all font-mono">
-                      {item.current_run_id ?? "No run yet"}
-                    </dd>
-                  </div>
-                </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No completed runs yet.
+                  </p>
+                )}
               </CardContent>
             </Card>
             <Card className="min-w-0">
@@ -245,49 +392,6 @@ export function IntegrationDetails({
                   <p className="text-sm text-muted-foreground">
                     Only the ledger owner can change configuration.
                   </p>
-                )}
-              </CardContent>
-            </Card>
-            <Card className="min-w-0">
-              <CardHeader>
-                <CardTitle>Associated categories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {categories.isError ? (
-                  <div role="alert" className="space-y-2 text-sm">
-                    <p>Could not load category names.</p>
-                    <Button
-                      variant="outline"
-                      onClick={() => void categories.refetch()}
-                    >
-                      Retry categories
-                    </Button>
-                  </div>
-                ) : categories.isPending ? (
-                  <p className="text-sm">Loading categories…</p>
-                ) : item.category_ids.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No categories assigned.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {item.category_ids.map((id) => {
-                      const category = categories.data.data.find(
-                        (entry) => entry.id === id,
-                      )
-                      return (
-                        <Badge
-                          key={id}
-                          variant="outline"
-                          className="max-w-full whitespace-normal break-all"
-                        >
-                          {category
-                            ? `${category.name} (${category.code})${category.archived_at ? " · archived" : ""}`
-                            : "Unavailable category"}
-                        </Badge>
-                      )
-                    })}
-                  </div>
                 )}
               </CardContent>
             </Card>

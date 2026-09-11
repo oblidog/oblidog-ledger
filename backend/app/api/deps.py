@@ -26,7 +26,14 @@ from app.core.capabilities import (
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.domain import LedgerAccessRole
-from app.models import ApiKey, Ledger, LedgerMembership, User
+from app.models import (
+    Category,
+    Integration,
+    IntegrationCredential,
+    Ledger,
+    LedgerMembership,
+    User,
+)
 from app.schemas import TokenPayload
 from app.services import api_keys as api_key_service
 from app.services import users as user_service
@@ -46,7 +53,7 @@ TokenDep = Annotated[str, Depends(reusable_oauth2)]
 integration_bearer = HTTPBearer(
     auto_error=False,
     scheme_name="IntegrationApiKey",
-    description="A ledger-scoped API key, for example fdg_live_…",
+    description="An integration connection key, for example fdg_live_…",
 )
 IntegrationTokenDep = Annotated[
     HTTPAuthorizationCredentials | None, Depends(integration_bearer)
@@ -57,8 +64,9 @@ IntegrationTokenDep = Annotated[
 class ApiContext:
     session: Session
     ledger: Ledger
-    api_key: ApiKey
-    scopes: frozenset[str]
+    integration: Integration
+    category: Category
+    credential: IntegrationCredential
 
 
 def require_capability(capability: Capability) -> Callable[[], None]:
@@ -111,41 +119,44 @@ def get_api_context(session: SessionDep, token: IntegrationTokenDep) -> ApiConte
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     key_hash = api_key_service.hash_api_key(token.credentials)
-    api_key = session.scalar(select(ApiKey).where(ApiKey.key_hash == key_hash))
-    if api_key is None or not api_key_service.verify_api_key(
-        token.credentials, api_key.key_hash
+    credential = session.scalar(
+        select(IntegrationCredential).where(IntegrationCredential.key_hash == key_hash)
+    )
+    if credential is None or not api_key_service.verify_api_key(
+        token.credentials, credential.key_hash
     ):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     now = datetime.now(UTC)
-    if api_key.revoked_at is not None or (
-        api_key.expires_at is not None and api_key.expires_at <= now
+    if credential.revoked_at is not None or (
+        credential.expires_at is not None and credential.expires_at <= now
     ):
         raise HTTPException(status_code=401, detail="API key is inactive")
 
-    ledger = session.get(Ledger, api_key.ledger_id)
-    if ledger is None or not ledger.is_active:
+    integration = session.get(Integration, credential.integration_id)
+    if integration is None:
+        raise HTTPException(status_code=401, detail="API key is inactive")
+    ledger = session.get(Ledger, integration.ledger_id)
+    category = session.get(Category, integration.category_id)
+    if ledger is None or category is None or not ledger.is_active:
         raise HTTPException(status_code=401, detail="API key is inactive")
 
-    api_key.last_used_at = now
+    credential.last_used_at = now
     session.commit()
     return ApiContext(
         session=session,
         ledger=ledger,
-        api_key=api_key,
-        scopes=frozenset(api_key.scopes),
+        integration=integration,
+        category=category,
+        credential=credential,
     )
 
 
 ApiContextDep = Annotated[ApiContext, Depends(get_api_context)]
 
 
-def require_scope(scope: str) -> Callable[[ApiContext], ApiContext]:
+def require_scope(_scope: str) -> Callable[[ApiContext], ApiContext]:
     def dependency(context: ApiContextDep) -> ApiContext:
-        if scope not in context.scopes:
-            raise HTTPException(
-                status_code=403, detail=f"Missing required scope: {scope}"
-            )
         return context
 
     return dependency

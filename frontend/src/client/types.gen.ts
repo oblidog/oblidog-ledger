@@ -5,126 +5,6 @@ export type ClientOptions = {
 };
 
 /**
- * ApiKeyCreate
- */
-export type ApiKeyCreate = {
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Scopes
-     */
-    scopes: Array<'ledger:read' | 'ledger:write'>;
-    /**
-     * Expires At
-     */
-    expires_at?: string | null;
-};
-
-/**
- * ApiKeyCreated
- */
-export type ApiKeyCreated = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Key Prefix
-     */
-    key_prefix: string;
-    /**
-     * Scopes
-     */
-    scopes: Array<'ledger:read' | 'ledger:write'>;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Last Used At
-     */
-    last_used_at: string | null;
-    /**
-     * Expires At
-     */
-    expires_at: string | null;
-    /**
-     * Revoked At
-     */
-    revoked_at: string | null;
-    /**
-     * Created By User Id
-     */
-    created_by_user_id: string;
-    /**
-     * Key
-     */
-    key: string;
-};
-
-/**
- * ApiKeyPublic
- */
-export type ApiKeyPublic = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Key Prefix
-     */
-    key_prefix: string;
-    /**
-     * Scopes
-     */
-    scopes: Array<'ledger:read' | 'ledger:write'>;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Last Used At
-     */
-    last_used_at: string | null;
-    /**
-     * Expires At
-     */
-    expires_at: string | null;
-    /**
-     * Revoked At
-     */
-    revoked_at: string | null;
-    /**
-     * Created By User Id
-     */
-    created_by_user_id: string;
-};
-
-/**
- * ApiKeysPublic
- */
-export type ApiKeysPublic = {
-    /**
-     * Data
-     */
-    data: Array<ApiKeyPublic>;
-    /**
-     * Count
-     */
-    count: number;
-};
-
-/**
  * BillingPeriodInput
  */
 export type BillingPeriodInput = {
@@ -448,6 +328,11 @@ export type CategoryPublic = {
      */
     category_group_id: string;
     /**
+     * Counterparty Id
+     */
+    counterparty_id: string | null;
+    counterparty: CounterpartySummaryPublic | null;
+    /**
      * Name
      */
     name: string;
@@ -515,6 +400,140 @@ export type CategoryUpdate = {
      */
     first_due_date?: string | null;
     currency?: Currency;
+};
+
+/**
+ * CounterpartiesPublic
+ */
+export type CounterpartiesPublic = {
+    /**
+     * Data
+     */
+    data: Array<CounterpartyPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * CounterpartyAssignment
+ */
+export type CounterpartyAssignment = {
+    /**
+     * Counterparty Id
+     */
+    counterparty_id?: string | null;
+};
+
+/**
+ * CounterpartyCreate
+ */
+export type CounterpartyCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Short Name
+     */
+    short_name?: string | null;
+    /**
+     * Logo Url
+     */
+    logo_url?: string | null;
+    /**
+     * Website Url
+     */
+    website_url?: string | null;
+};
+
+/**
+ * CounterpartyPublic
+ */
+export type CounterpartyPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Short Name
+     */
+    short_name: string | null;
+    /**
+     * Logo Url
+     */
+    logo_url: string | null;
+    /**
+     * Website Url
+     */
+    website_url: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * CounterpartySearchPublic
+ */
+export type CounterpartySearchPublic = {
+    /**
+     * Items
+     */
+    items: Array<CounterpartySummaryPublic>;
+};
+
+/**
+ * CounterpartySummaryPublic
+ */
+export type CounterpartySummaryPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Short Name
+     */
+    short_name: string | null;
+    /**
+     * Logo Url
+     */
+    logo_url: string | null;
+};
+
+/**
+ * CounterpartyUpdate
+ */
+export type CounterpartyUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Short Name
+     */
+    short_name?: string | null;
+    /**
+     * Logo Url
+     */
+    logo_url?: string | null;
+    /**
+     * Website Url
+     */
+    website_url?: string | null;
 };
 
 /**
@@ -679,33 +698,66 @@ export type IntegrationConflictResponse = {
  */
 export type IntegrationCreate = {
     /**
-     * Key
-     */
-    key: string;
-    /**
-     * Provider
-     */
-    provider: string;
-    /**
      * Name
      */
     name: string;
     /**
-     * Category Ids
+     * Category Id
      */
-    category_ids?: Array<string>;
+    category_id: string;
+};
+
+/**
+ * IntegrationCreated
+ */
+export type IntegrationCreated = {
+    integration: IntegrationPublic;
+    credential: IntegrationCredentialPublic;
     /**
-     * Enabled
+     * Connection Key
      */
-    enabled?: boolean;
+    connection_key: string;
+};
+
+/**
+ * IntegrationCredentialCreated
+ */
+export type IntegrationCredentialCreated = {
+    credential: IntegrationCredentialPublic;
     /**
-     * Stale After Seconds
+     * Connection Key
      */
-    stale_after_seconds?: number;
+    connection_key: string;
+};
+
+/**
+ * IntegrationCredentialPublic
+ */
+export type IntegrationCredentialPublic = {
     /**
-     * Run Timeout Seconds
+     * Id
      */
-    run_timeout_seconds?: number;
+    id: string;
+    /**
+     * Key Prefix
+     */
+    key_prefix: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Last Used At
+     */
+    last_used_at: string | null;
+    /**
+     * Expires At
+     */
+    expires_at: string | null;
+    /**
+     * Revoked At
+     */
+    revoked_at: string | null;
 };
 
 /**
@@ -731,21 +783,17 @@ export type IntegrationPublic = {
      */
     ledger_id: string;
     /**
-     * Key
-     */
-    key: string;
-    /**
-     * Provider
-     */
-    provider: string;
-    /**
      * Name
      */
     name: string;
     /**
-     * Category Ids
+     * Category Id
      */
-    category_ids: Array<string>;
+    category_id: string;
+    /**
+     * Credentials
+     */
+    credentials: Array<IntegrationCredentialPublic>;
     /**
      * Enabled
      */
@@ -882,10 +930,6 @@ export type IntegrationUpdate = {
      * Name
      */
     name?: string | null;
-    /**
-     * Category Ids
-     */
-    category_ids?: Array<string> | null;
     /**
      * Enabled
      */
@@ -1427,6 +1471,11 @@ export type ObligationPublic = {
      * Category Id
      */
     category_id: string;
+    /**
+     * Counterparty Id
+     */
+    counterparty_id: string | null;
+    counterparty: CounterpartySummaryPublic | null;
     /**
      * Category Code
      */
@@ -2021,100 +2070,6 @@ export type LoginRecoverPasswordHtmlContentResponses = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = LoginRecoverPasswordHtmlContentResponses[keyof LoginRecoverPasswordHtmlContentResponses];
-
-export type LedgersReadApiKeysData = {
-    body?: never;
-    path: {
-        /**
-         * Ledger Id
-         */
-        ledger_id: string;
-    };
-    query?: never;
-    url: '/api/v1/ledgers/{ledger_id}/api-keys';
-};
-
-export type LedgersReadApiKeysErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type LedgersReadApiKeysError = LedgersReadApiKeysErrors[keyof LedgersReadApiKeysErrors];
-
-export type LedgersReadApiKeysResponses = {
-    /**
-     * Successful Response
-     */
-    200: ApiKeysPublic;
-};
-
-export type LedgersReadApiKeysResponse = LedgersReadApiKeysResponses[keyof LedgersReadApiKeysResponses];
-
-export type LedgersCreateApiKeyData = {
-    body: ApiKeyCreate;
-    path: {
-        /**
-         * Ledger Id
-         */
-        ledger_id: string;
-    };
-    query?: never;
-    url: '/api/v1/ledgers/{ledger_id}/api-keys';
-};
-
-export type LedgersCreateApiKeyErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type LedgersCreateApiKeyError = LedgersCreateApiKeyErrors[keyof LedgersCreateApiKeyErrors];
-
-export type LedgersCreateApiKeyResponses = {
-    /**
-     * Successful Response
-     */
-    200: ApiKeyCreated;
-};
-
-export type LedgersCreateApiKeyResponse = LedgersCreateApiKeyResponses[keyof LedgersCreateApiKeyResponses];
-
-export type LedgersRevokeApiKeyData = {
-    body?: never;
-    path: {
-        /**
-         * Api Key Id
-         */
-        api_key_id: string;
-        /**
-         * Ledger Id
-         */
-        ledger_id: string;
-    };
-    query?: never;
-    url: '/api/v1/ledgers/{ledger_id}/api-keys/{api_key_id}';
-};
-
-export type LedgersRevokeApiKeyErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type LedgersRevokeApiKeyError = LedgersRevokeApiKeyErrors[keyof LedgersRevokeApiKeyErrors];
-
-export type LedgersRevokeApiKeyResponses = {
-    /**
-     * Successful Response
-     */
-    200: ApiKeyPublic;
-};
-
-export type LedgersRevokeApiKeyResponse = LedgersRevokeApiKeyResponses[keyof LedgersRevokeApiKeyResponses];
 
 export type LedgersReadLedgersData = {
     body?: never;
@@ -3175,46 +3130,302 @@ export type CategoriesReadCategoryDataSchemaVersionResponses = {
 
 export type CategoriesReadCategoryDataSchemaVersionResponse = CategoriesReadCategoryDataSchemaVersionResponses[keyof CategoriesReadCategoryDataSchemaVersionResponses];
 
-export type IntegrationReadIntegrationInstanceData = {
+export type CounterpartiesReadCounterpartiesData = {
     body?: never;
-    path: {
-        /**
-         * Integration Key
-         */
-        integration_key: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/integration/instances/{integration_key}';
+    url: '/api/v1/counterparties';
 };
 
-export type IntegrationReadIntegrationInstanceErrors = {
+export type CounterpartiesReadCounterpartiesResponses = {
+    /**
+     * Successful Response
+     */
+    200: CounterpartiesPublic;
+};
+
+export type CounterpartiesReadCounterpartiesResponse = CounterpartiesReadCounterpartiesResponses[keyof CounterpartiesReadCounterpartiesResponses];
+
+export type CounterpartiesCreateCounterpartyData = {
+    body: CounterpartyCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/counterparties';
+};
+
+export type CounterpartiesCreateCounterpartyErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type IntegrationReadIntegrationInstanceError = IntegrationReadIntegrationInstanceErrors[keyof IntegrationReadIntegrationInstanceErrors];
+export type CounterpartiesCreateCounterpartyError = CounterpartiesCreateCounterpartyErrors[keyof CounterpartiesCreateCounterpartyErrors];
 
-export type IntegrationReadIntegrationInstanceResponses = {
+export type CounterpartiesCreateCounterpartyResponses = {
     /**
      * Successful Response
      */
-    200: IntegrationPublic;
+    200: CounterpartyPublic;
 };
 
-export type IntegrationReadIntegrationInstanceResponse = IntegrationReadIntegrationInstanceResponses[keyof IntegrationReadIntegrationInstanceResponses];
+export type CounterpartiesCreateCounterpartyResponse = CounterpartiesCreateCounterpartyResponses[keyof CounterpartiesCreateCounterpartyResponses];
+
+export type CounterpartiesSearchCounterpartiesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Q
+         */
+        q?: string;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/counterparties/search';
+};
+
+export type CounterpartiesSearchCounterpartiesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesSearchCounterpartiesError = CounterpartiesSearchCounterpartiesErrors[keyof CounterpartiesSearchCounterpartiesErrors];
+
+export type CounterpartiesSearchCounterpartiesResponses = {
+    /**
+     * Successful Response
+     */
+    200: CounterpartySearchPublic;
+};
+
+export type CounterpartiesSearchCounterpartiesResponse = CounterpartiesSearchCounterpartiesResponses[keyof CounterpartiesSearchCounterpartiesResponses];
+
+export type CounterpartiesDeleteCounterpartyData = {
+    body?: never;
+    path: {
+        /**
+         * Counterparty Id
+         */
+        counterparty_id: string;
+    };
+    query?: never;
+    url: '/api/v1/counterparties/{counterparty_id}';
+};
+
+export type CounterpartiesDeleteCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesDeleteCounterpartyError = CounterpartiesDeleteCounterpartyErrors[keyof CounterpartiesDeleteCounterpartyErrors];
+
+export type CounterpartiesDeleteCounterpartyResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type CounterpartiesDeleteCounterpartyResponse = CounterpartiesDeleteCounterpartyResponses[keyof CounterpartiesDeleteCounterpartyResponses];
+
+export type CounterpartiesReadCounterpartyData = {
+    body?: never;
+    path: {
+        /**
+         * Counterparty Id
+         */
+        counterparty_id: string;
+    };
+    query?: never;
+    url: '/api/v1/counterparties/{counterparty_id}';
+};
+
+export type CounterpartiesReadCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesReadCounterpartyError = CounterpartiesReadCounterpartyErrors[keyof CounterpartiesReadCounterpartyErrors];
+
+export type CounterpartiesReadCounterpartyResponses = {
+    /**
+     * Successful Response
+     */
+    200: CounterpartyPublic;
+};
+
+export type CounterpartiesReadCounterpartyResponse = CounterpartiesReadCounterpartyResponses[keyof CounterpartiesReadCounterpartyResponses];
+
+export type CounterpartiesUpdateCounterpartyData = {
+    body: CounterpartyUpdate;
+    path: {
+        /**
+         * Counterparty Id
+         */
+        counterparty_id: string;
+    };
+    query?: never;
+    url: '/api/v1/counterparties/{counterparty_id}';
+};
+
+export type CounterpartiesUpdateCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesUpdateCounterpartyError = CounterpartiesUpdateCounterpartyErrors[keyof CounterpartiesUpdateCounterpartyErrors];
+
+export type CounterpartiesUpdateCounterpartyResponses = {
+    /**
+     * Successful Response
+     */
+    200: CounterpartyPublic;
+};
+
+export type CounterpartiesUpdateCounterpartyResponse = CounterpartiesUpdateCounterpartyResponses[keyof CounterpartiesUpdateCounterpartyResponses];
+
+export type CounterpartiesAssignCategoryCounterpartyData = {
+    body: CounterpartyAssignment;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty';
+};
+
+export type CounterpartiesAssignCategoryCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesAssignCategoryCounterpartyError = CounterpartiesAssignCategoryCounterpartyErrors[keyof CounterpartiesAssignCategoryCounterpartyErrors];
+
+export type CounterpartiesAssignCategoryCounterpartyResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryPublic;
+};
+
+export type CounterpartiesAssignCategoryCounterpartyResponse = CounterpartiesAssignCategoryCounterpartyResponses[keyof CounterpartiesAssignCategoryCounterpartyResponses];
+
+export type CounterpartiesReadObligationCounterpartyData = {
+    body?: never;
+    path: {
+        /**
+         * Obligation Key
+         */
+        obligation_key: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/counterparty';
+};
+
+export type CounterpartiesReadObligationCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesReadObligationCounterpartyError = CounterpartiesReadObligationCounterpartyErrors[keyof CounterpartiesReadObligationCounterpartyErrors];
+
+export type CounterpartiesReadObligationCounterpartyResponses = {
+    /**
+     * Response Counterparties-Read Obligation Counterparty
+     *
+     * Successful Response
+     */
+    200: CounterpartySummaryPublic | null;
+};
+
+export type CounterpartiesReadObligationCounterpartyResponse = CounterpartiesReadObligationCounterpartyResponses[keyof CounterpartiesReadObligationCounterpartyResponses];
+
+export type CounterpartiesAssignObligationCounterpartyData = {
+    body: CounterpartyAssignment;
+    path: {
+        /**
+         * Obligation Key
+         */
+        obligation_key: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/counterparty';
+};
+
+export type CounterpartiesAssignObligationCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesAssignObligationCounterpartyError = CounterpartiesAssignObligationCounterpartyErrors[keyof CounterpartiesAssignObligationCounterpartyErrors];
+
+export type CounterpartiesAssignObligationCounterpartyResponses = {
+    /**
+     * Response Counterparties-Assign Obligation Counterparty
+     *
+     * Successful Response
+     */
+    200: CounterpartySummaryPublic | null;
+};
+
+export type CounterpartiesAssignObligationCounterpartyResponse = CounterpartiesAssignObligationCounterpartyResponses[keyof CounterpartiesAssignObligationCounterpartyResponses];
+
+export type IntegrationReadIntegrationContextData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/integration/context';
+};
+
+export type IntegrationReadIntegrationContextResponses = {
+    /**
+     * Response Integration-Read Integration Context
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type IntegrationReadIntegrationContextResponse = IntegrationReadIntegrationContextResponses[keyof IntegrationReadIntegrationContextResponses];
 
 export type IntegrationStartIntegrationRunData = {
     body: IntegrationRunStart;
-    path: {
-        /**
-         * Integration Key
-         */
-        integration_key: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/integration/instances/{integration_key}/start';
+    url: '/api/v1/integration/runs/start';
 };
 
 export type IntegrationStartIntegrationRunErrors = {
@@ -3241,14 +3452,9 @@ export type IntegrationStartIntegrationRunResponse = IntegrationStartIntegration
 
 export type IntegrationFinishIntegrationRunData = {
     body: IntegrationRunFinish;
-    path: {
-        /**
-         * Integration Key
-         */
-        integration_key: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/integration/instances/{integration_key}/finish';
+    url: '/api/v1/integration/runs/finish';
 };
 
 export type IntegrationFinishIntegrationRunErrors = {
@@ -3275,24 +3481,10 @@ export type IntegrationFinishIntegrationRunResponse = IntegrationFinishIntegrati
 
 export type IntegrationReadLatestIntegrationCategoryDataRecordData = {
     body?: never;
-    path: {
-        /**
-         * Category Code
-         */
-        category_code: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/integration/categories/{category_code}/data-records/latest';
+    url: '/api/v1/integration/category/data-records/latest';
 };
-
-export type IntegrationReadLatestIntegrationCategoryDataRecordErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type IntegrationReadLatestIntegrationCategoryDataRecordError = IntegrationReadLatestIntegrationCategoryDataRecordErrors[keyof IntegrationReadLatestIntegrationCategoryDataRecordErrors];
 
 export type IntegrationReadLatestIntegrationCategoryDataRecordResponses = {
     /**
@@ -3305,12 +3497,7 @@ export type IntegrationReadLatestIntegrationCategoryDataRecordResponse = Integra
 
 export type IntegrationReadIntegrationCategoryDataRecordsData = {
     body?: never;
-    path: {
-        /**
-         * Category Code
-         */
-        category_code: string;
-    };
+    path?: never;
     query?: {
         /**
          * From
@@ -3329,7 +3516,7 @@ export type IntegrationReadIntegrationCategoryDataRecordsData = {
          */
         offset?: number;
     };
-    url: '/api/v1/integration/categories/{category_code}/data-records';
+    url: '/api/v1/integration/category/data-records';
 };
 
 export type IntegrationReadIntegrationCategoryDataRecordsErrors = {
@@ -3352,14 +3539,9 @@ export type IntegrationReadIntegrationCategoryDataRecordsResponse = IntegrationR
 
 export type IntegrationCreateIntegrationCategoryDataRecordData = {
     body: CategoryDataRecordCreate;
-    path: {
-        /**
-         * Category Code
-         */
-        category_code: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/integration/categories/{category_code}/data-records';
+    url: '/api/v1/integration/category/data-records';
 };
 
 export type IntegrationCreateIntegrationCategoryDataRecordErrors = {
@@ -3382,24 +3564,10 @@ export type IntegrationCreateIntegrationCategoryDataRecordResponse = Integration
 
 export type IntegrationReadIntegrationCategoryDataSchemaData = {
     body?: never;
-    path: {
-        /**
-         * Category Code
-         */
-        category_code: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/integration/categories/{category_code}/data-schema';
+    url: '/api/v1/integration/category/schema';
 };
-
-export type IntegrationReadIntegrationCategoryDataSchemaErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type IntegrationReadIntegrationCategoryDataSchemaError = IntegrationReadIntegrationCategoryDataSchemaErrors[keyof IntegrationReadIntegrationCategoryDataSchemaErrors];
 
 export type IntegrationReadIntegrationCategoryDataSchemaResponses = {
     /**
@@ -3409,47 +3577,6 @@ export type IntegrationReadIntegrationCategoryDataSchemaResponses = {
 };
 
 export type IntegrationReadIntegrationCategoryDataSchemaResponse = IntegrationReadIntegrationCategoryDataSchemaResponses[keyof IntegrationReadIntegrationCategoryDataSchemaResponses];
-
-export type IntegrationReadIntegrationLedgerData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/integration/ledger';
-};
-
-export type IntegrationReadIntegrationLedgerResponses = {
-    /**
-     * Successful Response
-     */
-    200: LedgerPublic;
-};
-
-export type IntegrationReadIntegrationLedgerResponse = IntegrationReadIntegrationLedgerResponses[keyof IntegrationReadIntegrationLedgerResponses];
-
-export type IntegrationUpdateIntegrationLedgerData = {
-    body: LedgerUpdate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/integration/ledger';
-};
-
-export type IntegrationUpdateIntegrationLedgerErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type IntegrationUpdateIntegrationLedgerError = IntegrationUpdateIntegrationLedgerErrors[keyof IntegrationUpdateIntegrationLedgerErrors];
-
-export type IntegrationUpdateIntegrationLedgerResponses = {
-    /**
-     * Successful Response
-     */
-    200: LedgerPublic;
-};
-
-export type IntegrationUpdateIntegrationLedgerResponse = IntegrationUpdateIntegrationLedgerResponses[keyof IntegrationUpdateIntegrationLedgerResponses];
 
 export type IntegrationReadIntegrationObligationsData = {
     body?: never;
@@ -3463,10 +3590,6 @@ export type IntegrationReadIntegrationObligationsData = {
          * Month
          */
         month?: number | null;
-        /**
-         * Category Code
-         */
-        category_code?: string | null;
         /**
          * Lifecycle
          */
@@ -3861,7 +3984,7 @@ export type IntegrationsCreateIntegrationResponses = {
     /**
      * Successful Response
      */
-    201: IntegrationPublic;
+    201: IntegrationCreated;
 };
 
 export type IntegrationsCreateIntegrationResponse = IntegrationsCreateIntegrationResponses[keyof IntegrationsCreateIntegrationResponses];
@@ -3937,6 +4060,78 @@ export type IntegrationsUpdateIntegrationResponses = {
 };
 
 export type IntegrationsUpdateIntegrationResponse = IntegrationsUpdateIntegrationResponses[keyof IntegrationsUpdateIntegrationResponses];
+
+export type IntegrationsGenerateIntegrationCredentialData = {
+    body?: never;
+    path: {
+        /**
+         * Integration Id
+         */
+        integration_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}/credentials';
+};
+
+export type IntegrationsGenerateIntegrationCredentialErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsGenerateIntegrationCredentialError = IntegrationsGenerateIntegrationCredentialErrors[keyof IntegrationsGenerateIntegrationCredentialErrors];
+
+export type IntegrationsGenerateIntegrationCredentialResponses = {
+    /**
+     * Successful Response
+     */
+    201: IntegrationCredentialCreated;
+};
+
+export type IntegrationsGenerateIntegrationCredentialResponse = IntegrationsGenerateIntegrationCredentialResponses[keyof IntegrationsGenerateIntegrationCredentialResponses];
+
+export type IntegrationsRevokeIntegrationCredentialData = {
+    body?: never;
+    path: {
+        /**
+         * Integration Id
+         */
+        integration_id: string;
+        /**
+         * Credential Id
+         */
+        credential_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}/credentials/{credential_id}';
+};
+
+export type IntegrationsRevokeIntegrationCredentialErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsRevokeIntegrationCredentialError = IntegrationsRevokeIntegrationCredentialErrors[keyof IntegrationsRevokeIntegrationCredentialErrors];
+
+export type IntegrationsRevokeIntegrationCredentialResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationCredentialPublic;
+};
+
+export type IntegrationsRevokeIntegrationCredentialResponse = IntegrationsRevokeIntegrationCredentialResponses[keyof IntegrationsRevokeIntegrationCredentialResponses];
 
 export type LegacyImportReadLegacyImportJobData = {
     body?: never;

@@ -185,21 +185,43 @@ test("renders schema-driven category history with versioning and formatters", as
 
   await expect(page).toHaveURL(/\/categories\/[^/]+\/data\?sort=desc$/)
   await expect(
-    page.getByRole("heading", { name: `Custom data history for ${categoryName}` }),
+    page.getByRole("heading", {
+      name: `Custom data history for ${categoryName}`,
+    }),
   ).toBeVisible()
   await expect(page.getByText("21 records for schema version 3.")).toBeVisible()
 
   const table = page.getByRole("table")
-  await expect(table.getByRole("columnheader", { name: "Meter reading" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Visits" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Active" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Status" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Bill date" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Captured at" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Offset at" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Invalid at" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "untitled" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Missing" })).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Meter reading" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Visits" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Active" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Status" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Bill date" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Captured at" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Offset at" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Invalid at" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "untitled" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Missing" }),
+  ).toBeVisible()
   await expect(table.getByText("warn").first()).toBeVisible()
   await expect(table.getByText("Yes").first()).toBeVisible()
   await expect(table.getByText("—").first()).toBeVisible()
@@ -258,7 +280,9 @@ test("renders schema-driven category history with versioning and formatters", as
   await page.getByRole("combobox", { name: "Schema version" }).click()
   await page.getByRole("option", { name: "Version 2" }).click()
   await expect(page).toHaveURL(/schema=2/)
-  await expect(page.getByRole("columnheader", { name: "Legacy reading" })).toBeVisible()
+  await expect(
+    page.getByRole("columnheader", { name: "Legacy reading" }),
+  ).toBeVisible()
   await expect(page.getByRole("cell", { name: "42" })).toBeVisible()
 
   await page.getByRole("combobox", { name: "Schema version" }).click()

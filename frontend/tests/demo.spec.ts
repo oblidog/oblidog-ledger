@@ -39,13 +39,17 @@ test.describe("demo login", () => {
   })
 })
 
-test("shows the persistent demo banner and hides user settings", async ({ page }) => {
+test("shows the persistent demo banner and hides user settings", async ({
+  page,
+}) => {
   await mockDemoConfig(page)
   await page.goto("/")
 
   await expect(page.getByTestId("demo-banner")).toBeVisible()
   await page.getByTestId("user-menu").click()
-  await expect(page.getByRole("menuitem", { name: "User Settings" })).toHaveCount(0)
+  await expect(
+    page.getByRole("menuitem", { name: "User Settings" }),
+  ).toHaveCount(0)
 })
 
 test("hides restricted ledger navigation and redirects direct routes", async ({
@@ -55,8 +59,12 @@ test("hides restricted ledger navigation and redirects direct routes", async ({
   await page.goto("/")
 
   await page.getByTestId("ledger-switcher").click()
-  await expect(page.getByRole("menuitem", { name: "Ledger settings" })).toHaveCount(0)
-  await expect(page.getByRole("menuitem", { name: "System Run" })).toHaveCount(0)
+  await expect(
+    page.getByRole("menuitem", { name: "Ledger settings" }),
+  ).toHaveCount(0)
+  await expect(page.getByRole("menuitem", { name: "System Run" })).toHaveCount(
+    0,
+  )
 
   const categoriesLink = page.getByRole("menuitem", { name: "Categories" })
   const href = await categoriesLink.getAttribute("href")
