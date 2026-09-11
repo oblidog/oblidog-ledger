@@ -619,9 +619,7 @@ function CashflowCurrencyChart({
     amount: Number(point.amount),
     cumulative: Number(point.cumulative_amount),
     date: point.due_date,
-    fill: point.is_overdue
-      ? "var(--destructive)"
-      : "var(--color-amount)",
+    fill: point.is_overdue ? "var(--destructive)" : "var(--color-amount)",
   }))
   const showValueLabels = chartData.length <= 8
 
@@ -1058,8 +1056,7 @@ function CategoryHistoryCard({
   const currency = knownPoints[0]?.currency ?? null
   const chartData =
     data?.points.map((point) => {
-      const amount =
-        point.state === "known" ? Number(point.current_amount) : 0
+      const amount = point.state === "known" ? Number(point.current_amount) : 0
       return {
         amount,
         fill:
@@ -1311,7 +1308,9 @@ function PeriodTotalsCard({
                                 <span>
                                   {formatAmount(
                                     String(value),
-                                    currency === "No currency" ? null : currency,
+                                    currency === "No currency"
+                                      ? null
+                                      : currency,
                                   )}
                                 </span>
                                 {item.payload.incomplete && (

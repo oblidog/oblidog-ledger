@@ -90,15 +90,15 @@ for (const width of [320, 375, 414]) {
     await expect(donut).toBeVisible()
     await expect(donut.locator("svg")).toBeVisible()
     await expect(donut.locator(".recharts-sector")).toBeVisible()
-    await expect(categoryCosts.getByText("Water", { exact: true })).toBeVisible()
+    await expect(
+      categoryCosts.getByText("Water", { exact: true }),
+    ).toBeVisible()
     await expect(
       categoryCosts.getByText("42.00 PLN", { exact: true }),
     ).toBeVisible()
     await expect
       .poll(() =>
-        donut.evaluate(
-          (element) => element.scrollWidth <= element.clientWidth,
-        ),
+        donut.evaluate((element) => element.scrollWidth <= element.clientWidth),
       )
       .toBe(true)
 

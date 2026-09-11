@@ -56,7 +56,9 @@ export function CounterpartyPicker({
                 {value.short_name || value.name}
               </p>
               {value.short_name ? (
-                <p className="truncate text-xs text-muted-foreground">{value.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {value.name}
+                </p>
               ) : null}
             </div>
           </div>
@@ -96,7 +98,9 @@ export function CounterpartyPicker({
               Type at least 2 characters.
             </p>
           ) : results.isLoading ? (
-            <p className="px-3 py-2 text-xs text-muted-foreground">Searching…</p>
+            <p className="px-3 py-2 text-xs text-muted-foreground">
+              Searching…
+            </p>
           ) : results.isError ? (
             <p className="px-3 py-2 text-xs text-destructive">
               Unable to search counterparties.
@@ -111,7 +115,10 @@ export function CounterpartyPicker({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => void choose(counterparty)}
               >
-                <CounterpartyLogo counterparty={counterparty} className="size-8" />
+                <CounterpartyLogo
+                  counterparty={counterparty}
+                  className="size-8"
+                />
                 <span className="min-w-0 flex-1 truncate">
                   {counterparty.short_name || counterparty.name}
                 </span>

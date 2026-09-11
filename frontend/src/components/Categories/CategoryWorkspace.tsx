@@ -84,12 +84,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { CategoryCounterpartyField } from "@/features/counterparties/CategoryCounterpartyField"
 import {
   assignCategoryCounterparty,
   type CategoryWithCounterparty,
   type CounterpartySummary,
 } from "@/features/counterparties/api"
+import { CategoryCounterpartyField } from "@/features/counterparties/CategoryCounterpartyField"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -125,7 +125,9 @@ type CategoryRow = CategoryPublic & { groupName: string }
 const FILTER_ALL = "all"
 
 function categoryCounterparty(category: CategoryPublic) {
-  return (category as CategoryPublic & CategoryWithCounterparty).counterparty ?? null
+  return (
+    (category as CategoryPublic & CategoryWithCounterparty).counterparty ?? null
+  )
 }
 
 function CurrencyField<T extends FieldValues>({
@@ -357,7 +359,8 @@ function useCategoryQueries(ledgerId: string, includeArchived: boolean) {
     queryKey: ["category-groups", ledgerId, includeArchived],
   })
   const categories = useSuspenseQuery({
-    queryFn: () => CategoriesService.readCategories({ ledgerId, includeArchived }),
+    queryFn: () =>
+      CategoriesService.readCategories({ ledgerId, includeArchived }),
     queryKey: ["categories", ledgerId, includeArchived],
   })
 
@@ -382,7 +385,9 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ["category-groups", ledgerId] }),
+      queryClient.invalidateQueries({
+        queryKey: ["category-groups", ledgerId],
+      }),
   })
 
   return (
@@ -396,12 +401,17 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create category group</DialogTitle>
-          <DialogDescription>Groups keep related categories together.</DialogDescription>
+          <DialogDescription>
+            Groups keep related categories together.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) =>
-              mutation.mutate({ ...data, description: data.description || null }),
+              mutation.mutate({
+                ...data,
+                description: data.description || null,
+              }),
             )}
             className="space-y-4"
           >
@@ -459,7 +469,8 @@ function EditGroupDialog({
   })
 
   useEffect(() => {
-    if (open) form.reset({ name: group.name, description: group.description ?? "" })
+    if (open)
+      form.reset({ name: group.name, description: group.description ?? "" })
   }, [form, group.description, group.name, open])
 
   const mutation = useMutation({
@@ -475,7 +486,9 @@ function EditGroupDialog({
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ["category-groups", ledgerId] }),
+      queryClient.invalidateQueries({
+        queryKey: ["category-groups", ledgerId],
+      }),
   })
 
   return (
@@ -489,12 +502,17 @@ function EditGroupDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit category group</DialogTitle>
-          <DialogDescription>Update the name or description of this group.</DialogDescription>
+          <DialogDescription>
+            Update the name or description of this group.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) =>
-              mutation.mutate({ ...data, description: data.description || null }),
+              mutation.mutate({
+                ...data,
+                description: data.description || null,
+              }),
             )}
             className="space-y-4"
           >
@@ -504,7 +522,9 @@ function EditGroupDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -515,7 +535,9 @@ function EditGroupDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
-                  <FormControl><Input placeholder="Optional description" {...field} /></FormControl>
+                  <FormControl>
+                    <Input placeholder="Optional description" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -540,7 +562,9 @@ function CreateCategoryDialog({
   groups: { id: string; name: string; is_active: boolean }[]
 }) {
   const [open, setOpen] = useState(false)
-  const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(null)
+  const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(
+    null,
+  )
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const activeGroups = groups.filter((group) => group.is_active)
@@ -591,7 +615,9 @@ function CreateCategoryDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create category</DialogTitle>
-          <DialogDescription>Add a category to an active group.</DialogDescription>
+          <DialogDescription>
+            Add a category to an active group.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -612,10 +638,16 @@ function CreateCategoryDialog({
                 <FormItem>
                   <FormLabel>Group</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Choose a group" /></SelectTrigger></FormControl>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a group" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {activeGroups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                        <SelectItem key={group.id} value={group.id}>
+                          {group.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -627,14 +659,26 @@ function CreateCategoryDialog({
               control={form.control}
               name="name"
               render={({ field }) => (
-                <FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="Electricity" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Electricity" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem><FormLabel>Description</FormLabel><FormControl><Input placeholder="Optional description" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Optional description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             <FormField
@@ -648,7 +692,9 @@ function CreateCategoryDialog({
                       placeholder="ELEC"
                       maxLength={4}
                       {...field}
-                      onChange={(event) => field.onChange(event.target.value.toUpperCase())}
+                      onChange={(event) =>
+                        field.onChange(event.target.value.toUpperCase())
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -663,7 +709,9 @@ function CreateCategoryDialog({
             <section className="space-y-4 border-t pt-4">
               <div>
                 <h3 className="text-sm font-semibold">Behavior</h3>
-                <p className="text-sm text-muted-foreground">Choose how obligations are created and managed.</p>
+                <p className="text-sm text-muted-foreground">
+                  Choose how obligations are created and managed.
+                </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
@@ -677,7 +725,8 @@ function CreateCategoryDialog({
                           field.onChange(value)
                           if (
                             value !== "manual" &&
-                            (!form.getValues("recurrence_interval") || !form.getValues("recurrence_unit"))
+                            (!form.getValues("recurrence_interval") ||
+                              !form.getValues("recurrence_unit"))
                           ) {
                             form.setValue("recurrence_interval", 1)
                             form.setValue("recurrence_unit", "month")
@@ -685,7 +734,11 @@ function CreateCategoryDialog({
                         }}
                         value={field.value}
                       >
-                        <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
                           <SelectItem value="manual">Manual</SelectItem>
                           <SelectItem value="automatic">Automatic</SelectItem>
@@ -723,7 +776,9 @@ function CreateCategoryDialog({
               />
             )}
             <DialogFooter>
-              <LoadingButton type="submit" loading={mutation.isPending}>Create category</LoadingButton>
+              <LoadingButton type="submit" loading={mutation.isPending}>
+                Create category
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>
@@ -745,12 +800,16 @@ function EditCategoryDialog({
 }) {
   const [open, setOpen] = useState(false)
   const currentCounterparty = categoryCounterparty(category)
-  const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(currentCounterparty)
+  const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(
+    currentCounterparty,
+  )
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const form = useForm<CategoryUpdateFormData & { category_group_id: string }>({
     resolver: zodResolver(
-      categoryConfigurationSchema.extend({ category_group_id: z.string().min(1, "Choose a group") }),
+      categoryConfigurationSchema.extend({
+        category_group_id: z.string().min(1, "Choose a group"),
+      }),
     ),
     defaultValues: {
       category_group_id: category.category_group_id,
@@ -788,7 +847,11 @@ function EditCategoryDialog({
         requestBody: data,
       })
       if ((counterparty?.id ?? null) !== (currentCounterparty?.id ?? null)) {
-        await assignCategoryCounterparty(ledgerId, category.id, counterparty?.id ?? null)
+        await assignCategoryCounterparty(
+          ledgerId,
+          category.id,
+          counterparty?.id ?? null,
+        )
       }
       return updated
     },
@@ -805,7 +868,11 @@ function EditCategoryDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="ghost" size="sm" aria-label={`More actions for ${category.name}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`More actions for ${category.name}`}
+          >
             <Pencil />
             <span className="sr-only">Edit {category.name}</span>
           </Button>
@@ -814,7 +881,9 @@ function EditCategoryDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit category</DialogTitle>
-          <DialogDescription>Update the category and its obligation configuration.</DialogDescription>
+          <DialogDescription>
+            Update the category and its obligation configuration.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -839,12 +908,24 @@ function EditCategoryDialog({
                 <FormItem>
                   <FormLabel>Group</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Choose a group" /></SelectTrigger></FormControl>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a group" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {groups
-                        .filter((group) => group.is_active || group.id === category.category_group_id)
+                        .filter(
+                          (group) =>
+                            group.is_active ||
+                            group.id === category.category_group_id,
+                        )
                         .map((group) => (
-                          <SelectItem key={group.id} value={group.id} disabled={!group.is_active}>
+                          <SelectItem
+                            key={group.id}
+                            value={group.id}
+                            disabled={!group.is_active}
+                          >
                             {group.name}
                           </SelectItem>
                         ))}
@@ -858,14 +939,26 @@ function EditCategoryDialog({
               control={form.control}
               name="name"
               render={({ field }) => (
-                <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem><FormLabel>Description</FormLabel><FormControl><Input placeholder="Optional description" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Optional description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             <div className="space-y-2">
@@ -889,7 +982,8 @@ function EditCategoryDialog({
                         field.onChange(value)
                         if (
                           value !== "manual" &&
-                          (!form.getValues("recurrence_interval") || !form.getValues("recurrence_unit"))
+                          (!form.getValues("recurrence_interval") ||
+                            !form.getValues("recurrence_unit"))
                         ) {
                           form.setValue("recurrence_interval", 1)
                           form.setValue("recurrence_unit", "month")
@@ -897,7 +991,11 @@ function EditCategoryDialog({
                       }}
                       value={field.value}
                     >
-                      <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         <SelectItem value="manual">Manual</SelectItem>
                         <SelectItem value="automatic">Automatic</SelectItem>
@@ -934,7 +1032,9 @@ function EditCategoryDialog({
               />
             )}
             <DialogFooter>
-              <LoadingButton type="submit" loading={mutation.isPending}>Save changes</LoadingButton>
+              <LoadingButton type="submit" loading={mutation.isPending}>
+                Save changes
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>
@@ -943,7 +1043,13 @@ function EditCategoryDialog({
   )
 }
 
-function ArchiveButton({ label, onArchive }: { label: string; onArchive: () => void }) {
+function ArchiveButton({
+  label,
+  onArchive,
+}: {
+  label: string
+  onArchive: () => void
+}) {
   return (
     <Button variant="ghost" size="sm" onClick={onArchive}>
       <Archive />
@@ -959,39 +1065,62 @@ function ManageGroupsDialog({
   onArchive,
 }: {
   ledgerId: string
-  groups: { id: string; name: string; description: string | null; is_active: boolean }[]
+  groups: {
+    id: string
+    name: string
+    description: string | null
+    is_active: boolean
+  }[]
   categories: CategoryPublic[]
   onArchive: (groupId: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const activeCategoryCount = (groupId: string) =>
     categories.filter(
-      (category) => category.category_group_id === groupId && category.is_active,
+      (category) =>
+        category.category_group_id === groupId && category.is_active,
     ).length
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Settings2 />Manage groups</Button>
+        <Button variant="outline">
+          <Settings2 />
+          Manage groups
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Manage category groups</DialogTitle>
           <DialogDescription>
-            Categories always belong to a group. Archive active categories or move them before archiving their group.
+            Categories always belong to a group. Archive active categories or
+            move them before archiving their group.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end"><CreateGroupDialog ledgerId={ledgerId} /></div>
+        <div className="flex justify-end">
+          <CreateGroupDialog ledgerId={ledgerId} />
+        </div>
         {groups.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">No groups yet.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No groups yet.
+          </p>
         ) : (
           <div className="divide-y rounded-lg border">
             {groups.map((group) => {
               const count = activeCategoryCount(group.id)
               return (
-                <div key={group.id} className="flex items-center justify-between gap-3 p-4">
+                <div
+                  key={group.id}
+                  className="flex items-center justify-between gap-3 p-4"
+                >
                   <div className="min-w-0">
-                    <p className={group.is_active ? "font-medium" : "font-medium text-muted-foreground line-through"}>
+                    <p
+                      className={
+                        group.is_active
+                          ? "font-medium"
+                          : "font-medium text-muted-foreground line-through"
+                      }
+                    >
                       {group.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -1004,7 +1133,10 @@ function ManageGroupsDialog({
                     {!group.is_active ? (
                       <Badge variant="secondary">Archived</Badge>
                     ) : (
-                      <ArchiveButton label={group.name} onArchive={() => onArchive(group.id)} />
+                      <ArchiveButton
+                        label={group.name}
+                        onArchive={() => onArchive(group.id)}
+                      />
                     )}
                   </div>
                 </div>
@@ -1037,7 +1169,11 @@ function CategoryActions({
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" aria-label={`More actions for ${category.name}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`More actions for ${category.name}`}
+          >
             <Ellipsis />
             <span className="sr-only">More actions for {category.name}</span>
           </Button>
@@ -1072,7 +1208,10 @@ function CategoryActions({
           />
           <DropdownMenuSeparator />
           {category.is_active ? (
-            <DropdownMenuItem variant="destructive" onSelect={() => onArchive(category.id)}>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => onArchive(category.id)}
+            >
               Archive category
             </DropdownMenuItem>
           ) : (
@@ -1123,14 +1262,21 @@ function CategoryHistoryDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{category.name} amount history</DialogTitle>
-          <DialogDescription>Last six periods. Missing and unknown amounts are kept distinct.</DialogDescription>
+          <DialogDescription>
+            Last six periods. Missing and unknown amounts are kept distinct.
+          </DialogDescription>
         </DialogHeader>
         {history.isLoading ? (
-          <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         ) : history.isError || !history.data ? (
           <Alert variant="destructive">
             <AlertTitle>History is unavailable</AlertTitle>
-            <AlertDescription>The category history could not be loaded right now.</AlertDescription>
+            <AlertDescription>
+              The category history could not be loaded right now.
+            </AlertDescription>
           </Alert>
         ) : (
           <div className="space-y-2">
@@ -1140,7 +1286,10 @@ function CategoryHistoryDialog({
                 key={`${point.period.year}-${point.period.month}`}
               >
                 <span className="text-sm font-medium">
-                  {new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(
+                  {new Intl.DateTimeFormat(undefined, {
+                    month: "long",
+                    year: "numeric",
+                  }).format(
                     new Date(point.period.year, point.period.month - 1, 1),
                   )}
                 </span>
@@ -1153,8 +1302,14 @@ function CategoryHistoryDialog({
                     {point.currency}
                   </span>
                 ) : (
-                  <Badge variant={point.state === "unknown" ? "outline" : "secondary"}>
-                    {point.state === "unknown" ? "Amount unknown" : "No obligation"}
+                  <Badge
+                    variant={
+                      point.state === "unknown" ? "outline" : "secondary"
+                    }
+                  >
+                    {point.state === "unknown"
+                      ? "Amount unknown"
+                      : "No obligation"}
                   </Badge>
                 )}
               </div>
@@ -1192,7 +1347,12 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
   useEffect(() => {
     if (typeof window === "undefined") return
     const params = new URLSearchParams(window.location.search)
-    const values = { group: groupFilter, q: query, status: statusFilter, sort: sortBy }
+    const values = {
+      group: groupFilter,
+      q: query,
+      status: statusFilter,
+      sort: sortBy,
+    }
     Object.entries(values).forEach(([key, value]) => {
       if (
         !value ||
@@ -1215,7 +1375,10 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
 
   const archiveGroup = useMutation({
     mutationFn: (groupId: string) =>
-      CategoriesService.archiveCategoryGroup({ ledgerId, categoryGroupId: groupId }),
+      CategoriesService.archiveCategoryGroup({
+        ledgerId,
+        categoryGroupId: groupId,
+      }),
     onSuccess: () => showSuccessToast("Category group archived"),
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
@@ -1246,26 +1409,32 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
     return categories
       .filter(
         (category) =>
-          groupFilter === FILTER_ALL || category.category_group_id === groupFilter,
+          groupFilter === FILTER_ALL ||
+          category.category_group_id === groupFilter,
       )
       .filter(
         (category) =>
           statusFilter === FILTER_ALL ||
-          (statusFilter === "active" ? category.is_active : !category.is_active),
+          (statusFilter === "active"
+            ? category.is_active
+            : !category.is_active),
       )
       .filter(
         (category) =>
           !normalizedQuery ||
-          `${category.name} ${category.code}`.toLocaleLowerCase().includes(normalizedQuery),
+          `${category.name} ${category.code}`
+            .toLocaleLowerCase()
+            .includes(normalizedQuery),
       )
       .map((category) => ({
         ...category,
-        groupName: groupNames.get(category.category_group_id) || "Unknown group",
+        groupName:
+          groupNames.get(category.category_group_id) || "Unknown group",
       }))
       .sort((left, right) => {
-        const result = (sortBy === "group" ? left.groupName : left.name).localeCompare(
-          sortBy === "group" ? right.groupName : right.name,
-        )
+        const result = (
+          sortBy === "group" ? left.groupName : left.name
+        ).localeCompare(sortBy === "group" ? right.groupName : right.name)
         return result || left.name.localeCompare(right.name)
       })
   }, [categories, groupFilter, groups, query, sortBy, statusFilter])
@@ -1281,11 +1450,19 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         ),
         cell: ({ row }) => (
           <div>
-            <p className={!row.original.is_active ? "font-medium text-muted-foreground line-through" : "font-medium"}>
+            <p
+              className={
+                !row.original.is_active
+                  ? "font-medium text-muted-foreground line-through"
+                  : "font-medium"
+              }
+            >
               {row.original.name}
             </p>
             {row.original.description && (
-              <p className="max-w-56 truncate text-sm text-muted-foreground">{row.original.description}</p>
+              <p className="max-w-56 truncate text-sm text-muted-foreground">
+                {row.original.description}
+              </p>
             )}
           </div>
         ),
@@ -1297,12 +1474,16 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
             Group <ArrowDownUp />
           </Button>
         ),
-        cell: ({ row }) => <Badge variant="outline">{row.original.groupName}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant="outline">{row.original.groupName}</Badge>
+        ),
       },
       {
         accessorKey: "code",
         header: "Code",
-        cell: ({ row }) => <Badge variant="secondary">{row.original.code}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant="secondary">{row.original.code}</Badge>
+        ),
       },
       { accessorKey: "data_source_policy", header: "Mode" },
       {
@@ -1373,16 +1554,22 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
               />
             </div>
             <Select value={groupFilter} onValueChange={setGroupFilter}>
-              <SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="All groups" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value={FILTER_ALL}>All groups</SelectItem>
                 {groups.map((group) => (
-                  <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="archived">Archived</SelectItem>

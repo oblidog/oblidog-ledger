@@ -21,7 +21,11 @@ export function CategoryCounterpartyField({
           not rewrite existing obligations.
         </p>
       </div>
-      <CounterpartyPicker value={value} disabled={disabled} onChange={onChange} />
+      <CounterpartyPicker
+        value={value}
+        disabled={disabled}
+        onChange={onChange}
+      />
     </div>
   )
 }

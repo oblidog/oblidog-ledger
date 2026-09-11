@@ -12,7 +12,7 @@ export function CounterpartyLogo({
 }) {
   const [failed, setFailed] = useState(false)
 
-  useEffect(() => setFailed(false), [counterparty?.logo_url])
+  useEffect(() => setFailed(false), [])
 
   if (counterparty?.logo_url && !failed) {
     return (
