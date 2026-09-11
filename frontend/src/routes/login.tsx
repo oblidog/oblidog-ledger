@@ -109,7 +109,8 @@ function Login() {
                   Password: <strong>{demoCredentials.password}</strong>
                 </p>
                 <p className="pt-1">
-                  The fields below are prefilled. Demo data is periodically reset.
+                  The fields below are prefilled. Demo data is periodically
+                  reset.
                 </p>
               </AlertDescription>
             </Alert>

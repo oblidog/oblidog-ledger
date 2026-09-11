@@ -32,8 +32,8 @@ export function ObligationCounterpartyDialog({
   obligation: ObligationPublic
   trigger: ReactNode
 }) {
-  const counterpartyObligation =
-    obligation as ObligationPublic & ObligationWithCounterparty
+  const counterpartyObligation = obligation as ObligationPublic &
+    ObligationWithCounterparty
   const current = counterpartyObligation.counterparty ?? null
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<CounterpartySummary | null>(current)
@@ -54,7 +54,9 @@ export function ObligationCounterpartyDialog({
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
-      void queryClient.invalidateQueries({ queryKey: ["obligations", ledgerId] })
+      void queryClient.invalidateQueries({
+        queryKey: ["obligations", ledgerId],
+      })
     },
   })
 

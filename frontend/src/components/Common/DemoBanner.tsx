@@ -9,7 +9,10 @@ export function DemoBanner() {
   if (!appConfig?.is_demo) return null
 
   return (
-    <Alert className="rounded-none border-x-0 border-t-0" data-testid="demo-banner">
+    <Alert
+      className="rounded-none border-x-0 border-t-0"
+      data-testid="demo-banner"
+    >
       <Info />
       <AlertTitle>Public demo</AlertTitle>
       <AlertDescription>

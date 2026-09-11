@@ -1,5 +1,4 @@
 import uuid
-from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,12 +10,8 @@ from app.api.deps import (
     require_ledger_owner_access,
     require_ledger_view_access,
 )
-from app.models import ApiKey, Ledger, LedgerMembership
+from app.models import Ledger, LedgerMembership
 from app.schemas import (
-    ApiKeyCreate,
-    ApiKeyCreated,
-    ApiKeyPublic,
-    ApiKeysPublic,
     LedgerCreate,
     LedgerMemberPublic,
     LedgerMembersPublic,
@@ -27,7 +22,6 @@ from app.schemas import (
     LedgerUpdate,
     Message,
 )
-from app.services import api_keys as api_key_service
 from app.services import users as user_service
 from app.use_cases import ledgers as ledger_use_cases
 from app.use_cases.exceptions import (
@@ -54,78 +48,6 @@ def _to_ledger_member_public(membership: LedgerMembership) -> LedgerMemberPublic
         role=membership.role,
         created_at=membership.created_at,
     )
-
-
-def _to_api_key_public(api_key: ApiKey) -> ApiKeyPublic:
-    return ApiKeyPublic.model_validate(api_key)
-
-
-@router.post("/{ledger_id}/api-keys", response_model=ApiKeyCreated)
-def create_api_key(
-    *,
-    session: SessionDep,
-    api_key_in: ApiKeyCreate,
-    ledger: Ledger = Depends(require_ledger_owner_access),
-    current_user: CurrentUser,
-) -> ApiKeyCreated:
-    if api_key_in.expires_at is not None and api_key_in.expires_at <= datetime.now(UTC):
-        raise HTTPException(status_code=422, detail="expires_at must be in the future")
-
-    raw_key = api_key_service.generate_api_key()
-    api_key = ApiKey(
-        ledger_id=ledger.id,
-        created_by_user_id=current_user.id,
-        name=api_key_in.name.strip(),
-        key_hash=api_key_service.hash_api_key(raw_key),
-        key_prefix=api_key_service.key_prefix(raw_key),
-        scopes=sorted(api_key_in.scopes),
-        expires_at=api_key_in.expires_at,
-    )
-    if not api_key.name:
-        raise HTTPException(status_code=422, detail="name must not be empty")
-    session.add(api_key)
-    session.commit()
-    session.refresh(api_key)
-    return ApiKeyCreated(
-        key=raw_key,
-        **ApiKeyPublic.model_validate(api_key).model_dump(),
-    )
-
-
-@router.get("/{ledger_id}/api-keys", response_model=ApiKeysPublic)
-def read_api_keys(
-    session: SessionDep,
-    ledger: Ledger = Depends(require_ledger_owner_access),
-) -> ApiKeysPublic:
-    api_keys = list(
-        session.scalars(
-            select(ApiKey)
-            .where(ApiKey.ledger_id == ledger.id)
-            .order_by(ApiKey.created_at.desc())
-        )
-    )
-    return ApiKeysPublic(
-        data=[_to_api_key_public(key) for key in api_keys], count=len(api_keys)
-    )
-
-
-@router.delete("/{ledger_id}/api-keys/{api_key_id}", response_model=ApiKeyPublic)
-def revoke_api_key(
-    *,
-    session: SessionDep,
-    api_key_id: uuid.UUID,
-    ledger: Ledger = Depends(require_ledger_owner_access),
-) -> ApiKeyPublic:
-    api_key = session.scalar(
-        select(ApiKey).where(ApiKey.id == api_key_id, ApiKey.ledger_id == ledger.id)
-    )
-    if api_key is None:
-        raise HTTPException(status_code=404, detail="API key not found")
-    if api_key.revoked_at is None:
-        api_key.revoked_at = datetime.now(UTC)
-        session.commit()
-        session.refresh(api_key)
-    return _to_api_key_public(api_key)
 
 
 @router.get("/", response_model=LedgersPublic)

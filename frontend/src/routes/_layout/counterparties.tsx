@@ -18,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
-import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import {
   type Counterparty,
   type CounterpartyInput,
@@ -27,6 +26,7 @@ import {
   listCounterparties,
   updateCounterparty,
 } from "@/features/counterparties/api"
+import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -334,7 +334,7 @@ function DeleteCounterpartyDialog({
   )
 }
 
-function CounterpartiesAdmin() {
+export function CounterpartiesAdmin() {
   const [query, setQuery] = useState("")
   const counterparties = useQuery({
     queryKey: ["counterparties"],

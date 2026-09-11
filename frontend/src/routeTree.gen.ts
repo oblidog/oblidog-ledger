@@ -15,6 +15,7 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutCounterpartiesRouteImport } from './routes/_layout/counterparties'
 import { Route as LayoutLedgersRouteImport } from './routes/_layout/ledgers'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutLedgersIndexRouteImport } from './routes/_layout/ledgers.index'
@@ -55,6 +56,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutCounterpartiesRoute = LayoutCounterpartiesRouteImport.update({
+  id: '/counterparties',
+  path: '/counterparties',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutLedgersRoute = LayoutLedgersRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof LayoutAdminRoute
+  '/counterparties': typeof LayoutCounterpartiesRoute
   '/ledgers': typeof LayoutLedgersRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
   '/ledgers/$ledgerId': typeof LayoutLedgersLedgerIdRouteWithChildren
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof LayoutAdminRoute
+  '/counterparties': typeof LayoutCounterpartiesRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
   '/ledgers/$ledgerId': typeof LayoutLedgersLedgerIdRouteWithChildren
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/counterparties': typeof LayoutCounterpartiesRoute
   '/_layout/ledgers': typeof LayoutLedgersRouteWithChildren
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/recover-password'
     | '/reset-password'
     | '/admin'
+    | '/counterparties'
     | '/ledgers'
     | '/settings'
     | '/ledgers/$ledgerId'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/recover-password'
     | '/reset-password'
     | '/admin'
+    | '/counterparties'
     | '/settings'
     | '/'
     | '/ledgers/$ledgerId'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/recover-password'
     | '/reset-password'
     | '/_layout/admin'
+    | '/_layout/counterparties'
     | '/_layout/ledgers'
     | '/_layout/settings'
     | '/_layout/'
@@ -293,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof LayoutAdminRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/counterparties': {
+      id: '/_layout/counterparties'
+      path: '/counterparties'
+      fullPath: '/counterparties'
+      preLoaderRoute: typeof LayoutCounterpartiesRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/ledgers': {
@@ -454,6 +473,7 @@ const LayoutLedgersRouteWithChildren = LayoutLedgersRoute._addFileChildren(
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutCounterpartiesRoute: typeof LayoutCounterpartiesRoute
   LayoutLedgersRoute: typeof LayoutLedgersRouteWithChildren
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -461,6 +481,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutCounterpartiesRoute: LayoutCounterpartiesRoute,
   LayoutLedgersRoute: LayoutLedgersRouteWithChildren,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,

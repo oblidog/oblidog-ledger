@@ -152,7 +152,6 @@ export const CategoriesService = {
   ),
 }
 export const LedgersService = {
-  createApiKey: request(generated.LedgersService.createApiKey<true>),
   createLedger: request(generated.LedgersService.createLedger<true>),
   deleteAllCategories: request(
     generated.LedgersService.deleteAllCategories<true>,
@@ -160,14 +159,12 @@ export const LedgersService = {
   deleteAllObligations: request(
     generated.LedgersService.deleteAllObligations<true>,
   ),
-  readApiKeys: request(generated.LedgersService.readApiKeys<true>),
   readLedger: request(generated.LedgersService.readLedger<true>),
   readLedgerMembers: request(generated.LedgersService.readLedgerMembers<true>),
   readLedgers: request(generated.LedgersService.readLedgers<true>),
   removeLedgerMember: request(
     generated.LedgersService.removeLedgerMember<true>,
   ),
-  revokeApiKey: request(generated.LedgersService.revokeApiKey<true>),
   shareLedger: request(generated.LedgersService.shareLedger<true>),
   updateLedger: request(generated.LedgersService.updateLedger<true>),
   updateLedgerMember: request(
@@ -184,6 +181,12 @@ export const IntegrationsService = {
   ),
   updateIntegration: request(
     generated.IntegrationsService.updateIntegration<true>,
+  ),
+  generateIntegrationCredential: request(
+    generated.IntegrationsService.generateIntegrationCredential<true>,
+  ),
+  revokeIntegrationCredential: request(
+    generated.IntegrationsService.revokeIntegrationCredential<true>,
   ),
 }
 export const LoginService = {

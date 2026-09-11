@@ -106,7 +106,9 @@ function CategoryDataHistory() {
     queryKey: ["categories", ledgerId, true],
     retry: false,
   })
-  const category = categoriesQuery.data?.data.find((item) => item.id === categoryId)
+  const category = categoriesQuery.data?.data.find(
+    (item) => item.id === categoryId,
+  )
 
   const schemasQuery = useQuery({
     queryFn: () => readCategoryDataSchemas(ledgerId, categoryId),
@@ -115,7 +117,9 @@ function CategoryDataHistory() {
     retry: false,
   })
 
-  const activeSchema = schemasQuery.data?.data.find((schema) => schema.is_active)
+  const activeSchema = schemasQuery.data?.data.find(
+    (schema) => schema.is_active,
+  )
   const selectedVersion = search.schema ?? activeSchema?.version
   const selectedSchema = schemasQuery.data?.data.find(
     (schema) => schema.version === selectedVersion,
@@ -148,7 +152,10 @@ function CategoryDataHistory() {
   })
 
   const count = countQuery.data?.count ?? 0
-  const pageItemCount = Math.min(PAGE_SIZE, Math.max(0, count - page * PAGE_SIZE))
+  const pageItemCount = Math.min(
+    PAGE_SIZE,
+    Math.max(0, count - page * PAGE_SIZE),
+  )
   const offset =
     search.sort === "asc"
       ? Math.max(0, count - (page + 1) * PAGE_SIZE)
@@ -216,10 +223,9 @@ function CategoryDataHistory() {
     )
   }
 
-  const properties = Object.entries(selectedSchema.schema?.properties ?? {}) as [
-    string,
-    CategoryDataPropertySchema,
-  ][]
+  const properties = Object.entries(
+    selectedSchema.schema?.properties ?? {},
+  ) as [string, CategoryDataPropertySchema][]
   const pageStart = count === 0 ? 0 : page * PAGE_SIZE + 1
   const pageEnd = Math.min((page + 1) * PAGE_SIZE, count)
   const canGoNext = pageEnd < count
@@ -269,40 +275,56 @@ function CategoryDataHistory() {
               <span className="font-medium">Schema version</span>
               <Select
                 value={String(selectedVersion)}
-                onValueChange={(value) => updateSearch({ schema: Number(value) })}
+                onValueChange={(value) =>
+                  updateSearch({ schema: Number(value) })
+                }
               >
                 <SelectTrigger className="w-full" aria-label="Schema version">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {schemasQuery.data?.data.map((schema) => (
-                    <SelectItem key={schema.version} value={String(schema.version)}>
-                      Version {schema.version}{schema.is_active ? " (active)" : ""}
+                    <SelectItem
+                      key={schema.version}
+                      value={String(schema.version)}
+                    >
+                      Version {schema.version}
+                      {schema.is_active ? " (active)" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1 text-sm">
-              <label htmlFor="category-data-observed-from" className="font-medium">
+              <label
+                htmlFor="category-data-observed-from"
+                className="font-medium"
+              >
                 Observed from
               </label>
               <Input
                 id="category-data-observed-from"
                 type="date"
                 value={search.from ?? ""}
-                onChange={(event) => updateSearch({ from: event.target.value || undefined })}
+                onChange={(event) =>
+                  updateSearch({ from: event.target.value || undefined })
+                }
               />
             </div>
             <div className="space-y-1 text-sm">
-              <label htmlFor="category-data-observed-to" className="font-medium">
+              <label
+                htmlFor="category-data-observed-to"
+                className="font-medium"
+              >
                 Observed to
               </label>
               <Input
                 id="category-data-observed-to"
                 type="date"
                 value={search.to ?? ""}
-                onChange={(event) => updateSearch({ to: event.target.value || undefined })}
+                onChange={(event) =>
+                  updateSearch({ to: event.target.value || undefined })
+                }
               />
             </div>
             <div className="space-y-1 text-sm">
@@ -311,7 +333,9 @@ function CategoryDataHistory() {
                 type="button"
                 variant="outline"
                 className="w-full justify-between"
-                onClick={() => updateSearch({ sort: search.sort === "asc" ? "desc" : "asc" })}
+                onClick={() =>
+                  updateSearch({ sort: search.sort === "asc" ? "desc" : "asc" })
+                }
               >
                 {search.sort === "asc" ? "Oldest first" : "Newest first"}
                 <ArrowUpDown />
@@ -330,7 +354,8 @@ function CategoryDataHistory() {
             </p>
           ) : count === 0 ? (
             <p className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-              No records were saved with schema version {selectedVersion} for the selected date range.
+              No records were saved with schema version {selectedVersion} for
+              the selected date range.
             </p>
           ) : (
             <>
@@ -338,7 +363,9 @@ function CategoryDataHistory() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="sticky left-0 z-10 bg-muted">Observed</TableHead>
+                      <TableHead className="sticky left-0 z-10 bg-muted">
+                        Observed
+                      </TableHead>
                       <TableHead>Source</TableHead>
                       <TableHead>Schema</TableHead>
                       {properties.map(([name, schema]) => (
@@ -357,7 +384,9 @@ function CategoryDataHistory() {
                         </TableCell>
                         <TableCell>{record.source || "—"}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">v{record.schema_version}</Badge>
+                          <Badge variant="secondary">
+                            v{record.schema_version}
+                          </Badge>
                         </TableCell>
                         {properties.map(([name, schema]) => (
                           <TableCell key={name} className="max-w-80">
@@ -381,7 +410,9 @@ function CategoryDataHistory() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage((current) => Math.max(0, current - 1))}
+                    onClick={() =>
+                      setPage((current) => Math.max(0, current - 1))
+                    }
                     disabled={page === 0 || recordsQuery.isFetching}
                   >
                     Previous

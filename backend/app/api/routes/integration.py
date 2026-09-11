@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.deps import ApiContext, require_scope
 from app.api.routes.categories import (
@@ -29,9 +29,7 @@ from app.schemas import (
     ObligationPublic,
     ObligationsPublic,
 )
-from app.schemas.ledgers import LedgerPublic, LedgerUpdate
 from app.use_cases import categories as category_use_cases
-from app.use_cases import ledgers as ledger_use_cases
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import (
     CategoryDataSchemaNotFoundError,
@@ -47,34 +45,25 @@ router.include_router(instances_router)
 
 
 @router.get(
-    "/categories/{category_code}/data-records/latest",
+    "/category/data-records/latest",
     response_model=CategoryDataRecordPublic,
 )
 def read_latest_integration_category_data_record(
-    category_code: str = Path(pattern=r"^[A-Z]{4}$"),
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> CategoryDataRecordPublic:
     try:
-        category = category_use_cases.get_category_by_code(
-            session=context.session,
-            ledger_id=context.ledger.id,
-            category_code=category_code,
-        )
         category_data = category_use_cases.get_category_data_record(
             session=context.session,
             ledger_id=context.ledger.id,
-            category_id=category.id,
+            category_id=context.category.id,
         )
     except (CategoryNotFoundError, CategoryDataSchemaNotFoundError):
         raise HTTPException(status_code=404, detail="Category data record not found")
     return _to_category_data_record_public(category_data)
 
 
-@router.get(
-    "/categories/{category_code}/data-records", response_model=CategoryDataRecordsPublic
-)
+@router.get("/category/data-records", response_model=CategoryDataRecordsPublic)
 def read_integration_category_data_records(
-    category_code: str = Path(pattern=r"^[A-Z]{4}$"),
     observed_from: datetime | None = Query(default=None, alias="from"),
     observed_to: datetime | None = Query(default=None, alias="to"),
     limit: int = Query(default=100, ge=1, le=100),
@@ -82,15 +71,10 @@ def read_integration_category_data_records(
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> CategoryDataRecordsPublic:
     try:
-        category = category_use_cases.get_category_by_code(
-            session=context.session,
-            ledger_id=context.ledger.id,
-            category_code=category_code,
-        )
         records = category_use_cases.list_category_data_records(
             session=context.session,
             ledger_id=context.ledger.id,
-            category_id=category.id,
+            category_id=context.category.id,
             observed_from=observed_from,
             observed_to=observed_to,
             limit=limit,
@@ -99,7 +83,7 @@ def read_integration_category_data_records(
         count = category_use_cases.count_category_data_records(
             session=context.session,
             ledger_id=context.ledger.id,
-            category_id=category.id,
+            category_id=context.category.id,
             observed_from=observed_from,
             observed_to=observed_to,
         )
@@ -111,24 +95,16 @@ def read_integration_category_data_records(
     )
 
 
-@router.post(
-    "/categories/{category_code}/data-records", response_model=CategoryDataRecordPublic
-)
+@router.post("/category/data-records", response_model=CategoryDataRecordPublic)
 def create_integration_category_data_record(
     category_data_in: CategoryDataRecordCreate,
-    category_code: str = Path(pattern=r"^[A-Z]{4}$"),
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> CategoryDataRecordPublic:
     try:
-        category = category_use_cases.get_category_by_code(
-            session=context.session,
-            ledger_id=context.ledger.id,
-            category_code=category_code,
-        )
         category_data = category_use_cases.create_category_data_record(
             session=context.session,
             ledger_id=context.ledger.id,
-            category_id=category.id,
+            category_id=context.category.id,
             observed_at=category_data_in.observed_at,
             data=category_data_in.data,
             source=category_data_in.source,
@@ -145,52 +121,21 @@ def create_integration_category_data_record(
     return _to_category_data_record_public(category_data)
 
 
-@router.get(
-    "/categories/{category_code}/data-schema", response_model=CategoryDataSchemaPublic
-)
+@router.get("/category/schema", response_model=CategoryDataSchemaPublic)
 def read_integration_category_data_schema(
-    category_code: str = Path(pattern=r"^[A-Z]{4}$"),
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> CategoryDataSchemaPublic:
     try:
-        category = category_use_cases.get_category_by_code(
-            session=context.session,
-            ledger_id=context.ledger.id,
-            category_code=category_code,
-        )
         category_schema = category_use_cases.get_category_data_schema(
             session=context.session,
             ledger_id=context.ledger.id,
-            category_id=category.id,
+            category_id=context.category.id,
         )
     except CategoryNotFoundError:
         raise HTTPException(status_code=404, detail="Category not found")
     except CategoryDataSchemaNotFoundError:
         raise HTTPException(status_code=404, detail="Category data schema not found")
     return _to_category_data_schema_public(category_schema)
-
-
-@router.get("/ledger", response_model=LedgerPublic)
-def read_integration_ledger(
-    context: ApiContext = Depends(require_scope("ledger:read")),
-) -> LedgerPublic:
-    """Return only the ledger selected by the authenticated API key."""
-    return LedgerPublic.model_validate(context.ledger)
-
-
-@router.patch("/ledger", response_model=LedgerPublic)
-def update_integration_ledger(
-    ledger_in: LedgerUpdate,
-    context: ApiContext = Depends(require_scope("ledger:write")),
-) -> LedgerPublic:
-    """Update the key's ledger through the shared ledger use case."""
-    ledger = ledger_use_cases.update_ledger(
-        session=context.session,
-        ledger_id=context.ledger.id,
-        name=ledger_in.name,
-        description=ledger_in.description,
-    )
-    return LedgerPublic.model_validate(ledger)
 
 
 def _parse_obligation_key(obligation_key: str) -> ObligationKey:
@@ -207,12 +152,22 @@ def _not_found_as_http(call: Any) -> ObligationPublic:
         raise HTTPException(status_code=404, detail="Obligation not found")
 
 
+def _require_context_category(context: ApiContext, key: ObligationKey) -> None:
+    try:
+        obligation = obligation_use_cases.get_obligation_by_key(
+            session=context.session, ledger_id=context.ledger.id, key=key
+        )
+    except ObligationNotFoundError:
+        raise HTTPException(status_code=404, detail="Obligation not found")
+    if obligation.category_id != context.category.id:
+        raise HTTPException(status_code=404, detail="Obligation not found")
+
+
 @router.get("/obligations", response_model=ObligationsPublic)
 def read_integration_obligations(
     context: ApiContext = Depends(require_scope("ledger:read")),
     year: int | None = Query(default=None, ge=1, le=9999),
     month: int | None = Query(default=None, ge=1, le=12),
-    category_code: str | None = Query(default=None, pattern=r"^[A-Z]{4}$"),
     lifecycle: ObligationLifecycle | None = None,
 ) -> ObligationsPublic:
     obligations = obligation_use_cases.list_obligations_for_ledger(
@@ -220,7 +175,7 @@ def read_integration_obligations(
         ledger_id=context.ledger.id,
         year=year,
         month=month,
-        category_code=category_code,
+        category_id=context.category.id,
         lifecycle=lifecycle,
     )
     return ObligationsPublic(
@@ -235,6 +190,7 @@ def read_integration_obligation(
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> ObligationPublic:
     key = _parse_obligation_key(obligation_key)
+    _require_context_category(context, key)
     return _not_found_as_http(
         lambda: obligation_use_cases.get_obligation_by_key(
             session=context.session, ledger_id=context.ledger.id, key=key
@@ -251,6 +207,7 @@ def read_integration_obligation_components(
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> ObligationComponentsPublic:
     key = _parse_obligation_key(obligation_key)
+    _require_context_category(context, key)
     try:
         components = obligation_use_cases.list_obligation_components(
             session=context.session, ledger_id=context.ledger.id, key=key
@@ -273,6 +230,7 @@ def upsert_integration_obligation_component(
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationComponentPublic:
     key = _parse_obligation_key(obligation_key)
+    _require_context_category(context, key)
     try:
         component = obligation_use_cases.upsert_obligation_component(
             session=context.session,
@@ -292,6 +250,7 @@ def update_integration_obligation(
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     key = _parse_obligation_key(obligation_key)
+    _require_context_category(context, key)
     try:
         obligation = obligation_use_cases.update_integration_obligation(
             session=context.session,
@@ -315,6 +274,7 @@ def _run_integration_action(
     *, context: ApiContext, obligation_key: str, action: Any
 ) -> ObligationPublic:
     key = _parse_obligation_key(obligation_key)
+    _require_context_category(context, key)
     try:
         obligation = action(
             session=context.session, ledger_id=context.ledger.id, key=key
@@ -395,12 +355,13 @@ def append_integration_obligation_note(
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     key = _parse_obligation_key(obligation_key)
+    _require_context_category(context, key)
     try:
         obligation = obligation_use_cases.append_integration_note(
             session=context.session,
             ledger_id=context.ledger.id,
             key=key,
-            integration_name=context.api_key.name,
+            integration_name=context.integration.name,
             text=note_in.text,
         )
     except ObligationNotFoundError:
