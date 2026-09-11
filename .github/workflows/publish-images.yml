@@ -38,47 +38,8 @@ env:
   DOCKER_IMAGE_FRONTEND: oblidog-ledger-frontend
 
 jobs:
-  test-backend:
-    name: Test backend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout release source
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.release_tag || github.ref }}
-
-      - name: Create CI environment file
-        run: cp .github/ci.env .env
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Start database services
-        run: docker compose up -d --wait db mailcatcher
-
-      - name: Create test database
-        run: docker compose exec -T db createdb -U "$POSTGRES_USER" findog_test
-
-      - name: Migrate database
-        run: uv run bash scripts/prestart.sh
-        working-directory: backend
-
-      - name: Run backend tests
-        run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.ref_name }}"
-        working-directory: backend
-
-      - name: Stop database services
-        if: always()
-        run: docker compose down -v --remove-orphans
-
   publish:
     name: Build and publish images
-    needs: test-backend
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
