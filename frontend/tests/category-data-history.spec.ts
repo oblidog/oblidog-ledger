@@ -76,6 +76,16 @@ test("renders schema-driven category history with versioning and formatters", as
               format: "date-time",
               title: "Captured at",
             },
+            offset_at: {
+              type: "string",
+              format: "date-time",
+              title: "Offset at",
+            },
+            invalid_at: {
+              type: "string",
+              format: "date-time",
+              title: "Invalid at",
+            },
             untitled: { type: "string" },
             payload: { type: "object", title: "Payload" },
             samples: { type: "array", title: "Samples" },
@@ -129,6 +139,8 @@ test("renders schema-driven category history with versioning and formatters", as
         status: number === 21 ? "warn" : "ok",
         bill_date: "2026-02-03",
         captured_at: "2026-02-03T14:15:00Z",
+        offset_at: "2026-02-03T15:15:00+01:00",
+        invalid_at: "not-a-date-time",
         untitled: "raw-name fallback",
         payload: { nested: "value" },
         samples: [1, 2, 3],
@@ -199,6 +211,12 @@ test("renders schema-driven category history with versioning and formatters", as
     table.getByRole("columnheader", { name: "Captured at" }),
   ).toBeVisible()
   await expect(
+    table.getByRole("columnheader", { name: "Offset at" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Invalid at" }),
+  ).toBeVisible()
+  await expect(
     table.getByRole("columnheader", { name: "untitled" }),
   ).toBeVisible()
   await expect(
@@ -214,7 +232,36 @@ test("renders schema-driven category history with versioning and formatters", as
     new Intl.NumberFormat().format(12345.67),
   )
   await expect(table.getByText(formattedNumber).first()).toBeVisible()
-  await expect(table).not.toContainText("2026-02-03T14:15:00Z")
+  await expect(
+    table.getByText("2026-02-03T14:15:00Z", { exact: true }),
+  ).toHaveCount(0)
+  const formattedDateTime = await page.evaluate(() =>
+    new Intl.DateTimeFormat(undefined, {
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      month: "short",
+      timeZone: "UTC",
+      timeZoneName: "short",
+      year: "numeric",
+    }).format(new Date("2026-02-03T14:15:00Z")),
+  )
+  const utcDateTime = table
+    .locator('time[datetime="2026-02-03T14:15:00Z"]')
+    .first()
+  const offsetDateTime = table
+    .locator('time[datetime="2026-02-03T15:15:00+01:00"]')
+    .first()
+  await expect(utcDateTime).toContainText(formattedDateTime)
+  await expect(offsetDateTime).toContainText(formattedDateTime)
+  await expect(utcDateTime).toHaveAttribute(
+    "title",
+    "Exact value: 2026-02-03T14:15:00Z",
+  )
+  await expect(table.getByText("not-a-date-time").first()).toBeVisible()
+  await expect(
+    table.locator('time[datetime="2026-02-03"]').first(),
+  ).toBeVisible()
 
   await expect(page.getByText("Showing 1–20 of 21")).toBeVisible()
   const hasPageOverflow = await page.evaluate(

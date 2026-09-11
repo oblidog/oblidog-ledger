@@ -27,6 +27,13 @@ class CurrencyPaymentSummary:
 
 @dataclass(frozen=True, slots=True)
 class PeriodPaymentSummary:
+    """Payment progress for every non-canceled obligation in a ledger period.
+
+    Counts include obligations in every non-canceled lifecycle. Known amounts from
+    those obligations contribute to their currency summary; missing amounts are
+    counted as unknown and excluded from amount totals.
+    """
+
     total_obligation_count: int
     paid_obligation_count: int
     paid_percentage: Decimal | None

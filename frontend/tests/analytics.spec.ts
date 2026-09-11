@@ -52,6 +52,37 @@ async function createCategoryHistoryFixture() {
   return ledger
 }
 
+async function periodTotalsBarFill(page: import("@playwright/test").Page) {
+  const chart = page.getByTestId("period-totals-chart")
+  const bar = chart.locator(".recharts-bar-rectangle path").first()
+
+  await expect(bar).toBeVisible()
+  await expect(bar).toHaveAttribute("fill", "var(--color-amount)")
+  await bar.hover()
+  await expect(chart.locator(".recharts-tooltip-wrapper")).toBeVisible()
+
+  return bar.evaluate((element) => getComputedStyle(element).fill)
+}
+
+test("uses a theme-aware color for period total bars", async ({ page }) => {
+  const ledger = await createCategoryHistoryFixture()
+
+  await page.addInitScript(() => localStorage.setItem("vite-ui-theme", "light"))
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  await expect(page.locator("html")).toHaveClass(/light/)
+  const lightFill = await periodTotalsBarFill(page)
+
+  await page.getByTestId("theme-button").click()
+  await page.getByTestId("dark-mode").click()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+  const darkFill = await periodTotalsBarFill(page)
+
+  expect(lightFill).not.toBe("rgb(0, 0, 0)")
+  expect(darkFill).not.toBe("rgb(0, 0, 0)")
+  expect(darkFill).not.toBe(lightFill)
+})
+
 for (const width of [320, 375, 414]) {
   test(`keeps analytics charts readable at ${width}px`, async ({ page }) => {
     const ledger = await createCategoryHistoryFixture()
@@ -118,3 +149,46 @@ for (const width of [320, 375, 414]) {
     ).toBeVisible()
   })
 }
+
+test("shows amount progress as the primary payment metric", async ({
+  page,
+}) => {
+  const ledger = await createCategoryHistoryFixture()
+  await page.route("**/analytics/period-summary?**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: {
+        period: {
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+        },
+        total_obligation_count: 2,
+        paid_obligation_count: 1,
+        paid_percentage: "50",
+        unknown_amount_count: 0,
+        is_complete: true,
+        amount_summaries: [
+          {
+            currency: "PLN",
+            total_known_amount: "100.00",
+            paid_known_amount: "10.00",
+            paid_percentage: "10",
+          },
+        ],
+      },
+    })
+  })
+
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  const progress = page.getByRole("region", {
+    name: "Payment progress in PLN",
+  })
+  await expect(progress.getByText("10%", { exact: true })).toBeVisible()
+  await expect(
+    progress.getByText("10.00 PLN / 100.00 PLN", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("1 of 2 obligations paid", { exact: true }),
+  ).toBeVisible()
+})
