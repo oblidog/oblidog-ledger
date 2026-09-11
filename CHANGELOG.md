@@ -1,3 +1,9 @@
+## v0.12.3 (2026-09-11)
+
+### Fix
+
+- **integrations**: derive record sources from context (#338)
+
 ## v0.12.2 (2026-09-11)
 
 ### Refactor
