@@ -5,6 +5,9 @@ from app.api.routes.integrations import integration_errors
 from app.core.capabilities import Capability
 from app.schemas.integrations import (
     IntegrationConflictResponse,
+    IntegrationContextCategoryPublic,
+    IntegrationContextIntegrationPublic,
+    IntegrationContextPublic,
     IntegrationPublic,
     IntegrationRunFinish,
     IntegrationRunStart,
@@ -16,23 +19,23 @@ router = APIRouter(
 )
 
 
-@router.get("/context", response_model=dict[str, object])
+@router.get("/context", response_model=IntegrationContextPublic)
 def read_integration_context(
     context: ApiContext = Depends(require_scope("ledger:read")),
-) -> dict[str, object]:
-    return {
-        "integration": {
-            "id": str(context.integration.id),
-            "name": context.integration.name,
-            "enabled": context.integration.enabled,
-            "revision": context.integration.revision,
-        },
-        "category": {
-            "id": str(context.category.id),
-            "code": context.category.code,
-            "name": context.category.name,
-        },
-    }
+) -> IntegrationContextPublic:
+    return IntegrationContextPublic(
+        integration=IntegrationContextIntegrationPublic(
+            id=context.integration.id,
+            name=context.integration.name,
+            enabled=context.integration.enabled,
+            revision=context.integration.revision,
+        ),
+        category=IntegrationContextCategoryPublic(
+            id=context.category.id,
+            code=context.category.code,
+            name=context.category.name,
+        ),
+    )
 
 
 @router.post(
