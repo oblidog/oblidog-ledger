@@ -1,8 +1,12 @@
 import type { ReactNode } from "react"
 
+import {
+  type JsonSchemaProperty,
+  unwrapNullablePropertySchema,
+} from "@/components/Categories/categoryDataSchema"
 import { Badge } from "@/components/ui/badge"
 
-export type CategoryDataPropertySchema = {
+export type CategoryDataPropertySchema = JsonSchemaProperty & {
   type?: string
   format?: string
   title?: string
@@ -14,8 +18,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   hour: "2-digit",
   minute: "2-digit",
   month: "short",
-  timeZone: "UTC",
-  timeZoneName: "short",
   year: "numeric",
 })
 
@@ -39,9 +41,8 @@ function parseCalendarDate(year: number, month: number, day: number) {
 }
 
 /**
- * Category date-times are normalized to UTC for display. The locale still comes
- * from the browser, while the explicit zone keeps the result identical across
- * devices and prevents an instant from moving to another calendar day.
+ * Category date-times are displayed in the browser's locale and timezone.
+ * Their exact RFC 3339 value remains available in the rendered detail.
  */
 export function formatCategoryDateTime(value: string): string | null {
   const match = isoDateTimePattern.exec(value)
@@ -100,11 +101,16 @@ export function formatCategoryDataValue(
 ): ReactNode {
   if (value === null || value === undefined) return "—"
 
-  if (schema.enum?.includes(value)) {
+  const { value: effectiveSchema } = unwrapNullablePropertySchema(schema)
+  const enumValues = Array.isArray(effectiveSchema.enum)
+    ? effectiveSchema.enum
+    : schema.enum
+
+  if (enumValues?.includes(value)) {
     return <Badge variant="outline">{String(value)}</Badge>
   }
 
-  if (schema.type === "boolean" && typeof value === "boolean") {
+  if (effectiveSchema.type === "boolean" && typeof value === "boolean") {
     return (
       <Badge variant={value ? "secondary" : "outline"}>
         {value ? "Yes" : "No"}
@@ -113,17 +119,20 @@ export function formatCategoryDataValue(
   }
 
   if (
-    (schema.type === "number" || schema.type === "integer") &&
+    (effectiveSchema.type === "number" || effectiveSchema.type === "integer") &&
     typeof value === "number"
   ) {
     return new Intl.NumberFormat().format(value)
   }
 
-  if (schema.type === "string" && schema.format === "date") {
+  if (effectiveSchema.type === "string" && effectiveSchema.format === "date") {
     return <CalendarDateValue value={String(value)} />
   }
 
-  if (schema.type === "string" && schema.format === "date-time") {
+  if (
+    effectiveSchema.type === "string" &&
+    effectiveSchema.format === "date-time"
+  ) {
     return <DateTimeValue value={String(value)} />
   }
 

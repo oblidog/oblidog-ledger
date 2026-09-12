@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 
+test.use({ timezoneId: "Europe/Warsaw" })
+
 function uniqueName(prefix: string) {
   return `${prefix} ${Math.random().toString(36).slice(2, 8)}`
 }
@@ -72,8 +74,10 @@ test("renders schema-driven category history with versioning and formatters", as
             status: { type: "string", title: "Status", enum: ["ok", "warn"] },
             bill_date: { type: "string", format: "date", title: "Bill date" },
             captured_at: {
-              type: "string",
-              format: "date-time",
+              anyOf: [
+                { type: "string", format: "date-time" },
+                { type: "null" },
+              ],
               title: "Captured at",
             },
             offset_at: {
@@ -130,7 +134,10 @@ test("renders schema-driven category history with versioning and formatters", as
     return {
       id: `record-${number}`,
       schema_version: 3,
-      observed_at: new Date(Date.UTC(2026, 0, number)).toISOString(),
+      observed_at:
+        number === 21
+          ? "2026-09-07T15:28:04.518577Z"
+          : new Date(Date.UTC(2026, 0, number)).toISOString(),
       source: "integration",
       data: {
         reading: number === 21 ? 12345.67 : number,
@@ -138,7 +145,7 @@ test("renders schema-driven category history with versioning and formatters", as
         active: number % 2 === 1,
         status: number === 21 ? "warn" : "ok",
         bill_date: "2026-02-03",
-        captured_at: "2026-02-03T14:15:00Z",
+        captured_at: "2026-09-07T15:53:44.584000+02:00",
         offset_at: "2026-02-03T15:15:00+01:00",
         invalid_at: "not-a-date-time",
         untitled: "raw-name fallback",
@@ -233,30 +240,60 @@ test("renders schema-driven category history with versioning and formatters", as
   )
   await expect(table.getByText(formattedNumber).first()).toBeVisible()
   await expect(
-    table.getByText("2026-02-03T14:15:00Z", { exact: true }),
+    table.getByText("2026-09-07T15:53:44.584000+02:00", { exact: true }),
   ).toHaveCount(0)
+  const browserTimeZone = await page.evaluate(
+    () => new Intl.DateTimeFormat().resolvedOptions().timeZone,
+  )
+  expect(browserTimeZone).toBe("Europe/Warsaw")
   const formattedDateTime = await page.evaluate(() =>
     new Intl.DateTimeFormat(undefined, {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
       month: "short",
-      timeZone: "UTC",
-      timeZoneName: "short",
       year: "numeric",
     }).format(new Date("2026-02-03T14:15:00Z")),
   )
-  const utcDateTime = table
-    .locator('time[datetime="2026-02-03T14:15:00Z"]')
+  const observedDateTime = table
+    .locator('time[datetime="2026-09-07T15:28:04.518577Z"]')
+    .first()
+  const nullableDateTime = table
+    .locator('time[datetime="2026-09-07T15:53:44.584000+02:00"]')
     .first()
   const offsetDateTime = table
     .locator('time[datetime="2026-02-03T15:15:00+01:00"]')
     .first()
-  await expect(utcDateTime).toContainText(formattedDateTime)
+  await expect(observedDateTime).toContainText(
+    await page.evaluate(() =>
+      new Intl.DateTimeFormat(undefined, {
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(new Date("2026-09-07T15:28:04.518577Z")),
+    ),
+  )
+  await expect(nullableDateTime).toContainText(
+    await page.evaluate(() =>
+      new Intl.DateTimeFormat(undefined, {
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(new Date("2026-09-07T15:53:44.584000+02:00")),
+    ),
+  )
   await expect(offsetDateTime).toContainText(formattedDateTime)
-  await expect(utcDateTime).toHaveAttribute(
+  await expect(observedDateTime).toHaveAttribute(
     "title",
-    "Exact value: 2026-02-03T14:15:00Z",
+    "Exact value: 2026-09-07T15:28:04.518577Z",
+  )
+  await expect(nullableDateTime).toHaveAttribute(
+    "title",
+    "Exact value: 2026-09-07T15:53:44.584000+02:00",
   )
   await expect(table.getByText("not-a-date-time").first()).toBeVisible()
   await expect(
