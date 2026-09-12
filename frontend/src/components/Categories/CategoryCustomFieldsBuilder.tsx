@@ -13,6 +13,10 @@ import {
   type CategoryDataSchemaPublic,
   type CategoryPublic,
 } from "@/client"
+import {
+  type JsonSchemaProperty,
+  unwrapNullablePropertySchema,
+} from "@/components/Categories/categoryDataSchema"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -120,23 +124,6 @@ const customFieldsDraftSchema = z.object({
 
 type CustomFieldsForm = z.infer<typeof customFieldsSchema>
 type CustomField = CustomFieldsForm["fields"][number]
-type JsonSchemaProperty = Record<string, unknown>
-
-function unwrapNullable(value: JsonSchemaProperty) {
-  if (!Array.isArray(value.anyOf) || value.anyOf.length !== 2) {
-    return { value, nullable: false }
-  }
-  const nullOption = value.anyOf.find(
-    (option) => isRecord(option) && option.type === "null",
-  )
-  const typedOption = value.anyOf.find(
-    (option) => isRecord(option) && option.type !== "null",
-  )
-  return nullOption && typedOption
-    ? { value: typedOption, nullable: true }
-    : { value, nullable: false }
-}
-
 function draftKey(ledgerId: string, categoryId: string) {
   return `category-custom-fields-draft:${ledgerId}:${categoryId}`
 }
@@ -211,7 +198,7 @@ function unsupportedSchemaReason(schema: CategoryDataSchemaPublic | null) {
 
   for (const [key, value] of Object.entries(properties)) {
     if (!isRecord(value)) return `Field “${key}” is not an object definition.`
-    const { value: typedValue, nullable } = unwrapNullable(value)
+    const { value: typedValue, nullable } = unwrapNullablePropertySchema(value)
     if (nullable) {
       const unsupportedOuterKeyword = Object.keys(value).find(
         (propertyKey) =>
@@ -298,7 +285,8 @@ function fieldsFromSchema(
   return Object.entries(properties).flatMap(([key, value]) => {
     if (!value || typeof value !== "object") return []
     const property = value as JsonSchemaProperty
-    const { value: typedProperty, nullable } = unwrapNullable(property)
+    const { value: typedProperty, nullable } =
+      unwrapNullablePropertySchema(property)
     const type =
       typedProperty.type === "string" && typedProperty.format === "date"
         ? "date"

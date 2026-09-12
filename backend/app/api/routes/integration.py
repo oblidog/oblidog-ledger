@@ -1,9 +1,10 @@
 """Ledger-scoped, API-key authenticated integration endpoints."""
 
+import re
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from app.api.deps import ApiContext, require_scope
 from app.api.routes.categories import (
@@ -15,7 +16,7 @@ from app.api.routes.obligations import (
     to_obligation_component_public,
     to_obligation_public,
 )
-from app.domain import ObligationKey, ObligationLifecycle
+from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
 from app.schemas import (
     CategoryDataRecordPublic,
     CategoryDataRecordsPublic,
@@ -42,6 +43,17 @@ from app.use_cases.exceptions import (
 
 router = APIRouter(prefix="/integration", tags=["integration"])
 router.include_router(instances_router)
+
+IntegrationObligationPeriodPath = Annotated[
+    str,
+    Path(
+        description=(
+            "Billing period in YYYY-MM format. Full obligation keys are temporarily "
+            "accepted for client migration."
+        ),
+        examples=["2026-09"],
+    ),
+]
 
 
 @router.get(
@@ -138,28 +150,52 @@ def read_integration_category_data_schema(
     return _to_category_data_schema_public(category_schema)
 
 
-def _parse_obligation_key(obligation_key: str) -> ObligationKey:
+_OBLIGATION_PERIOD_PATTERN = re.compile(r"(?P<year>\d{4})-(?P<month>\d{2})")
+
+
+def _resolve_integration_obligation_key(
+    *, context: ApiContext, period: str
+) -> ObligationKey:
+    """Resolve a period in the credential-bound category to a domain key.
+
+    Full obligation keys remain accepted temporarily so an updated Ledger can
+    be deployed before all integration clients have migrated to period-based
+    addressing.
+    """
+    legacy_key: ObligationKey | None = None
     try:
-        return ObligationKey.parse(obligation_key)
+        legacy_key = ObligationKey.parse(period)
+    except ValueError:
+        pass
+
+    if legacy_key is not None:
+        if legacy_key.category_code != context.category.code:
+            raise HTTPException(status_code=404, detail="Obligation not found")
+        return legacy_key
+
+    match = _OBLIGATION_PERIOD_PATTERN.fullmatch(period)
+    if match is None:
+        raise HTTPException(status_code=422, detail="Invalid obligation period")
+    year = int(match["year"])
+    month = int(match["month"])
+    if year < 1:
+        raise HTTPException(status_code=422, detail="Invalid obligation period")
+    try:
+        billing_period = BillingPeriod(year=year, month=month)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail="Invalid obligation key") from exc
+        raise HTTPException(
+            status_code=422, detail="Invalid obligation period"
+        ) from exc
+    return ObligationKey(
+        category_code=context.category.code,
+        period=billing_period,
+    )
 
 
 def _not_found_as_http(call: Any) -> ObligationPublic:
     try:
         return to_obligation_public(call())
     except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-
-
-def _require_context_category(context: ApiContext, key: ObligationKey) -> None:
-    try:
-        obligation = obligation_use_cases.get_obligation_by_key(
-            session=context.session, ledger_id=context.ledger.id, key=key
-        )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    if obligation.category_id != context.category.id:
         raise HTTPException(status_code=404, detail="Obligation not found")
 
 
@@ -184,13 +220,12 @@ def read_integration_obligations(
     )
 
 
-@router.get("/obligations/{obligation_key}", response_model=ObligationPublic)
+@router.get("/obligations/{period}", response_model=ObligationPublic)
 def read_integration_obligation(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> ObligationPublic:
-    key = _parse_obligation_key(obligation_key)
-    _require_context_category(context, key)
+    key = _resolve_integration_obligation_key(context=context, period=period)
     return _not_found_as_http(
         lambda: obligation_use_cases.get_obligation_by_key(
             session=context.session, ledger_id=context.ledger.id, key=key
@@ -199,15 +234,14 @@ def read_integration_obligation(
 
 
 @router.get(
-    "/obligations/{obligation_key}/components",
+    "/obligations/{period}/components",
     response_model=ObligationComponentsPublic,
 )
 def read_integration_obligation_components(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> ObligationComponentsPublic:
-    key = _parse_obligation_key(obligation_key)
-    _require_context_category(context, key)
+    key = _resolve_integration_obligation_key(context=context, period=period)
     try:
         components = obligation_use_cases.list_obligation_components(
             session=context.session, ledger_id=context.ledger.id, key=key
@@ -221,16 +255,15 @@ def read_integration_obligation_components(
 
 
 @router.put(
-    "/obligations/{obligation_key}/components/upsert",
+    "/obligations/{period}/components/upsert",
     response_model=ObligationComponentPublic,
 )
 def upsert_integration_obligation_component(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     component_in: IntegrationObligationComponentUpsert,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationComponentPublic:
-    key = _parse_obligation_key(obligation_key)
-    _require_context_category(context, key)
+    key = _resolve_integration_obligation_key(context=context, period=period)
     try:
         component = obligation_use_cases.upsert_obligation_component(
             session=context.session,
@@ -244,14 +277,13 @@ def upsert_integration_obligation_component(
     return to_obligation_component_public(component)
 
 
-@router.patch("/obligations/{obligation_key}", response_model=ObligationPublic)
+@router.patch("/obligations/{period}", response_model=ObligationPublic)
 def update_integration_obligation(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     obligation_in: ObligationIntegrationUpdate,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
-    key = _parse_obligation_key(obligation_key)
-    _require_context_category(context, key)
+    key = _resolve_integration_obligation_key(context=context, period=period)
     try:
         obligation = obligation_use_cases.update_integration_obligation(
             session=context.session,
@@ -272,10 +304,9 @@ def update_integration_obligation(
 
 
 def _run_integration_action(
-    *, context: ApiContext, obligation_key: str, action: Any
+    *, context: ApiContext, period: str, action: Any
 ) -> ObligationPublic:
-    key = _parse_obligation_key(obligation_key)
-    _require_context_category(context, key)
+    key = _resolve_integration_obligation_key(context=context, period=period)
     try:
         obligation = action(
             session=context.session, ledger_id=context.ledger.id, key=key
@@ -289,74 +320,73 @@ def _run_integration_action(
     return to_obligation_public(obligation)
 
 
-@router.patch("/obligations/{obligation_key}/ready", response_model=ObligationPublic)
+@router.patch("/obligations/{period}/ready", response_model=ObligationPublic)
 def mark_integration_obligation_ready(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     return _run_integration_action(
         context=context,
-        obligation_key=obligation_key,
+        period=period,
         action=obligation_use_cases.mark_obligation_ready,
     )
 
 
-@router.post("/obligations/{obligation_key}/mark-paid", response_model=ObligationPublic)
+@router.post("/obligations/{period}/mark-paid", response_model=ObligationPublic)
 def mark_integration_obligation_paid(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     return _run_integration_action(
         context=context,
-        obligation_key=obligation_key,
+        period=period,
         action=obligation_use_cases.mark_obligation_paid,
     )
 
 
-@router.post("/obligations/{obligation_key}/cancel", response_model=ObligationPublic)
+@router.post("/obligations/{period}/cancel", response_model=ObligationPublic)
 def cancel_integration_obligation(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     return _run_integration_action(
         context=context,
-        obligation_key=obligation_key,
+        period=period,
         action=obligation_use_cases.cancel_obligation,
     )
 
 
-@router.post("/obligations/{obligation_key}/reopen", response_model=ObligationPublic)
+@router.post("/obligations/{period}/reopen", response_model=ObligationPublic)
 def reopen_integration_obligation(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     return _run_integration_action(
         context=context,
-        obligation_key=obligation_key,
+        period=period,
         action=obligation_use_cases.reopen_obligation,
     )
 
 
-@router.post("/obligations/{obligation_key}/error", response_model=ObligationPublic)
+@router.post("/obligations/{period}/error", response_model=ObligationPublic)
 def mark_integration_obligation_error(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
     return _run_integration_action(
         context=context,
-        obligation_key=obligation_key,
+        period=period,
         action=obligation_use_cases.mark_obligation_error,
     )
 
 
-@router.post("/obligations/{obligation_key}/notes", response_model=ObligationPublic)
+@router.post("/obligations/{period}/notes", response_model=ObligationPublic)
 def append_integration_obligation_note(
-    obligation_key: str,
+    period: IntegrationObligationPeriodPath,
     note_in: ObligationNoteAppend,
     context: ApiContext = Depends(require_scope("ledger:write")),
 ) -> ObligationPublic:
-    key = _parse_obligation_key(obligation_key)
-    _require_context_category(context, key)
+    key = _resolve_integration_obligation_key(context=context, period=period)
     try:
         obligation = obligation_use_cases.append_integration_note(
             session=context.session,

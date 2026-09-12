@@ -43,8 +43,19 @@ def test_creation_returns_secret_once_and_context_is_credential_scoped(
         f"{settings.API_V1_STR}/integration/context", headers=connection_headers
     )
     assert context.status_code == 200
-    assert context.json()["integration"]["id"] == integration["id"]
-    assert context.json()["category"]["id"] == str(category.id)
+    assert context.json() == {
+        "integration": {
+            "id": integration["id"],
+            "name": "Meter",
+            "enabled": True,
+            "revision": 0,
+        },
+        "category": {
+            "id": str(category.id),
+            "code": category.code,
+            "name": category.name,
+        },
+    }
     listed = client.get(
         f"{settings.API_V1_STR}/ledgers/{ledger.id}/integrations", headers=headers
     )
@@ -129,6 +140,62 @@ def test_credential_cannot_access_another_category_obligation(
     assert response.status_code == 404
 
 
+def test_integration_resolves_obligation_period_in_credential_category(
+    client: TestClient, db: Session
+) -> None:
+    created, _, ledger, category = _create_integration(client, db)
+    other = category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=category.category_group_id,
+        name="Other",
+        code="OTHR",
+    )
+    period = BillingPeriod(2026, 8)
+    expected = obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=period,
+    )
+    obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=other.code,
+        period=period,
+    )
+    connection_headers = {"Authorization": f"Bearer {created['connection_key']}"}
+
+    response = client.get(
+        f"{settings.API_V1_STR}/integration/obligations/2026-08",
+        headers=connection_headers,
+    )
+    legacy_response = client.get(
+        f"{settings.API_V1_STR}/integration/obligations/{expected.business_key}",
+        headers=connection_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["key"] == expected.business_key
+    assert legacy_response.status_code == 200
+    assert legacy_response.json()["key"] == expected.business_key
+
+
+def test_integration_rejects_invalid_obligation_periods(
+    client: TestClient, db: Session
+) -> None:
+    created, _, _, _ = _create_integration(client, db)
+    connection_headers = {"Authorization": f"Bearer {created['connection_key']}"}
+
+    for period in ("2026-13", "0000-01", "not-a-period"):
+        response = client.get(
+            f"{settings.API_V1_STR}/integration/obligations/{period}",
+            headers=connection_headers,
+        )
+        assert response.status_code == 422
+        assert response.json() == {"detail": "Invalid obligation period"}
+
+
 def test_integration_derives_category_data_and_component_source_from_context(
     client: TestClient, db: Session
 ) -> None:
@@ -143,7 +210,7 @@ def test_integration_derives_category_data_and_component_source_from_context(
             "required": ["reading"],
         },
     )
-    obligation = obligation_use_cases.create_manual_obligation(
+    obligation_use_cases.create_manual_obligation(
         session=db,
         ledger_id=ledger.id,
         category_code=category.code,
@@ -175,8 +242,7 @@ def test_integration_derives_category_data_and_component_source_from_context(
     assert category_data.json()["source"] == "Meter"
 
     component_url = (
-        f"{settings.API_V1_STR}/integration/obligations/"
-        f"{obligation.business_key}/components/upsert"
+        f"{settings.API_V1_STR}/integration/obligations/2026-08/components/upsert"
     )
     rejected_component = client.put(
         component_url,

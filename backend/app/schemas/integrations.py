@@ -127,9 +127,22 @@ class IntegrationCredentialCreated(BaseModel):
     connection_key: str
 
 
+class IntegrationContextIntegrationPublic(BaseModel):
+    id: uuid.UUID
+    name: str
+    enabled: bool
+    revision: int
+
+
+class IntegrationContextCategoryPublic(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+
+
 class IntegrationContextPublic(BaseModel):
-    integration: dict[str, object]
-    category: dict[str, object]
+    integration: IntegrationContextIntegrationPublic
+    category: IntegrationContextCategoryPublic
 
 
 IntegrationPublic.model_rebuild()
