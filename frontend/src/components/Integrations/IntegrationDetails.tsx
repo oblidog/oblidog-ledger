@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { ArrowLeft, RefreshCw, Settings } from "lucide-react"
+import { ArrowLeft, Copy, RefreshCw, Settings } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { apiUrl } from "@/config"
 import useAuth from "@/hooks/useAuth"
 import { IntegrationForm } from "./IntegrationForm"
 import {
@@ -349,33 +350,44 @@ export function IntegrationDetails({
             </CardHeader>
             <CardContent className="space-y-4">
               {newKey && (
-                <Alert>
-                  <AlertTitle>Connection key created</AlertTitle>
-                  <AlertDescription className="space-y-3">
-                    <code className="block break-all rounded-md bg-muted p-3">
-                      {newKey}
-                    </code>
-                    <p>This key will only be shown once.</p>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => void navigator.clipboard.writeText(newKey)}
-                      >
-                        Copy key
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          void navigator.clipboard.writeText(
-                            `OBLIDOG_URL=${window.location.origin}\nOBLIDOG_API_KEY=${newKey}\n`,
-                          )
-                        }
-                      >
-                        Copy configuration
-                      </Button>
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 sm:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <h3 className="font-semibold">Connection key created</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Save this key now. It will not be shown again.
+                      </p>
                     </div>
-                  </AlertDescription>
-                </Alert>
+                    <span className="rounded-full border bg-background px-2.5 py-1 text-xs font-medium">
+                      Shown once
+                    </span>
+                  </div>
+
+                  <div className="mt-4 rounded-md border bg-background p-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      API key
+                    </p>
+                    <code className="block break-all text-sm">{newKey}</code>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      onClick={() => void navigator.clipboard.writeText(newKey)}
+                    >
+                      <Copy /> Copy key
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        void navigator.clipboard.writeText(
+                          `OBLIDOG_URL=${apiUrl}\nOBLIDOG_API_KEY=${newKey}\n`,
+                        )
+                      }
+                    >
+                      <Copy /> Copy .env configuration
+                    </Button>
+                  </div>
+                </div>
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-3">
