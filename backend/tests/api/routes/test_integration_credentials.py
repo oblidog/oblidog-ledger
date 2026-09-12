@@ -43,8 +43,19 @@ def test_creation_returns_secret_once_and_context_is_credential_scoped(
         f"{settings.API_V1_STR}/integration/context", headers=connection_headers
     )
     assert context.status_code == 200
-    assert context.json()["integration"]["id"] == integration["id"]
-    assert context.json()["category"]["id"] == str(category.id)
+    assert context.json() == {
+        "integration": {
+            "id": integration["id"],
+            "name": "Meter",
+            "enabled": True,
+            "revision": 0,
+        },
+        "category": {
+            "id": str(category.id),
+            "code": category.code,
+            "name": category.name,
+        },
+    }
     listed = client.get(
         f"{settings.API_V1_STR}/ledgers/{ledger.id}/integrations", headers=headers
     )

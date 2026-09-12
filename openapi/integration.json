@@ -255,6 +255,75 @@
         "title": "IntegrationConflictResponse",
         "type": "object"
       },
+      "IntegrationContextCategoryPublic": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "IntegrationContextCategoryPublic",
+        "type": "object"
+      },
+      "IntegrationContextIntegrationPublic": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "enabled",
+          "revision"
+        ],
+        "title": "IntegrationContextIntegrationPublic",
+        "type": "object"
+      },
+      "IntegrationContextPublic": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/IntegrationContextCategoryPublic"
+          },
+          "integration": {
+            "$ref": "#/components/schemas/IntegrationContextIntegrationPublic"
+          }
+        },
+        "required": [
+          "integration",
+          "category"
+        ],
+        "title": "IntegrationContextPublic",
+        "type": "object"
+      },
       "IntegrationCredentialPublic": {
         "properties": {
           "created_at": {
@@ -1405,9 +1474,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Integration-Read Integration Context",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IntegrationContextPublic"
                 }
               }
             },
