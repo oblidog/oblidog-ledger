@@ -1,3 +1,14 @@
+## v0.12.4 (2026-09-12)
+
+### Fix
+
+- **integrations**: type integration context response (#343)
+- **frontend**: render category date-times in local timezone (#342)
+
+### Refactor
+
+- **api**: address integration obligations by period (#344)
+
 ## v0.12.3 (2026-09-11)
 
 ### Fix
