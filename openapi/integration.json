@@ -1582,16 +1582,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}": {
+    "/api/v1/integration/obligations/{period}": {
       "get": {
         "operationId": "integration-read_integration_obligation",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1632,11 +1637,16 @@
         "operationId": "integration-update_integration_obligation",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1684,16 +1694,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/cancel": {
+    "/api/v1/integration/obligations/{period}/cancel": {
       "post": {
         "operationId": "integration-cancel_integration_obligation",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1731,16 +1746,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/components": {
+    "/api/v1/integration/obligations/{period}/components": {
       "get": {
         "operationId": "integration-read_integration_obligation_components",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1778,16 +1798,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/components/upsert": {
+    "/api/v1/integration/obligations/{period}/components/upsert": {
       "put": {
         "operationId": "integration-upsert_integration_obligation_component",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1835,16 +1860,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/error": {
+    "/api/v1/integration/obligations/{period}/error": {
       "post": {
         "operationId": "integration-mark_integration_obligation_error",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1882,16 +1912,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/mark-paid": {
+    "/api/v1/integration/obligations/{period}/mark-paid": {
       "post": {
         "operationId": "integration-mark_integration_obligation_paid",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1929,16 +1964,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/notes": {
+    "/api/v1/integration/obligations/{period}/notes": {
       "post": {
         "operationId": "integration-append_integration_obligation_note",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -1986,16 +2026,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/ready": {
+    "/api/v1/integration/obligations/{period}/ready": {
       "patch": {
         "operationId": "integration-mark_integration_obligation_ready",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
@@ -2033,16 +2078,21 @@
         ]
       }
     },
-    "/api/v1/integration/obligations/{obligation_key}/reopen": {
+    "/api/v1/integration/obligations/{period}/reopen": {
       "post": {
         "operationId": "integration-reopen_integration_obligation",
         "parameters": [
           {
+            "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
             "in": "path",
-            "name": "obligation_key",
+            "name": "period",
             "required": true,
             "schema": {
-              "title": "Obligation Key",
+              "description": "Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.",
+              "examples": [
+                "2026-09"
+              ],
+              "title": "Period",
               "type": "string"
             }
           }
