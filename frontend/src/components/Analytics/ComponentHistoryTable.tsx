@@ -1,8 +1,9 @@
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { AlertCircle } from "lucide-react"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
+  CategoriesService,
   type ObligationComponentPublic,
   ObligationsService,
 } from "@/client"
@@ -15,6 +16,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -34,6 +42,11 @@ type ComponentColumn = {
   source: string | null
   externalId: string | null
   firstSeenIndex: number
+}
+
+function currentPeriod(): Period {
+  const now = new Date()
+  return { year: now.getFullYear(), month: now.getMonth() + 1 }
 }
 
 function addMonths(period: Period, offset: number): Period {
@@ -64,6 +77,114 @@ function formatAmount(amount: string, currency: string | null) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}${currency ? ` ${currency}` : ""}`
+}
+
+export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
+  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>()
+  const categories = useQuery({
+    queryFn: () => CategoriesService.readCategories({ ledgerId }),
+    queryKey: ["categories", ledgerId],
+  })
+  const selectablePeriods = useMemo(
+    () =>
+      Array.from({ length: 25 }, (_, index) =>
+        addMonths(currentPeriod(), index - 12),
+      ),
+    [],
+  )
+
+  useEffect(() => {
+    const availableCategories = categories.data?.data
+    if (!availableCategories?.length) return
+    if (
+      !availableCategories.some(
+        (category) => category.id === selectedCategoryId,
+      )
+    ) {
+      setSelectedCategoryId(availableCategories[0].id)
+    }
+  }, [categories.data, selectedCategoryId])
+
+  const selectedCategory = categories.data?.data.find(
+    (category) => category.id === selectedCategoryId,
+  )
+
+  return (
+    <section className="space-y-4" aria-labelledby="component-history-heading">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <h2 id="component-history-heading" className="text-xl font-semibold">
+            Component comparison
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Track how recurring bill components change across recent periods.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm font-medium">
+            Category
+            <Select
+              value={selectedCategoryId}
+              onValueChange={setSelectedCategoryId}
+              disabled={categories.isLoading || categories.isError}
+            >
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.data?.data.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Range ending
+            <Select
+              value={periodKey(selectedPeriod)}
+              onValueChange={(value) => {
+                const next = selectablePeriods.find(
+                  (period) => periodKey(period) === value,
+                )
+                if (next) setSelectedPeriod(next)
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {selectablePeriods.map((period) => (
+                  <SelectItem key={periodKey(period)} value={periodKey(period)}>
+                    {periodLabel(period)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+      </div>
+
+      {categories.isError ? (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Categories are unavailable</AlertTitle>
+          <AlertDescription>
+            Component comparison cannot be loaded until categories are available.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <ComponentHistoryTable
+          ledgerId={ledgerId}
+          categoryCode={selectedCategory?.code}
+          currency={selectedCategory?.currency}
+          selectedPeriod={selectedPeriod}
+        />
+      )}
+    </section>
+  )
 }
 
 export function ComponentHistoryTable({
@@ -240,12 +361,11 @@ export function ComponentHistoryTable({
                         const existedPreviously = previousComponents.some(
                           (item) => componentIdentity(item) === column.key,
                         )
-                        const nextObligationExists = Boolean(obligation)
                         const state = component
                           ? !existedPreviously && periodIndex > 0
                             ? "added"
                             : "present"
-                          : existedPreviously && nextObligationExists
+                          : existedPreviously && obligation
                             ? "removed"
                             : "missing"
 
