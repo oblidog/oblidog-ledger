@@ -4,6 +4,7 @@ from app.api.deps import enforce_demo_request_capabilities
 from app.api.routes import (
     analytics,
     categories,
+    category_data_csv,
     category_data_schemas,
     counterparties,
     integration,
@@ -23,6 +24,7 @@ api_router.include_router(login.router)
 api_router.include_router(ledgers.router)
 api_router.include_router(analytics.router)
 api_router.include_router(categories.router)
+api_router.include_router(category_data_csv.router)
 api_router.include_router(category_data_schemas.router)
 api_router.include_router(counterparties.router)
 api_router.include_router(integration.router)
