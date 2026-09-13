@@ -51,7 +51,8 @@ def _property_columns(schema_definition: dict[str, Any]) -> list[tuple[str, dict
         )
 
     columns: list[tuple[str, dict[str, Any]]] = []
-    for name, property_schema in properties.items():
+    for name in sorted(properties):
+        property_schema = properties[name]
         if not isinstance(property_schema, dict):
             raise UnsupportedCategoryDataCsvSchemaError(
                 f"Field '{name}' has an unsupported schema definition."
