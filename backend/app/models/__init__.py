@@ -13,6 +13,7 @@ from app.models.obligation import Obligation, ObligationActionLog, ObligationCom
 from app.models.report_delivery import ReportDelivery
 from app.models.system_run import SystemRun, SystemRunStep
 from app.models.user import User
+from app.models.user_invitation import UserInvitation
 
 __all__ = [
     "Base",
@@ -33,4 +34,5 @@ __all__ = [
     "SystemRun",
     "SystemRunStep",
     "User",
+    "UserInvitation",
 ]

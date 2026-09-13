@@ -1,5 +1,4 @@
 import uuid
-from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -7,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import verify_password
+from app.main import app
 from app.models import User
 from app.schemas import UserCreate
 from app.services import users as user_service
@@ -36,28 +36,23 @@ def test_get_users_normal_user_me(
     assert current_user["email"] == settings.EMAIL_TEST_USER
 
 
-def test_create_user_new_email(
+def test_direct_user_creation_is_disabled(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    with (
-        patch("app.api.routes.users.send_email", return_value=None),
-        patch("app.core.config.settings.SMTP_HOST", "smtp.example.com"),
-        patch("app.core.config.settings.SMTP_USER", "admin@example.com"),
-    ):
-        username = random_email()
-        password = random_lower_string()
-        data = {"email": username, "password": password}
-        r = client.post(
-            f"{settings.API_V1_STR}/users/",
-            headers=superuser_token_headers,
-            json=data,
-        )
-        assert 200 <= r.status_code < 300
-        created_user = r.json()
-        assert created_user["created_at"] is not None
-        user = user_service.get_user_by_email(session=db, email=username)
-        assert user
-        assert user.email == created_user["email"]
+    username = random_email()
+    data = {"email": username, "password": random_lower_string()}
+    r = client.post(
+        f"{settings.API_V1_STR}/users/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert r.status_code == 410
+    assert user_service.get_user_by_email(session=db, email=username) is None
+
+
+def test_direct_user_creation_is_deprecated_in_openapi() -> None:
+    operation = app.openapi()["paths"][f"{settings.API_V1_STR}/users/"]["post"]
+    assert operation["deprecated"] is True
 
 
 def test_get_existing_user_as_superuser(
@@ -161,7 +156,7 @@ def test_create_user_existing_username(
         json=data,
     )
     created_user = r.json()
-    assert r.status_code == 400
+    assert r.status_code == 410
     assert "_id" not in created_user
 
 

@@ -1,0 +1,13 @@
+<mjml>
+  <mj-body background-color="#fafbfc">
+    <mj-section background-color="#fff" padding="40px 20px">
+      <mj-column vertical-align="middle" width="100%">
+        <mj-text align="center" padding="35px" font-size="20px" font-family="Arial, Helvetica, sans-serif" color="#333">You're invited to {{ project_name }}</mj-text>
+        <mj-text align="center" font-size="16px" font-family="Arial, Helvetica, sans-serif" color="#555">An administrator invited {{ email }} to create an account.</mj-text>
+        <mj-button align="center" font-size="18px" background-color="#009688" border-radius="8px" color="#fff" href="{{ link }}" padding="15px 30px">Accept invitation</mj-button>
+        <mj-text align="center" font-size="16px" font-family="Arial, Helvetica, sans-serif" color="#555">Or copy this link: <a href="{{ link }}">{{ link }}</a></mj-text>
+        <mj-text align="center" font-size="14px" font-family="Arial, Helvetica, sans-serif" color="#555">This one-time invitation expires in {{ valid_hours }} hours. If you weren't expecting it, you can ignore this email.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
