@@ -114,6 +114,8 @@ def test_lifecycle_actions_include_implicit_state_and_paid_at_changes(
     paid = obligation_use_cases.mark_obligation_paid(
         session=db, ledger_id=obligation.ledger_id, key=key
     )
+    paid_at = paid.paid_at
+    assert paid_at is not None
     before_retry = len(_actions(db, obligation.id))
     obligation_use_cases.mark_obligation_paid(
         session=db, ledger_id=obligation.ledger_id, key=key
@@ -132,7 +134,7 @@ def test_lifecycle_actions_include_implicit_state_and_paid_at_changes(
     }
     assert marked_paid.action == "marked_paid"
     assert marked_paid.changes["lifecycle"] == {"from": "ready", "to": "paid"}
-    assert marked_paid.changes["paid_at"]["to"] == paid.paid_at.isoformat()
+    assert marked_paid.changes["paid_at"]["to"] == paid_at.isoformat()
     assert reopened.action == "reopened"
     assert reopened.changes["paid_at"]["to"] is None
 
