@@ -11,7 +11,6 @@ from app.api.deps import (
 from app.schemas import (
     Message,
     UpdatePassword,
-    UserCreate,
     UserPublic,
     UsersPublic,
     UserUpdate,
@@ -35,22 +34,6 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     return UsersPublic(
         data=[UserPublic.model_validate(user) for user in users],
         count=len(users),
-    )
-
-
-@router.post(
-    "/",
-    dependencies=[Depends(get_current_active_superuser)],
-    response_model=Message,
-    deprecated=True,
-)
-def create_user(user_in: UserCreate) -> None:
-    # Keep the deprecated operation in OpenAPI until the frontend migration in
-    # #93 lands. The payload is intentionally ignored and no account is created.
-    del user_in
-    raise HTTPException(
-        status_code=410,
-        detail="Direct user creation has been replaced by invitations",
     )
 
 

@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
+import { MailPlus } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type UserCreate, UsersService } from "@/client"
+import { type UserInvitationCreate, UserInvitationsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -31,28 +31,15 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
-const formSchema = z
-  .object({
-    email: z.email({ message: "Invalid email address" }),
-    full_name: z.string().optional(),
-    password: z
-      .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
-    confirm_password: z
-      .string()
-      .min(1, { message: "Please confirm your password" }),
-    is_superuser: z.boolean(),
-    is_active: z.boolean(),
-  })
-  .refine((data) => data.password === data.confirm_password, {
-    message: "The passwords don't match",
-    path: ["confirm_password"],
-  })
+const formSchema = z.object({
+  email: z.email({ message: "Invalid email address" }),
+  full_name: z.string().optional(),
+  is_superuser: z.boolean(),
+})
 
 type FormData = z.infer<typeof formSchema>
 
-const AddUser = () => {
+const InviteUser = () => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -64,44 +51,45 @@ const AddUser = () => {
     defaultValues: {
       email: "",
       full_name: "",
-      password: "",
-      confirm_password: "",
       is_superuser: false,
-      is_active: false,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: UserCreate) =>
-      UsersService.createUser({ requestBody: data }),
+    mutationFn: (data: UserInvitationCreate) =>
+      UserInvitationsService.createInvitation({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("User created successfully")
+      showSuccessToast("Invitation sent")
       form.reset()
       setIsOpen(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["user-invitations"] })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    mutation.mutate({
+      ...data,
+      full_name: data.full_name?.trim() || null,
+    })
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="my-4">
-          <Plus className="mr-2" />
-          Add User
+        <Button>
+          <MailPlus />
+          Invite User
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add User</DialogTitle>
+          <DialogTitle>Invite User</DialogTitle>
           <DialogDescription>
-            Fill in the form below to add a new user to the system.
+            We will email a secure link so the recipient can create their own
+            password.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -119,8 +107,8 @@ const AddUser = () => {
                       <Input
                         placeholder="Email"
                         type="email"
+                        autoComplete="off"
                         {...field}
-                        required
                       />
                     </FormControl>
                     <FormMessage />
@@ -144,49 +132,6 @@ const AddUser = () => {
 
               <FormField
                 control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Set Password <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Password"
-                        type="password"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirm_password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Confirm Password{" "}
-                      <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Password"
-                        type="password"
-                        {...field}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="is_superuser"
                 render={({ field }) => (
                   <FormItem className="flex items-center gap-3 space-y-0">
@@ -200,22 +145,6 @@ const AddUser = () => {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
-                  </FormItem>
-                )}
-              />
             </div>
 
             <DialogFooter>
@@ -225,7 +154,7 @@ const AddUser = () => {
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Send invitation
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -235,4 +164,4 @@ const AddUser = () => {
   )
 }
 
-export default AddUser
+export default InviteUser

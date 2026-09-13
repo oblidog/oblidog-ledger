@@ -235,8 +235,27 @@ export const SystemRunsService = {
   readSystemRuns: request(generated.SystemRunsService.runsReadSystemRuns<true>),
   startSystemRun: request(generated.SystemRunsService.runsStartSystemRun<true>),
 }
+export const UserInvitationsService = {
+  acceptInvitation: request(
+    generated.UserInvitationsService.acceptInvitation<true>,
+  ),
+  createInvitation: request(
+    generated.UserInvitationsService.createInvitation<true>,
+  ),
+  inspectInvitation: request(
+    generated.UserInvitationsService.inspectInvitation<true>,
+  ),
+  listInvitations: request(
+    generated.UserInvitationsService.listInvitations<true>,
+  ),
+  resendInvitation: request(
+    generated.UserInvitationsService.resendInvitation<true>,
+  ),
+  revokeInvitation: request(
+    generated.UserInvitationsService.revokeInvitation<true>,
+  ),
+}
 export const UsersService = {
-  createUser: request(generated.UsersService.createUser<true>),
   deleteUser: request(generated.UsersService.deleteUser<true>),
   deleteUserMe: request(generated.UsersService.deleteUserMe<true>),
   readUserMe: request(generated.UsersService.readUserMe<true>),
