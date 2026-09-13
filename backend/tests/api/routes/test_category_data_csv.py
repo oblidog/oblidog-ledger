@@ -72,23 +72,23 @@ def test_category_data_csv_export_encodes_schema_values_and_escaping(
         "schema_version",
         "source",
         "external_id",
-        "label",
-        "period",
-        "captured_at",
         "amount",
+        "captured_at",
         "enabled",
+        "label",
         "optional",
+        "period",
     ]
     assert rows[1][1:] == [
         "1",
         'meter,"main"\nfeed',
         "invoice,42",
-        'Zażółć, "gęślą"\njaźń',
-        "2026-01-02",
-        "2026-01-02T10:15:30+00:00",
         "12.5",
+        "2026-01-02T10:15:30+00:00",
         "true",
+        'Zażółć, "gęślą"\njaźń',
         "",
+        "2026-01-02",
     ]
 
 
