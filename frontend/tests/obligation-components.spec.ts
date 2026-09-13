@@ -154,7 +154,9 @@ test("renders monetary and informational components in a scannable table", async
   await page.goto(`/ledgers/${fixture.ledger.id}`)
   await page.getByText(fixture.categoryName, { exact: true }).click()
 
-  const table = page.getByRole("table")
+  const table = page
+    .getByRole("table")
+    .filter({ has: page.getByRole("columnheader", { name: "Component" }) })
   await expect(table).toBeVisible()
   await expect(table.getByRole("columnheader", { name: "Component" })).toBeVisible()
   await expect(table.getByRole("columnheader", { name: "Amount" })).toBeVisible()
