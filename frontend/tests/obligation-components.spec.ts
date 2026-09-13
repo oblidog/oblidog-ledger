@@ -76,7 +76,9 @@ test("manages manual obligation components and keeps integration components read
   })
   await page.unroute("**/components*")
   await page.getByRole("button", { name: "Try again" }).click()
-  await expect(page.getByText("No components yet.")).toBeVisible()
+  await expect(
+    page.getByText("No components for this obligation."),
+  ).toBeVisible()
 
   await page.getByRole("button", { name: "Add component" }).click()
   await page.getByLabel("Label").fill("Water settlement")
@@ -114,13 +116,64 @@ test("manages manual obligation components and keeps integration components read
   })
   await page.reload()
   await page.getByText(fixture.categoryName, { exact: true }).click()
-  await expect(page.getByText("Integration · provider")).toBeVisible()
+  await expect(page.getByText("Integration", { exact: true })).toBeVisible()
+  await expect(page.getByText("provider", { exact: true })).toBeVisible()
+  await expect(page.getByText("FV/2026/08/12345", { exact: true })).toBeVisible()
   await expect(
     page.getByRole("button", { name: "Edit Synced invoice" }),
   ).toHaveCount(0)
   await expect(
     page.getByRole("button", { name: "Remove Synced invoice" }),
   ).toHaveCount(0)
+})
+
+test("renders monetary and informational components in a scannable table", async ({
+  page,
+}) => {
+  const fixture = await createObligationFixture()
+  await authenticateApi()
+  await ObligationsService.addObligationComponent({
+    ledgerId: fixture.ledger.id,
+    obligationKey: fixture.key,
+    requestBody: {
+      type: "invoice_item",
+      label: "Water usage",
+      amount: "87.50",
+    },
+  })
+  await ObligationsService.addObligationComponent({
+    ledgerId: fixture.ledger.id,
+    obligationKey: fixture.key,
+    requestBody: {
+      type: "consumption",
+      label: "Meter reading",
+      source: "provider",
+    },
+  })
+
+  await page.goto(`/ledgers/${fixture.ledger.id}`)
+  await page.getByText(fixture.categoryName, { exact: true }).click()
+
+  const table = page.getByRole("table")
+  await expect(table).toBeVisible()
+  await expect(table.getByRole("columnheader", { name: "Component" })).toBeVisible()
+  await expect(table.getByRole("columnheader", { name: "Amount" })).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Source / reference" }),
+  ).toBeVisible()
+
+  const monetaryRow = table.getByRole("row").filter({ hasText: "Water usage" })
+  await expect(monetaryRow).toContainText("Invoice item")
+  await expect(monetaryRow).toContainText("87.50")
+  await expect(monetaryRow).toContainText("Manual")
+
+  const informationalRow = table
+    .getByRole("row")
+    .filter({ hasText: "Meter reading" })
+  await expect(informationalRow).toContainText("Consumption")
+  await expect(informationalRow).toContainText("Integration")
+  await expect(informationalRow).toContainText("provider")
+  await expect(informationalRow).toContainText("—")
 })
 
 test("does not show component management actions to viewers", async ({
@@ -146,7 +199,9 @@ test("does not show component management actions to viewers", async ({
   await viewerPage.goto(`/ledgers/${fixture.ledger.id}`)
   await viewerPage.getByText(fixture.categoryName, { exact: true }).click()
 
-  await expect(viewerPage.getByText("No components yet.")).toBeVisible()
+  await expect(
+    viewerPage.getByText("No components for this obligation."),
+  ).toBeVisible()
   await expect(
     viewerPage.getByRole("button", { name: "Add component" }),
   ).toHaveCount(0)
