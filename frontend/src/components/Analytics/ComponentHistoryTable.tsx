@@ -122,14 +122,14 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          <label className="grid gap-1 text-sm font-medium">
-            Category
+          <div className="grid gap-1 text-sm font-medium">
+            <span>Category</span>
             <Select
               value={selectedCategoryId}
               onValueChange={setSelectedCategoryId}
               disabled={categories.isLoading || categories.isError}
             >
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-48" aria-label="Category">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -140,9 +140,9 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 ))}
               </SelectContent>
             </Select>
-          </label>
-          <label className="grid gap-1 text-sm font-medium">
-            Range ending
+          </div>
+          <div className="grid gap-1 text-sm font-medium">
+            <span>Range ending</span>
             <Select
               value={periodKey(selectedPeriod)}
               onValueChange={(value) => {
@@ -152,7 +152,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 if (next) setSelectedPeriod(next)
               }}
             >
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40" aria-label="Range ending">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -163,7 +163,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 ))}
               </SelectContent>
             </Select>
-          </label>
+          </div>
         </div>
       </div>
 
