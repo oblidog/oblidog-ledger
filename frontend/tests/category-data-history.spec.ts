@@ -351,7 +351,7 @@ test("renders schema-driven category history with versioning and formatters", as
     name: "changed. Current: 2. Previous: 1",
   })
   await expect(boundaryDelta.first()).toContainText("+1")
-  await boundaryDelta.first().hover()
+  await boundaryDelta.first().focus()
   const differenceTooltip = page.getByRole("tooltip")
   await expect(differenceTooltip.getByText("Previous:")).toBeVisible()
   await expect(differenceTooltip.getByText("1", { exact: true })).toBeVisible()
