@@ -1,3 +1,17 @@
+## v0.13.0 (2026-09-13)
+
+### Feat
+
+- **analytics**: compare obligation components across periods (#357)
+- **components**: present obligation components in a table (#356)
+- **category-data**: export history to CSV (#355)
+- **frontend**: display application version (#354)
+- **categories**: show category data differences (#353)
+- **frontend**: add user invitation management and activation (#352)
+- **auth**: replace direct user creation with invitation flow (#351)
+- **obligations**: add append-only action log (#349)
+- **frontend**: simplify integration details layout (#348)
+
 ## v0.12.4 (2026-09-12)
 
 ### Fix
