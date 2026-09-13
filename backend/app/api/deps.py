@@ -25,7 +25,7 @@ from app.core.capabilities import (
 )
 from app.core.config import settings
 from app.core.db import SessionLocal
-from app.domain import LedgerAccessRole
+from app.domain import LedgerAccessRole, ObligationActionActor
 from app.models import (
     Category,
     Integration,
@@ -112,6 +112,16 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_current_action_actor(current_user: CurrentUser) -> ObligationActionActor:
+    return ObligationActionActor.user(
+        user_id=current_user.id,
+        display_name=current_user.full_name or current_user.email,
+    )
+
+
+CurrentActionActor = Annotated[ObligationActionActor, Depends(get_current_action_actor)]
 
 
 def get_api_context(session: SessionDep, token: IntegrationTokenDep) -> ApiContext:

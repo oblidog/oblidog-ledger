@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.deps import (
+    CurrentActionActor,
     SessionDep,
     require_ledger_edit_access,
     require_ledger_view_access,
@@ -14,6 +15,8 @@ from app.models import Ledger, Obligation
 from app.schemas import (
     CounterpartySummaryPublic,
     EnsuredObligationsPublic,
+    ObligationActionPublic,
+    ObligationActionsPublic,
     ObligationComponentCreate,
     ObligationComponentPublic,
     ObligationComponentsPublic,
@@ -99,6 +102,7 @@ def to_obligation_component_public(component: Any) -> ObligationComponentPublic:
 def ensure_obligations(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     year: int | None = Query(default=None, ge=1, le=9999),
     month: int | None = Query(default=None, ge=1, le=12),
     ledger: Ledger = Depends(require_ledger_edit_access),
@@ -112,6 +116,7 @@ def ensure_obligations(
         session=session,
         ledger_id=ledger.id,
         period=period,
+        actor=actor,
     )
     return EnsuredObligationsPublic(
         created_keys=[obligation.business_key for obligation in created],
@@ -146,6 +151,7 @@ def read_obligations(
 def create_obligation(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_in: ObligationCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
@@ -163,6 +169,7 @@ def create_obligation(
             issue_date=obligation_in.issue_date,
             due_date=obligation_in.due_date,
             notes=obligation_in.notes,
+            actor=actor,
         )
     except CategoryNotFoundError:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -208,6 +215,34 @@ def read_obligation_components(
     )
 
 
+@router.get(
+    "/ledgers/{ledger_id}/obligations/{obligation_key}/actions",
+    response_model=ObligationActionsPublic,
+)
+def read_obligation_actions(
+    *,
+    session: SessionDep,
+    obligation_key: str,
+    limit: int = Query(default=100, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    ledger: Ledger = Depends(require_ledger_view_access),
+) -> ObligationActionsPublic:
+    try:
+        actions, count = obligation_use_cases.list_obligation_actions(
+            session=session,
+            ledger_id=ledger.id,
+            key=_parse_obligation_key(obligation_key),
+            limit=limit,
+            offset=offset,
+        )
+    except ObligationNotFoundError:
+        raise HTTPException(status_code=404, detail="Obligation not found")
+    return ObligationActionsPublic(
+        data=[ObligationActionPublic.model_validate(action) for action in actions],
+        count=count,
+    )
+
+
 @router.post(
     "/ledgers/{ledger_id}/obligations/{obligation_key}/components",
     response_model=ObligationComponentPublic,
@@ -215,6 +250,7 @@ def read_obligation_components(
 def add_obligation_component(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     component_in: ObligationComponentCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
@@ -225,6 +261,7 @@ def add_obligation_component(
             ledger_id=ledger.id,
             key=_parse_obligation_key(obligation_key),
             **component_in.model_dump(),
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -242,6 +279,7 @@ def add_obligation_component(
 def upsert_obligation_component(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     component_in: ObligationComponentUpsert,
     ledger: Ledger = Depends(require_ledger_edit_access),
@@ -252,6 +290,7 @@ def upsert_obligation_component(
             ledger_id=ledger.id,
             key=_parse_obligation_key(obligation_key),
             **component_in.model_dump(),
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -265,6 +304,7 @@ def upsert_obligation_component(
 def update_obligation_component(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     component_id: uuid.UUID,
     component_in: ObligationComponentUpdate,
@@ -277,6 +317,7 @@ def update_obligation_component(
             key=_parse_obligation_key(obligation_key),
             component_id=component_id,
             **component_in.model_dump(exclude_unset=True),
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -296,6 +337,7 @@ def update_obligation_component(
 def remove_obligation_component(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     component_id: uuid.UUID,
     ledger: Ledger = Depends(require_ledger_edit_access),
@@ -306,6 +348,7 @@ def remove_obligation_component(
             ledger_id=ledger.id,
             key=_parse_obligation_key(obligation_key),
             component_id=component_id,
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -320,6 +363,7 @@ def remove_obligation_component(
 def update_obligation(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     obligation_in: ObligationUpdate,
     ledger: Ledger = Depends(require_ledger_edit_access),
@@ -335,6 +379,7 @@ def update_obligation(
             ledger_id=ledger.id,
             key=key,
             **obligation_in.model_dump(exclude_unset=True),
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -356,6 +401,7 @@ def update_obligation(
 def mark_obligation_ready(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
@@ -369,6 +415,7 @@ def mark_obligation_ready(
             session=session,
             ledger_id=ledger.id,
             key=key,
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -385,6 +432,7 @@ def mark_obligation_ready(
 def mark_obligation_paid(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
@@ -398,6 +446,7 @@ def mark_obligation_paid(
             session=session,
             ledger_id=ledger.id,
             key=key,
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -417,6 +466,7 @@ def mark_obligation_paid(
 def cancel_obligation(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
@@ -430,6 +480,7 @@ def cancel_obligation(
             session=session,
             ledger_id=ledger.id,
             key=key,
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -449,6 +500,7 @@ def cancel_obligation(
 def reopen_obligation(
     *,
     session: SessionDep,
+    actor: CurrentActionActor,
     obligation_key: str,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
@@ -462,6 +514,7 @@ def reopen_obligation(
             session=session,
             ledger_id=ledger.id,
             key=key,
+            actor=actor,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")

@@ -93,7 +93,7 @@ function Login() {
             <p className="text-sm text-muted-foreground">
               {appConfig?.is_demo
                 ? "Explore Oblidog using the shared public demo account."
-                : "Access is limited to users provisioned by an administrator."}
+                : "Access is limited to users invited by an administrator."}
             </p>
           </div>
 

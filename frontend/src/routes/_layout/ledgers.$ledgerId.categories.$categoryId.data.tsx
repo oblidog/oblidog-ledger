@@ -7,9 +7,15 @@ import { useState } from "react"
 import {
   ApiError,
   CategoriesService,
+  type CategoryDataRecordPublic,
   type CategoryDataSchemaPublic,
   client,
 } from "@/client"
+import { CategoryDataCsvExportButton } from "@/components/Categories/CategoryDataCsvExportButton"
+import {
+  buildPreviousRecordMap,
+  CategoryDataDifferenceValue,
+} from "@/components/Categories/CategoryDataDifference"
 import {
   type CategoryDataPropertySchema,
   formatCategoryDataValue,
@@ -22,7 +28,9 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -99,6 +107,7 @@ function CategoryDataHistory() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const [page, setPage] = useState(0)
+  const [showDifferences, setShowDifferences] = useState(true)
 
   const categoriesQuery = useQuery({
     queryFn: () =>
@@ -174,12 +183,23 @@ function CategoryDataHistory() {
       if (pageItemCount === 0) return { data: [], count }
       const response = await CategoriesService.readCategoryDataRecords({
         ...queryFilters,
-        limit: pageItemCount,
+        // The extra, older record is comparison context for the final visible
+        // row. It is never rendered as part of the current page.
+        limit: pageItemCount + 1,
         offset,
       })
-      return search.sort === "asc"
-        ? { ...response, data: [...response.data].reverse() }
-        : response
+      const recordsNewestFirst = response.data as CategoryDataRecordPublic[]
+      const previousByRecordId = buildPreviousRecordMap(recordsNewestFirst)
+      const visibleRecords = recordsNewestFirst.slice(0, pageItemCount)
+
+      return {
+        ...response,
+        data:
+          search.sort === "asc"
+            ? [...visibleRecords].reverse()
+            : visibleRecords,
+        previousByRecordId,
+      }
     },
     enabled: Boolean(selectedSchema) && countQuery.isSuccess,
     retry: false,
@@ -244,15 +264,24 @@ function CategoryDataHistory() {
             Back to categories
           </Link>
         </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link
-            to="/ledgers/$ledgerId/categories/$categoryId/custom-fields"
-            params={{ ledgerId, categoryId }}
-          >
-            <ListPlus />
-            Manage custom fields
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <CategoryDataCsvExportButton
+            ledgerId={ledgerId}
+            categoryId={categoryId}
+            schemaVersion={selectedVersion}
+            observedFrom={queryFilters.observedFrom}
+            observedTo={queryFilters.observedTo}
+          />
+          <Button variant="outline" size="sm" asChild>
+            <Link
+              to="/ledgers/$ledgerId/categories/$categoryId/custom-fields"
+              params={{ ledgerId, categoryId }}
+            >
+              <ListPlus />
+              Manage custom fields
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="min-w-0">
@@ -270,7 +299,7 @@ function CategoryDataHistory() {
           </CardDescription>
         </CardHeader>
         <CardContent className="min-w-0 space-y-5">
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-5">
             <div className="space-y-1 text-sm">
               <span className="font-medium">Schema version</span>
               <Select
@@ -341,6 +370,20 @@ function CategoryDataHistory() {
                 <ArrowUpDown />
               </Button>
             </div>
+            <div className="flex items-end pb-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="show-category-data-differences"
+                  checked={showDifferences}
+                  onCheckedChange={(checked) =>
+                    setShowDifferences(checked === true)
+                  }
+                />
+                <Label htmlFor="show-category-data-differences">
+                  Show differences
+                </Label>
+              </div>
+            </div>
           </div>
 
           {countQuery.isLoading || recordsQuery.isLoading ? (
@@ -375,7 +418,10 @@ function CategoryDataHistory() {
                   </TableHeader>
                   <TableBody>
                     {recordsQuery.data?.data.map((record) => (
-                      <TableRow key={record.id}>
+                      <TableRow
+                        key={record.id}
+                        data-testid={`category-data-row-${record.id}`}
+                      >
                         <TableCell className="sticky left-0 z-10 bg-card font-medium">
                           {formatCategoryDataValue(record.observed_at, {
                             type: "string",
@@ -390,10 +436,17 @@ function CategoryDataHistory() {
                         </TableCell>
                         {properties.map(([name, schema]) => (
                           <TableCell key={name} className="max-w-80">
-                            {formatCategoryDataValue(
-                              record.data?.[name],
-                              schema,
-                            )}
+                            <CategoryDataDifferenceValue
+                              currentData={record.data}
+                              previousData={
+                                recordsQuery.data?.previousByRecordId.get(
+                                  record.id,
+                                )?.data
+                              }
+                              propertyName={name}
+                              schema={schema}
+                              showDifferences={showDifferences}
+                            />
                           </TableCell>
                         ))}
                       </TableRow>

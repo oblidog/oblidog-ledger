@@ -111,6 +111,24 @@ def generate_new_account_email(
     return EmailData(html_content=html_content, subject=subject)
 
 
+def generate_user_invitation_email(
+    email_to: str, token: str, valid_hours: int
+) -> EmailData:
+    project_name = settings.PROJECT_NAME
+    link = f"{settings.FRONTEND_HOST}/accept-invitation?token={token}"
+    subject = f"{project_name} - You're invited"
+    html_content = render_email_template(
+        template_name="user_invitation.html",
+        context={
+            "project_name": project_name,
+            "email": email_to,
+            "link": link,
+            "valid_hours": valid_hours,
+        },
+    )
+    return EmailData(html_content=html_content, subject=subject)
+
+
 def generate_password_reset_token(email: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.now(UTC)

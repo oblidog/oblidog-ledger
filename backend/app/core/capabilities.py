@@ -60,6 +60,9 @@ def capability_for_request(*, method: str, path: str) -> Capability | None:
     ):
         return Capability.ACCOUNT_SECURITY
 
+    if "/invitations" in normalized_path:
+        return Capability.ACCOUNT_SECURITY
+
     if "/users" in normalized_path and normalized_method not in {"GET", "HEAD"}:
         # Normal token login lives outside /users and remains available in demo.
         return Capability.ACCOUNT_SECURITY

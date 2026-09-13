@@ -26,6 +26,7 @@ from app.models import (
     SystemRun,
     SystemRunStep,
     User,
+    UserInvitation,
 )
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
@@ -81,6 +82,7 @@ def db() -> Generator[Session, None, None]:
         session.execute(delete(CategoryGroup))
         session.execute(delete(LedgerMembership))
         session.execute(delete(Ledger))
+        session.execute(delete(UserInvitation))
         session.execute(delete(User))
         session.commit()
         init_db(session)
@@ -97,6 +99,7 @@ def db() -> Generator[Session, None, None]:
         session.execute(delete(CategoryGroup))
         session.execute(delete(LedgerMembership))
         session.execute(delete(Ledger))
+        session.execute(delete(UserInvitation))
         statement = delete(User)
         session.execute(statement)
         session.commit()

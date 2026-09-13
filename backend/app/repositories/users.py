@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.models import User
@@ -19,7 +19,7 @@ def get_user_by_id(*, session: Session, user_id: uuid.UUID) -> User | None:
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
-    statement = select(User).where(User.email == email)
+    statement = select(User).where(func.lower(User.email) == email.casefold())
     return session.scalars(statement).first()
 
 

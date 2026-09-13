@@ -4,180 +4,174 @@ import { createUser } from "./utils/privateApi"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser } from "./utils/user"
 
-test("Admin page is accessible and shows correct title", async ({ page }) => {
+test("Admin page separates invitations from user accounts", async ({
+  page,
+}) => {
   await page.goto("/admin")
+
   await expect(page.getByRole("heading", { name: "Users" })).toBeVisible()
   await expect(
-    page.getByText(
-      "Manage administrator-provisioned user accounts and permissions",
-    ),
+    page.getByText("Manage user accounts, permissions, and invitations"),
+  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Invitations" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "User accounts" }),
   ).toBeVisible()
 })
 
-test("Add User button is visible", async ({ page }) => {
-  await page.goto("/admin")
-  await expect(page.getByRole("button", { name: "Add User" })).toBeVisible()
-})
-
-test.describe("Admin user management", () => {
-  test("Create a new user successfully", async ({ page }) => {
+test.describe("Admin invitation management", () => {
+  test("Invitation form does not ask the admin for a password", async ({
+    page,
+  }) => {
     await page.goto("/admin")
+    await page.getByRole("button", { name: "Invite User" }).click()
 
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByLabel("Email *")).toBeVisible()
+    await expect(dialog.getByLabel("Full Name")).toBeVisible()
+    await expect(dialog.getByLabel("Is superuser?")).toBeVisible()
+    await expect(dialog.locator('input[type="password"]')).toHaveCount(0)
+    await expect(dialog.getByLabel(/active/i)).toHaveCount(0)
+  })
+
+  test("Admin can send an invitation", async ({ page }) => {
     const email = randomEmail()
-    const password = randomPassword()
-    const fullName = "Test User Admin"
+    const fullName = "Invited Test User"
 
-    await page.getByRole("button", { name: "Add User" }).click()
-
+    await page.goto("/admin")
+    await page.getByRole("button", { name: "Invite User" }).click()
     await page.getByPlaceholder("Email").fill(email)
     await page.getByPlaceholder("Full name").fill(fullName)
-    await page.getByPlaceholder("Password").first().fill(password)
-    await page.getByPlaceholder("Password").last().fill(password)
+    await page.getByRole("button", { name: "Send invitation" }).click()
 
-    await page.getByRole("button", { name: "Save" }).click()
-
-    await expect(page.getByText("User created successfully")).toBeVisible()
-
+    await expect(page.getByText("Invitation sent")).toBeVisible()
     await expect(page.getByRole("dialog")).not.toBeVisible()
 
-    const userRow = page.getByRole("row").filter({ hasText: email })
-    await expect(userRow).toBeVisible()
+    const row = page.getByRole("row").filter({ hasText: email })
+    await expect(row).toBeVisible()
+    await expect(row.getByText(fullName)).toBeVisible()
+    await expect(row.getByText("Pending")).toBeVisible()
   })
 
-  test("Create a superuser", async ({ page }) => {
-    await page.goto("/admin")
-
+  test("Admin can invite a superuser", async ({ page }) => {
     const email = randomEmail()
-    const password = randomPassword()
 
-    await page.getByRole("button", { name: "Add User" }).click()
-
+    await page.goto("/admin")
+    await page.getByRole("button", { name: "Invite User" }).click()
     await page.getByPlaceholder("Email").fill(email)
-    await page.getByPlaceholder("Password").first().fill(password)
-    await page.getByPlaceholder("Password").last().fill(password)
     await page.getByLabel("Is superuser?").check()
-    await page.getByLabel("Is active?").check()
+    await page.getByRole("button", { name: "Send invitation" }).click()
 
-    await page.getByRole("button", { name: "Save" }).click()
-
-    await expect(page.getByText("User created successfully")).toBeVisible()
-
-    await expect(page.getByRole("dialog")).not.toBeVisible()
-
-    const userRow = page.getByRole("row").filter({ hasText: email })
-    await expect(userRow.getByText("Superuser")).toBeVisible()
+    const row = page.getByRole("row").filter({ hasText: email })
+    await expect(row.getByText("Superuser")).toBeVisible()
   })
 
-  test("Edit a user successfully", async ({ page }) => {
-    await page.goto("/admin")
-
+  test("Admin can resend an invitation", async ({ page }) => {
     const email = randomEmail()
-    const password = randomPassword()
-    const originalName = "Original Name"
-    const updatedName = "Updated Name"
 
-    await page.getByRole("button", { name: "Add User" }).click()
+    await page.goto("/admin")
+    await page.getByRole("button", { name: "Invite User" }).click()
     await page.getByPlaceholder("Email").fill(email)
-    await page.getByPlaceholder("Full name").fill(originalName)
-    await page.getByPlaceholder("Password").first().fill(password)
-    await page.getByPlaceholder("Password").last().fill(password)
-    await page.getByRole("button", { name: "Save" }).click()
+    await page.getByRole("button", { name: "Send invitation" }).click()
 
-    await expect(page.getByText("User created successfully")).toBeVisible()
-    await expect(page.getByRole("dialog")).not.toBeVisible()
-
-    const userRow = page.getByRole("row").filter({ hasText: email })
-    await userRow.getByRole("button").click()
-
-    await page.getByRole("menuitem", { name: "Edit User" }).click()
-
-    await page.getByPlaceholder("Full name").fill(updatedName)
-    await page.getByRole("button", { name: "Save" }).click()
-
-    await expect(page.getByText("User updated successfully")).toBeVisible()
-    await expect(page.getByText(updatedName)).toBeVisible()
+    const row = page.getByRole("row").filter({ hasText: email })
+    await row
+      .getByRole("button", { name: `Resend invitation to ${email}` })
+      .click()
+    await expect(page.getByText("Invitation resent")).toBeVisible()
+    await expect(row.getByText("Pending")).toBeVisible()
   })
 
-  test("Delete a user successfully", async ({ page }) => {
-    await page.goto("/admin")
-
+  test("Admin can revoke an invitation", async ({ page }) => {
     const email = randomEmail()
-    const password = randomPassword()
 
-    await page.getByRole("button", { name: "Add User" }).click()
+    await page.goto("/admin")
+    await page.getByRole("button", { name: "Invite User" }).click()
     await page.getByPlaceholder("Email").fill(email)
-    await page.getByPlaceholder("Password").first().fill(password)
-    await page.getByPlaceholder("Password").last().fill(password)
-    await page.getByRole("button", { name: "Save" }).click()
+    await page.getByRole("button", { name: "Send invitation" }).click()
 
-    await expect(page.getByText("User created successfully")).toBeVisible()
+    const row = page.getByRole("row").filter({ hasText: email })
+    await row
+      .getByRole("button", { name: `Revoke invitation for ${email}` })
+      .click()
+    await page
+      .getByRole("button", { name: "Revoke invitation", exact: true })
+      .click()
 
-    await expect(page.getByRole("dialog")).not.toBeVisible()
+    await expect(page.getByText("Invitation revoked")).toBeVisible()
+    await expect(row.getByText("Revoked")).toBeVisible()
+  })
 
-    const userRow = page.getByRole("row").filter({ hasText: email })
-    await userRow.getByRole("button").click()
+  test("Duplicate invitation error is shown", async ({ page }) => {
+    const email = randomEmail()
 
-    await page.getByRole("menuitem", { name: "Delete User" }).click()
-
-    await page.getByRole("button", { name: "Delete" }).click()
+    await page.goto("/admin")
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await page.getByRole("button", { name: "Invite User" }).click()
+      await page.getByPlaceholder("Email").fill(email)
+      await page.getByRole("button", { name: "Send invitation" }).click()
+      if (attempt === 0) {
+        await expect(page.getByText("Invitation sent")).toBeVisible()
+        await expect(page.getByRole("dialog")).not.toBeVisible()
+      }
+    }
 
     await expect(
-      page.getByText("The user was deleted successfully"),
+      page.getByText("An active invitation for this email already exists"),
     ).toBeVisible()
-
-    await expect(
-      page.getByRole("row").filter({ hasText: email }),
-    ).not.toBeVisible()
   })
 
-  test("Cancel user creation", async ({ page }) => {
+  test("Invitation email must be valid", async ({ page }) => {
     await page.goto("/admin")
-
-    await page.getByRole("button", { name: "Add User" }).click()
-    await page.getByPlaceholder("Email").fill("test@example.com")
-
-    await page.getByRole("button", { name: "Cancel" }).click()
-
-    await expect(page.getByRole("dialog")).not.toBeVisible()
-  })
-
-  test("Email is required and must be valid", async ({ page }) => {
-    await page.goto("/admin")
-
-    await page.getByRole("button", { name: "Add User" }).click()
-
+    await page.getByRole("button", { name: "Invite User" }).click()
     await page.getByPlaceholder("Email").fill("invalid-email")
     await page.getByPlaceholder("Email").blur()
 
     await expect(page.getByText("Invalid email address")).toBeVisible()
   })
 
-  test("Password must be at least 8 characters", async ({ page }) => {
+  test("Invitation dialog can be cancelled", async ({ page }) => {
     await page.goto("/admin")
-
-    await page.getByRole("button", { name: "Add User" }).click()
-
+    await page.getByRole("button", { name: "Invite User" }).click()
     await page.getByPlaceholder("Email").fill(randomEmail())
-    await page.getByPlaceholder("Password").first().fill("short")
-    await page.getByPlaceholder("Password").last().fill("short")
+    await page.getByRole("button", { name: "Cancel" }).click()
+
+    await expect(page.getByRole("dialog")).not.toBeVisible()
+  })
+})
+
+test.describe("Existing user management", () => {
+  test("Admin can edit an existing user", async ({ page }) => {
+    const email = randomEmail()
+    const password = randomPassword()
+    const user = await createUser({ email, password })
+
+    await page.goto("/admin")
+    const row = page.getByRole("row").filter({ hasText: user.email })
+    await row.getByRole("button").click()
+    await page.getByRole("menuitem", { name: "Edit User" }).click()
+    await page.getByPlaceholder("Full name").fill("Updated User")
     await page.getByRole("button", { name: "Save" }).click()
 
-    await expect(
-      page.getByText("Password must be at least 8 characters"),
-    ).toBeVisible()
+    await expect(page.getByText("User updated successfully")).toBeVisible()
+    await expect(row.getByText("Updated User")).toBeVisible()
   })
 
-  test("Passwords must match", async ({ page }) => {
+  test("Admin can delete an existing user", async ({ page }) => {
+    const email = randomEmail()
+    const password = randomPassword()
+    await createUser({ email, password })
+
     await page.goto("/admin")
+    const row = page.getByRole("row").filter({ hasText: email })
+    await row.getByRole("button").click()
+    await page.getByRole("menuitem", { name: "Delete User" }).click()
+    await page.getByRole("button", { name: "Delete" }).click()
 
-    await page.getByRole("button", { name: "Add User" }).click()
-
-    await page.getByPlaceholder("Email").fill(randomEmail())
-    await page.getByPlaceholder("Password").first().fill(randomPassword())
-    await page.getByPlaceholder("Password").last().fill("different12345")
-    await page.getByPlaceholder("Password").last().blur()
-
-    await expect(page.getByText("The passwords don't match")).toBeVisible()
+    await expect(
+      page.getByText("The user was deleted successfully"),
+    ).toBeVisible()
+    await expect(row).not.toBeVisible()
   })
 })
 
@@ -190,7 +184,6 @@ test.describe("Admin page access control", () => {
 
     await createUser({ email, password })
     await logInUser(page, email, password)
-
     await page.goto("/admin")
 
     await expect(page.getByRole("heading", { name: "Users" })).not.toBeVisible()
@@ -199,7 +192,6 @@ test.describe("Admin page access control", () => {
 
   test("Superuser can access admin page", async ({ page }) => {
     await logInUser(page, firstSuperuser, firstSuperuserPassword)
-
     await page.goto("/admin")
 
     await expect(page.getByRole("heading", { name: "Users" })).toBeVisible()

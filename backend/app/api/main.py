@@ -4,6 +4,7 @@ from app.api.deps import enforce_demo_request_capabilities
 from app.api.routes import (
     analytics,
     categories,
+    category_data_csv,
     category_data_schemas,
     counterparties,
     integration,
@@ -13,6 +14,7 @@ from app.api.routes import (
     login,
     obligations,
     system_runs,
+    user_invitations,
     users,
     utils,
 )
@@ -22,6 +24,7 @@ api_router.include_router(login.router)
 api_router.include_router(ledgers.router)
 api_router.include_router(analytics.router)
 api_router.include_router(categories.router)
+api_router.include_router(category_data_csv.router)
 api_router.include_router(category_data_schemas.router)
 api_router.include_router(counterparties.router)
 api_router.include_router(integration.router)
@@ -29,5 +32,7 @@ api_router.include_router(integrations.router)
 api_router.include_router(legacy_import.router)
 api_router.include_router(obligations.router)
 api_router.include_router(system_runs.router)
+api_router.include_router(user_invitations.admin_router)
+api_router.include_router(user_invitations.public_router)
 api_router.include_router(users.router)
 api_router.include_router(utils.router)
