@@ -13,6 +13,7 @@ from app.api.routes import (
     login,
     obligations,
     system_runs,
+    user_invitations,
     users,
     utils,
 )
@@ -29,5 +30,7 @@ api_router.include_router(integrations.router)
 api_router.include_router(legacy_import.router)
 api_router.include_router(obligations.router)
 api_router.include_router(system_runs.router)
+api_router.include_router(user_invitations.admin_router)
+api_router.include_router(user_invitations.public_router)
 api_router.include_router(users.router)
 api_router.include_router(utils.router)

@@ -59,7 +59,13 @@ def get_user_by_id(*, session: Session, user_id: uuid.UUID) -> User | None:
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
-    return user_repository.get_user_by_email(session=session, email=email)
+    return user_repository.get_user_by_email(
+        session=session, email=normalize_user_email(email)
+    )
+
+
+def normalize_user_email(email: str) -> str:
+    return str(email_adapter.validate_python(email)).strip().casefold()
 
 
 def list_users(*, session: Session, skip: int = 0, limit: int = 100) -> list[User]:
@@ -68,13 +74,14 @@ def list_users(*, session: Session, skip: int = 0, limit: int = 100) -> list[Use
 
 
 def create_user(*, session: Session, user_in: UserCreate) -> User:
-    existing_user = get_user_by_email(session=session, email=user_in.email)
+    email = normalize_user_email(str(user_in.email))
+    existing_user = get_user_by_email(session=session, email=email)
     if existing_user:
         raise UserEmailAlreadyExistsError
 
     return user_repository.create_user(
         session=session,
-        email=str(user_in.email),
+        email=email,
         hashed_password=get_password_hash(user_in.password),
         is_active=user_in.is_active,
         is_superuser=user_in.is_superuser,
@@ -90,10 +97,13 @@ def update_user_me(
         if existing_user and existing_user.id != current_user.id:
             raise UserEmailAlreadyExistsError
 
+    updates = user_in.model_dump(exclude_unset=True)
+    if "email" in updates:
+        updates["email"] = normalize_user_email(str(updates["email"]))
     return user_repository.update_user(
         session=session,
         db_user=current_user,
-        updates=user_in.model_dump(exclude_unset=True),
+        updates=updates,
     )
 
 
@@ -149,10 +159,13 @@ def update_user_by_id(
         if existing_user and existing_user.id != user_id:
             raise UserEmailAlreadyExistsError
 
+    updates = _build_user_updates(user_in)
+    if "email" in updates:
+        updates["email"] = normalize_user_email(str(updates["email"]))
     return user_repository.update_user(
         session=session,
         db_user=db_user,
-        updates=_build_user_updates(user_in),
+        updates=updates,
     )
 
 

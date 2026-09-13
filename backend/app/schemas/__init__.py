@@ -73,6 +73,13 @@ from app.schemas.system_runs import (
     SystemRunStepPublic,
     SystemRunTaskPublic,
 )
+from app.schemas.user_invitations import (
+    UserInvitationAccept,
+    UserInvitationCreate,
+    UserInvitationInspect,
+    UserInvitationPublic,
+    UserInvitationsPublic,
+)
 from app.schemas.users import (
     UpdatePassword,
     UserCreate,
@@ -85,6 +92,11 @@ from app.schemas.users import (
 __all__ = [
     "Message",
     "NewPassword",
+    "UserInvitationAccept",
+    "UserInvitationCreate",
+    "UserInvitationInspect",
+    "UserInvitationPublic",
+    "UserInvitationsPublic",
     "PasswordStr",
     "Token",
     "TokenPayload",

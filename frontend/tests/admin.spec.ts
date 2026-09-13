@@ -20,7 +20,9 @@ test("Add User button is visible", async ({ page }) => {
 })
 
 test.describe("Admin user management", () => {
-  test("Create a new user successfully", async ({ page }) => {
+  // Direct account creation is disabled by #92. These scenarios return with
+  // the invitation-management UI tracked in #93.
+  test.fixme("Create a new user successfully", async ({ page }) => {
     await page.goto("/admin")
 
     const email = randomEmail()
@@ -44,7 +46,7 @@ test.describe("Admin user management", () => {
     await expect(userRow).toBeVisible()
   })
 
-  test("Create a superuser", async ({ page }) => {
+  test.fixme("Create a superuser", async ({ page }) => {
     await page.goto("/admin")
 
     const email = randomEmail()
@@ -68,7 +70,7 @@ test.describe("Admin user management", () => {
     await expect(userRow.getByText("Superuser")).toBeVisible()
   })
 
-  test("Edit a user successfully", async ({ page }) => {
+  test.fixme("Edit a user successfully", async ({ page }) => {
     await page.goto("/admin")
 
     const email = randomEmail()
@@ -98,7 +100,7 @@ test.describe("Admin user management", () => {
     await expect(page.getByText(updatedName)).toBeVisible()
   })
 
-  test("Delete a user successfully", async ({ page }) => {
+  test.fixme("Delete a user successfully", async ({ page }) => {
     await page.goto("/admin")
 
     const email = randomEmail()
