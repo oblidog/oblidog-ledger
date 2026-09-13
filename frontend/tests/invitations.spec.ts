@@ -86,7 +86,7 @@ test("Missing invitation token has a terminal state", async ({ page }) => {
 })
 
 test("Expired invitation explains how to recover", async ({ page }) => {
-  await page.route("**/api/v1/invitations/expired-token", async (route) => {
+  await page.route("**/api/v1/invitations/**", async (route) => {
     await route.fulfill({
       status: 410,
       contentType: "application/json",
