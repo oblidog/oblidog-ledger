@@ -1,9 +1,6 @@
 name: Update dev release PR
 
 on:
-  push:
-    branches:
-      - dev
   workflow_dispatch:
 
 permissions:
