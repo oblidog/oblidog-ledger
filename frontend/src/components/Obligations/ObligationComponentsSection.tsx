@@ -12,6 +12,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { handleError } from "@/utils"
 
 const componentTypes = [
@@ -197,6 +205,46 @@ function ComponentForm({
   )
 }
 
+function ComponentSourceCell({
+  component,
+}: {
+  component: ObligationComponentPublic
+}) {
+  const managed = isIntegrationManaged(component)
+
+  if (!managed) {
+    return <span className="text-muted-foreground">Manual</span>
+  }
+
+  return (
+    <div className="min-w-44 space-y-1.5">
+      <Badge variant="outline" className="gap-1">
+        <Wrench className="size-3" /> Integration
+      </Badge>
+      <dl className="space-y-0.5 text-xs">
+        <div className="flex gap-1">
+          <dt className="text-muted-foreground">Source:</dt>
+          <dd className="break-all">{component.source ?? "—"}</dd>
+        </div>
+        <div className="flex gap-1">
+          <dt className="text-muted-foreground">Reference:</dt>
+          <dd className="break-all">{component.external_id ?? "—"}</dd>
+        </div>
+      </dl>
+      {component.metadata ? (
+        <details className="text-xs">
+          <summary className="text-muted-foreground flex cursor-pointer items-center gap-1">
+            <ChevronDown className="size-3" /> Metadata
+          </summary>
+          <pre className="mt-1 max-w-80 whitespace-pre-wrap break-all rounded bg-muted/50 p-2">
+            {JSON.stringify(component.metadata, null, 2)}
+          </pre>
+        </details>
+      ) : null}
+    </div>
+  )
+}
+
 export function ObligationComponentsSection({
   ledgerId,
   obligationKey,
@@ -336,93 +384,77 @@ export function ObligationComponentsSection({
       {!components.isLoading &&
       !components.isError &&
       components.data?.data.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No components yet.</p>
+        <div className="rounded-lg border border-dashed p-6 text-center">
+          <p className="text-muted-foreground text-sm">
+            No components for this obligation.
+          </p>
+        </div>
       ) : null}
       {!components.isError && components.data?.data.length ? (
-        <div className="space-y-2">
-          {components.data.data.map((component) => {
-            const managed = isIntegrationManaged(component)
-            return (
-              <article key={component.id} className="rounded-lg border p-3">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary">
-                        {componentTypeLabel(component.type)}
-                      </Badge>
-                      {managed ? (
-                        <Badge variant="outline" className="gap-1">
-                          <Wrench className="size-3" /> Integration
-                          {component.source ? ` · ${component.source}` : ""}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Manual</Badge>
-                      )}
-                    </div>
-                    <p className="break-words font-medium">{component.label}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold tabular-nums">
-                      {amountLabel(component.amount, currency)}
-                    </span>
-                    {canManage && !managed ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Edit ${component.label}`}
-                          onClick={() => setFormMode(component)}
-                        >
-                          <Pencil />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Remove ${component.label}`}
-                          onClick={() => setRemoving(component)}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
-                </div>
-                {managed ? (
-                  <details className="mt-3 text-xs">
-                    <summary className="text-muted-foreground flex cursor-pointer items-center gap-1">
-                      <ChevronDown className="size-3" /> Technical details
-                    </summary>
-                    <dl className="mt-2 grid gap-1 break-all rounded bg-muted/50 p-2">
-                      <div>
-                        <dt className="inline text-muted-foreground">
-                          Source:{" "}
-                        </dt>
-                        <dd className="inline">{component.source ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt className="inline text-muted-foreground">
-                          External ID:{" "}
-                        </dt>
-                        <dd className="inline">
-                          {component.external_id ?? "—"}
-                        </dd>
-                      </div>
-                      {component.metadata ? (
-                        <div>
-                          <dt className="text-muted-foreground">Metadata</dt>
-                          <dd>
-                            <pre className="mt-1 whitespace-pre-wrap">
-                              {JSON.stringify(component.metadata, null, 2)}
-                            </pre>
-                          </dd>
-                        </div>
-                      ) : null}
-                    </dl>
-                  </details>
+        <div className="max-w-full overflow-x-auto rounded-lg border">
+          <Table className="min-w-[720px] table-fixed">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[38%]">Component</TableHead>
+                <TableHead className="w-[18%] text-right">Amount</TableHead>
+                <TableHead className="w-[32%]">Source / reference</TableHead>
+                {canManage ? (
+                  <TableHead className="w-[12%] text-right">Actions</TableHead>
                 ) : null}
-              </article>
-            )
-          })}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {components.data.data.map((component) => {
+                const managed = isIntegrationManaged(component)
+                return (
+                  <TableRow key={component.id}>
+                    <TableCell className="align-top whitespace-normal">
+                      <div className="min-w-0 space-y-1.5">
+                        <p className="break-words font-medium">
+                          {component.label}
+                        </p>
+                        <Badge variant="secondary">
+                          {componentTypeLabel(component.type)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="align-top text-right font-medium tabular-nums whitespace-nowrap">
+                      {amountLabel(component.amount, currency)}
+                    </TableCell>
+                    <TableCell className="align-top whitespace-normal">
+                      <ComponentSourceCell component={component} />
+                    </TableCell>
+                    {canManage ? (
+                      <TableCell className="align-top text-right">
+                        {!managed ? (
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Edit ${component.label}`}
+                              onClick={() => setFormMode(component)}
+                            >
+                              <Pencil />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Remove ${component.label}`}
+                              onClick={() => setRemoving(component)}
+                            >
+                              <Trash2 />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
         </div>
       ) : null}
 
