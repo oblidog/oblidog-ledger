@@ -29,9 +29,7 @@ const waitForInvitationToken = async (email: string): Promise<string> => {
       const html = await axios.get<string>(
         `${mailcatcherHost}/messages/${message.id}.html`,
       )
-      const match = html.data.match(
-        /accept-invitation\?token=([^&"'<\s]+)/,
-      )
+      const match = html.data.match(/accept-invitation\?token=([^&"'<\s]+)/)
       if (match?.[1]) {
         return decodeURIComponent(match[1])
       }

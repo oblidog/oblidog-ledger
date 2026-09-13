@@ -3944,23 +3944,29 @@ export const UpdatePasswordSchema = {
     title: 'UpdatePassword'
 } as const;
 
-export const UserCreateSchema = {
+export const UserInvitationAcceptSchema = {
+    properties: {
+        new_password: {
+            type: 'string',
+            maxLength: 128,
+            minLength: 8,
+            title: 'New Password'
+        }
+    },
+    type: 'object',
+    required: [
+        'new_password'
+    ],
+    title: 'UserInvitationAccept'
+} as const;
+
+export const UserInvitationCreateSchema = {
     properties: {
         email: {
             type: 'string',
             maxLength: 255,
             format: 'email',
             title: 'Email'
-        },
-        is_active: {
-            type: 'boolean',
-            title: 'Is Active',
-            default: true
-        },
-        is_superuser: {
-            type: 'boolean',
-            title: 'Is Superuser',
-            default: false
         },
         full_name: {
             anyOf: [
@@ -3974,19 +3980,160 @@ export const UserCreateSchema = {
             ],
             title: 'Full Name'
         },
-        password: {
+        is_superuser: {
+            type: 'boolean',
+            title: 'Is Superuser',
+            default: false
+        }
+    },
+    type: 'object',
+    required: [
+        'email'
+    ],
+    title: 'UserInvitationCreate'
+} as const;
+
+export const UserInvitationInspectSchema = {
+    properties: {
+        email: {
             type: 'string',
-            maxLength: 128,
-            minLength: 8,
-            title: 'Password'
+            format: 'email',
+            title: 'Email'
+        },
+        expires_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Expires At'
         }
     },
     type: 'object',
     required: [
         'email',
-        'password'
+        'expires_at'
     ],
-    title: 'UserCreate'
+    title: 'UserInvitationInspect'
+} as const;
+
+export const UserInvitationPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        email: {
+            type: 'string',
+            format: 'email',
+            title: 'Email'
+        },
+        full_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Full Name'
+        },
+        is_superuser: {
+            type: 'boolean',
+            title: 'Is Superuser'
+        },
+        status: {
+            type: 'string',
+            enum: [
+                'pending',
+                'expired',
+                'accepted',
+                'revoked'
+            ],
+            title: 'Status'
+        },
+        expires_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Expires At'
+        },
+        accepted_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Accepted At'
+        },
+        revoked_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Revoked At'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        created_by_user_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created By User Id'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'email',
+        'full_name',
+        'is_superuser',
+        'status',
+        'expires_at',
+        'accepted_at',
+        'revoked_at',
+        'created_at',
+        'created_by_user_id'
+    ],
+    title: 'UserInvitationPublic'
+} as const;
+
+export const UserInvitationsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                $ref: '#/components/schemas/UserInvitationPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'data',
+        'count'
+    ],
+    title: 'UserInvitationsPublic'
 } as const;
 
 export const UserPublicSchema = {
