@@ -8,6 +8,8 @@ from app.domain import (
     BillingPeriod,
     CurrentValueSource,
     EffectiveValueSourceMode,
+    ObligationActionActorType,
+    ObligationActionType,
     ObligationLifecycle,
     ValueState,
     due_date_range,
@@ -125,6 +127,27 @@ class ObligationComponentPublic(BaseModel):
 
 class ObligationComponentsPublic(BaseModel):
     data: list[ObligationComponentPublic]
+    count: int
+
+
+class ObligationActionPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    obligation_id: uuid.UUID
+    action: ObligationActionType
+    actor_type: ObligationActionActorType
+    actor_id: uuid.UUID | None
+    actor_display_name: str
+    integration_id: uuid.UUID | None
+    run_id: uuid.UUID | None
+    changes: dict[str, object]
+    metadata: dict[str, object] | None = Field(validation_alias="action_metadata")
+    created_at: datetime
+
+
+class ObligationActionsPublic(BaseModel):
+    data: list[ObligationActionPublic]
     count: int
 
 

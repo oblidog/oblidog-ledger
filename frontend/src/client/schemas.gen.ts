@@ -1373,6 +1373,78 @@ export const IntegrationConflictResponseSchema = {
     title: 'IntegrationConflictResponse'
 } as const;
 
+export const IntegrationContextCategoryPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        code: {
+            type: 'string',
+            title: 'Code'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'code',
+        'name'
+    ],
+    title: 'IntegrationContextCategoryPublic'
+} as const;
+
+export const IntegrationContextIntegrationPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        enabled: {
+            type: 'boolean',
+            title: 'Enabled'
+        },
+        revision: {
+            type: 'integer',
+            title: 'Revision'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'name',
+        'enabled',
+        'revision'
+    ],
+    title: 'IntegrationContextIntegrationPublic'
+} as const;
+
+export const IntegrationContextPublicSchema = {
+    properties: {
+        integration: {
+            $ref: '#/components/schemas/IntegrationContextIntegrationPublic'
+        },
+        category: {
+            $ref: '#/components/schemas/IntegrationContextCategoryPublic'
+        }
+    },
+    type: 'object',
+    required: [
+        'integration',
+        'category'
+    ],
+    title: 'IntegrationContextPublic'
+} as const;
+
 export const IntegrationCreateSchema = {
     properties: {
         name: {
@@ -2429,6 +2501,151 @@ export const NewPasswordSchema = {
         'new_password'
     ],
     title: 'NewPassword'
+} as const;
+
+export const ObligationActionActorTypeSchema = {
+    type: 'string',
+    enum: [
+        'user',
+        'integration',
+        'system'
+    ],
+    title: 'ObligationActionActorType'
+} as const;
+
+export const ObligationActionPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        obligation_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Obligation Id'
+        },
+        action: {
+            $ref: '#/components/schemas/ObligationActionType'
+        },
+        actor_type: {
+            $ref: '#/components/schemas/ObligationActionActorType'
+        },
+        actor_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Actor Id'
+        },
+        actor_display_name: {
+            type: 'string',
+            title: 'Actor Display Name'
+        },
+        integration_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Integration Id'
+        },
+        run_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Run Id'
+        },
+        changes: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Changes'
+        },
+        metadata: {
+            anyOf: [
+                {
+                    additionalProperties: true,
+                    type: 'object'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Metadata'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'obligation_id',
+        'action',
+        'actor_type',
+        'actor_id',
+        'actor_display_name',
+        'integration_id',
+        'run_id',
+        'changes',
+        'metadata',
+        'created_at'
+    ],
+    title: 'ObligationActionPublic'
+} as const;
+
+export const ObligationActionTypeSchema = {
+    type: 'string',
+    enum: [
+        'created',
+        'values_updated',
+        'components_changed',
+        'marked_ready',
+        'marked_paid',
+        'canceled',
+        'reopened',
+        'marked_error'
+    ],
+    title: 'ObligationActionType'
+} as const;
+
+export const ObligationActionsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                $ref: '#/components/schemas/ObligationActionPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'data',
+        'count'
+    ],
+    title: 'ObligationActionsPublic'
 } as const;
 
 export const ObligationComponentCreateSchema = {

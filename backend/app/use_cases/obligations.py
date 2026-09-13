@@ -3,23 +3,33 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from enum import Enum
+from typing import Any
 
-from sqlalchemy import select, text
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.domain import (
+    SYSTEM_ACTION_ACTOR,
     BillingPeriod,
     CurrentValueSource,
     DataSourcePolicy,
     EffectiveValueSourceMode,
+    ObligationActionActor,
+    ObligationActionType,
     ObligationKey,
     ObligationLifecycle,
     ValueState,
     due_date_range,
 )
-from app.models import Category, Ledger, Obligation, ObligationComponent
+from app.models import (
+    Category,
+    Ledger,
+    Obligation,
+    ObligationActionLog,
+    ObligationComponent,
+)
 from app.services import obligations as obligation_service
 from app.use_cases.exceptions import (
     CategoryNotFoundError,
@@ -40,6 +50,97 @@ class _Unset:
 
 UNSET = _Unset()
 
+_AUDITED_OBLIGATION_FIELDS = (
+    "lifecycle",
+    "current_amount",
+    "amount_state",
+    "amount_source",
+    "issue_date",
+    "issue_date_state",
+    "issue_date_source",
+    "due_date",
+    "due_date_state",
+    "due_date_source",
+    "effective_value_source",
+    "paid_at",
+)
+
+
+def _serialize_action_value(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, (Enum, uuid.UUID)):
+        return str(value.value) if isinstance(value, Enum) else str(value)
+    if isinstance(value, dict):
+        return {str(key): _serialize_action_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_serialize_action_value(item) for item in value]
+    return value
+
+
+def _obligation_snapshot(obligation: Obligation) -> dict[str, object]:
+    return {
+        field: _serialize_action_value(getattr(obligation, field))
+        for field in _AUDITED_OBLIGATION_FIELDS
+    }
+
+
+def _component_snapshot(component: ObligationComponent) -> dict[str, object]:
+    return {
+        "id": str(component.id),
+        "type": component.type,
+        "label": component.label,
+        "amount": _serialize_action_value(component.amount),
+        "source": component.source,
+        "external_id": component.external_id,
+        "metadata": _serialize_action_value(component.component_metadata),
+    }
+
+
+def _snapshot_diff(
+    before: dict[str, object], after: dict[str, object]
+) -> dict[str, object]:
+    return {
+        field: {"from": before[field], "to": after[field]}
+        for field in sorted(before.keys() | after.keys())
+        if before.get(field) != after.get(field)
+    }
+
+
+def _created_changes(obligation: Obligation) -> dict[str, object]:
+    return {
+        field: {"from": None, "to": value}
+        for field, value in _obligation_snapshot(obligation).items()
+    }
+
+
+def _record_action(
+    *,
+    session: Session,
+    obligation: Obligation,
+    action: ObligationActionType,
+    actor: ObligationActionActor,
+    changes: dict[str, object],
+    metadata: dict[str, object] | None = None,
+) -> None:
+    if not changes:
+        return
+    session.add(
+        ObligationActionLog(
+            obligation_id=obligation.id,
+            action=action.value,
+            actor_type=actor.actor_type.value,
+            actor_id=actor.actor_id,
+            actor_display_name=actor.display_name,
+            integration_id=actor.integration_id,
+            run_id=actor.run_id,
+            changes=changes,
+            action_metadata=_serialize_action_value(metadata),
+        )
+    )
+
 
 def _require_ledger(*, session: Session, ledger_id: uuid.UUID) -> Ledger:
     ledger = session.get(Ledger, ledger_id)
@@ -53,6 +154,7 @@ def ensure_obligations_for_period(
     session: Session,
     ledger_id: uuid.UUID,
     period: BillingPeriod,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> list[Obligation]:
     _require_ledger(session=session, ledger_id=ledger_id)
 
@@ -61,6 +163,14 @@ def ensure_obligations_for_period(
         ledger_id=ledger_id,
         current_period=period,
     )
+    for obligation in created:
+        _record_action(
+            session=session,
+            obligation=obligation,
+            action=ObligationActionType.CREATED,
+            actor=actor,
+            changes=_created_changes(obligation),
+        )
     session.commit()
     for obligation in created:
         session.refresh(obligation)
@@ -68,14 +178,42 @@ def ensure_obligations_for_period(
 
 
 def estimate_missing_obligation_amounts(
-    *, session: Session, ledger_id: uuid.UUID, period: BillingPeriod
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    period: BillingPeriod,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> list[Obligation]:
     _require_ledger(session=session, ledger_id=ledger_id)
+    next_period = period.next()
+    candidates = session.scalars(
+        select(Obligation).where(
+            Obligation.ledger_id == ledger_id,
+            (
+                (Obligation.period_year == period.year)
+                & (Obligation.period_month == period.month)
+            )
+            | (
+                (Obligation.period_year == next_period.year)
+                & (Obligation.period_month == next_period.month)
+            ),
+        )
+    ).all()
+    before_by_id = {item.id: _obligation_snapshot(item) for item in candidates}
     updated = obligation_service.estimate_missing_obligation_amounts(
         session=session, ledger_id=ledger_id, current_period=period
     )
     for obligation in updated:
         _update_effective_value_source(obligation)
+        _record_action(
+            session=session,
+            obligation=obligation,
+            action=ObligationActionType.VALUES_UPDATED,
+            actor=actor,
+            changes=_snapshot_diff(
+                before_by_id[obligation.id], _obligation_snapshot(obligation)
+            ),
+        )
     session.commit()
     for obligation in updated:
         session.refresh(obligation)
@@ -168,6 +306,7 @@ def create_manual_obligation(
     issue_date: date | None = None,
     due_date: date | None = None,
     notes: str | None = None,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
     if current_amount is not None and current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
@@ -225,6 +364,14 @@ def create_manual_obligation(
         obligation.due_date_source = CurrentValueSource.MANUAL
 
     _update_effective_value_source(obligation)
+
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.CREATED,
+        actor=actor,
+        changes=_created_changes(obligation),
+    )
 
     session.commit()
     session.refresh(obligation)
@@ -287,6 +434,7 @@ def update_manual_obligation(
     issue_date: date | None | _Unset = UNSET,
     due_date: date | None | _Unset = UNSET,
     notes: str | None | _Unset = UNSET,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
     return _update_obligation_values(
         session=session,
@@ -297,6 +445,7 @@ def update_manual_obligation(
         due_date=due_date,
         notes=notes,
         source=CurrentValueSource.MANUAL,
+        actor=actor,
     )
 
 
@@ -308,6 +457,7 @@ def update_integration_obligation(
     current_amount: Decimal | None | _Unset = UNSET,
     issue_date: date | None | _Unset = UNSET,
     due_date: date | None | _Unset = UNSET,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
     return _update_obligation_values(
         session=session,
@@ -317,6 +467,7 @@ def update_integration_obligation(
         issue_date=issue_date,
         due_date=due_date,
         source=CurrentValueSource.INTEGRATION,
+        actor=actor,
     )
 
 
@@ -330,14 +481,18 @@ def _update_obligation_values(
     due_date: date | None | _Unset = UNSET,
     notes: str | None | _Unset = UNSET,
     source: CurrentValueSource,
+    actor: ObligationActionActor,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     if obligation.lifecycle not in {
         ObligationLifecycle.DRAFT,
         ObligationLifecycle.COLLECTING_DATA,
     }:
         raise ObligationReadOnlyError
 
+    before = _obligation_snapshot(obligation)
     next_current_amount = (
         obligation.current_amount
         if isinstance(current_amount, _Unset)
@@ -404,15 +559,28 @@ def _update_obligation_values(
     if has_value_changes and obligation.lifecycle is ObligationLifecycle.DRAFT:
         obligation.lifecycle = ObligationLifecycle.COLLECTING_DATA
     _update_effective_value_source(obligation)
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.VALUES_UPDATED,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
     session.commit()
     session.refresh(obligation)
     return obligation
 
 
 def mark_obligation_ready(
-    *, session: Session, ledger_id: uuid.UUID, key: ObligationKey
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     if obligation.lifecycle is not ObligationLifecycle.COLLECTING_DATA:
         raise ValueError("Only obligations collecting data can be marked as ready")
     if obligation.current_amount is None or obligation.due_date is None:
@@ -425,49 +593,91 @@ def mark_obligation_ready(
             "current_amount and due_date must have at least an estimated state"
         )
 
+    before = _obligation_snapshot(obligation)
     obligation.lifecycle = ObligationLifecycle.READY
     obligation.amount_state = ValueState.CONFIRMED
     obligation.due_date_state = ValueState.CONFIRMED
     if obligation.issue_date is not None:
         obligation.issue_date_state = ValueState.CONFIRMED
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.MARKED_READY,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
     session.commit()
     session.refresh(obligation)
     return obligation
 
 
 def mark_obligation_paid(
-    *, session: Session, ledger_id: uuid.UUID, key: ObligationKey
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     if obligation.lifecycle is ObligationLifecycle.PAID:
         return obligation
     if obligation.lifecycle is not ObligationLifecycle.READY:
         raise ObligationInvalidLifecycleError
 
+    before = _obligation_snapshot(obligation)
     obligation.lifecycle = ObligationLifecycle.PAID
     obligation.paid_at = datetime.now(UTC)
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.MARKED_PAID,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
     session.commit()
     session.refresh(obligation)
     return obligation
 
 
 def cancel_obligation(
-    *, session: Session, ledger_id: uuid.UUID, key: ObligationKey
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     if obligation.lifecycle is not ObligationLifecycle.COLLECTING_DATA:
         raise ObligationInvalidLifecycleError
 
+    before = _obligation_snapshot(obligation)
     obligation.lifecycle = ObligationLifecycle.CANCELED
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.CANCELED,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
     session.commit()
     session.refresh(obligation)
     return obligation
 
 
 def reopen_obligation(
-    *, session: Session, ledger_id: uuid.UUID, key: ObligationKey
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     if obligation.lifecycle not in {
         ObligationLifecycle.READY,
         ObligationLifecycle.PAID,
@@ -476,18 +686,40 @@ def reopen_obligation(
     }:
         raise ObligationInvalidLifecycleError
 
+    before = _obligation_snapshot(obligation)
     obligation.lifecycle = ObligationLifecycle.COLLECTING_DATA
     obligation.paid_at = None
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.REOPENED,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
     session.commit()
     session.refresh(obligation)
     return obligation
 
 
 def mark_obligation_error(
-    *, session: Session, ledger_id: uuid.UUID, key: ObligationKey
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
+    before = _obligation_snapshot(obligation)
     obligation.lifecycle = ObligationLifecycle.ERROR
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.MARKED_ERROR,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
     session.commit()
     session.refresh(obligation)
     return obligation
@@ -502,7 +734,9 @@ def append_integration_note(
     text: str,
     now: datetime | None = None,
 ) -> Obligation:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     timestamp = (now or datetime.now(UTC)).astimezone(UTC).strftime("%Y-%m-%d %H:%M")
     entry = f"[{timestamp}] {integration_name}: {text}"
     obligation.notes = entry if not obligation.notes else f"{obligation.notes}\n{entry}"
@@ -512,10 +746,14 @@ def append_integration_note(
 
 
 def get_obligation_by_key(
-    *, session: Session, ledger_id: uuid.UUID, key: ObligationKey
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    lock: bool = False,
 ) -> Obligation:
     _require_ledger(session=session, ledger_id=ledger_id)
-    obligation = session.scalar(
+    statement = (
         select(Obligation)
         .join(Obligation.category)
         .where(
@@ -525,9 +763,46 @@ def get_obligation_by_key(
             Obligation.period_month == key.period.month,
         )
     )
+    if lock:
+        statement = statement.with_for_update(of=Obligation).execution_options(
+            populate_existing=True
+        )
+    obligation = session.scalar(statement)
     if obligation is None:
         raise ObligationNotFoundError
     return obligation
+
+
+def list_obligation_actions(
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    limit: int = 100,
+    offset: int = 0,
+) -> tuple[list[ObligationActionLog], int]:
+    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    items = list(
+        session.scalars(
+            select(ObligationActionLog)
+            .where(ObligationActionLog.obligation_id == obligation.id)
+            .order_by(
+                ObligationActionLog.created_at.desc(),
+                ObligationActionLog.id.desc(),
+            )
+            .limit(limit)
+            .offset(offset)
+        ).all()
+    )
+    count = (
+        session.scalar(
+            select(func.count())
+            .select_from(ObligationActionLog)
+            .where(ObligationActionLog.obligation_id == obligation.id)
+        )
+        or 0
+    )
+    return items, count
 
 
 def list_obligation_components(
@@ -556,8 +831,11 @@ def add_obligation_component(
     source: str | None = None,
     external_id: str | None = None,
     metadata: dict[str, object] | None = None,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> ObligationComponent:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     component = ObligationComponent(
         obligation_id=obligation.id,
         type=type,
@@ -569,6 +847,20 @@ def add_obligation_component(
     )
     session.add(component)
     try:
+        session.flush()
+        _record_action(
+            session=session,
+            obligation=obligation,
+            action=ObligationActionType.COMPONENTS_CHANGED,
+            actor=actor,
+            changes={
+                "components": {
+                    "added": [_component_snapshot(component)],
+                    "updated": [],
+                    "removed": [],
+                }
+            },
+        )
         session.commit()
     except IntegrityError as exc:
         session.rollback()
@@ -603,11 +895,15 @@ def update_obligation_component(
     source: str | None | _Unset = UNSET,
     external_id: str | None | _Unset = UNSET,
     metadata: dict[str, object] | None | _Unset = UNSET,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> ObligationComponent:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     component = _get_obligation_component(
         session=session, obligation_id=obligation.id, component_id=component_id
     )
+    before = _component_snapshot(component)
     if not isinstance(type, _Unset):
         component.type = type
     if not isinstance(label, _Unset):
@@ -621,6 +917,28 @@ def update_obligation_component(
     if not isinstance(metadata, _Unset):
         component.component_metadata = metadata
     try:
+        after = _component_snapshot(component)
+        component_changes = _snapshot_diff(before, after)
+        if component_changes:
+            _record_action(
+                session=session,
+                obligation=obligation,
+                action=ObligationActionType.COMPONENTS_CHANGED,
+                actor=actor,
+                changes={
+                    "components": {
+                        "added": [],
+                        "updated": [
+                            {
+                                "id": str(component.id),
+                                "label": before["label"],
+                                "changes": component_changes,
+                            }
+                        ],
+                        "removed": [],
+                    }
+                },
+            )
         session.commit()
     except IntegrityError as exc:
         session.rollback()
@@ -635,12 +953,29 @@ def remove_obligation_component(
     ledger_id: uuid.UUID,
     key: ObligationKey,
     component_id: uuid.UUID,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> None:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
     component = _get_obligation_component(
         session=session, obligation_id=obligation.id, component_id=component_id
     )
+    snapshot = _component_snapshot(component)
     session.delete(component)
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.COMPONENTS_CHANGED,
+        actor=actor,
+        changes={
+            "components": {
+                "added": [],
+                "updated": [],
+                "removed": [snapshot],
+            }
+        },
+    )
     session.commit()
 
 
@@ -655,11 +990,22 @@ def upsert_obligation_component(
     external_id: str,
     amount: Decimal | None = None,
     metadata: dict[str, object] | None = None,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> ObligationComponent:
-    obligation = get_obligation_by_key(session=session, ledger_id=ledger_id, key=key)
-    statement = (
-        pg_insert(ObligationComponent)
-        .values(
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
+    component = session.scalar(
+        select(ObligationComponent).where(
+            ObligationComponent.obligation_id == obligation.id,
+            ObligationComponent.source == source,
+            ObligationComponent.external_id == external_id,
+        )
+    )
+    created = component is None
+    before: dict[str, object] | None = None
+    if component is None:
+        component = ObligationComponent(
             obligation_id=obligation.id,
             type=type,
             label=label,
@@ -668,22 +1014,51 @@ def upsert_obligation_component(
             external_id=external_id,
             component_metadata=metadata,
         )
-        .on_conflict_do_update(
-            index_elements=["obligation_id", "source", "external_id"],
-            index_where=text("source IS NOT NULL AND external_id IS NOT NULL"),
-            set_={
-                "type": type,
-                "label": label,
-                "amount": amount,
-                "metadata": metadata,
-                "updated_at": datetime.now(UTC),
-            },
+        session.add(component)
+        session.flush()
+    else:
+        before = _component_snapshot(component)
+        component.type = type
+        component.label = label
+        component.amount = amount
+        component.component_metadata = metadata
+
+    after = _component_snapshot(component)
+    if created:
+        component_diff: dict[str, object] = {
+            "components": {"added": [after], "updated": [], "removed": []}
+        }
+    else:
+        assert before is not None
+        field_changes = _snapshot_diff(before, after)
+        component_diff = (
+            {
+                "components": {
+                    "added": [],
+                    "updated": [
+                        {
+                            "id": str(component.id),
+                            "label": before["label"],
+                            "changes": field_changes,
+                        }
+                    ],
+                    "removed": [],
+                }
+            }
+            if field_changes
+            else {}
         )
-        .returning(ObligationComponent.id)
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.COMPONENTS_CHANGED,
+        actor=actor,
+        changes=component_diff,
     )
-    component_id = session.scalar(statement)
-    session.commit()
-    component = session.get(ObligationComponent, component_id)
-    assert component is not None
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise DuplicateObligationComponentError from exc
     session.refresh(component)
     return component

@@ -267,3 +267,46 @@ def test_integration_derives_category_data_and_component_source_from_context(
     )
     assert component.status_code == 200
     assert component.json()["source"] == "Meter"
+
+
+def test_integration_obligation_actions_are_attributed_to_the_current_run(
+    client: TestClient, db: Session
+) -> None:
+    created, owner_headers, ledger, category = _create_integration(client, db)
+    period = BillingPeriod(2026, 8)
+    obligation = obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=period,
+    )
+    connection_headers = {"Authorization": f"Bearer {created['connection_key']}"}
+    run_id = uuid.uuid4()
+    started = client.post(
+        f"{settings.API_V1_STR}/integration/runs/start",
+        headers=connection_headers,
+        json={"run_id": str(run_id), "expected_revision": 0},
+    )
+    assert started.status_code == 200, started.text
+
+    updated = client.patch(
+        f"{settings.API_V1_STR}/integration/obligations/2026-08",
+        headers=connection_headers,
+        json={"current_amount": "77.40"},
+    )
+    assert updated.status_code == 200, updated.text
+
+    history = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/"
+        f"{obligation.business_key}/actions",
+        headers=owner_headers,
+    )
+    assert history.status_code == 200
+    action = history.json()["data"][0]
+    integration_id = created["integration"]["id"]
+    assert action["action"] == "values_updated"
+    assert action["actor_type"] == "integration"
+    assert action["actor_id"] == integration_id
+    assert action["actor_display_name"] == "Meter"
+    assert action["integration_id"] == integration_id
+    assert action["run_id"] == str(run_id)
