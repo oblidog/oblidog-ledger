@@ -11,6 +11,7 @@ import {
   type CategoryDataSchemaPublic,
   client,
 } from "@/client"
+import { CategoryDataCsvExportButton } from "@/components/Categories/CategoryDataCsvExportButton"
 import {
   buildPreviousRecordMap,
   CategoryDataDifferenceValue,
@@ -263,15 +264,24 @@ function CategoryDataHistory() {
             Back to categories
           </Link>
         </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link
-            to="/ledgers/$ledgerId/categories/$categoryId/custom-fields"
-            params={{ ledgerId, categoryId }}
-          >
-            <ListPlus />
-            Manage custom fields
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <CategoryDataCsvExportButton
+            ledgerId={ledgerId}
+            categoryId={categoryId}
+            schemaVersion={selectedVersion}
+            observedFrom={queryFilters.observedFrom}
+            observedTo={queryFilters.observedTo}
+          />
+          <Button variant="outline" size="sm" asChild>
+            <Link
+              to="/ledgers/$ledgerId/categories/$categoryId/custom-fields"
+              params={{ ledgerId, categoryId }}
+            >
+              <ListPlus />
+              Manage custom fields
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="min-w-0">
