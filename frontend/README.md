@@ -15,6 +15,33 @@ bun run --filter frontend dev
 
 Open <http://localhost:5173>. The local dev server is the recommended frontend workflow; Docker Compose is useful for testing the full stack.
 
+## Application Version
+
+The frontend exposes the build version through `VITE_APP_VERSION` and renders it in the page footer. The value is compiled into the Vite bundle, so displaying it does not require an API request.
+
+Local development can omit the variable; the UI then displays `dev`:
+
+```bash
+bun run --filter frontend dev
+```
+
+To verify a versioned build locally, provide the exact release tag:
+
+```bash
+VITE_APP_VERSION=v0.12.4 bun run --filter frontend build
+```
+
+The frontend Dockerfile accepts the same value as a build argument:
+
+```bash
+docker build \
+  --build-arg VITE_APP_VERSION=v0.12.4 \
+  -f frontend/Dockerfile \
+  .
+```
+
+Release container builds set `VITE_APP_VERSION` from the same Git tag (`vX.Y.Z`) that is used as the immutable GHCR image tag. This keeps the version shown in the UI aligned with the served frontend artifact.
+
 ## Generate Client
 
 ### Automatically

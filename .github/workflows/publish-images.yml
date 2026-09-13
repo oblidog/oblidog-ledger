@@ -47,8 +47,10 @@ jobs:
         include:
           - name: backend
             dockerfile: backend/Dockerfile
+            build_args: ""
           - name: frontend
             dockerfile: frontend/Dockerfile
+            build_args: VITE_APP_VERSION=${{ inputs.release_tag || github.ref_name }}
     steps:
       - name: Checkout release source
         uses: actions/checkout@v7
@@ -83,5 +85,6 @@ jobs:
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+          build-args: ${{ matrix.build_args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
