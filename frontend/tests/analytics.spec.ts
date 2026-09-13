@@ -52,6 +52,19 @@ async function createCategoryHistoryFixture() {
   return ledger
 }
 
+function addMonths(offset: number) {
+  const now = new Date()
+  const date = new Date(now.getFullYear(), now.getMonth() + offset, 1)
+  return { year: date.getFullYear(), month: date.getMonth() + 1 }
+}
+
+function periodLabel(period: { year: number; month: number }) {
+  return new Intl.DateTimeFormat("en-GB", {
+    month: "short",
+    year: "numeric",
+  }).format(new Date(period.year, period.month - 1, 1))
+}
+
 async function periodTotalsBarFill(page: import("@playwright/test").Page) {
   const chart = page.getByTestId("period-totals-chart")
   const bar = chart.locator(".recharts-bar-rectangle path").first()
@@ -191,4 +204,121 @@ test("shows amount progress as the primary payment metric", async ({
   await expect(
     page.getByText("1 of 2 obligations paid", { exact: true }),
   ).toBeVisible()
+})
+
+test("compares stable, added, removed and renamed components across six periods", async ({
+  page,
+}) => {
+  const ledger = await createCategoryHistoryFixture()
+  const current = addMonths(0)
+  const previous = addMonths(-1)
+  const earlier = addMonths(-2)
+
+  const currentObligations = await ObligationsService.readObligations({
+    ledgerId: ledger.id,
+    year: current.year,
+    month: current.month,
+    categoryCode: "WATR",
+  })
+  const currentObligation = currentObligations.data[0]
+
+  const earlierObligation = await ObligationsService.createObligation({
+    ledgerId: ledger.id,
+    requestBody: {
+      category_code: "WATR",
+      period: earlier,
+    },
+  })
+  const previousObligation = await ObligationsService.createObligation({
+    ledgerId: ledger.id,
+    requestBody: {
+      category_code: "WATR",
+      period: previous,
+    },
+  })
+
+  for (const [obligationKey, baseLabel, baseAmount, legacyAmount] of [
+    [earlierObligation.key, "Base charge", "10.00", "5.00"],
+    [previousObligation.key, "Base charge", "11.00", "6.00"],
+  ] as const) {
+    await ObligationsService.addObligationComponent({
+      ledgerId: ledger.id,
+      obligationKey,
+      requestBody: {
+        type: "invoice_item",
+        label: baseLabel,
+        amount: baseAmount,
+        source: "provider",
+        external_id: "base",
+      },
+    })
+    await ObligationsService.addObligationComponent({
+      ledgerId: ledger.id,
+      obligationKey,
+      requestBody: {
+        type: "invoice_item",
+        label: "Legacy fee",
+        amount: legacyAmount,
+        source: "provider",
+        external_id: "legacy",
+      },
+    })
+  }
+
+  await ObligationsService.addObligationComponent({
+    ledgerId: ledger.id,
+    obligationKey: previousObligation.key,
+    requestBody: {
+      type: "adjustment",
+      label: "New discount",
+      amount: "2.00",
+      source: "provider",
+      external_id: "new",
+    },
+  })
+  await ObligationsService.addObligationComponent({
+    ledgerId: ledger.id,
+    obligationKey: currentObligation.key,
+    requestBody: {
+      type: "invoice_item",
+      label: "Base charge renamed",
+      amount: "0.00",
+      source: "provider",
+      external_id: "base",
+    },
+  })
+  await ObligationsService.addObligationComponent({
+    ledgerId: ledger.id,
+    obligationKey: currentObligation.key,
+    requestBody: {
+      type: "adjustment",
+      label: "New discount",
+      source: "provider",
+      external_id: "new",
+    },
+  })
+
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  const table = page.getByTestId("component-history-table")
+  await expect(table).toBeVisible()
+  await expect(table.getByText("Base charge renamed", { exact: true })).toBeVisible()
+  await expect(table.getByText("Previously: Base charge", { exact: true })).toBeVisible()
+
+  const earlierRow = table.getByRole("row").filter({ hasText: periodLabel(earlier) })
+  await expect(earlierRow).toContainText("10.00 PLN")
+  await expect(earlierRow).toContainText("5.00 PLN")
+
+  const previousRow = table.getByRole("row").filter({ hasText: periodLabel(previous) })
+  await expect(previousRow).toContainText("11.00 PLN")
+  await expect(previousRow).toContainText("2.00 PLN")
+  await expect(previousRow.getByText("Added", { exact: true })).toBeVisible()
+
+  const currentRow = table.getByRole("row").filter({ hasText: periodLabel(current) })
+  await expect(currentRow).toContainText("0.00 PLN")
+  await expect(currentRow).toContainText("Present")
+  await expect(currentRow.getByText("Removed", { exact: true })).toBeVisible()
+  await expect(currentRow).toContainText("0.00 PLN")
+
+  await expect(table.getByRole("row")).toHaveCount(7)
 })
