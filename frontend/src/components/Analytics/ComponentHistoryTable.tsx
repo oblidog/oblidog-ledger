@@ -266,12 +266,15 @@ export function ComponentHistoryTable({
         })
       })
     })
-    return [...byIdentity.values()].sort(
-      (left, right) =>
+    return [...byIdentity.values()].sort((left, right) => {
+      const leftLabel = left.labels[left.labels.length - 1]
+      const rightLabel = right.labels[right.labels.length - 1]
+      return (
         left.firstSeenIndex - right.firstSeenIndex ||
-        left.labels.at(-1)!.localeCompare(right.labels.at(-1)!) ||
-        left.type.localeCompare(right.type),
-    )
+        leftLabel.localeCompare(rightLabel) ||
+        left.type.localeCompare(right.type)
+      )
+    })
   }, [componentsByPeriod])
 
   return (
@@ -308,7 +311,7 @@ export function ComponentHistoryTable({
                 <TableRow>
                   <TableHead className="sticky left-0 z-10 min-w-32 bg-background">Period</TableHead>
                   {columns.map((column) => {
-                    const currentLabel = column.labels.at(-1)!
+                    const currentLabel = column.labels[column.labels.length - 1]
                     const previousLabels = column.labels.slice(0, -1)
                     return (
                       <TableHead key={column.key} className="min-w-44 whitespace-normal align-top">
