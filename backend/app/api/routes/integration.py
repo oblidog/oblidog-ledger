@@ -16,7 +16,12 @@ from app.api.routes.obligations import (
     to_obligation_component_public,
     to_obligation_public,
 )
-from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
+from app.domain import (
+    BillingPeriod,
+    ObligationActionActor,
+    ObligationKey,
+    ObligationLifecycle,
+)
 from app.schemas import (
     CategoryDataRecordPublic,
     CategoryDataRecordsPublic,
@@ -54,6 +59,19 @@ IntegrationObligationPeriodPath = Annotated[
         examples=["2026-09"],
     ),
 ]
+
+
+def _integration_action_actor(context: ApiContext) -> ObligationActionActor:
+    run_id = (
+        context.integration.current_run_id
+        if context.integration.current_finished_at is None
+        else None
+    )
+    return ObligationActionActor.integration(
+        integration_id=context.integration.id,
+        display_name=context.integration.name,
+        run_id=run_id,
+    )
 
 
 @router.get(
@@ -270,6 +288,7 @@ def upsert_integration_obligation_component(
             ledger_id=context.ledger.id,
             key=key,
             source=context.integration.name,
+            actor=_integration_action_actor(context),
             **component_in.model_dump(),
         )
     except ObligationNotFoundError:
@@ -289,6 +308,7 @@ def update_integration_obligation(
             session=context.session,
             ledger_id=context.ledger.id,
             key=key,
+            actor=_integration_action_actor(context),
             **obligation_in.model_dump(exclude_unset=True),
         )
     except ObligationNotFoundError:
@@ -309,7 +329,10 @@ def _run_integration_action(
     key = _resolve_integration_obligation_key(context=context, period=period)
     try:
         obligation = action(
-            session=context.session, ledger_id=context.ledger.id, key=key
+            session=context.session,
+            ledger_id=context.ledger.id,
+            key=key,
+            actor=_integration_action_actor(context),
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")

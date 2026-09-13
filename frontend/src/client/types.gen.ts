@@ -692,6 +692,54 @@ export type IntegrationConflictResponse = {
 };
 
 /**
+ * IntegrationContextCategoryPublic
+ */
+export type IntegrationContextCategoryPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * IntegrationContextIntegrationPublic
+ */
+export type IntegrationContextIntegrationPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Revision
+     */
+    revision: number;
+};
+
+/**
+ * IntegrationContextPublic
+ */
+export type IntegrationContextPublic = {
+    integration: IntegrationContextIntegrationPublic;
+    category: IntegrationContextCategoryPublic;
+};
+
+/**
  * IntegrationCreate
  */
 export type IntegrationCreate = {
@@ -1208,6 +1256,78 @@ export type NewPassword = {
      * New Password
      */
     new_password: string;
+};
+
+/**
+ * ObligationActionActorType
+ */
+export type ObligationActionActorType = 'user' | 'integration' | 'system';
+
+/**
+ * ObligationActionPublic
+ */
+export type ObligationActionPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Obligation Id
+     */
+    obligation_id: string;
+    action: ObligationActionType;
+    actor_type: ObligationActionActorType;
+    /**
+     * Actor Id
+     */
+    actor_id: string | null;
+    /**
+     * Actor Display Name
+     */
+    actor_display_name: string;
+    /**
+     * Integration Id
+     */
+    integration_id: string | null;
+    /**
+     * Run Id
+     */
+    run_id: string | null;
+    /**
+     * Changes
+     */
+    changes: {
+        [key: string]: unknown;
+    };
+    /**
+     * Metadata
+     */
+    metadata: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * ObligationActionType
+ */
+export type ObligationActionType = 'created' | 'values_updated' | 'components_changed' | 'marked_ready' | 'marked_paid' | 'canceled' | 'reopened' | 'marked_error';
+
+/**
+ * ObligationActionsPublic
+ */
+export type ObligationActionsPublic = {
+    /**
+     * Data
+     */
+    data: Array<ObligationActionPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -3444,13 +3564,9 @@ export type IntegrationReadIntegrationContextData = {
 
 export type IntegrationReadIntegrationContextResponses = {
     /**
-     * Response Integration-Read Integration Context
-     *
      * Successful Response
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: IntegrationContextPublic;
 };
 
 export type IntegrationReadIntegrationContextResponse = IntegrationReadIntegrationContextResponses[keyof IntegrationReadIntegrationContextResponses];
@@ -3654,12 +3770,14 @@ export type IntegrationReadIntegrationObligationData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}';
+    url: '/api/v1/integration/obligations/{period}';
 };
 
 export type IntegrationReadIntegrationObligationErrors = {
@@ -3684,12 +3802,14 @@ export type IntegrationUpdateIntegrationObligationData = {
     body: ObligationIntegrationUpdate;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}';
+    url: '/api/v1/integration/obligations/{period}';
 };
 
 export type IntegrationUpdateIntegrationObligationErrors = {
@@ -3714,12 +3834,14 @@ export type IntegrationReadIntegrationObligationComponentsData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/components';
+    url: '/api/v1/integration/obligations/{period}/components';
 };
 
 export type IntegrationReadIntegrationObligationComponentsErrors = {
@@ -3744,12 +3866,14 @@ export type IntegrationUpsertIntegrationObligationComponentData = {
     body: IntegrationObligationComponentUpsert;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/components/upsert';
+    url: '/api/v1/integration/obligations/{period}/components/upsert';
 };
 
 export type IntegrationUpsertIntegrationObligationComponentErrors = {
@@ -3774,12 +3898,14 @@ export type IntegrationMarkIntegrationObligationReadyData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/ready';
+    url: '/api/v1/integration/obligations/{period}/ready';
 };
 
 export type IntegrationMarkIntegrationObligationReadyErrors = {
@@ -3804,12 +3930,14 @@ export type IntegrationMarkIntegrationObligationPaidData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/mark-paid';
+    url: '/api/v1/integration/obligations/{period}/mark-paid';
 };
 
 export type IntegrationMarkIntegrationObligationPaidErrors = {
@@ -3834,12 +3962,14 @@ export type IntegrationCancelIntegrationObligationData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/cancel';
+    url: '/api/v1/integration/obligations/{period}/cancel';
 };
 
 export type IntegrationCancelIntegrationObligationErrors = {
@@ -3864,12 +3994,14 @@ export type IntegrationReopenIntegrationObligationData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/reopen';
+    url: '/api/v1/integration/obligations/{period}/reopen';
 };
 
 export type IntegrationReopenIntegrationObligationErrors = {
@@ -3894,12 +4026,14 @@ export type IntegrationMarkIntegrationObligationErrorData = {
     body?: never;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/error';
+    url: '/api/v1/integration/obligations/{period}/error';
 };
 
 export type IntegrationMarkIntegrationObligationErrorErrors = {
@@ -3924,12 +4058,14 @@ export type IntegrationAppendIntegrationObligationNoteData = {
     body: ObligationNoteAppend;
     path: {
         /**
-         * Obligation Key
+         * Period
+         *
+         * Billing period in YYYY-MM format. Full obligation keys are temporarily accepted for client migration.
          */
-        obligation_key: string;
+        period: string;
     };
     query?: never;
-    url: '/api/v1/integration/obligations/{obligation_key}/notes';
+    url: '/api/v1/integration/obligations/{period}/notes';
 };
 
 export type IntegrationAppendIntegrationObligationNoteErrors = {
@@ -4333,6 +4469,49 @@ export type ObligationsAddObligationComponentResponses = {
 };
 
 export type ObligationsAddObligationComponentResponse = ObligationsAddObligationComponentResponses[keyof ObligationsAddObligationComponentResponses];
+
+export type ObligationsReadObligationActionsData = {
+    body?: never;
+    path: {
+        /**
+         * Obligation Key
+         */
+        obligation_key: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/actions';
+};
+
+export type ObligationsReadObligationActionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ObligationsReadObligationActionsError = ObligationsReadObligationActionsErrors[keyof ObligationsReadObligationActionsErrors];
+
+export type ObligationsReadObligationActionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ObligationActionsPublic;
+};
+
+export type ObligationsReadObligationActionsResponse = ObligationsReadObligationActionsResponses[keyof ObligationsReadObligationActionsResponses];
 
 export type ObligationsUpsertObligationComponentData = {
     body: ObligationComponentUpsert;
