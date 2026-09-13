@@ -69,6 +69,7 @@ test("renders schema-driven category history with versioning and formatters", as
           type: "object",
           properties: {
             reading: { type: "number", title: "Meter reading" },
+            precise: { type: "number", title: "Precise value" },
             visits: { type: "integer", title: "Visits" },
             active: { type: "boolean", title: "Active" },
             status: { type: "string", title: "Status", enum: ["ok", "warn"] },
@@ -94,6 +95,11 @@ test("renders schema-driven category history with versioning and formatters", as
             payload: { type: "object", title: "Payload" },
             samples: { type: "array", title: "Samples" },
             missing: { type: "string", title: "Missing" },
+            nullable_text: {
+              anyOf: [{ type: "string" }, { type: "null" }],
+              title: "Nullable text",
+            },
+            optional_text: { type: "string", title: "Optional text" },
           },
         },
       },
@@ -141,6 +147,7 @@ test("renders schema-driven category history with versioning and formatters", as
       source: "integration",
       data: {
         reading: number === 21 ? 12345.67 : number,
+        precise: number === 21 ? 1.0002 : 1.0001,
         visits: number,
         active: number % 2 === 1,
         status: number === 21 ? "warn" : "ok",
@@ -151,6 +158,8 @@ test("renders schema-driven category history with versioning and formatters", as
         untitled: "raw-name fallback",
         payload: { nested: "value" },
         samples: [1, 2, 3],
+        nullable_text: number === 21 ? "current" : null,
+        ...(number === 20 ? { optional_text: "present" } : {}),
       },
     }
   })
@@ -301,6 +310,58 @@ test("renders schema-driven category history with versioning and formatters", as
   ).toBeVisible()
 
   await expect(page.getByText("Showing 1–20 of 21")).toBeVisible()
+  await expect(table.locator("tbody tr")).toHaveCount(20)
+
+  const newestRow = table.getByTestId("category-data-row-record-21")
+  await expect(
+    newestRow.getByRole("button", {
+      name: "changed. Current: current. Previous: null",
+    }),
+  ).toBeVisible()
+  await expect(
+    newestRow.getByRole("button", {
+      name: "changed. Current: 1.0002. Previous: 1.0001",
+    }),
+  ).toBeVisible()
+  await expect(
+    newestRow.getByRole("button", {
+      name: "changed. Current: 2026-02-03. Previous: 2026-02-03",
+    }),
+  ).toHaveCount(0)
+  await expect(
+    newestRow.getByRole("button", {
+      name: "removed. Current: not set. Previous: present",
+    }),
+  ).toBeVisible()
+
+  const addedRow = table.getByTestId("category-data-row-record-20")
+  await expect(
+    addedRow.getByRole("button", {
+      name: "added. Current: present. Previous: not set",
+    }),
+  ).toBeVisible()
+  await expect(
+    addedRow.getByRole("button", {
+      name: "changed. Current: null. Previous: null",
+    }),
+  ).toHaveCount(0)
+
+  const boundaryRow = table.getByTestId("category-data-row-record-2")
+  const boundaryDelta = boundaryRow.getByRole("button", {
+    name: "changed. Current: 2. Previous: 1",
+  })
+  await expect(boundaryDelta.first()).toContainText("+1")
+  await boundaryDelta.first().hover()
+  const differenceTooltip = page.getByRole("tooltip")
+  await expect(differenceTooltip.getByText("Previous:")).toBeVisible()
+  await expect(differenceTooltip.getByText("1", { exact: true })).toBeVisible()
+
+  await page.getByRole("checkbox", { name: "Show differences" }).uncheck()
+  await expect(
+    newestRow.getByRole("button", { name: /^(changed|added|removed)\./ }),
+  ).toHaveCount(0)
+  await page.getByRole("checkbox", { name: "Show differences" }).check()
+
   const hasPageOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > window.innerWidth,
   )
@@ -313,6 +374,21 @@ test("renders schema-driven category history with versioning and formatters", as
   await page.getByRole("button", { name: "Newest first" }).click()
   await expect(page.getByRole("button", { name: "Oldest first" })).toBeVisible()
   await expect(page.getByText("Showing 1–20 of 21")).toBeVisible()
+  await expect(
+    table
+      .getByTestId("category-data-row-record-2")
+      .getByRole("button", { name: "changed. Current: 2. Previous: 1" })
+      .first(),
+  ).toContainText("+1")
+
+  await page.getByRole("button", { name: "Next" }).click()
+  const ascendingBoundaryRow = table.getByTestId("category-data-row-record-21")
+  await expect(
+    ascendingBoundaryRow.getByRole("button", {
+      name: "changed. Current: current. Previous: null",
+    }),
+  ).toBeVisible()
+  await expect(table.locator("tbody tr")).toHaveCount(1)
 
   await page.getByRole("combobox", { name: "Schema version" }).click()
   await page.getByRole("option", { name: "Version 2" }).click()

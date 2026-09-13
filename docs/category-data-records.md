@@ -156,3 +156,17 @@ curl --silent --show-error --fail-with-body \
   --header "Authorization: Bearer fdg_live_your_api_key" \
   "http://localhost:8000/api/v1/integration/categories/FLAT/data-records/latest"
 ```
+
+## Difference pagination strategy
+
+The category history UI compares observations only within the selected schema
+version and date filters. The API remains ordered newest first, independently
+of the selected display order. For a page of `N` visible rows, the UI requests
+`N + 1` records at the page offset. The last, older record is used only as the
+comparison baseline for the oldest visible row and is not rendered. The UI then
+maps each record to the next record in API order before optionally reversing the
+visible rows for oldest-first display.
+
+This look-ahead strategy means a page boundary cannot be mistaken for the start
+of the history. Because the request always includes `schema_version`, a
+comparison never crosses a schema-version boundary.
