@@ -23,6 +23,36 @@ class UnsupportedCategoryDataCsvSchemaError(ValueError):
     pass
 
 
+def _excel_datetime(value: datetime) -> str:
+    return value.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _unwrap_nullable_scalar_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    any_of = schema.get("anyOf")
+    if not isinstance(any_of, list) or len(any_of) != 2:
+        return schema
+
+    null_option = next(
+        (
+            option
+            for option in any_of
+            if isinstance(option, dict) and option.get("type") == "null"
+        ),
+        None,
+    )
+    typed_option = next(
+        (
+            option
+            for option in any_of
+            if isinstance(option, dict) and option.get("type") != "null"
+        ),
+        None,
+    )
+    return (
+        typed_option if null_option is not None and typed_option is not None else schema
+    )
+
+
 def _scalar_type(property_name: str, schema: dict[str, Any]) -> str:
     value_type = schema.get("type")
     if isinstance(value_type, list):
@@ -30,7 +60,7 @@ def _scalar_type(property_name: str, schema: dict[str, Any]) -> str:
         if len(non_null_types) == 1:
             value_type = non_null_types[0]
 
-    if value_type not in _SUPPORTED_SCALAR_TYPES:
+    if not isinstance(value_type, str) or value_type not in _SUPPORTED_SCALAR_TYPES:
         raise UnsupportedCategoryDataCsvSchemaError(
             f"Field '{property_name}' uses unsupported CSV shape/type: {value_type!r}. "
             "Only scalar string, number, integer and boolean fields are supported."
@@ -38,7 +68,9 @@ def _scalar_type(property_name: str, schema: dict[str, Any]) -> str:
     return value_type
 
 
-def _property_columns(schema_definition: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
+def _property_columns(
+    schema_definition: dict[str, Any],
+) -> list[tuple[str, dict[str, Any]]]:
     if schema_definition.get("type") != "object":
         raise UnsupportedCategoryDataCsvSchemaError(
             "Category data CSV export requires an object schema."
@@ -57,8 +89,9 @@ def _property_columns(schema_definition: dict[str, Any]) -> list[tuple[str, dict
             raise UnsupportedCategoryDataCsvSchemaError(
                 f"Field '{name}' has an unsupported schema definition."
             )
-        _scalar_type(name, property_schema)
-        columns.append((name, property_schema))
+        scalar_schema = _unwrap_nullable_scalar_schema(property_schema)
+        _scalar_type(name, scalar_schema)
+        columns.append((name, scalar_schema))
     return columns
 
 
@@ -72,7 +105,9 @@ def _format_value(value: Any, schema: dict[str, Any]) -> str:
 
     if value_type == "boolean":
         return "true" if value is True else "false"
-    if value_type in {"number", "integer"}:
+    if value_type == "number":
+        return str(value).replace(".", ",")
+    if value_type == "integer":
         return str(value)
     if value_type == "string":
         text = str(value)
@@ -80,7 +115,7 @@ def _format_value(value: Any, schema: dict[str, Any]) -> str:
         if value_format == "date":
             return date.fromisoformat(text).isoformat()
         if value_format == "date-time":
-            return datetime.fromisoformat(text.replace("Z", "+00:00")).isoformat()
+            return _excel_datetime(datetime.fromisoformat(text.replace("Z", "+00:00")))
         return text
 
     raise UnsupportedCategoryDataCsvSchemaError(
@@ -143,12 +178,12 @@ def export_category_data_csv(
     )
 
     output = io.StringIO(newline="")
-    writer = csv.writer(output, lineterminator="\r\n")
+    writer = csv.writer(output, delimiter=";", lineterminator="\r\n")
     writer.writerow([*_METADATA_COLUMNS, *(name for name, _ in columns)])
     for record in records:
         writer.writerow(
             [
-                record.observed_at.isoformat(),
+                _excel_datetime(record.observed_at),
                 str(record.schema_version),
                 record.source or "",
                 record.external_id or "",
