@@ -2,6 +2,7 @@ import { Download } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { apiUrl } from "@/config"
 import useCustomToast from "@/hooks/useCustomToast"
 
 type CategoryDataCsvExportButtonProps = {
@@ -43,12 +44,18 @@ export function CategoryDataCsvExportButton(
   const handleExport = async () => {
     setIsExporting(true)
     try {
-      const response = await fetch(exportUrl(props), {
-        credentials: "same-origin",
+      const accessToken = localStorage.getItem("access_token")
+      const response = await fetch(`${apiUrl}${exportUrl(props)}`, {
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
       })
       if (!response.ok) {
         const payload = await response.json().catch(() => null)
         throw new Error(payload?.detail ?? "Could not export category data.")
+      }
+      if (!response.headers.get("content-type")?.startsWith("text/csv")) {
+        throw new Error("The export response was not a CSV file.")
       }
 
       const blobUrl = URL.createObjectURL(await response.blob())
@@ -61,7 +68,9 @@ export function CategoryDataCsvExportButton(
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
       showErrorToast(
-        error instanceof Error ? error.message : "Could not export category data.",
+        error instanceof Error
+          ? error.message
+          : "Could not export category data.",
       )
     } finally {
       setIsExporting(false)
