@@ -98,6 +98,7 @@ export function IntegrationDataCategoriesTable({
                         <Link
                           to="/ledgers/$ledgerId/categories/$categoryId/data"
                           params={{ ledgerId, categoryId: category.id }}
+                          search={{ sort: "desc" }}
                         >
                           View history
                         </Link>
