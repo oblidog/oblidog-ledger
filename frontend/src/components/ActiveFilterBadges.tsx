@@ -22,6 +22,7 @@ export function ActiveFilterBadges({
 
   return (
     <div
+      role="group"
       className="flex min-w-0 flex-wrap items-center gap-2"
       aria-label="Active filters"
     >
