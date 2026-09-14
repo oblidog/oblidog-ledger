@@ -84,6 +84,6 @@ test("shows integration data as a dedicated ledger page", async ({ page }) => {
 
   await table.getByRole("link", { name: "View history" }).click()
   await expect(page).toHaveURL(
-    `/ledgers/${ledger.id}/categories/${metered.id}/data`,
+    `/ledgers/${ledger.id}/categories/${metered.id}/data?sort=desc`,
   )
 })
