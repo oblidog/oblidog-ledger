@@ -17,6 +17,10 @@ import {
   type ObligationPublic,
   ObligationsService,
 } from "@/client"
+import {
+  ActiveFilterBadges,
+  type ActiveFilter,
+} from "@/components/ActiveFilterBadges"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -109,6 +113,40 @@ function periodFromSearch() {
   return isValidPeriod(year, month) ? { year, month } : currentPeriod()
 }
 
+function filtersFromSearch() {
+  const period = periodFromSearch()
+  if (typeof window === "undefined") {
+    return {
+      year: String(period.year),
+      month: String(period.month),
+      filterByPeriod: true,
+      categoryCode: "",
+      lifecycle: "unpaid" as LifecycleFilter,
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search)
+  const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
+  return {
+    year: String(period.year),
+    month: String(period.month),
+    filterByPeriod: params.get("period") !== "all",
+    categoryCode: (params.get("category") ?? "").toUpperCase().slice(0, 4),
+    lifecycle:
+      lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
+        ? lifecycleParam
+        : ("unpaid" as LifecycleFilter),
+  }
+}
+
+function lifecycleFilterLabel(lifecycle: LifecycleFilter) {
+  if (lifecycle === "unpaid") return "Unpaid"
+  return lifecycle
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
 function dueDateRange(year: number, month: number) {
   const minimum = new Date(Date.UTC(year, month - 1, 1))
   const maximum = new Date(Date.UTC(year, month, 0))
@@ -197,12 +235,17 @@ export function ObligationWorkspace({
   ledgerId: string
   canManageComponents: boolean
 }) {
+  const initialFilters = filtersFromSearch()
   const period = periodFromSearch()
-  const [year, setYear] = useState(String(period.year))
-  const [month, setMonth] = useState(String(period.month))
-  const [filterByPeriod, setFilterByPeriod] = useState(true)
-  const [categoryCode, setCategoryCode] = useState("")
-  const [lifecycle, setLifecycle] = useState<LifecycleFilter>("unpaid")
+  const [year, setYear] = useState(initialFilters.year)
+  const [month, setMonth] = useState(initialFilters.month)
+  const [filterByPeriod, setFilterByPeriod] = useState(
+    initialFilters.filterByPeriod,
+  )
+  const [categoryCode, setCategoryCode] = useState(initialFilters.categoryCode)
+  const [lifecycle, setLifecycle] = useState<LifecycleFilter>(
+    initialFilters.lifecycle,
+  )
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
@@ -212,6 +255,37 @@ export function ObligationWorkspace({
   const filterMonth = Number(month)
   const hasValidPeriodFilter =
     !filterByPeriod || isValidPeriod(filterYear, filterMonth)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const params = new URLSearchParams(window.location.search)
+    params.delete("year")
+    params.delete("month")
+    params.delete("period")
+    params.delete("category")
+    params.delete("lifecycle")
+
+    if (filterByPeriod && hasValidPeriodFilter) {
+      params.set("year", String(filterYear))
+      params.set("month", String(filterMonth))
+    } else if (!filterByPeriod) {
+      params.set("period", "all")
+    }
+    if (categoryCode) params.set("category", categoryCode)
+    if (lifecycle) params.set("lifecycle", lifecycle)
+
+    const search = params.toString()
+    const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`
+    window.history.replaceState(window.history.state, "", nextUrl)
+  }, [
+    categoryCode,
+    filterByPeriod,
+    filterMonth,
+    filterYear,
+    hasValidPeriodFilter,
+    lifecycle,
+  ])
 
   const obligations = useQuery({
     queryFn: () =>
@@ -254,6 +328,34 @@ export function ObligationWorkspace({
       if (second.due_date === null) return 1
       return first.due_date.localeCompare(second.due_date)
     })
+  const activeFilters: ActiveFilter[] = []
+  if (filterByPeriod && hasValidPeriodFilter) {
+    activeFilters.push({
+      key: "period",
+      label: `Period: ${monthInputValue(year, month)}`,
+      onRemove: () => setFilterByPeriod(false),
+    })
+  }
+  if (categoryCode) {
+    activeFilters.push({
+      key: "category",
+      label: `Category: ${categoryCode}`,
+      onRemove: () => setCategoryCode(""),
+    })
+  }
+  if (lifecycle) {
+    activeFilters.push({
+      key: "lifecycle",
+      label: `Status: ${lifecycleFilterLabel(lifecycle)}`,
+      onRemove: () => setLifecycle(""),
+    })
+  }
+  const clearFilters = () => {
+    setFilterByPeriod(false)
+    setCategoryCode("")
+    setLifecycle("")
+  }
+
   const markReady = useMutation({
     mutationFn: (obligation: ObligationPublic) =>
       ObligationsService.markObligationReady({
@@ -395,6 +497,7 @@ export function ObligationWorkspace({
           />
           <Label htmlFor="obligation-filter-by-period">Filter by period</Label>
         </div>
+        <ActiveFilterBadges filters={activeFilters} onClearAll={clearFilters} />
         {filterByPeriod && !hasValidPeriodFilter ? (
           <p className="text-sm text-muted-foreground">
             Enter a valid year and month to load obligations.
