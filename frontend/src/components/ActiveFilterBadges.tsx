@@ -21,11 +21,8 @@ export function ActiveFilterBadges({
   }
 
   return (
-    <div
-      role="group"
-      className="flex min-w-0 flex-wrap items-center gap-2"
-      aria-label="Active filters"
-    >
+    <fieldset className="flex min-w-0 flex-wrap items-center gap-2">
+      <legend className="sr-only">Active filters</legend>
       {filters.map((filter) => (
         <Badge
           key={filter.key}
@@ -54,6 +51,6 @@ export function ActiveFilterBadges({
           Clear all
         </Button>
       ) : null}
-    </div>
+    </fieldset>
   )
 }
