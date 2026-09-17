@@ -46,6 +46,7 @@ import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
 
 type LifecycleFilter = ObligationLifecycle | "" | "unpaid"
@@ -251,6 +252,10 @@ export function ObligationWorkspace({
     useState<ObligationPublic | null>(null)
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
+  const invalidateActionHistory = (obligationKey: string) =>
+    void queryClient.invalidateQueries({
+      queryKey: ["obligation-actions", ledgerId, obligationKey],
+    })
   const filterYear = Number(year)
   const filterMonth = Number(month)
   const hasValidPeriodFilter =
@@ -365,6 +370,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation marked as ready")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -382,6 +388,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation reopened")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -399,6 +406,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation canceled")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -416,6 +424,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation marked as paid")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -695,6 +704,10 @@ export function ObligationWorkspace({
                   canManage={canManageComponents}
                   onError={showErrorToast}
                   onSuccess={showSuccessToast}
+                />
+                <ObligationActionHistory
+                  ledgerId={ledgerId}
+                  obligationKey={selected.data.key}
                 />
               </div>
             ) : (
