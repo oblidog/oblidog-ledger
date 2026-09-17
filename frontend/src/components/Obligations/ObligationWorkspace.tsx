@@ -477,6 +477,7 @@ export function ObligationWorkspace({
             }
           />
           <select
+            aria-label="Lifecycle"
             className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm"
             value={lifecycle}
             onChange={(event) =>
