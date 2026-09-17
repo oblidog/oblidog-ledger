@@ -1032,6 +1032,9 @@ function EditObligationDialog({
       onSuccess("Obligation updated")
       onOpenChange(false)
       void queryClient.invalidateQueries({
+        queryKey: ["obligation-actions", ledgerId, obligation.key],
+      })
+      void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
       void queryClient.invalidateQueries({
