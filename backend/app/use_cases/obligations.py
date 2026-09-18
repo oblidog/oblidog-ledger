@@ -74,6 +74,8 @@ _AUDITED_OBLIGATION_FIELDS = (
     "paid_at",
 )
 
+_MONEY_QUANTUM = Decimal("0.01")
+
 
 def _serialize_action_value(value: Any) -> Any:
     if isinstance(value, Decimal):
@@ -89,11 +91,22 @@ def _serialize_action_value(value: Any) -> Any:
     return value
 
 
+def _serialize_money_action_value(value: Decimal | None) -> str | None:
+    """Match the canonical scale of the Numeric(12, 2) database columns."""
+    if value is None:
+        return None
+    return format(value.quantize(_MONEY_QUANTUM), "f")
+
+
 def _obligation_snapshot(obligation: Obligation) -> dict[str, object]:
-    return {
+    snapshot = {
         field: _serialize_action_value(getattr(obligation, field))
         for field in _AUDITED_OBLIGATION_FIELDS
     }
+    snapshot["current_amount"] = _serialize_money_action_value(
+        obligation.current_amount
+    )
+    return snapshot
 
 
 def _component_snapshot(component: ObligationComponent) -> dict[str, object]:
@@ -101,7 +114,7 @@ def _component_snapshot(component: ObligationComponent) -> dict[str, object]:
         "id": str(component.id),
         "type": component.type,
         "label": component.label,
-        "amount": _serialize_action_value(component.amount),
+        "amount": _serialize_money_action_value(component.amount),
         "source": component.source,
         "external_id": component.external_id,
         "metadata": _serialize_action_value(component.component_metadata),

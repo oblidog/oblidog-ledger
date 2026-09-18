@@ -74,7 +74,7 @@ def test_creation_and_value_changes_are_structured_and_skip_noops(
         session=db,
         ledger_id=ledger.id,
         key=key,
-        current_amount=Decimal("125.00"),
+        current_amount=Decimal("125.0"),
         actor=actor,
     )
     updated = _actions(db, obligation.id)
@@ -236,6 +236,7 @@ def test_component_upsert_is_idempotent_and_logs_only_real_changes(
     created = obligation_use_cases.upsert_obligation_component(**arguments)
     assert created.result == MutationResult.CREATED
     after_create = len(_actions(db, obligation.id))
+    arguments["amount"] = Decimal("50.0")
     unchanged = obligation_use_cases.upsert_obligation_component(**arguments)
     assert unchanged.result == MutationResult.UNCHANGED
     assert len(_actions(db, obligation.id)) == after_create
