@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum
@@ -16,6 +17,7 @@ from app.domain import (
     CurrentValueSource,
     DataSourcePolicy,
     EffectiveValueSourceMode,
+    MutationResult,
     ObligationActionActor,
     ObligationActionType,
     ObligationKey,
@@ -49,6 +51,13 @@ class _Unset:
 
 
 UNSET = _Unset()
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentUpsertOutcome:
+    component: ObligationComponent
+    result: MutationResult
+
 
 _AUDITED_OBLIGATION_FIELDS = (
     "lifecycle",
@@ -991,7 +1000,7 @@ def upsert_obligation_component(
     amount: Decimal | None = None,
     metadata: dict[str, object] | None = None,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
-) -> ObligationComponent:
+) -> ComponentUpsertOutcome:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
     )
@@ -1025,12 +1034,14 @@ def upsert_obligation_component(
 
     after = _component_snapshot(component)
     if created:
+        result = MutationResult.CREATED
         component_diff: dict[str, object] = {
             "components": {"added": [after], "updated": [], "removed": []}
         }
     else:
         assert before is not None
         field_changes = _snapshot_diff(before, after)
+        result = MutationResult.UPDATED if field_changes else MutationResult.UNCHANGED
         component_diff = (
             {
                 "components": {
@@ -1061,4 +1072,4 @@ def upsert_obligation_component(
         session.rollback()
         raise DuplicateObligationComponentError from exc
     session.refresh(component)
-    return component
+    return ComponentUpsertOutcome(component=component, result=result)

@@ -28,8 +28,8 @@ from app.schemas import (
     CategoryDataSchemaPublic,
     IntegrationCategoryDataRecordCreate,
     IntegrationObligationComponentUpsert,
-    ObligationComponentPublic,
     ObligationComponentsPublic,
+    ObligationComponentUpsertResult,
     ObligationIntegrationUpdate,
     ObligationNoteAppend,
     ObligationPublic,
@@ -274,16 +274,16 @@ def read_integration_obligation_components(
 
 @router.put(
     "/obligations/{period}/components/upsert",
-    response_model=ObligationComponentPublic,
+    response_model=ObligationComponentUpsertResult,
 )
 def upsert_integration_obligation_component(
     period: IntegrationObligationPeriodPath,
     component_in: IntegrationObligationComponentUpsert,
     context: ApiContext = Depends(require_scope("ledger:write")),
-) -> ObligationComponentPublic:
+) -> ObligationComponentUpsertResult:
     key = _resolve_integration_obligation_key(context=context, period=period)
     try:
-        component = obligation_use_cases.upsert_obligation_component(
+        outcome = obligation_use_cases.upsert_obligation_component(
             session=context.session,
             ledger_id=context.ledger.id,
             key=key,
@@ -293,7 +293,10 @@ def upsert_integration_obligation_component(
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
-    return to_obligation_component_public(component)
+    return ObligationComponentUpsertResult(
+        component=to_obligation_component_public(outcome.component),
+        result=outcome.result,
+    )
 
 
 @router.patch("/obligations/{period}", response_model=ObligationPublic)

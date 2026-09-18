@@ -8,6 +8,7 @@ from app.domain import (
     BillingPeriod,
     CurrentValueSource,
     EffectiveValueSourceMode,
+    MutationResult,
     ObligationActionActorType,
     ObligationActionType,
     ObligationLifecycle,
@@ -123,6 +124,11 @@ class ObligationComponentPublic(BaseModel):
     metadata: dict[str, object] | None
     created_at: datetime
     updated_at: datetime
+
+
+class ObligationComponentUpsertResult(BaseModel):
+    component: ObligationComponentPublic
+    result: MutationResult
 
 
 class ObligationComponentsPublic(BaseModel):

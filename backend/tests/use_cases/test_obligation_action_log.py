@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.domain import (
     BillingPeriod,
+    MutationResult,
     ObligationActionActor,
     ObligationKey,
     ObligationLifecycle,
@@ -232,14 +233,17 @@ def test_component_upsert_is_idempotent_and_logs_only_real_changes(
         "external_id": "invoice-123",
         "amount": Decimal("50.00"),
     }
-    component = obligation_use_cases.upsert_obligation_component(**arguments)
+    created = obligation_use_cases.upsert_obligation_component(**arguments)
+    assert created.result == MutationResult.CREATED
     after_create = len(_actions(db, obligation.id))
-    obligation_use_cases.upsert_obligation_component(**arguments)
+    unchanged = obligation_use_cases.upsert_obligation_component(**arguments)
+    assert unchanged.result == MutationResult.UNCHANGED
     assert len(_actions(db, obligation.id)) == after_create
 
     arguments["amount"] = Decimal("55.00")
     updated = obligation_use_cases.upsert_obligation_component(**arguments)
-    assert updated.id == component.id
+    assert updated.result == MutationResult.UPDATED
+    assert updated.component.id == created.component.id
     action = _actions(db, obligation.id)[-1]
     assert action.changes["components"]["updated"][0]["changes"]["amount"] == {
         "from": "50.00",

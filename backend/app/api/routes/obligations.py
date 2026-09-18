@@ -22,6 +22,7 @@ from app.schemas import (
     ObligationComponentsPublic,
     ObligationComponentUpdate,
     ObligationComponentUpsert,
+    ObligationComponentUpsertResult,
     ObligationCreate,
     ObligationPeriodPublic,
     ObligationPublic,
@@ -274,7 +275,7 @@ def add_obligation_component(
 
 @router.put(
     "/ledgers/{ledger_id}/obligations/{obligation_key}/components/upsert",
-    response_model=ObligationComponentPublic,
+    response_model=ObligationComponentUpsertResult,
 )
 def upsert_obligation_component(
     *,
@@ -285,7 +286,7 @@ def upsert_obligation_component(
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
     try:
-        component = obligation_use_cases.upsert_obligation_component(
+        outcome = obligation_use_cases.upsert_obligation_component(
             session=session,
             ledger_id=ledger.id,
             key=_parse_obligation_key(obligation_key),
@@ -294,7 +295,10 @@ def upsert_obligation_component(
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
-    return to_obligation_component_public(component)
+    return ObligationComponentUpsertResult(
+        component=to_obligation_component_public(outcome.component),
+        result=outcome.result,
+    )
 
 
 @router.patch(

@@ -789,6 +789,15 @@
         "title": "IntegrationRunStart",
         "type": "object"
       },
+      "MutationResult": {
+        "enum": [
+          "created",
+          "updated",
+          "unchanged"
+        ],
+        "title": "MutationResult",
+        "type": "string"
+      },
       "ObligationComponentPublic": {
         "properties": {
           "amount": {
@@ -879,6 +888,22 @@
           "updated_at"
         ],
         "title": "ObligationComponentPublic",
+        "type": "object"
+      },
+      "ObligationComponentUpsertResult": {
+        "properties": {
+          "component": {
+            "$ref": "#/components/schemas/ObligationComponentPublic"
+          },
+          "result": {
+            "$ref": "#/components/schemas/MutationResult"
+          }
+        },
+        "required": [
+          "component",
+          "result"
+        ],
+        "title": "ObligationComponentUpsertResult",
         "type": "object"
       },
       "ObligationComponentsPublic": {
@@ -1832,7 +1857,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ObligationComponentPublic"
+                  "$ref": "#/components/schemas/ObligationComponentUpsertResult"
                 }
               }
             },

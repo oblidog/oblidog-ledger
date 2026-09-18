@@ -44,6 +44,12 @@ class CurrentValueSource(StrEnum):
     LEGACY = "legacy"
 
 
+class MutationResult(StrEnum):
+    CREATED = "created"
+    UPDATED = "updated"
+    UNCHANGED = "unchanged"
+
+
 class EffectiveValueSourceMode(StrEnum):
     UNKNOWN = "unknown"
     AUTOMATIC = "automatic"
