@@ -152,7 +152,10 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 if (next) setSelectedPeriod(next)
               }}
             >
-              <SelectTrigger className="w-full sm:w-40" aria-label="Range ending">
+              <SelectTrigger
+                className="w-full sm:w-40"
+                aria-label="Range ending"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -172,7 +175,8 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
           <AlertCircle />
           <AlertTitle>Categories are unavailable</AlertTitle>
           <AlertDescription>
-            Component comparison cannot be loaded until categories are available.
+            Component comparison cannot be loaded until categories are
+            available.
           </AlertDescription>
         </Alert>
       ) : (
@@ -200,7 +204,9 @@ export function ComponentHistoryTable({
 }) {
   const periods = useMemo(
     () =>
-      Array.from({ length: 6 }, (_, index) => addMonths(selectedPeriod, index - 5)),
+      Array.from({ length: 6 }, (_, index) =>
+        addMonths(selectedPeriod, index - 5),
+      ),
     [selectedPeriod],
   )
   const obligations = useQuery({
@@ -209,7 +215,12 @@ export function ComponentHistoryTable({
         ledgerId,
         categoryCode,
       }),
-    queryKey: ["analytics", "component-history-obligations", ledgerId, categoryCode],
+    queryKey: [
+      "analytics",
+      "component-history-obligations",
+      ledgerId,
+      categoryCode,
+    ],
     enabled: Boolean(categoryCode),
   })
   const obligationsByPeriod = useMemo(
@@ -241,9 +252,12 @@ export function ComponentHistoryTable({
 
   const isLoading =
     obligations.isLoading || componentQueries.some((query) => query.isLoading)
-  const isError = obligations.isError || componentQueries.some((query) => query.isError)
+  const isError =
+    obligations.isError || componentQueries.some((query) => query.isError)
 
-  const componentsByPeriod = componentQueries.map((query) => query.data?.data ?? [])
+  const componentsByPeriod = componentQueries.map(
+    (query) => query.data?.data ?? [],
+  )
   const columns = useMemo(() => {
     const byIdentity = new Map<string, ComponentColumn>()
     componentsByPeriod.forEach((components, periodIndex) => {
@@ -282,12 +296,15 @@ export function ComponentHistoryTable({
       <CardHeader>
         <CardTitle>Component history</CardTitle>
         <CardDescription>
-          Compare the selected category across the six periods ending in {periodLabel(selectedPeriod)}.
+          Compare the selected category across the six periods ending in{" "}
+          {periodLabel(selectedPeriod)}.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!categoryCode ? (
-          <p className="text-sm text-muted-foreground">Select a category to compare its components.</p>
+          <p className="text-sm text-muted-foreground">
+            Select a category to compare its components.
+          </p>
         ) : isLoading ? (
           <Skeleton className="h-48 w-full" />
         ) : isError ? (
@@ -295,28 +312,40 @@ export function ComponentHistoryTable({
             <AlertCircle />
             <AlertTitle>Component history is unavailable</AlertTitle>
             <AlertDescription>
-              Obligations or components for the selected range could not be loaded.
+              Obligations or components for the selected range could not be
+              loaded.
             </AlertDescription>
           </Alert>
         ) : columns.length === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              No components were recorded for this category in the selected range.
+              No components were recorded for this category in the selected
+              range.
             </p>
           </div>
         ) : (
-          <div className="max-w-full overflow-x-auto rounded-lg border" data-testid="component-history-table">
+          <div
+            className="max-w-full overflow-x-auto rounded-lg border"
+            data-testid="component-history-table"
+          >
             <Table className="min-w-[960px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 z-10 min-w-32 bg-background">Period</TableHead>
+                  <TableHead className="sticky left-0 z-10 min-w-32 bg-background">
+                    Period
+                  </TableHead>
                   {columns.map((column) => {
                     const currentLabel = column.labels[column.labels.length - 1]
                     const previousLabels = column.labels.slice(0, -1)
                     return (
-                      <TableHead key={column.key} className="min-w-44 whitespace-normal align-top">
+                      <TableHead
+                        key={column.key}
+                        className="min-w-44 whitespace-normal align-top"
+                      >
                         <div className="space-y-1">
-                          <p className="break-words font-medium text-foreground">{currentLabel}</p>
+                          <p className="break-words font-medium text-foreground">
+                            {currentLabel}
+                          </p>
                           <Badge variant="secondary">{column.type}</Badge>
                           {previousLabels.length ? (
                             <p className="text-xs font-normal text-muted-foreground">
@@ -325,14 +354,18 @@ export function ComponentHistoryTable({
                           ) : null}
                           {column.source || column.externalId ? (
                             <p className="break-all text-xs font-normal text-muted-foreground">
-                              {[column.source, column.externalId].filter(Boolean).join(" · ")}
+                              {[column.source, column.externalId]
+                                .filter(Boolean)
+                                .join(" · ")}
                             </p>
                           ) : null}
                         </div>
                       </TableHead>
                     )
                   })}
-                  <TableHead className="min-w-36 text-right">Shown total</TableHead>
+                  <TableHead className="min-w-36 text-right">
+                    Shown total
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -340,7 +373,10 @@ export function ComponentHistoryTable({
                   const obligation = obligationsByPeriod.get(periodKey(period))
                   const periodComponents = componentsByPeriod[periodIndex]
                   const componentMap = new Map(
-                    periodComponents.map((component) => [componentIdentity(component), component]),
+                    periodComponents.map((component) => [
+                      componentIdentity(component),
+                      component,
+                    ]),
                   )
                   const monetaryComponents = periodComponents.filter(
                     (component) => component.amount !== null,
@@ -355,12 +391,17 @@ export function ComponentHistoryTable({
                       <TableCell className="sticky left-0 z-10 bg-background align-top font-medium whitespace-nowrap">
                         <div>{periodLabel(period)}</div>
                         {!obligation ? (
-                          <span className="text-xs font-normal text-muted-foreground">No obligation</span>
+                          <span className="text-xs font-normal text-muted-foreground">
+                            No obligation
+                          </span>
                         ) : null}
                       </TableCell>
                       {columns.map((column) => {
                         const component = componentMap.get(column.key)
-                        const previousComponents = periodIndex > 0 ? componentsByPeriod[periodIndex - 1] : []
+                        const previousComponents =
+                          periodIndex > 0
+                            ? componentsByPeriod[periodIndex - 1]
+                            : []
                         const existedPreviously = previousComponents.some(
                           (item) => componentIdentity(item) === column.key,
                         )
@@ -379,9 +420,14 @@ export function ComponentHistoryTable({
                                 <span className="font-medium tabular-nums whitespace-nowrap">
                                   {component.amount === null
                                     ? "Present"
-                                    : formatAmount(component.amount, currency ?? null)}
+                                    : formatAmount(
+                                        component.amount,
+                                        currency ?? null,
+                                      )}
                                 </span>
-                                {state === "added" ? <Badge variant="outline">Added</Badge> : null}
+                                {state === "added" ? (
+                                  <Badge variant="outline">Added</Badge>
+                                ) : null}
                               </div>
                             ) : state === "removed" ? (
                               <div className="space-y-1">
@@ -395,7 +441,9 @@ export function ComponentHistoryTable({
                         )
                       })}
                       <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">
-                        {monetaryComponents.length > 0 ? formatAmount(total.toFixed(2), currency ?? null) : "—"}
+                        {monetaryComponents.length > 0
+                          ? formatAmount(total.toFixed(2), currency ?? null)
+                          : "—"}
                       </TableCell>
                     </TableRow>
                   )
@@ -403,7 +451,8 @@ export function ComponentHistoryTable({
               </TableBody>
             </Table>
             <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-              “Shown total” sums only component amounts displayed in the row; informational components are excluded.
+              “Shown total” sums only component amounts displayed in the row;
+              informational components are excluded.
             </p>
           </div>
         )}
