@@ -23,7 +23,6 @@ import { Route as LayoutLedgersIndexRouteImport } from './routes/_layout/ledgers
 import { Route as LayoutLedgersLedgerIdRouteImport } from './routes/_layout/ledgers.$ledgerId'
 import { Route as LayoutLedgersLedgerIdAnalyticsRouteImport } from './routes/_layout/ledgers.$ledgerId.analytics'
 import { Route as LayoutLedgersLedgerIdCategoriesRouteImport } from './routes/_layout/ledgers.$ledgerId.categories'
-import { Route as LayoutLedgersLedgerIdIntegrationDataRouteImport } from './routes/_layout/ledgers.$ledgerId.integration-data'
 import { Route as LayoutLedgersLedgerIdIntegrationsRouteImport } from './routes/_layout/ledgers.$ledgerId.integrations'
 import { Route as LayoutLedgersLedgerIdSettingsRouteImport } from './routes/_layout/ledgers.$ledgerId.settings'
 import { Route as LayoutLedgersLedgerIdSystemRunRouteImport } from './routes/_layout/ledgers.$ledgerId.system-run'
@@ -102,12 +101,6 @@ const LayoutLedgersLedgerIdCategoriesRoute =
     path: '/categories',
     getParentRoute: () => LayoutLedgersLedgerIdRoute,
   } as any)
-const LayoutLedgersLedgerIdIntegrationDataRoute =
-  LayoutLedgersLedgerIdIntegrationDataRouteImport.update({
-    id: '/integration-data',
-    path: '/integration-data',
-    getParentRoute: () => LayoutLedgersLedgerIdRoute,
-  } as any)
 const LayoutLedgersLedgerIdIntegrationsRoute =
   LayoutLedgersLedgerIdIntegrationsRouteImport.update({
     id: '/integrations',
@@ -159,7 +152,6 @@ export interface FileRoutesByFullPath {
   '/ledgers/': typeof LayoutLedgersIndexRoute
   '/ledgers/$ledgerId/analytics': typeof LayoutLedgersLedgerIdAnalyticsRoute
   '/ledgers/$ledgerId/categories': typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
-  '/ledgers/$ledgerId/integration-data': typeof LayoutLedgersLedgerIdIntegrationDataRoute
   '/ledgers/$ledgerId/integrations': typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   '/ledgers/$ledgerId/settings': typeof LayoutLedgersLedgerIdSettingsRoute
   '/ledgers/$ledgerId/system-run': typeof LayoutLedgersLedgerIdSystemRunRoute
@@ -180,7 +172,6 @@ export interface FileRoutesByTo {
   '/ledgers': typeof LayoutLedgersIndexRoute
   '/ledgers/$ledgerId/analytics': typeof LayoutLedgersLedgerIdAnalyticsRoute
   '/ledgers/$ledgerId/categories': typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
-  '/ledgers/$ledgerId/integration-data': typeof LayoutLedgersLedgerIdIntegrationDataRoute
   '/ledgers/$ledgerId/integrations': typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   '/ledgers/$ledgerId/settings': typeof LayoutLedgersLedgerIdSettingsRoute
   '/ledgers/$ledgerId/system-run': typeof LayoutLedgersLedgerIdSystemRunRoute
@@ -204,7 +195,6 @@ export interface FileRoutesById {
   '/_layout/ledgers/': typeof LayoutLedgersIndexRoute
   '/_layout/ledgers/$ledgerId/analytics': typeof LayoutLedgersLedgerIdAnalyticsRoute
   '/_layout/ledgers/$ledgerId/categories': typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
-  '/_layout/ledgers/$ledgerId/integration-data': typeof LayoutLedgersLedgerIdIntegrationDataRoute
   '/_layout/ledgers/$ledgerId/integrations': typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   '/_layout/ledgers/$ledgerId/settings': typeof LayoutLedgersLedgerIdSettingsRoute
   '/_layout/ledgers/$ledgerId/system-run': typeof LayoutLedgersLedgerIdSystemRunRoute
@@ -228,7 +218,6 @@ export interface FileRouteTypes {
     | '/ledgers/'
     | '/ledgers/$ledgerId/analytics'
     | '/ledgers/$ledgerId/categories'
-    | '/ledgers/$ledgerId/integration-data'
     | '/ledgers/$ledgerId/integrations'
     | '/ledgers/$ledgerId/settings'
     | '/ledgers/$ledgerId/system-run'
@@ -249,7 +238,6 @@ export interface FileRouteTypes {
     | '/ledgers'
     | '/ledgers/$ledgerId/analytics'
     | '/ledgers/$ledgerId/categories'
-    | '/ledgers/$ledgerId/integration-data'
     | '/ledgers/$ledgerId/integrations'
     | '/ledgers/$ledgerId/settings'
     | '/ledgers/$ledgerId/system-run'
@@ -272,7 +260,6 @@ export interface FileRouteTypes {
     | '/_layout/ledgers/'
     | '/_layout/ledgers/$ledgerId/analytics'
     | '/_layout/ledgers/$ledgerId/categories'
-    | '/_layout/ledgers/$ledgerId/integration-data'
     | '/_layout/ledgers/$ledgerId/integrations'
     | '/_layout/ledgers/$ledgerId/settings'
     | '/_layout/ledgers/$ledgerId/system-run'
@@ -389,13 +376,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutLedgersLedgerIdCategoriesRouteImport
       parentRoute: typeof LayoutLedgersLedgerIdRoute
     }
-    '/_layout/ledgers/$ledgerId/integration-data': {
-      id: '/_layout/ledgers/$ledgerId/integration-data'
-      path: '/integration-data'
-      fullPath: '/ledgers/$ledgerId/integration-data'
-      preLoaderRoute: typeof LayoutLedgersLedgerIdIntegrationDataRouteImport
-      parentRoute: typeof LayoutLedgersLedgerIdRoute
-    }
     '/_layout/ledgers/$ledgerId/integrations': {
       id: '/_layout/ledgers/$ledgerId/integrations'
       path: '/integrations'
@@ -477,7 +457,6 @@ const LayoutLedgersLedgerIdIntegrationsRouteWithChildren =
 interface LayoutLedgersLedgerIdRouteChildren {
   LayoutLedgersLedgerIdAnalyticsRoute: typeof LayoutLedgersLedgerIdAnalyticsRoute
   LayoutLedgersLedgerIdCategoriesRoute: typeof LayoutLedgersLedgerIdCategoriesRouteWithChildren
-  LayoutLedgersLedgerIdIntegrationDataRoute: typeof LayoutLedgersLedgerIdIntegrationDataRoute
   LayoutLedgersLedgerIdIntegrationsRoute: typeof LayoutLedgersLedgerIdIntegrationsRouteWithChildren
   LayoutLedgersLedgerIdSettingsRoute: typeof LayoutLedgersLedgerIdSettingsRoute
   LayoutLedgersLedgerIdSystemRunRoute: typeof LayoutLedgersLedgerIdSystemRunRoute
@@ -487,8 +466,6 @@ const LayoutLedgersLedgerIdRouteChildren: LayoutLedgersLedgerIdRouteChildren = {
   LayoutLedgersLedgerIdAnalyticsRoute: LayoutLedgersLedgerIdAnalyticsRoute,
   LayoutLedgersLedgerIdCategoriesRoute:
     LayoutLedgersLedgerIdCategoriesRouteWithChildren,
-  LayoutLedgersLedgerIdIntegrationDataRoute:
-    LayoutLedgersLedgerIdIntegrationDataRoute,
   LayoutLedgersLedgerIdIntegrationsRoute:
     LayoutLedgersLedgerIdIntegrationsRouteWithChildren,
   LayoutLedgersLedgerIdSettingsRoute: LayoutLedgersLedgerIdSettingsRoute,

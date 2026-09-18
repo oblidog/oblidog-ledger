@@ -298,7 +298,7 @@ test("compares stable, added, removed and renamed components across six periods"
     },
   })
 
-  await page.goto(`/ledgers/${ledger.id}/integration-data`)
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
 
   const table = page.getByTestId("component-history-table")
   await expect(table).toBeVisible()
