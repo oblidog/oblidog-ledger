@@ -1,4 +1,4 @@
-import { Database, Home, ListChecks, Tags } from "lucide-react"
+import { Home, ListChecks, Tags } from "lucide-react"
 
 import type { Item } from "./Main"
 
@@ -16,11 +16,6 @@ export function primaryNavigation(ledgerId: string | null): Item[] {
             icon: Tags,
             title: "Categories",
             path: `/ledgers/${ledgerId}/categories`,
-          },
-          {
-            icon: Database,
-            title: "Integration Data",
-            path: `/ledgers/${ledgerId}/integration-data`,
           },
         ]
       : []),

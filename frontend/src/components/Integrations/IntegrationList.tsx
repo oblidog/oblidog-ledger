@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { Plus, RefreshCw } from "lucide-react"
+import { EllipsisVertical, Plus, RefreshCw } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -10,6 +10,12 @@ import {
 } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -146,7 +152,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                   <TableHead>Last run</TableHead>
                   <TableHead>Result</TableHead>
                   <TableHead>Changes</TableHead>
-                  <TableHead className="w-24 text-right">Action</TableHead>
+                  <TableHead className="w-16 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -180,14 +186,47 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                       {changesLabel(item)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link
-                          to="/ledgers/$ledgerId/integrations/$integrationId"
-                          params={{ ledgerId, integrationId: item.id }}
-                        >
-                          View
-                        </Link>
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Actions for ${item.name}`}
+                          >
+                            <EllipsisVertical />
+                            <span className="sr-only">
+                              Actions for {item.name}
+                            </span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/ledgers/$ledgerId/integrations/$integrationId"
+                              params={{ ledgerId, integrationId: item.id }}
+                            >
+                              View integration
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/ledgers/$ledgerId/categories/$categoryId/data"
+                              params={{
+                                ledgerId,
+                                categoryId: item.category_id,
+                              }}
+                              search={{
+                                schema: undefined,
+                                from: undefined,
+                                to: undefined,
+                                sort: "desc",
+                              }}
+                            >
+                              View category data
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
