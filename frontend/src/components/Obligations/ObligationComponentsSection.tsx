@@ -451,7 +451,9 @@ export function ObligationComponentsSection({
                             </Button>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
+                          <span className="text-muted-foreground text-xs">
+                            —
+                          </span>
                         )}
                       </TableCell>
                     ) : null}

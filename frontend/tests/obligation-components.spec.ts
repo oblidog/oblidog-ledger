@@ -118,7 +118,9 @@ test("manages manual obligation components and keeps integration components read
   await page.getByText(fixture.categoryName, { exact: true }).click()
   await expect(page.getByText("Integration", { exact: true })).toBeVisible()
   await expect(page.getByText("provider", { exact: true })).toBeVisible()
-  await expect(page.getByText("FV/2026/08/12345", { exact: true })).toBeVisible()
+  await expect(
+    page.getByText("FV/2026/08/12345", { exact: true }),
+  ).toBeVisible()
   await expect(
     page.getByRole("button", { name: "Edit Synced invoice" }),
   ).toHaveCount(0)
@@ -158,8 +160,12 @@ test("renders monetary and informational components in a scannable table", async
     .getByRole("table")
     .filter({ has: page.getByRole("columnheader", { name: "Component" }) })
   await expect(table).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Component" })).toBeVisible()
-  await expect(table.getByRole("columnheader", { name: "Amount" })).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Component" }),
+  ).toBeVisible()
+  await expect(
+    table.getByRole("columnheader", { name: "Amount" }),
+  ).toBeVisible()
   await expect(
     table.getByRole("columnheader", { name: "Source / reference" }),
   ).toBeVisible()

@@ -18,8 +18,8 @@ import {
   ObligationsService,
 } from "@/client"
 import {
-  ActiveFilterBadges,
   type ActiveFilter,
+  ActiveFilterBadges,
 } from "@/components/ActiveFilterBadges"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
