@@ -1,3 +1,18 @@
+## v0.14.0 (2026-09-18)
+
+### Feat
+
+- **api**: return component upsert mutation result (#385)
+- **frontend**: add obligation action history (#369)
+- **frontend**: show active filters as removable badges (#366)
+
+### Fix
+
+- ignore decimal scale in action log diffs (#389)
+- **frontend**: move integration data access to integrations (#388)
+- **frontend**: move integration data to a dedicated page (#365)
+- **categories**: make CSV export compatible with Excel (#364)
+
 ## v0.13.0 (2026-09-13)
 
 ### Feat
