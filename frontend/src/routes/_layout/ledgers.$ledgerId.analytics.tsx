@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_layout/ledgers/$ledgerId/analytics")({
 function LedgerAnalytics() {
   const { ledgerId } = Route.useParams()
   return (
-    <div className="space-y-8">
+    <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-8">
       <AnalyticsDashboard ledgerId={ledgerId} />
       <ComponentHistoryExplorer ledgerId={ledgerId} />
     </div>

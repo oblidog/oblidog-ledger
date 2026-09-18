@@ -99,8 +99,27 @@ def test_obligation_component_endpoints_support_manual_crud_and_external_upsert(
         },
     )
     assert first_upsert.status_code == second_upsert.status_code == 200
-    assert first_upsert.json()["id"] == second_upsert.json()["id"]
-    assert second_upsert.json()["amount"] == "120.00"
+    assert first_upsert.json()["result"] == "created"
+    assert second_upsert.json()["result"] == "updated"
+    assert (
+        first_upsert.json()["component"]["id"]
+        == second_upsert.json()["component"]["id"]
+    )
+    assert second_upsert.json()["component"]["amount"] == "120.00"
+
+    unchanged_upsert = client.put(
+        f"{url}/upsert",
+        headers=headers,
+        json={
+            "type": "invoice",
+            "label": "Corrected August invoice",
+            "amount": "120.00",
+            "source": "provider",
+            "external_id": "FV/2026/08/12345",
+        },
+    )
+    assert unchanged_upsert.status_code == 200
+    assert unchanged_upsert.json()["result"] == "unchanged"
 
     duplicate_create = client.post(
         url,

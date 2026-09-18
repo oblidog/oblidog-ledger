@@ -31,6 +31,9 @@ def test_category_data_csv_export_encodes_schema_values_and_escaping(
                 "period": {"type": "string", "format": "date"},
                 "captured_at": {"type": "string", "format": "date-time"},
                 "amount": {"type": "number"},
+                "account_204_balance": {
+                    "anyOf": [{"type": "number"}, {"type": "null"}]
+                },
                 "enabled": {"type": "boolean"},
                 "optional": {"type": ["string", "null"]},
             },
@@ -50,6 +53,7 @@ def test_category_data_csv_export_encodes_schema_values_and_escaping(
             "period": "2026-01-02",
             "captured_at": "2026-01-02T10:15:30Z",
             "amount": 12.5,
+            "account_204_balance": 241.34,
             "enabled": True,
             "optional": None,
         },
@@ -66,12 +70,15 @@ def test_category_data_csv_export_encodes_schema_values_and_escaping(
     assert "attachment;" in response.headers["content-disposition"]
     assert response.content.startswith(b"\xef\xbb\xbf")
 
-    rows = list(csv.reader(io.StringIO(response.content.decode("utf-8-sig"))))
+    rows = list(
+        csv.reader(io.StringIO(response.content.decode("utf-8-sig")), delimiter=";")
+    )
     assert rows[0] == [
         "observed_at",
         "schema_version",
         "source",
         "external_id",
+        "account_204_balance",
         "amount",
         "captured_at",
         "enabled",
@@ -79,12 +86,14 @@ def test_category_data_csv_export_encodes_schema_values_and_escaping(
         "optional",
         "period",
     ]
+    assert rows[1][0] == "2026-01-02 12:30:00"
     assert rows[1][1:] == [
         "1",
         'meter,"main"\nfeed',
         "invoice,42",
-        "12.5",
-        "2026-01-02T10:15:30+00:00",
+        "241,34",
+        "12,5",
+        "2026-01-02 10:15:30",
         "true",
         'Zażółć, "gęślą"\njaźń',
         "",
@@ -137,13 +146,19 @@ def test_category_data_csv_export_respects_date_filter_and_empty_scope(
     )
 
     assert filtered.status_code == 200
-    filtered_rows = list(csv.reader(io.StringIO(filtered.content.decode("utf-8-sig"))))
+    filtered_rows = list(
+        csv.reader(io.StringIO(filtered.content.decode("utf-8-sig")), delimiter=";")
+    )
     assert len(filtered_rows) == 2
     assert filtered_rows[1][-1] == "20"
 
     assert empty.status_code == 200
-    empty_rows = list(csv.reader(io.StringIO(empty.content.decode("utf-8-sig"))))
-    assert empty_rows == [["observed_at", "schema_version", "source", "external_id", "reading"]]
+    empty_rows = list(
+        csv.reader(io.StringIO(empty.content.decode("utf-8-sig")), delimiter=";")
+    )
+    assert empty_rows == [
+        ["observed_at", "schema_version", "source", "external_id", "reading"]
+    ]
 
 
 def test_category_data_csv_export_rejects_nested_fields(

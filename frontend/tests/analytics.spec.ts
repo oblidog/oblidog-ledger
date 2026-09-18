@@ -302,19 +302,29 @@ test("compares stable, added, removed and renamed components across six periods"
 
   const table = page.getByTestId("component-history-table")
   await expect(table).toBeVisible()
-  await expect(table.getByText("Base charge renamed", { exact: true })).toBeVisible()
-  await expect(table.getByText("Previously: Base charge", { exact: true })).toBeVisible()
+  await expect(
+    table.getByText("Base charge renamed", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    table.getByText("Previously: Base charge", { exact: true }),
+  ).toBeVisible()
 
-  const earlierRow = table.getByRole("row").filter({ hasText: periodLabel(earlier) })
+  const earlierRow = table
+    .getByRole("row")
+    .filter({ hasText: periodLabel(earlier) })
   await expect(earlierRow).toContainText("10.00 PLN")
   await expect(earlierRow).toContainText("5.00 PLN")
 
-  const previousRow = table.getByRole("row").filter({ hasText: periodLabel(previous) })
+  const previousRow = table
+    .getByRole("row")
+    .filter({ hasText: periodLabel(previous) })
   await expect(previousRow).toContainText("11.00 PLN")
   await expect(previousRow).toContainText("2.00 PLN")
   await expect(previousRow.getByText("Added", { exact: true })).toBeVisible()
 
-  const currentRow = table.getByRole("row").filter({ hasText: periodLabel(current) })
+  const currentRow = table
+    .getByRole("row")
+    .filter({ hasText: periodLabel(current) })
   await expect(currentRow).toContainText("0.00 PLN")
   await expect(currentRow).toContainText("Present")
   await expect(currentRow.getByText("Removed", { exact: true })).toBeVisible()

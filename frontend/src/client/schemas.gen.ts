@@ -2482,6 +2482,16 @@ export const MessageSchema = {
     title: 'Message'
 } as const;
 
+export const MutationResultSchema = {
+    type: 'string',
+    enum: [
+        'created',
+        'updated',
+        'unchanged'
+    ],
+    title: 'MutationResult'
+} as const;
+
 export const NewPasswordSchema = {
     properties: {
         token: {
@@ -2980,6 +2990,23 @@ export const ObligationComponentUpsertSchema = {
         'label'
     ],
     title: 'ObligationComponentUpsert'
+} as const;
+
+export const ObligationComponentUpsertResultSchema = {
+    properties: {
+        component: {
+            $ref: '#/components/schemas/ObligationComponentPublic'
+        },
+        result: {
+            $ref: '#/components/schemas/MutationResult'
+        }
+    },
+    type: 'object',
+    required: [
+        'component',
+        'result'
+    ],
+    title: 'ObligationComponentUpsertResult'
 } as const;
 
 export const ObligationComponentsPublicSchema = {

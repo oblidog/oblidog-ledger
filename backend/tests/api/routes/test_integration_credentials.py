@@ -266,7 +266,20 @@ def test_integration_derives_category_data_and_component_source_from_context(
         },
     )
     assert component.status_code == 200
-    assert component.json()["source"] == "Meter"
+    assert component.json()["result"] == "created"
+    assert component.json()["component"]["source"] == "Meter"
+
+    unchanged_component = client.put(
+        component_url,
+        headers=connection_headers,
+        json={
+            "type": "invoice",
+            "label": "August invoice",
+            "external_id": "FV/2026/08/12345",
+        },
+    )
+    assert unchanged_component.status_code == 200
+    assert unchanged_component.json()["result"] == "unchanged"
 
 
 def test_integration_obligation_actions_are_attributed_to_the_current_run(

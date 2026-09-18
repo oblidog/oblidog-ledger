@@ -191,3 +191,21 @@ test("owner rotates and revokes individual connection keys", async ({
   await page.getByRole("button", { name: "Revoke key" }).first().click()
   await expect(page.getByText(/obd_live_old.*revoked/)).toBeVisible()
 })
+
+test("actions menu links to the integration and its category data", async ({
+  page,
+}) => {
+  await mockApi(page, [integration()])
+  await page.goto(root)
+
+  await page.getByRole("button", { name: "Actions for Phone bills" }).click()
+  await expect(
+    page.getByRole("menuitem", { name: "View integration" }),
+  ).toHaveAttribute("href", `${root}/${integrationId}`)
+  await expect(
+    page.getByRole("menuitem", { name: "View category data" }),
+  ).toHaveAttribute(
+    "href",
+    `/ledgers/${ledgerId}/categories/${categoryId}/data?sort=desc`,
+  )
+})

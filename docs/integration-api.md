@@ -80,6 +80,30 @@ The caller must sanitize messages: never send credentials, raw provider response
 or tracebacks. A partially completed synchronization is a failed run, even if
 some business writes already committed.
 
+## Upsert an obligation component
+
+`PUT /api/v1/integration/obligations/{period}/components/upsert` returns the
+persisted component together with a mutation result:
+
+```json
+{
+  "component": {
+    "id": "b20b9f7a-cc55-4d3c-b8d2-67f9c9918d11",
+    "type": "invoice",
+    "label": "September invoice"
+  },
+  "result": "updated"
+}
+```
+
+`result` is `created` for a new external identity, `updated` when at least one
+persisted field changed, and `unchanged` for an identical retry. The ledger
+component-upsert endpoint uses the same response contract. This wrapper is an
+intentional breaking response-shape change: clients that previously read the
+component directly from the response body must now read `component`. Regenerate
+typed clients from the current OpenAPI document before deploying consumers. An
+`unchanged` response does not create an obligation action-log entry.
+
 All reporting success responses are 200 and return current public state.
 Timestamps come from the server. Identical retries of the current start or
 finish do not advance them or revision. Never reuse run IDs, never rerun a

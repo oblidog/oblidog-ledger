@@ -273,7 +273,12 @@ export function ObligationComponentsSection({
     queryFn: () =>
       ObligationsService.readObligationComponents({ ledgerId, obligationKey }),
   })
-  const invalidate = () => void queryClient.invalidateQueries({ queryKey })
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey })
+    void queryClient.invalidateQueries({
+      queryKey: ["obligation-actions", ledgerId, obligationKey],
+    })
+  }
   const create = useMutation({
     mutationFn: (requestBody: ObligationComponentCreate) =>
       ObligationsService.addObligationComponent({
@@ -446,7 +451,9 @@ export function ObligationComponentsSection({
                             </Button>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
+                          <span className="text-muted-foreground text-xs">
+                            —
+                          </span>
                         )}
                       </TableCell>
                     ) : null}

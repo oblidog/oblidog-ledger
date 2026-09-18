@@ -211,6 +211,9 @@ export const ObligationsService = {
     generated.ObligationsService.markObligationReady<true>,
   ),
   readObligation: request(generated.ObligationsService.readObligation<true>),
+  readObligationActions: request(
+    generated.ObligationsService.readObligationActions<true>,
+  ),
   readObligationComponents: request(
     generated.ObligationsService.readObligationComponents<true>,
   ),

@@ -1,11 +1,13 @@
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from threading import Barrier
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
+from app.domain import BillingPeriod, MutationResult, ObligationKey, ObligationLifecycle
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import ObligationReadOnlyError
 from tests.utils.ledger_domain import create_category_with_recurrence
@@ -316,8 +318,10 @@ def test_upsert_obligation_component_is_idempotent_for_external_identity(
         amount=Decimal("120.00"),
     )
 
-    assert second.id == first.id
-    assert second.amount == Decimal("120.00")
+    assert first.result == MutationResult.CREATED
+    assert second.result == MutationResult.UPDATED
+    assert second.component.id == first.component.id
+    assert second.component.amount == Decimal("120.00")
     assert (
         len(
             obligation_use_cases.list_obligation_components(
@@ -328,7 +332,7 @@ def test_upsert_obligation_component_is_idempotent_for_external_identity(
     )
 
 
-def test_upsert_obligation_component_is_atomic_across_separate_sessions(
+def test_concurrent_component_upserts_report_committed_results(
     db: Session,
 ) -> None:
     ledger, _, category = create_category_with_recurrence(db)
@@ -337,28 +341,27 @@ def test_upsert_obligation_component_is_atomic_across_separate_sessions(
         session=db, ledger_id=ledger.id, period=period
     )
     key = ObligationKey(category_code=category.code, period=period)
-    with Session(bind=db.get_bind()) as first_session:
-        first = obligation_use_cases.upsert_obligation_component(
-            session=first_session,
-            ledger_id=ledger.id,
-            key=key,
-            type="invoice",
-            label="August invoice",
-            source="provider",
-            external_id="FV/2026/08/12345",
-            amount=Decimal("100.00"),
-        )
-    with Session(bind=db.get_bind()) as second_session:
-        second = obligation_use_cases.upsert_obligation_component(
-            session=second_session,
-            ledger_id=ledger.id,
-            key=key,
-            type="invoice",
-            label="August invoice",
-            source="provider",
-            external_id="FV/2026/08/12345",
-            amount=Decimal("120.00"),
-        )
+    start = Barrier(2)
 
-    assert second.id == first.id
-    assert second.amount == Decimal("120.00")
+    def upsert() -> obligation_use_cases.ComponentUpsertOutcome:
+        with Session(bind=db.get_bind()) as session:
+            start.wait()
+            return obligation_use_cases.upsert_obligation_component(
+                session=session,
+                ledger_id=ledger.id,
+                key=key,
+                type="invoice",
+                label="August invoice",
+                source="provider",
+                external_id="FV/2026/08/12345",
+                amount=Decimal("100.00"),
+            )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first, second = executor.map(lambda _: upsert(), range(2))
+
+    assert {first.result, second.result} == {
+        MutationResult.CREATED,
+        MutationResult.UNCHANGED,
+    }
+    assert second.component.id == first.component.id

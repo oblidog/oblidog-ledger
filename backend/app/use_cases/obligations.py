@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum
@@ -16,6 +17,7 @@ from app.domain import (
     CurrentValueSource,
     DataSourcePolicy,
     EffectiveValueSourceMode,
+    MutationResult,
     ObligationActionActor,
     ObligationActionType,
     ObligationKey,
@@ -50,6 +52,13 @@ class _Unset:
 
 UNSET = _Unset()
 
+
+@dataclass(frozen=True, slots=True)
+class ComponentUpsertOutcome:
+    component: ObligationComponent
+    result: MutationResult
+
+
 _AUDITED_OBLIGATION_FIELDS = (
     "lifecycle",
     "current_amount",
@@ -64,6 +73,8 @@ _AUDITED_OBLIGATION_FIELDS = (
     "effective_value_source",
     "paid_at",
 )
+
+_MONEY_QUANTUM = Decimal("0.01")
 
 
 def _serialize_action_value(value: Any) -> Any:
@@ -80,11 +91,22 @@ def _serialize_action_value(value: Any) -> Any:
     return value
 
 
+def _serialize_money_action_value(value: Decimal | None) -> str | None:
+    """Match the canonical scale of the Numeric(12, 2) database columns."""
+    if value is None:
+        return None
+    return format(value.quantize(_MONEY_QUANTUM), "f")
+
+
 def _obligation_snapshot(obligation: Obligation) -> dict[str, object]:
-    return {
+    snapshot = {
         field: _serialize_action_value(getattr(obligation, field))
         for field in _AUDITED_OBLIGATION_FIELDS
     }
+    snapshot["current_amount"] = _serialize_money_action_value(
+        obligation.current_amount
+    )
+    return snapshot
 
 
 def _component_snapshot(component: ObligationComponent) -> dict[str, object]:
@@ -92,7 +114,7 @@ def _component_snapshot(component: ObligationComponent) -> dict[str, object]:
         "id": str(component.id),
         "type": component.type,
         "label": component.label,
-        "amount": _serialize_action_value(component.amount),
+        "amount": _serialize_money_action_value(component.amount),
         "source": component.source,
         "external_id": component.external_id,
         "metadata": _serialize_action_value(component.component_metadata),
@@ -991,7 +1013,7 @@ def upsert_obligation_component(
     amount: Decimal | None = None,
     metadata: dict[str, object] | None = None,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
-) -> ObligationComponent:
+) -> ComponentUpsertOutcome:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
     )
@@ -1025,12 +1047,14 @@ def upsert_obligation_component(
 
     after = _component_snapshot(component)
     if created:
+        result = MutationResult.CREATED
         component_diff: dict[str, object] = {
             "components": {"added": [after], "updated": [], "removed": []}
         }
     else:
         assert before is not None
         field_changes = _snapshot_diff(before, after)
+        result = MutationResult.UPDATED if field_changes else MutationResult.UNCHANGED
         component_diff = (
             {
                 "components": {
@@ -1061,4 +1085,4 @@ def upsert_obligation_component(
         session.rollback()
         raise DuplicateObligationComponentError from exc
     session.refresh(component)
-    return component
+    return ComponentUpsertOutcome(component=component, result=result)

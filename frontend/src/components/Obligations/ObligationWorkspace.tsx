@@ -17,6 +17,10 @@ import {
   type ObligationPublic,
   ObligationsService,
 } from "@/client"
+import {
+  type ActiveFilter,
+  ActiveFilterBadges,
+} from "@/components/ActiveFilterBadges"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -42,6 +46,7 @@ import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
 
 type LifecycleFilter = ObligationLifecycle | "" | "unpaid"
@@ -107,6 +112,40 @@ function periodFromSearch() {
   const year = Number(params.get("year"))
   const month = Number(params.get("month"))
   return isValidPeriod(year, month) ? { year, month } : currentPeriod()
+}
+
+function filtersFromSearch() {
+  const period = periodFromSearch()
+  if (typeof window === "undefined") {
+    return {
+      year: String(period.year),
+      month: String(period.month),
+      filterByPeriod: true,
+      categoryCode: "",
+      lifecycle: "unpaid" as LifecycleFilter,
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search)
+  const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
+  return {
+    year: String(period.year),
+    month: String(period.month),
+    filterByPeriod: params.get("period") !== "all",
+    categoryCode: (params.get("category") ?? "").toUpperCase().slice(0, 4),
+    lifecycle:
+      lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
+        ? lifecycleParam
+        : ("unpaid" as LifecycleFilter),
+  }
+}
+
+function lifecycleFilterLabel(lifecycle: LifecycleFilter) {
+  if (lifecycle === "unpaid") return "Unpaid"
+  return lifecycle
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
 }
 
 function dueDateRange(year: number, month: number) {
@@ -197,21 +236,61 @@ export function ObligationWorkspace({
   ledgerId: string
   canManageComponents: boolean
 }) {
+  const initialFilters = filtersFromSearch()
   const period = periodFromSearch()
-  const [year, setYear] = useState(String(period.year))
-  const [month, setMonth] = useState(String(period.month))
-  const [filterByPeriod, setFilterByPeriod] = useState(true)
-  const [categoryCode, setCategoryCode] = useState("")
-  const [lifecycle, setLifecycle] = useState<LifecycleFilter>("unpaid")
+  const [year, setYear] = useState(initialFilters.year)
+  const [month, setMonth] = useState(initialFilters.month)
+  const [filterByPeriod, setFilterByPeriod] = useState(
+    initialFilters.filterByPeriod,
+  )
+  const [categoryCode, setCategoryCode] = useState(initialFilters.categoryCode)
+  const [lifecycle, setLifecycle] = useState<LifecycleFilter>(
+    initialFilters.lifecycle,
+  )
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
+  const invalidateActionHistory = (obligationKey: string) =>
+    void queryClient.invalidateQueries({
+      queryKey: ["obligation-actions", ledgerId, obligationKey],
+    })
   const filterYear = Number(year)
   const filterMonth = Number(month)
   const hasValidPeriodFilter =
     !filterByPeriod || isValidPeriod(filterYear, filterMonth)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const params = new URLSearchParams(window.location.search)
+    params.delete("year")
+    params.delete("month")
+    params.delete("period")
+    params.delete("category")
+    params.delete("lifecycle")
+
+    if (filterByPeriod && hasValidPeriodFilter) {
+      params.set("year", String(filterYear))
+      params.set("month", String(filterMonth))
+    } else if (!filterByPeriod) {
+      params.set("period", "all")
+    }
+    if (categoryCode) params.set("category", categoryCode)
+    if (lifecycle) params.set("lifecycle", lifecycle)
+
+    const search = params.toString()
+    const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`
+    window.history.replaceState(window.history.state, "", nextUrl)
+  }, [
+    categoryCode,
+    filterByPeriod,
+    filterMonth,
+    filterYear,
+    hasValidPeriodFilter,
+    lifecycle,
+  ])
 
   const obligations = useQuery({
     queryFn: () =>
@@ -254,6 +333,34 @@ export function ObligationWorkspace({
       if (second.due_date === null) return 1
       return first.due_date.localeCompare(second.due_date)
     })
+  const activeFilters: ActiveFilter[] = []
+  if (filterByPeriod && hasValidPeriodFilter) {
+    activeFilters.push({
+      key: "period",
+      label: `Period: ${monthInputValue(year, month)}`,
+      onRemove: () => setFilterByPeriod(false),
+    })
+  }
+  if (categoryCode) {
+    activeFilters.push({
+      key: "category",
+      label: `Category: ${categoryCode}`,
+      onRemove: () => setCategoryCode(""),
+    })
+  }
+  if (lifecycle) {
+    activeFilters.push({
+      key: "lifecycle",
+      label: `Status: ${lifecycleFilterLabel(lifecycle)}`,
+      onRemove: () => setLifecycle(""),
+    })
+  }
+  const clearFilters = () => {
+    setFilterByPeriod(false)
+    setCategoryCode("")
+    setLifecycle("")
+  }
+
   const markReady = useMutation({
     mutationFn: (obligation: ObligationPublic) =>
       ObligationsService.markObligationReady({
@@ -263,6 +370,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation marked as ready")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -280,6 +388,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation reopened")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -297,6 +406,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation canceled")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -314,6 +424,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
       showSuccessToast("Obligation marked as paid")
+      invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
@@ -366,6 +477,7 @@ export function ObligationWorkspace({
             }
           />
           <select
+            aria-label="Lifecycle"
             className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm"
             value={lifecycle}
             onChange={(event) =>
@@ -395,6 +507,7 @@ export function ObligationWorkspace({
           />
           <Label htmlFor="obligation-filter-by-period">Filter by period</Label>
         </div>
+        <ActiveFilterBadges filters={activeFilters} onClearAll={clearFilters} />
         {filterByPeriod && !hasValidPeriodFilter ? (
           <p className="text-sm text-muted-foreground">
             Enter a valid year and month to load obligations.
@@ -592,6 +705,10 @@ export function ObligationWorkspace({
                   canManage={canManageComponents}
                   onError={showErrorToast}
                   onSuccess={showSuccessToast}
+                />
+                <ObligationActionHistory
+                  ledgerId={ledgerId}
+                  obligationKey={selected.data.key}
                 />
               </div>
             ) : (
@@ -915,6 +1032,9 @@ function EditObligationDialog({
     onSuccess: () => {
       onSuccess("Obligation updated")
       onOpenChange(false)
+      void queryClient.invalidateQueries({
+        queryKey: ["obligation-actions", ledgerId, obligation.key],
+      })
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
