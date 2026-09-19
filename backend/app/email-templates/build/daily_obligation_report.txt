@@ -1,5 +1,16 @@
 {{ project_name }}: daily obligation report
 Report date: {{ report_date }}
+{% if integration_health %}
+
+Integration health
+{% for ledger_name, items in integration_health.items() %}
+{{ ledger_name }}
+{% for item in items %}
+- {{ item.integration_name }} | {{ item.health|replace('_', ' ')|title }} | {{ item.detail }}{% if item.last_success_at %} | last success: {{ item.last_success_at }}{% endif %} | {{ item.link }}
+{% endfor %}
+{% endfor %}
+{% if integration_health_truncated %}Additional unhealthy integrations were omitted to keep this report concise.
+{% endif %}{% endif %}
 {% if activity %}
 
 Recent activity

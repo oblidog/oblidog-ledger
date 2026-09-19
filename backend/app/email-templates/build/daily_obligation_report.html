@@ -1,5 +1,17 @@
 <h1>{{ project_name }}: daily obligation report</h1>
 <p>Report date: {{ report_date }}</p>
+{% if integration_health %}
+<h2>Integration health</h2>
+{% for ledger_name, items in integration_health.items() %}
+<h3>{{ ledger_name }}</h3>
+<ul>
+{% for item in items %}
+  <li><a href="{{ item.link }}">{{ item.integration_name }}</a> — {{ item.health|replace('_', ' ')|title }}: {{ item.detail }}{% if item.last_success_at %}; last success: {{ item.last_success_at }}{% endif %}</li>
+{% endfor %}
+</ul>
+{% endfor %}
+{% if integration_health_truncated %}<p>Additional unhealthy integrations were omitted to keep this report concise.</p>{% endif %}
+{% endif %}
 {% if activity %}
 <h2>Recent activity</h2>
 {% for ledger_name, items in activity.items() %}

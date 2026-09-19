@@ -4,16 +4,25 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta, tzinfo
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, noload
 
 from app.core.config import settings
 from app.domain import BillingPeriod, BusinessCalendar, ObligationLifecycle, ValueState
-from app.models import Ledger, LedgerMembership, Obligation, ObligationActionLog, User
+from app.domain.integrations import IntegrationExecutionState, IntegrationHealth
+from app.models import (
+    Integration,
+    Ledger,
+    LedgerMembership,
+    Obligation,
+    ObligationActionLog,
+    User,
+)
+from app.use_cases.integrations import integration_status
 from app.utils import EmailData, render_email_template
 
 if TYPE_CHECKING:
@@ -25,6 +34,12 @@ MISSING_DUE_DATE_DAY = 5
 MAX_ACTIVITY_LOGS = 500
 MAX_ACTIVITY_GROUPS = 50
 MAX_ACTIVITY_MESSAGES_PER_GROUP = 5
+MAX_UNHEALTHY_INTEGRATIONS = 50
+REPORTED_INTEGRATION_HEALTH = {
+    IntegrationHealth.ERROR,
+    IntegrationHealth.TIMED_OUT,
+    IntegrationHealth.STALE,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +61,16 @@ class DailyActivityItem:
     actor_name: str
     messages: tuple[str, ...]
     omitted_changes: int
+    link: str
+
+
+@dataclass(frozen=True, slots=True)
+class IntegrationHealthItem:
+    ledger_name: str
+    integration_name: str
+    health: IntegrationHealth
+    detail: str
+    last_success_at: str | None
     link: str
 
 
@@ -76,7 +101,10 @@ class DailyObligationReport:
         activity, activity_truncated = _select_activity(
             session=session, user=user, context=context
         )
-        if not any(sections.values()) and not activity:
+        integration_health, integration_health_truncated = _select_integration_health(
+            session=session, user=user, context=context
+        )
+        if not any(sections.values()) and not activity and not integration_health:
             return None
         rendered = {
             name: _group_by_ledger(items) for name, items in sections.items() if items
@@ -87,6 +115,10 @@ class DailyObligationReport:
             "sections": rendered,
             "activity": _group_activity_by_ledger(activity),
             "activity_truncated": activity_truncated,
+            "integration_health": _group_integration_health_by_ledger(
+                integration_health
+            ),
+            "integration_health_truncated": integration_health_truncated,
         }
         return EmailData(
             subject=f"{settings.PROJECT_NAME} - Daily obligation report",
@@ -340,6 +372,74 @@ def _group_activity_by_ledger(
     items: list[DailyActivityItem],
 ) -> dict[str, list[DailyActivityItem]]:
     grouped: dict[str, list[DailyActivityItem]] = defaultdict(list)
+    for item in items:
+        grouped[item.ledger_name].append(item)
+    return dict(grouped)
+
+
+def _select_integration_health(
+    *, session: Session, user: User, context: SystemRunContext
+) -> tuple[list[IntegrationHealthItem], bool]:
+    integrations = list(
+        session.execute(
+            select(Integration, Ledger.name)
+            .join(LedgerMembership, LedgerMembership.ledger_id == Integration.ledger_id)
+            .join(Ledger, Ledger.id == Integration.ledger_id)
+            .where(LedgerMembership.user_id == user.id, Ledger.is_active)
+            .options(noload(Integration.credentials))
+            .order_by(Ledger.name, Integration.name, Integration.id)
+        )
+    )
+    items: list[IntegrationHealthItem] = []
+    for integration, ledger_name in integrations:
+        state, _, health = integration_status(integration, context.effective_at)
+        if (
+            state is IntegrationExecutionState.NEVER_RUN
+            or health not in REPORTED_INTEGRATION_HEALTH
+        ):
+            continue
+        items.append(
+            IntegrationHealthItem(
+                ledger_name=ledger_name,
+                integration_name=integration.name,
+                health=health,
+                detail=_integration_health_detail(integration, health),
+                last_success_at=_local_datetime(
+                    integration.last_success_at, context.timezone
+                ),
+                link=(
+                    f"{settings.FRONTEND_HOST}/ledgers/{integration.ledger_id}"
+                    f"/integrations/{integration.id}"
+                ),
+            )
+        )
+    truncated = len(items) > MAX_UNHEALTHY_INTEGRATIONS
+    return items[:MAX_UNHEALTHY_INTEGRATIONS], truncated
+
+
+def _integration_health_detail(
+    integration: Integration, health: IntegrationHealth
+) -> str:
+    if health is IntegrationHealth.ERROR:
+        error = integration.last_error_message or "Last run failed"
+        if integration.last_error_code:
+            return f"{integration.last_error_code}: {error}"
+        return error
+    if health is IntegrationHealth.TIMED_OUT:
+        return "The current run exceeded its configured timeout"
+    return "No completed run within the configured freshness interval"
+
+
+def _local_datetime(value: datetime | None, timezone: tzinfo) -> str | None:
+    if value is None:
+        return None
+    return value.astimezone(timezone).isoformat(timespec="minutes")
+
+
+def _group_integration_health_by_ledger(
+    items: list[IntegrationHealthItem],
+) -> dict[str, list[IntegrationHealthItem]]:
+    grouped: dict[str, list[IntegrationHealthItem]] = defaultdict(list)
     for item in items:
         grouped[item.ledger_name].append(item)
     return dict(grouped)
