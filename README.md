@@ -196,6 +196,14 @@ docker compose up -d
 Keep database backups and migration compatibility in mind before rolling a
 version back.
 
+### Releases
+
+Commitizen prepares a version bump and `CHANGELOG.md` on a release branch.
+After its pull request is merged, the finalizer creates an annotated tag and a
+draft GitHub Release containing the matching changelog section and integration
+OpenAPI asset. Publishing the reviewed draft builds the immutable backend and
+frontend images in GHCR and starts Python client regeneration.
+
 ## Project status
 
 Oblidog Ledger is currently an early-stage project rather than a finished

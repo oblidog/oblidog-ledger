@@ -60,6 +60,9 @@ jobs:
       - name: Install uv
         if: steps.scope.outputs.run_heavy == 'true'
         uses: astral-sh/setup-uv@v7
+      - name: Test release tooling
+        if: steps.scope.outputs.run_heavy == 'true'
+        run: uv run --frozen pytest -q tests/test_extract_release_notes.py
       - run: docker compose down -v --remove-orphans
         if: steps.scope.outputs.run_heavy == 'true'
       - run: docker compose up -d --wait db mailcatcher

@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
   pull-requests: write
 
 concurrency:
@@ -108,7 +107,15 @@ jobs:
           fi
           git push origin "$tag"
 
-      - name: Create GitHub Release
+      - name: Extract release notes
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: >-
+          uv run python scripts/extract_release_notes.py
+          "v${RELEASE_VERSION}"
+          release-notes.md
+
+      - name: Create draft GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
@@ -118,8 +125,10 @@ jobs:
             echo "GitHub Release ${tag} already exists."
           else
             gh release create "$tag" \
+              --draft \
+              --verify-tag \
               --title "$tag" \
-              --generate-notes
+              --notes-file release-notes.md
           fi
 
       - name: Upload integration OpenAPI asset
@@ -132,38 +141,6 @@ jobs:
           gh release upload "$tag" \
             integration-openapi.json \
             --clobber
-
-      - name: Trigger Python client regeneration
-        env:
-          CLIENT_REPO_TOKEN: ${{ secrets.FINDOG_CLIENT_TOKEN }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        shell: bash
-        run: |
-          if [[ -z "$CLIENT_REPO_TOKEN" ]]; then
-            echo "FINDOG_CLIENT_TOKEN is not configured; skipping client regeneration trigger."
-            exit 0
-          fi
-
-          GH_TOKEN="$CLIENT_REPO_TOKEN" gh api \
-            --method POST \
-            repos/oblidog/oblidog-client-python/dispatches \
-            --input - <<EOF
-          {
-            "event_type": "ledger-release",
-            "client_payload": {
-              "tag_name": "v${RELEASE_VERSION}"
-            }
-          }
-          EOF
-
-      - name: Trigger image publishing
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          gh workflow run publish-images.yml \
-            --ref "v${RELEASE_VERSION}" \
-            -f release_tag="v${RELEASE_VERSION}"
 
       - name: Create main-to-dev sync branch
         id: sync
