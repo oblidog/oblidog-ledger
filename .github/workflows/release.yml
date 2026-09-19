@@ -132,4 +132,4 @@ jobs:
             --base main \
             --head "$RELEASE_BRANCH" \
             --title "bump: version $RELEASE_VERSION" \
-            --body "Automated release preparation for v$RELEASE_VERSION.\n\nMerge this PR after required checks pass. After merge, the release finalizer will create the Git tag, GitHub Release, and trigger GHCR image publishing."
+            --body "Automated release preparation for v$RELEASE_VERSION.\n\nMerge this PR after required checks pass. The finalizer will create a tag and draft GitHub Release from CHANGELOG.md. Publish that draft to build the GHCR images and regenerate the Python client."

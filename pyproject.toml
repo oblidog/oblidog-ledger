@@ -5,6 +5,8 @@ members = ["backend"]
 name = "cz_conventional_commits"
 tag_format = "v$version"
 update_changelog_on_bump = true
+changelog_incremental = true
+changelog_file = "CHANGELOG.md"
 pre_bump_hooks = ["uv lock"]
 version_provider = "commitizen"
 version = "0.14.0"
@@ -14,3 +16,7 @@ version_files = [
     "frontend/package.json:^  \"version\": \"(?P<version>.*)\",",
 ]
 annotated_tag = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
