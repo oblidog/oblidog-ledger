@@ -1,5 +1,5 @@
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -9,6 +9,10 @@ from app.models import Ledger
 from app.schemas import (
     CategoryAmountHistoryPointPublic,
     CategoryAmountHistoryPublic,
+    ComponentHistoryGroupPublic,
+    ComponentHistoryPublic,
+    ComponentHistoryTotalPublic,
+    ComponentHistoryValuePublic,
     CurrencyCashflowPublic,
     CurrencyPaymentSummaryPublic,
     CurrencyPeriodTotalPublic,
@@ -143,6 +147,75 @@ def read_obligation_period_totals(
             )
             for point in totals.points
         ]
+    )
+
+
+@router.get(
+    "/ledgers/{ledger_id}/analytics/component-history",
+    response_model=ComponentHistoryPublic,
+)
+def read_component_history(
+    *,
+    session: SessionDep,
+    category_id: uuid.UUID,
+    end_year: int = Query(ge=1, le=9999),
+    end_month: int = Query(ge=1, le=12),
+    periods: int = Query(default=6, ge=1, le=24),
+    match_by: Literal["label", "external_id"] = Query(default="label"),
+    ledger: Ledger = Depends(require_ledger_view_access),
+) -> Any:
+    try:
+        history = analytics_use_cases.get_component_history(
+            session=session,
+            ledger_id=ledger.id,
+            category_id=category_id,
+            end_period=BillingPeriod(year=end_year, month=end_month),
+            periods=periods,
+            match_by=match_by,
+        )
+    except CategoryNotFoundError:
+        raise HTTPException(status_code=404, detail="Category not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return ComponentHistoryPublic(
+        match_by=history.match_by,
+        periods=[
+            ObligationPeriodPublic(year=item.year, month=item.month)
+            for item in history.periods
+        ],
+        components=[
+            ComponentHistoryGroupPublic(
+                identity=group.identity,
+                label=group.label,
+                type=group.type,
+                source=group.source,
+                external_id=group.external_id,
+                values=[
+                    ComponentHistoryValuePublic(
+                        period=ObligationPeriodPublic(
+                            year=value.period.year, month=value.period.month
+                        ),
+                        amount=value.amount,
+                        state=value.state,
+                        label=value.label,
+                        source=value.source,
+                        external_id=value.external_id,
+                    )
+                    for value in group.values
+                ],
+            )
+            for group in history.components
+        ],
+        totals=[
+            ComponentHistoryTotalPublic(
+                period=ObligationPeriodPublic(
+                    year=total.period.year, month=total.period.month
+                ),
+                amount=total.amount,
+            )
+            for total in history.totals
+        ],
     )
 
 
