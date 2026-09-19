@@ -418,6 +418,9 @@ def test_daily_report_includes_only_actionable_accessible_integration_health(
         email.text_content
     )
     assert "last success:" in email.text_content
+    assert "started: 2026-09-19T08:30+02:00" in email.text_content
+    assert "deadline: 2026-09-19T09:00+02:00" in email.text_content
+    assert "last completed run: 2026-09-17T09:29+02:00" in email.text_content
     assert "Healthy provider" not in email.text_content
     assert "Running provider" not in email.text_content
     assert "Disabled provider" not in email.text_content
@@ -425,3 +428,6 @@ def test_daily_report_includes_only_actionable_accessible_integration_health(
     assert "Inaccessible failure" not in email.text_content
     assert "Inactive ledger failure" not in email.text_content
     assert "Integration health" in email.html_content
+    assert "started: 2026-09-19T08:30+02:00" in email.html_content
+    assert "deadline: 2026-09-19T09:00+02:00" in email.html_content
+    assert "last completed run: 2026-09-17T09:29+02:00" in email.html_content

@@ -403,7 +403,9 @@ def _select_integration_health(
                 ledger_name=ledger_name,
                 integration_name=integration.name,
                 health=health,
-                detail=_integration_health_detail(integration, health),
+                detail=_integration_health_detail(
+                    integration, health, context.timezone
+                ),
                 last_success_at=_local_datetime(
                     integration.last_success_at, context.timezone
                 ),
@@ -418,7 +420,7 @@ def _select_integration_health(
 
 
 def _integration_health_detail(
-    integration: Integration, health: IntegrationHealth
+    integration: Integration, health: IntegrationHealth, timezone: tzinfo
 ) -> str:
     if health is IntegrationHealth.ERROR:
         error = integration.last_error_message or "Last run failed"
@@ -426,8 +428,21 @@ def _integration_health_detail(
             return f"{integration.last_error_code}: {error}"
         return error
     if health is IntegrationHealth.TIMED_OUT:
-        return "The current run exceeded its configured timeout"
-    return "No completed run within the configured freshness interval"
+        started_at = _local_datetime(integration.current_started_at, timezone)
+        deadline_at = _local_datetime(integration.current_deadline_at, timezone)
+        return (
+            "The current run exceeded its configured timeout"
+            f"; started: {started_at or 'unknown'}"
+            f"; deadline: {deadline_at or 'unknown'}"
+        )
+    reference = integration.last_finished_at or integration.enabled_at
+    reference_label = (
+        "last completed run" if integration.last_finished_at else "enabled"
+    )
+    return (
+        "No completed run within the configured freshness interval"
+        f"; {reference_label}: {_local_datetime(reference, timezone) or 'unknown'}"
+    )
 
 
 def _local_datetime(value: datetime | None, timezone: tzinfo) -> str | None:
