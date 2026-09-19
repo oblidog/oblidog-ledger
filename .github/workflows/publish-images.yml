@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: |
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          [[ "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" == "false" ]]
+          [[ "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" == "false" ]]
 
       - name: Checkout release source
         uses: actions/checkout@v7
@@ -96,14 +96,13 @@ jobs:
           cache-to: type=gha,mode=max
 
   regenerate-python-client:
-    if: github.event_name == 'release'
     needs: publish
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Python client regeneration
         env:
           CLIENT_REPO_TOKEN: ${{ secrets.FINDOG_CLIENT_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         shell: bash
         run: |
           if [[ -z "$CLIENT_REPO_TOKEN" ]]; then
