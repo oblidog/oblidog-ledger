@@ -288,6 +288,23 @@ export function ComponentHistoryTable({
                           {component.label}
                         </p>
                         <Badge variant="secondary">{component.type}</Badge>
+                        {(() => {
+                          const previousLabels = [
+                            ...new Set(
+                              component.values
+                                .map((value) => value.label)
+                                .filter(
+                                  (label): label is string =>
+                                    Boolean(label) && label !== component.label,
+                                ),
+                            ),
+                          ]
+                          return previousLabels.length ? (
+                            <p className="text-xs font-normal text-muted-foreground">
+                              Previously: {previousLabels.join(", ")}
+                            </p>
+                          ) : null
+                        })()}
                         {component.source || component.external_id ? (
                           <p className="break-all text-xs font-normal text-muted-foreground">
                             {[component.source, component.external_id]
