@@ -1,3 +1,10 @@
+## v0.15.0 (2026-09-19)
+
+### Feat
+
+- **notifications**: report unhealthy integrations (#397)
+- **notifications**: summarize meaningful daily activity (#394)
+
 ## v0.14.0 (2026-09-18)
 
 ### Feat
