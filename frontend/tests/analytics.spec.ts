@@ -300,6 +300,9 @@ test("compares stable, added, removed and renamed components across six periods"
 
   await page.goto(`/ledgers/${ledger.id}/analytics`)
 
+  await page.getByRole("combobox", { name: "Compare by" }).click()
+  await page.getByRole("option", { name: "External ID" }).click()
+
   const table = page.getByTestId("component-history-table")
   await expect(table).toBeVisible()
   await expect(
