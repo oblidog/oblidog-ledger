@@ -11,7 +11,7 @@ from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session, selectinload
 
 from app.domain import BillingPeriod, ObligationLifecycle
-from app.models import Category, Obligation
+from app.models import Category, Obligation, ObligationComponent
 from app.use_cases.exceptions import CategoryNotFoundError
 
 
@@ -453,12 +453,12 @@ def _normalize_component_label(value: str) -> str:
     return " ".join(value.split()).casefold()
 
 
-def _component_history_identity(component: object, match_by: ComponentHistoryMatchBy) -> str:
-    component_type = str(getattr(component, "type"))
+def _component_history_identity(component: ObligationComponent, match_by: ComponentHistoryMatchBy) -> str:
+    component_type = component.type
     if match_by == "label":
-        return f"{component_type}:{_normalize_component_label(str(getattr(component, 'label')))}"
-    source = getattr(component, "source")
-    external_id = getattr(component, "external_id")
+        return f"{component_type}:{_normalize_component_label(component.label)}"
+    source = component.source
+    external_id = component.external_id
     if not source or not external_id:
         raise ValueError(
             "external_id matching requires source and external_id on every component"
@@ -518,12 +518,12 @@ def get_component_history(
         (item.period_year, item.period_month): item for item in obligations
     }
 
-    components_by_period: list[dict[str, object]] = []
+    components_by_period: list[dict[str, ObligationComponent]] = []
     ordered_identities: list[str] = []
-    descriptors: dict[str, object] = {}
+    descriptors: dict[str, ObligationComponent] = {}
     for period in requested_periods:
         obligation = obligations_by_period.get((period.year, period.month))
-        current: dict[str, object] = {}
+        current: dict[str, ObligationComponent] = {}
         for component in obligation.components if obligation else []:
             identity = _component_history_identity(component, match_by)
             if identity in current:
@@ -541,7 +541,7 @@ def get_component_history(
     for identity in ordered_identities:
         descriptor = descriptors[identity]
         values: list[ComponentHistoryValue] = []
-        previous_component: object | None = None
+        previous_component: ObligationComponent | None = None
         seen = False
         for index, period in enumerate(requested_periods):
             component = components_by_period[index].get(identity)
@@ -561,19 +561,19 @@ def get_component_history(
                 state = "added"
             else:
                 changed = (
-                    getattr(component, "amount") != getattr(previous_component, "amount")
-                    or getattr(component, "label") != getattr(previous_component, "label")
-                    or getattr(component, "type") != getattr(previous_component, "type")
+                    component.amount != previous_component.amount
+                    or component.label != previous_component.label
+                    or component.type != previous_component.type
                 )
                 state = "changed" if changed else "present"
             values.append(
                 ComponentHistoryValue(
                     period=period,
-                    amount=getattr(component, "amount"),
+                    amount=component.amount,
                     state=state,
-                    label=str(getattr(component, "label")),
-                    source=getattr(component, "source"),
-                    external_id=getattr(component, "external_id"),
+                    label=component.label,
+                    source=component.source,
+                    external_id=component.external_id,
                 )
             )
             seen = True
@@ -582,10 +582,10 @@ def get_component_history(
         groups.append(
             ComponentHistoryGroup(
                 identity=identity,
-                label=str(getattr(descriptor, "label")),
-                type=str(getattr(descriptor, "type")),
-                source=getattr(descriptor, "source"),
-                external_id=getattr(descriptor, "external_id"),
+                label=descriptor.label,
+                type=descriptor.type,
+                source=descriptor.source,
+                external_id=descriptor.external_id,
                 values=values,
             )
         )
@@ -593,9 +593,9 @@ def get_component_history(
     totals: list[ComponentHistoryTotal] = []
     for period, component_map in zip(requested_periods, components_by_period, strict=True):
         amounts = [
-            getattr(component, "amount")
+            component.amount
             for component in component_map.values()
-            if getattr(component, "amount") is not None
+            if component.amount is not None
         ]
         totals.append(
             ComponentHistoryTotal(
