@@ -179,7 +179,9 @@ def test_activity_messages_use_invoice_wording_only_for_invoice_components() -> 
     ]
 
 
-def test_daily_report_renders_grouped_accessible_integration_activity(db) -> None:  # type: ignore[no-untyped-def]
+def test_daily_report_renders_grouped_accessible_user_and_integration_activity(
+    db,
+) -> None:  # type: ignore[no-untyped-def]
     ledger, _, category = create_category_with_recurrence(db)
     other_ledger, _, other_category = create_category_with_recurrence(db)
     obligation = obligation_use_cases.ensure_obligations_for_period(
@@ -192,16 +194,25 @@ def test_daily_report_renders_grouped_accessible_integration_activity(db) -> Non
     run_id = uuid.uuid4()
     occurred_at = datetime(2026, 9, 18, 12, tzinfo=UTC)
 
-    def add_log(*, target, action: str, changes: dict[str, object]) -> None:  # type: ignore[no-untyped-def]
+    def add_log(  # type: ignore[no-untyped-def]
+        *,
+        target,
+        action: str,
+        changes: dict[str, object],
+        actor_type: str = "integration",
+        actor_id: uuid.UUID = integration_id,
+        actor_name: str = "eKartoteka",
+        action_run_id: uuid.UUID | None = run_id,
+    ) -> None:
         db.add(
             ObligationActionLog(
                 obligation_id=target.id,
                 action=action,
-                actor_type="integration",
-                actor_id=integration_id,
-                actor_display_name="eKartoteka",
-                integration_id=integration_id,
-                run_id=run_id,
+                actor_type=actor_type,
+                actor_id=actor_id,
+                actor_display_name=actor_name,
+                integration_id=actor_id if actor_type == "integration" else None,
+                run_id=action_run_id,
                 changes=changes,
                 created_at=occurred_at,
             )
@@ -233,6 +244,15 @@ def test_daily_report_renders_grouped_accessible_integration_activity(db) -> Non
         changes={"lifecycle": {"from": "ready", "to": "paid"}},
     )
     add_log(
+        target=obligation,
+        action="values_updated",
+        changes={"due_date": {"from": "2026-09-20", "to": "2026-09-22"}},
+        actor_type="user",
+        actor_id=ledger.owner_user_id,
+        actor_name="Mario",
+        action_run_id=None,
+    )
+    add_log(
         target=other_obligation,
         action="values_updated",
         changes={"current_amount": {"from": "1.00", "to": "999.00"}},
@@ -249,12 +269,14 @@ def test_daily_report_renders_grouped_accessible_integration_activity(db) -> Non
 
     assert email is not None
     assert email.text_content is not None
-    assert "Integration activity" in email.text_content
+    assert "Recent activity" in email.text_content
     assert "New invoice: September invoice (125.00)" in email.text_content
     assert "Amount changed: 120.00 → 125.00" in email.text_content
     assert "Payment recognized" in email.text_content
+    assert "Due date changed: 2026-09-20 → 2026-09-22" in email.text_content
     assert email.text_content.count("eKartoteka") == 1
+    assert email.text_content.count("Mario") == 1
     assert other_category.name not in email.text_content
     assert "999.00" not in email.text_content
-    assert "Integration activity" in email.html_content
+    assert "Recent activity" in email.html_content
     assert category.name in email.html_content

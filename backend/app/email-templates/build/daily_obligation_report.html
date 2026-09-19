@@ -1,12 +1,12 @@
 <h1>{{ project_name }}: daily obligation report</h1>
 <p>Report date: {{ report_date }}</p>
 {% if activity %}
-<h2>Integration activity</h2>
+<h2>Recent activity</h2>
 {% for ledger_name, items in activity.items() %}
 <h3>{{ ledger_name }}</h3>
 <ul>
 {% for item in items %}
-  <li><a href="{{ item.link }}">{{ item.category_name }}</a> — {{ item.integration_name }}
+  <li><a href="{{ item.link }}">{{ item.category_name }}</a> — {{ item.actor_name }}
     <ul>
     {% for message in item.messages %}<li>{{ message }}</li>{% endfor %}
     {% if item.omitted_changes %}<li>And {{ item.omitted_changes }} more changes</li>{% endif %}

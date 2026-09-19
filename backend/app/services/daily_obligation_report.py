@@ -43,7 +43,7 @@ class DailyReportItem:
 class DailyActivityItem:
     ledger_name: str
     category_name: str
-    integration_name: str
+    actor_name: str
     messages: tuple[str, ...]
     omitted_changes: int
     link: str
@@ -196,7 +196,7 @@ def _select_activity(
             .where(
                 LedgerMembership.user_id == user.id,
                 Ledger.is_active,
-                ObligationActionLog.actor_type == "integration",
+                ObligationActionLog.actor_type.in_(("integration", "user")),
                 ObligationActionLog.created_at >= window_start,
                 ObligationActionLog.created_at < window_end,
             )
@@ -215,9 +215,14 @@ def _select_activity(
     truncated_logs = len(logs) > MAX_ACTIVITY_LOGS
     logs = logs[:MAX_ACTIVITY_LOGS]
 
-    grouped: dict[tuple[object, object, object], list[ObligationActionLog]] = {}
+    grouped: dict[tuple[object, object, object, object], list[ObligationActionLog]] = {}
     for log in logs:
-        key = (log.obligation_id, log.integration_id, log.run_id or "no-run")
+        key = (
+            log.obligation_id,
+            log.actor_type,
+            log.actor_id,
+            log.run_id or "no-run",
+        )
         grouped.setdefault(key, []).append(log)
 
     items: list[DailyActivityItem] = []
@@ -236,7 +241,7 @@ def _select_activity(
             DailyActivityItem(
                 ledger_name=obligation.ledger.name,
                 category_name=obligation.category.name,
-                integration_name=log.actor_display_name,
+                actor_name=log.actor_display_name,
                 messages=visible_messages,
                 omitted_changes=len(messages) - len(visible_messages),
                 link=(

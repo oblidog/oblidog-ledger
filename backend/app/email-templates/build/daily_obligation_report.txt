@@ -2,11 +2,11 @@
 Report date: {{ report_date }}
 {% if activity %}
 
-Integration activity
+Recent activity
 {% for ledger_name, items in activity.items() %}
 {{ ledger_name }}
 {% for item in items %}
-- {{ item.category_name }} | {{ item.integration_name }} | {{ item.link }}
+- {{ item.category_name }} | {{ item.actor_name }} | {{ item.link }}
 {% for message in item.messages %}  - {{ message }}
 {% endfor %}{% if item.omitted_changes %}  - And {{ item.omitted_changes }} more changes
 {% endif %}{% endfor %}
