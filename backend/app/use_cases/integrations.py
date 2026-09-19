@@ -52,8 +52,9 @@ def execution_state(item: Integration, now: datetime) -> IntegrationExecutionSta
     return IntegrationExecutionState.RUNNING
 
 
-def to_public(item: Integration, *, now: datetime | None = None) -> IntegrationPublic:
-    now = now or get_datetime_utc()
+def integration_status(
+    item: Integration, now: datetime
+) -> tuple[IntegrationExecutionState, bool, IntegrationHealth]:
     state = execution_state(item, now)
     is_stale = False
     if item.enabled:
@@ -74,6 +75,12 @@ def to_public(item: Integration, *, now: datetime | None = None) -> IntegrationP
         health = IntegrationHealth.ERROR
     else:
         health = IntegrationHealth.HEALTHY
+    return state, is_stale, health
+
+
+def to_public(item: Integration, *, now: datetime | None = None) -> IntegrationPublic:
+    now = now or get_datetime_utc()
+    state, is_stale, health = integration_status(item, now)
     derived = {"execution_state": state, "is_stale": is_stale, "health": health}
     return IntegrationPublic.model_validate(
         {
