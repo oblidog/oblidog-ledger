@@ -1,5 +1,18 @@
 {{ project_name }}: daily obligation report
 Report date: {{ report_date }}
+{% if activity %}
+
+Recent activity
+{% for ledger_name, items in activity.items() %}
+{{ ledger_name }}
+{% for item in items %}
+- {{ item.category_name }} | {{ item.actor_name }} | {{ item.link }}
+{% for message in item.messages %}  - {{ message }}
+{% endfor %}{% if item.omitted_changes %}  - And {{ item.omitted_changes }} more changes
+{% endif %}{% endfor %}
+{% endfor %}
+{% if activity_truncated %}Additional activity was omitted to keep this report concise.
+{% endif %}{% endif %}
 {% for section, ledgers in sections.items() %}
 
 {{ section|replace('_', ' ')|title }}

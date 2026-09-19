@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
 from app.domain import BillingPeriod, BusinessCalendar, ObligationLifecycle, ValueState
-from app.models import Ledger, LedgerMembership, Obligation, User
+from app.models import Ledger, LedgerMembership, Obligation, ObligationActionLog, User
 from app.utils import EmailData, render_email_template
 
 if TYPE_CHECKING:
@@ -22,6 +22,9 @@ if TYPE_CHECKING:
 PREPARATION_DAYS = 3
 READY_TO_PAY_DAYS = 2
 MISSING_DUE_DATE_DAY = 5
+MAX_ACTIVITY_LOGS = 500
+MAX_ACTIVITY_GROUPS = 50
+MAX_ACTIVITY_MESSAGES_PER_GROUP = 5
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +36,16 @@ class DailyReportItem:
     currency: str | None
     amount_state: ValueState
     due_date_state: ValueState
+    link: str
+
+
+@dataclass(frozen=True, slots=True)
+class DailyActivityItem:
+    ledger_name: str
+    category_name: str
+    actor_name: str
+    messages: tuple[str, ...]
+    omitted_changes: int
     link: str
 
 
@@ -60,7 +73,10 @@ class DailyObligationReport:
         sections = _select_sections(
             session=session, user=user, report_date=context.business_date
         )
-        if not any(sections.values()):
+        activity, activity_truncated = _select_activity(
+            session=session, user=user, context=context
+        )
+        if not any(sections.values()) and not activity:
             return None
         rendered = {
             name: _group_by_ledger(items) for name, items in sections.items() if items
@@ -69,6 +85,8 @@ class DailyObligationReport:
             "project_name": settings.PROJECT_NAME,
             "report_date": context.business_date.isoformat(),
             "sections": rendered,
+            "activity": _group_activity_by_ledger(activity),
+            "activity_truncated": activity_truncated,
         }
         return EmailData(
             subject=f"{settings.PROJECT_NAME} - Daily obligation report",
@@ -153,6 +171,175 @@ def _item(obligation: Obligation) -> DailyReportItem:
 
 def _group_by_ledger(items: list[DailyReportItem]) -> dict[str, list[DailyReportItem]]:
     grouped: dict[str, list[DailyReportItem]] = defaultdict(list)
+    for item in items:
+        grouped[item.ledger_name].append(item)
+    return dict(grouped)
+
+
+def _activity_window(context: SystemRunContext) -> tuple[datetime, datetime]:
+    """Return the last complete local calendar day as a retry-stable window."""
+    end_local = datetime.combine(context.business_date, time.min, context.timezone)
+    start_local = end_local - timedelta(days=1)
+    return start_local.astimezone(UTC), end_local.astimezone(UTC)
+
+
+def _select_activity(
+    *, session: Session, user: User, context: SystemRunContext
+) -> tuple[list[DailyActivityItem], bool]:
+    window_start, window_end = _activity_window(context)
+    logs = list(
+        session.scalars(
+            select(ObligationActionLog)
+            .join(Obligation, Obligation.id == ObligationActionLog.obligation_id)
+            .join(LedgerMembership, LedgerMembership.ledger_id == Obligation.ledger_id)
+            .join(Ledger, Ledger.id == Obligation.ledger_id)
+            .where(
+                LedgerMembership.user_id == user.id,
+                Ledger.is_active,
+                ObligationActionLog.actor_type.in_(("integration", "user")),
+                ObligationActionLog.created_at >= window_start,
+                ObligationActionLog.created_at < window_end,
+            )
+            .options(
+                joinedload(ObligationActionLog.obligation).joinedload(
+                    Obligation.ledger
+                ),
+                joinedload(ObligationActionLog.obligation).joinedload(
+                    Obligation.category
+                ),
+            )
+            .order_by(ObligationActionLog.created_at, ObligationActionLog.id)
+            .limit(MAX_ACTIVITY_LOGS + 1)
+        ).unique()
+    )
+    truncated_logs = len(logs) > MAX_ACTIVITY_LOGS
+    logs = logs[:MAX_ACTIVITY_LOGS]
+
+    grouped: dict[tuple[object, object, object, object], list[ObligationActionLog]] = {}
+    for log in logs:
+        key = (
+            log.obligation_id,
+            log.actor_type,
+            log.actor_id,
+            log.run_id or "no-run",
+        )
+        grouped.setdefault(key, []).append(log)
+
+    items: list[DailyActivityItem] = []
+    for group_logs in grouped.values():
+        messages = list(
+            dict.fromkeys(
+                message for log in group_logs for message in _activity_messages(log)
+            )
+        )
+        if not messages:
+            continue
+        log = group_logs[-1]
+        obligation = log.obligation
+        visible_messages = tuple(messages[:MAX_ACTIVITY_MESSAGES_PER_GROUP])
+        items.append(
+            DailyActivityItem(
+                ledger_name=obligation.ledger.name,
+                category_name=obligation.category.name,
+                actor_name=log.actor_display_name,
+                messages=visible_messages,
+                omitted_changes=len(messages) - len(visible_messages),
+                link=(
+                    f"{settings.FRONTEND_HOST}/ledgers/{obligation.ledger_id}"
+                    f"/obligations/{obligation.id}"
+                ),
+            )
+        )
+
+    truncated_groups = len(items) > MAX_ACTIVITY_GROUPS
+    return items[:MAX_ACTIVITY_GROUPS], truncated_logs or truncated_groups
+
+
+def _activity_messages(log: ObligationActionLog) -> list[str]:
+    changes = log.changes
+    if log.action == "created":
+        return ["Obligation created"]
+    if log.action == "marked_paid":
+        return ["Payment recognized"]
+    if log.action == "marked_ready":
+        return ["Marked ready to pay"]
+    if log.action == "marked_error":
+        return ["Integration marked the obligation as requiring attention"]
+    if log.action == "canceled":
+        return ["Obligation canceled"]
+    if log.action == "reopened":
+        return ["Obligation reopened"]
+    if log.action == "values_updated":
+        return _value_change_messages(changes)
+    if log.action == "components_changed":
+        return _component_change_messages(changes)
+    return []
+
+
+def _value_change_messages(changes: dict[str, object]) -> list[str]:
+    labels = {
+        "current_amount": "Amount",
+        "issue_date": "Issue date",
+        "due_date": "Due date",
+    }
+    messages: list[str] = []
+    for field, label in labels.items():
+        diff = changes.get(field)
+        if isinstance(diff, dict) and "to" in diff:
+            messages.append(
+                f"{label} changed: {_display(diff.get('from'))} → {_display(diff['to'])}"
+            )
+    return messages
+
+
+def _component_change_messages(changes: dict[str, object]) -> list[str]:
+    components = changes.get("components")
+    if not isinstance(components, dict):
+        return []
+    messages: list[str] = []
+    for component in components.get("added", []):
+        if not isinstance(component, dict):
+            continue
+        label = str(component.get("label") or "Unnamed component")
+        prefix = (
+            "New invoice" if component.get("type") == "invoice" else "Component added"
+        )
+        messages.append(f"{prefix}: {label}{_amount_suffix(component.get('amount'))}")
+    for component in components.get("updated", []):
+        if not isinstance(component, dict):
+            continue
+        label = str(component.get("label") or "Unnamed component")
+        component_changes = component.get("changes")
+        if not isinstance(component_changes, dict):
+            continue
+        amount = component_changes.get("amount")
+        if isinstance(amount, dict) and "to" in amount:
+            messages.append(
+                f"{label}: amount changed {_display(amount.get('from'))} → "
+                f"{_display(amount['to'])}"
+            )
+        elif component_changes:
+            messages.append(f"Component updated: {label}")
+    for component in components.get("removed", []):
+        if isinstance(component, dict):
+            messages.append(
+                f"Component removed: {component.get('label') or 'Unnamed component'}"
+            )
+    return messages
+
+
+def _amount_suffix(value: object) -> str:
+    return "" if value is None else f" ({value})"
+
+
+def _display(value: object) -> str:
+    return "unknown" if value is None else str(value)
+
+
+def _group_activity_by_ledger(
+    items: list[DailyActivityItem],
+) -> dict[str, list[DailyActivityItem]]:
+    grouped: dict[str, list[DailyActivityItem]] = defaultdict(list)
     for item in items:
         grouped[item.ledger_name].append(item)
     return dict(grouped)

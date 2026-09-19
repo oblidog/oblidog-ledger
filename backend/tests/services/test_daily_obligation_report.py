@@ -1,11 +1,22 @@
-from datetime import date
+import uuid
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from app.domain import BillingPeriod, ObligationLifecycle
 from app.domain.business_calendar import BusinessCalendar
-from app.services.daily_obligation_report import _section_for
+from app.models import ObligationActionLog
+from app.services.daily_obligation_report import (
+    DailyObligationReport,
+    _activity_messages,
+    _activity_window,
+    _section_for,
+)
+from app.use_cases import obligations as obligation_use_cases
+from app.use_cases.system_runs import SystemRunContext
+from tests.utils.ledger_domain import create_category_with_recurrence
 
 CALENDAR = BusinessCalendar("PL")
 
@@ -131,3 +142,141 @@ def test_daily_report_always_reports_errors_in_the_dedicated_section(
         _section_for(obligation, date(2026, 6, 3), BillingPeriod(2026, 6), CALENDAR)
         == "errors"
     )  # type: ignore[arg-type]
+
+
+def test_activity_window_is_previous_complete_local_day() -> None:
+    context = SystemRunContext.create(
+        effective_at=datetime(2026, 9, 19, 9, 30, tzinfo=ZoneInfo("Europe/Warsaw")),
+        timezone=ZoneInfo("Europe/Warsaw"),
+    )
+
+    assert _activity_window(context) == (
+        datetime(2026, 9, 17, 22, 0, tzinfo=UTC),
+        datetime(2026, 9, 18, 22, 0, tzinfo=UTC),
+    )
+
+
+def test_activity_messages_use_invoice_wording_only_for_invoice_components() -> None:
+    invoice_log = SimpleNamespace(
+        action="components_changed",
+        changes={
+            "components": {
+                "added": [
+                    {
+                        "type": "invoice",
+                        "label": "September invoice",
+                        "amount": "42.00",
+                    },
+                    {"type": "charge", "label": "Heating", "amount": "12.00"},
+                ]
+            }
+        },
+    )
+
+    assert _activity_messages(invoice_log) == [  # type: ignore[arg-type]
+        "New invoice: September invoice (42.00)",
+        "Component added: Heating (12.00)",
+    ]
+
+
+def test_daily_report_renders_grouped_accessible_user_and_integration_activity(
+    db,
+) -> None:  # type: ignore[no-untyped-def]
+    ledger, _, category = create_category_with_recurrence(db)
+    other_ledger, _, other_category = create_category_with_recurrence(db)
+    obligation = obligation_use_cases.ensure_obligations_for_period(
+        session=db, ledger_id=ledger.id, period=BillingPeriod(2026, 9)
+    )[0]
+    other_obligation = obligation_use_cases.ensure_obligations_for_period(
+        session=db, ledger_id=other_ledger.id, period=BillingPeriod(2026, 9)
+    )[0]
+    integration_id = uuid.uuid4()
+    run_id = uuid.uuid4()
+    occurred_at = datetime(2026, 9, 18, 12, tzinfo=UTC)
+
+    def add_log(  # type: ignore[no-untyped-def]
+        *,
+        target,
+        action: str,
+        changes: dict[str, object],
+        actor_type: str = "integration",
+        actor_id: uuid.UUID = integration_id,
+        actor_name: str = "eKartoteka",
+        action_run_id: uuid.UUID | None = run_id,
+    ) -> None:
+        db.add(
+            ObligationActionLog(
+                obligation_id=target.id,
+                action=action,
+                actor_type=actor_type,
+                actor_id=actor_id,
+                actor_display_name=actor_name,
+                integration_id=actor_id if actor_type == "integration" else None,
+                run_id=action_run_id,
+                changes=changes,
+                created_at=occurred_at,
+            )
+        )
+
+    add_log(
+        target=obligation,
+        action="components_changed",
+        changes={
+            "components": {
+                "added": [
+                    {
+                        "type": "invoice",
+                        "label": "September invoice",
+                        "amount": "125.00",
+                    }
+                ]
+            }
+        },
+    )
+    add_log(
+        target=obligation,
+        action="values_updated",
+        changes={"current_amount": {"from": "120.00", "to": "125.00"}},
+    )
+    add_log(
+        target=obligation,
+        action="marked_paid",
+        changes={"lifecycle": {"from": "ready", "to": "paid"}},
+    )
+    add_log(
+        target=obligation,
+        action="values_updated",
+        changes={"due_date": {"from": "2026-09-20", "to": "2026-09-22"}},
+        actor_type="user",
+        actor_id=ledger.owner_user_id,
+        actor_name="Mario",
+        action_run_id=None,
+    )
+    add_log(
+        target=other_obligation,
+        action="values_updated",
+        changes={"current_amount": {"from": "1.00", "to": "999.00"}},
+    )
+    db.commit()
+
+    context = SystemRunContext.create(
+        effective_at=datetime(2026, 9, 19, 9, 30, tzinfo=ZoneInfo("Europe/Warsaw")),
+        timezone=ZoneInfo("Europe/Warsaw"),
+    )
+    email = DailyObligationReport().render(
+        session=db, user=ledger.owner, context=context
+    )
+
+    assert email is not None
+    assert email.text_content is not None
+    assert "Recent activity" in email.text_content
+    assert "New invoice: September invoice (125.00)" in email.text_content
+    assert "Amount changed: 120.00 → 125.00" in email.text_content
+    assert "Payment recognized" in email.text_content
+    assert "Due date changed: 2026-09-20 → 2026-09-22" in email.text_content
+    assert email.text_content.count("eKartoteka") == 1
+    assert email.text_content.count("Mario") == 1
+    assert other_category.name not in email.text_content
+    assert "999.00" not in email.text_content
+    assert "Recent activity" in email.html_content
+    assert category.name in email.html_content
