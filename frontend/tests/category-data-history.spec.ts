@@ -318,11 +318,17 @@ test("renders schema-driven category history with versioning and formatters", as
       name: "changed. Current: current. Previous: null",
     }),
   ).toBeVisible()
+  const formattedPreciseDelta = await page.evaluate(() =>
+    new Intl.NumberFormat(undefined, {
+      maximumFractionDigits: 4,
+      signDisplay: "always",
+    }).format(1.0002 - 1.0001),
+  )
   await expect(
     newestRow.getByRole("button", {
       name: "changed. Current: 1.0002. Previous: 1.0001",
     }),
-  ).toContainText("+0.0001")
+  ).toContainText(formattedPreciseDelta)
   await expect(
     newestRow.getByRole("button", {
       name: "changed. Current: 2026-02-03. Previous: 2026-02-03",
