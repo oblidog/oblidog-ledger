@@ -191,6 +191,8 @@ export const IntegrationsService = {
 }
 export const LoginService = {
   loginAccessToken: request(generated.LoginService.loginAccessToken<true>),
+  loginSession: request(generated.LoginService.loginSession<true>),
+  logout: request(generated.LoginService.logout<true>),
   recoverPassword: request(generated.LoginService.recoverPassword<true>),
   resetPassword: request(generated.LoginService.resetPassword<true>),
 }

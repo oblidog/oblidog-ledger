@@ -49,6 +49,36 @@ export type BodyLoginLoginAccessToken = {
 };
 
 /**
+ * Body_login-login_session
+ */
+export type BodyLoginLoginSession = {
+    /**
+     * Grant Type
+     */
+    grant_type?: string | null;
+    /**
+     * Username
+     */
+    username: string;
+    /**
+     * Password
+     */
+    password: string;
+    /**
+     * Scope
+     */
+    scope?: string;
+    /**
+     * Client Id
+     */
+    client_id?: string | null;
+    /**
+     * Client Secret
+     */
+    client_secret?: string | null;
+};
+
+/**
  * CategoriesPublic
  */
 export type CategoriesPublic = {
@@ -376,6 +406,96 @@ export type CategoryUpdate = {
      */
     first_due_date?: string | null;
     currency?: Currency;
+};
+
+/**
+ * ComponentHistoryGroupPublic
+ */
+export type ComponentHistoryGroupPublic = {
+    /**
+     * Identity
+     */
+    identity: string;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Source
+     */
+    source: string | null;
+    /**
+     * External Id
+     */
+    external_id: string | null;
+    /**
+     * Values
+     */
+    values: Array<ComponentHistoryValuePublic>;
+};
+
+/**
+ * ComponentHistoryPublic
+ */
+export type ComponentHistoryPublic = {
+    /**
+     * Match By
+     */
+    match_by: 'label' | 'external_id';
+    /**
+     * Periods
+     */
+    periods: Array<ObligationPeriodPublic>;
+    /**
+     * Components
+     */
+    components: Array<ComponentHistoryGroupPublic>;
+    /**
+     * Totals
+     */
+    totals: Array<ComponentHistoryTotalPublic>;
+};
+
+/**
+ * ComponentHistoryTotalPublic
+ */
+export type ComponentHistoryTotalPublic = {
+    period: ObligationPeriodPublic;
+    /**
+     * Amount
+     */
+    amount: string | null;
+};
+
+/**
+ * ComponentHistoryValuePublic
+ */
+export type ComponentHistoryValuePublic = {
+    period: ObligationPeriodPublic;
+    /**
+     * Amount
+     */
+    amount: string | null;
+    /**
+     * State
+     */
+    state: 'added' | 'present' | 'changed' | 'removed' | 'missing';
+    /**
+     * Label
+     */
+    label?: string | null;
+    /**
+     * Source
+     */
+    source?: string | null;
+    /**
+     * External Id
+     */
+    external_id?: string | null;
 };
 
 /**
@@ -2213,6 +2333,47 @@ export type LoginLoginAccessTokenResponses = {
 
 export type LoginLoginAccessTokenResponse = LoginLoginAccessTokenResponses[keyof LoginLoginAccessTokenResponses];
 
+export type LoginLoginSessionData = {
+    body: BodyLoginLoginSession;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/session';
+};
+
+export type LoginLoginSessionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LoginLoginSessionError = LoginLoginSessionErrors[keyof LoginLoginSessionErrors];
+
+export type LoginLoginSessionResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type LoginLoginSessionResponse = LoginLoginSessionResponses[keyof LoginLoginSessionResponses];
+
+export type LoginLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/logout';
+};
+
+export type LoginLogoutResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type LoginLogoutResponse = LoginLogoutResponses[keyof LoginLogoutResponses];
+
 export type LoginTestTokenData = {
     body?: never;
     path?: never;
@@ -2869,6 +3030,57 @@ export type AnalyticsReadObligationPeriodTotalsResponses = {
 };
 
 export type AnalyticsReadObligationPeriodTotalsResponse = AnalyticsReadObligationPeriodTotalsResponses[keyof AnalyticsReadObligationPeriodTotalsResponses];
+
+export type AnalyticsReadComponentHistoryData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * End Year
+         */
+        end_year: number;
+        /**
+         * End Month
+         */
+        end_month: number;
+        /**
+         * Periods
+         */
+        periods?: number;
+        /**
+         * Match By
+         */
+        match_by?: 'label' | 'external_id';
+    };
+    url: '/api/v1/ledgers/{ledger_id}/analytics/component-history';
+};
+
+export type AnalyticsReadComponentHistoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AnalyticsReadComponentHistoryError = AnalyticsReadComponentHistoryErrors[keyof AnalyticsReadComponentHistoryErrors];
+
+export type AnalyticsReadComponentHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: ComponentHistoryPublic;
+};
+
+export type AnalyticsReadComponentHistoryResponse = AnalyticsReadComponentHistoryResponses[keyof AnalyticsReadComponentHistoryResponses];
 
 export type AnalyticsReadRemainingPeriodCashflowData = {
     body?: never;

@@ -16,6 +16,7 @@ class TokenPayload(BaseModel):
     sub: str | None = None
     # Tokens issued before session versioning was introduced are version 1.
     session_version: int = 1
+    csrf: str | None = None
 
 
 PasswordStr = Annotated[str, Field(min_length=8, max_length=128)]

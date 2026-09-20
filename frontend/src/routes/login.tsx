@@ -39,7 +39,7 @@ type FormData = z.infer<typeof formSchema>
 export const Route = createFileRoute("/login")({
   component: Login,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isLoggedIn()) {
       throw redirect({
         to: "/",
       })

@@ -33,7 +33,7 @@ type FormData = z.infer<typeof formSchema>
 export const Route = createFileRoute("/recover-password")({
   component: RecoverPassword,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isLoggedIn()) {
       throw redirect({
         to: "/",
       })

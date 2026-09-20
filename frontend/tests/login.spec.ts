@@ -80,6 +80,28 @@ test("Successful log out", async ({ page }) => {
   await page.waitForURL("/login")
 })
 
+test("Failed log out keeps the active browser session", async ({ page }) => {
+  await page.goto("/login")
+
+  await fillForm(page, firstSuperuser, firstSuperuserPassword)
+  await page.getByRole("button", { name: "Log In" }).click()
+  await page.waitForURL(/\/(?:$|ledgers\/[^/]+$)/)
+
+  await page.route("**/api/v1/login/logout", (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "Logout failed" }),
+    }),
+  )
+  await page.getByTestId("user-menu").click()
+  await page.getByRole("menuitem", { name: "Log out" }).click()
+
+  await expect(page).not.toHaveURL(/\/login/)
+  await expect(page.getByTestId("user-menu")).toBeVisible()
+  await expect(page.getByText("Logout failed")).toBeVisible()
+})
+
 test("Logged-out user cannot access protected routes", async ({ page }) => {
   await page.goto("/login")
 
@@ -97,13 +119,15 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
   await page.waitForURL("/login")
 })
 
-test("Redirects to /login when token is wrong", async ({ page }) => {
-  await page.goto("/settings")
-  await page.evaluate(() => {
-    localStorage.setItem("access_token", "invalid_token")
+test("Removes a legacy localStorage token", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("access_token", "legacy-token")
   })
   await page.goto("/settings")
   await expect(page).toHaveURL("/login")
+  await expect(
+    page.evaluate(() => localStorage.getItem("access_token")),
+  ).resolves.toBeNull()
 })
 
 test("Redirects to /login when the token user no longer exists", async ({
@@ -116,9 +140,6 @@ test("Redirects to /login when the token user no longer exists", async ({
     }),
   )
   await page.goto("/settings")
-  await page.evaluate(() => {
-    localStorage.setItem("access_token", "token-for-a-removed-user")
-  })
   await page.goto("/settings")
 
   await expect(page).toHaveURL(/\/login/)

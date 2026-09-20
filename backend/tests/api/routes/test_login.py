@@ -7,6 +7,7 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.orm import Session
 
 from app.core import security
+from app.core.browser_auth import CSRF_HEADER_NAME
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import User
@@ -33,6 +34,144 @@ def test_get_access_token(client: TestClient) -> None:
     assert r.status_code == 200
     assert "access_token" in tokens
     assert tokens["access_token"]
+
+
+def test_browser_session_uses_http_only_cookie_and_csrf(client: TestClient) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        login = client.post(f"{settings.API_V1_STR}/login/session", data=login_data)
+
+        assert login.status_code == 200
+        assert login.json() == {"message": "Session created"}
+        assert "access_token" not in login.text
+        set_cookie = login.headers["set-cookie"]
+        assert f"{settings.SESSION_COOKIE_NAME}=" in set_cookie
+        assert "HttpOnly" in set_cookie
+        assert "Max-Age=" in set_cookie
+        assert "SameSite=lax" in set_cookie
+        csrf_token = login.headers[CSRF_HEADER_NAME]
+
+        current_user = client.get(f"{settings.API_V1_STR}/users/me")
+        assert current_user.status_code == 200
+        assert current_user.headers[CSRF_HEADER_NAME] == csrf_token
+
+        rejected = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Origin": settings.FRONTEND_HOST},
+        )
+        assert rejected.status_code == 403
+        assert rejected.json() == {"detail": "Invalid CSRF token"}
+
+        accepted = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={
+                "Origin": settings.FRONTEND_HOST,
+                CSRF_HEADER_NAME: csrf_token,
+            },
+        )
+        assert accepted.status_code == 200
+
+        logout = client.post(
+            f"{settings.API_V1_STR}/login/logout",
+            headers={CSRF_HEADER_NAME: csrf_token},
+        )
+        assert logout.status_code == 200
+        assert client.cookies.get(settings.SESSION_COOKIE_NAME) is None
+        assert "Max-Age=0" in logout.headers["set-cookie"]
+    finally:
+        client.cookies.clear()
+
+
+def test_explicit_bearer_takes_priority_over_browser_session_cookie(
+    client: TestClient,
+) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        access_login = client.post(
+            f"{settings.API_V1_STR}/login/access-token", data=login_data
+        )
+        access_token = access_login.json()["access_token"]
+        session_login = client.post(
+            f"{settings.API_V1_STR}/login/session", data=login_data
+        )
+        assert session_login.status_code == 200
+
+        accepted = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert accepted.status_code == 200
+
+        rejected = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Authorization": "Bearer invalid"},
+        )
+        assert rejected.status_code == 403
+    finally:
+        client.cookies.clear()
+
+
+def test_access_token_cannot_be_used_as_browser_session_cookie(
+    client: TestClient,
+) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        access_login = client.post(
+            f"{settings.API_V1_STR}/login/access-token", data=login_data
+        )
+        access_token = access_login.json()["access_token"]
+        client.cookies.set(settings.SESSION_COOKIE_NAME, access_token)
+
+        response = client.get(f"{settings.API_V1_STR}/users/me")
+
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Could not validate credentials"}
+    finally:
+        client.cookies.clear()
+
+
+def test_browser_login_rejects_untrusted_origin(client: TestClient) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    response = client.post(
+        f"{settings.API_V1_STR}/login/session",
+        data=login_data,
+        headers={"Origin": "https://attacker.example"},
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin is not allowed"}
+
+
+def test_browser_cors_explicitly_allows_credentials_and_csrf(
+    client: TestClient,
+) -> None:
+    response = client.options(
+        f"{settings.API_V1_STR}/login/session",
+        headers={
+            "Origin": settings.FRONTEND_HOST,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": CSRF_HEADER_NAME,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == settings.FRONTEND_HOST
+    assert response.headers["access-control-allow-credentials"] == "true"
+    assert (
+        CSRF_HEADER_NAME.lower()
+        in response.headers["access-control-allow-headers"].lower()
+    )
 
 
 def test_legacy_token_is_version_one_until_password_changes(

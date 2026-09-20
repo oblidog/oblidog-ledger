@@ -54,7 +54,7 @@ export function User({ user }: { user: any }) {
     }
   }
   const handleLogout = async () => {
-    logout()
+    await logout()
   }
 
   return (

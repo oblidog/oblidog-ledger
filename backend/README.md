@@ -49,6 +49,26 @@ Make sure your editor is using the correct Python virtual environment, with the 
 - Payment obligations support lifecycle actions for data collection, readiness,
   payment, cancellation, and reopening.
 
+## Browser authentication
+
+The frontend signs in through `POST /api/v1/login/session`. The backend stores
+the JWT in a host-only `HttpOnly` cookie and exposes only a per-session CSRF
+token in the `X-CSRF-Token` response header. Credentialed browser requests must
+send that header for `POST`, `PUT`, `PATCH`, and `DELETE`. CORS accepts only
+`FRONTEND_HOST` and `BACKEND_CORS_ORIGINS`; the production frontend and API may
+use separate hostnames as long as both origins are configured.
+
+`SESSION_COOKIE_SAMESITE` defaults to `lax`. `SESSION_COOKIE_SECURE` defaults to
+enabled in staging and production and disabled locally; explicitly enable it
+for HTTPS demo deployments. `SameSite=none` is rejected unless Secure is also
+enabled. The frontend deletes the legacy `localStorage.access_token` during
+startup. Users therefore sign in again once after upgrading from a bearer-token
+frontend release.
+
+`POST /api/v1/login/access-token` remains available for non-browser user API
+clients and test tooling. Integration connection keys continue to use their
+independent Bearer flow and are not session cookies.
+
 ## Temporary legacy workbook import
 
 For the migration window, a ledger owner can start a legacy import with
