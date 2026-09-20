@@ -95,5 +95,4 @@ def reset_password(*, session: Session, token: str, new_password: str) -> User:
     reset_token.consumed_at = now
     session.add_all([user, reset_token])
     session.commit()
-    session.refresh(user)
     return user

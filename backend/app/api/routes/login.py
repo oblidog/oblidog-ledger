@@ -149,6 +149,8 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
     delivery = password_reset_service.issue_password_reset(session=session, user=user)
     email_data = generate_reset_password_email(
         email_to=user.email, email=email, token=delivery.token

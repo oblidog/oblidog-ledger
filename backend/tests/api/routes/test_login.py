@@ -7,13 +7,14 @@ from unittest.mock import patch
 import jwt
 from fastapi.testclient import TestClient
 from pwdlib.hashers.bcrypt import BcryptHasher
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core import security
 from app.core.browser_auth import CSRF_HEADER_NAME
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
-from app.models import User
+from app.models import PasswordResetToken, User
 from app.schemas import UserCreate
 from app.services import password_resets as password_reset_service
 from app.services import users as user_service
@@ -256,6 +257,29 @@ def test_recovery_password_user_not_exits(
     }
 
 
+def test_recovery_html_content_rejects_inactive_user(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(
+            email=random_email(),
+            password=random_lower_string(),
+            is_active=False,
+        ),
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/password-recovery-html-content/{user.email}",
+        headers=superuser_token_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Inactive user"}
+
+
 def test_reset_password(client: TestClient, db: Session) -> None:
     email = random_email()
     password = random_lower_string()
@@ -359,6 +383,33 @@ def test_reset_password_rejects_expired_and_wrong_purpose_tokens(
         )
         assert response.status_code == 400
         assert response.json() == {"detail": "Invalid token"}
+
+
+def test_reset_password_rejects_token_expired_in_persisted_state(
+    client: TestClient, db: Session
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=random_lower_string()),
+    )
+    token = password_reset_service.issue_password_reset(session=db, user=user).token
+    reset_token = db.scalar(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token_hash
+            == password_reset_service.hash_password_reset_token(token)
+        )
+    )
+    assert reset_token is not None
+    reset_token.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    db.commit()
+
+    response = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": random_lower_string(), "token": token},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid token"}
 
 
 def test_failed_password_validation_does_not_consume_reset_token(
