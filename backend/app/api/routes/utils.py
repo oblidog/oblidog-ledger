@@ -21,6 +21,7 @@ READINESS_TIMEOUT_SECONDS = 3.0
 def _check_database() -> None:
     """Execute the smallest useful database round-trip for readiness."""
     with engine.connect() as connection:
+        connection.execute(text("SET LOCAL statement_timeout = 2000"))
         connection.execute(text("SELECT 1"))
 
 
