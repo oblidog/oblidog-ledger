@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { clearBrowserSessionState } from "@/browserSession"
 import { LoginService, type UpdatePassword, UsersService } from "@/client"
 import {
   Form,
@@ -55,8 +56,12 @@ const ChangePassword = () => {
     mutationFn: (data: UpdatePassword) =>
       UsersService.updatePasswordMe({ requestBody: data }),
     onSuccess: async () => {
-      await LoginService.logout()
-      window.location.replace("/login?passwordChanged=true")
+      try {
+        await LoginService.logout()
+      } finally {
+        clearBrowserSessionState()
+        window.location.replace("/login?passwordChanged=true")
+      }
     },
     onError: handleError.bind(showErrorToast),
   })

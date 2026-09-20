@@ -4,7 +4,7 @@ from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
-from app.core.browser_auth import BrowserSessionSecurityMiddleware
+from app.core.browser_auth import CSRF_HEADER_NAME, BrowserSessionSecurityMiddleware
 from app.core.config import settings
 
 
@@ -37,9 +37,9 @@ if settings.all_cors_origins:
             "Accept",
             "Authorization",
             "Content-Type",
-            settings.CSRF_HEADER_NAME,
+            CSRF_HEADER_NAME,
         ],
-        expose_headers=[settings.CSRF_HEADER_NAME],
+        expose_headers=[CSRF_HEADER_NAME],
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)

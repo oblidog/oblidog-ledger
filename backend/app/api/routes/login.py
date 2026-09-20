@@ -8,7 +8,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
-from app.core.browser_auth import clear_session_cookie, set_session_cookie
+from app.core.browser_auth import (
+    CSRF_HEADER_NAME,
+    clear_session_cookie,
+    set_session_cookie,
+)
 from app.core.config import settings
 from app.models import User
 from app.schemas import Message, NewPassword, Token, UserPublic
@@ -69,7 +73,7 @@ def login_session(
         csrf_token=csrf_token,
     )
     set_session_cookie(response, access_token)
-    response.headers[settings.CSRF_HEADER_NAME] = csrf_token
+    response.headers[CSRF_HEADER_NAME] = csrf_token
     return Message(message="Session created")
 
 

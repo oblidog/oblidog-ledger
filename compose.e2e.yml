@@ -81,7 +81,8 @@ services:
       FIRST_SUPERUSER_PASSWORD: e2e-admin-password
       MAILCATCHER_HOST: http://mailcatcher:1080
       PLAYWRIGHT_HTML_HOST: 0.0.0.0
-      VITE_API_URL: http://backend:8000
+      VITE_API_URL: http://localhost:5173
+      VITE_API_PROXY_TARGET: http://backend:8000
     networks:
       - e2e
     shm_size: 1gb

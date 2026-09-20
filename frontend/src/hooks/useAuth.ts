@@ -84,11 +84,18 @@ const useAuth = () => {
   const logout = async () => {
     try {
       await LoginService.logout()
-    } finally {
-      clearBrowserSessionState()
-      queryClient.clear()
-      navigate({ to: "/login" })
+    } catch (error) {
+      if (error instanceof ApiError) {
+        handleError.call(showErrorToast, error)
+      } else {
+        showErrorToast("Unable to log out. Please try again.")
+      }
+      return
     }
+
+    clearBrowserSessionState()
+    queryClient.clear()
+    navigate({ to: "/login" })
   }
 
   return {

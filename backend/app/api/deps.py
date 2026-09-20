@@ -90,6 +90,7 @@ def enforce_demo_request_capabilities(request: Request) -> None:
 
 
 def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> User:
+    uses_session_cookie = token is None
     token = token or request.cookies.get(settings.SESSION_COOKIE_NAME)
     if token is None:
         raise HTTPException(
@@ -103,6 +104,8 @@ def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> 
         )
         token_data = TokenPayload(**payload)
         if token_data.sub is None:
+            raise ValueError
+        if uses_session_cookie and not token_data.csrf:
             raise ValueError
         user_id = uuid.UUID(token_data.sub)
     except (InvalidTokenError, ValidationError, ValueError):

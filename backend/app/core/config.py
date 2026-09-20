@@ -40,7 +40,6 @@ class Settings(BaseSettings):
     SESSION_COOKIE_NAME: str = "oblidog_session"
     SESSION_COOKIE_SECURE: bool | None = None
     SESSION_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
-    CSRF_HEADER_NAME: str = "X-CSRF-Token"
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "demo", "production"] = "local"
 

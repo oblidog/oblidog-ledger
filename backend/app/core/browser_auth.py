@@ -11,6 +11,13 @@ from app.core import security
 from app.core.config import settings
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+CSRF_HEADER_NAME = "X-CSRF-Token"
+
+
+def request_uses_bearer_auth(request: Request) -> bool:
+    authorization = request.headers.get("authorization", "")
+    scheme, _, credentials = authorization.partition(" ")
+    return scheme.lower() == "bearer" and bool(credentials)
 
 
 def set_session_cookie(response: Response, token: str) -> None:
@@ -69,8 +76,8 @@ class BrowserSessionSecurityMiddleware(BaseHTTPMiddleware):
                 )
 
             csrf_token = session_csrf_token(request)
-            if csrf_token is not None:
-                provided = request.headers.get(settings.CSRF_HEADER_NAME)
+            if csrf_token is not None and not request_uses_bearer_auth(request):
+                provided = request.headers.get(CSRF_HEADER_NAME)
                 if provided is None or not secrets.compare_digest(provided, csrf_token):
                     return JSONResponse(
                         status_code=status.HTTP_403_FORBIDDEN,
@@ -80,5 +87,5 @@ class BrowserSessionSecurityMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         csrf_token = session_csrf_token(request)
         if csrf_token is not None:
-            response.headers[settings.CSRF_HEADER_NAME] = csrf_token
+            response.headers[CSRF_HEADER_NAME] = csrf_token
         return response
