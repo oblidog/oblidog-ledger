@@ -224,6 +224,7 @@ def test_update_password_me(
     user_query = select(User).where(User.email == email)
     user_db = db.scalars(user_query).first()
     assert user_db
+    db.refresh(user_db)
     assert user_db.email == email
     verified, _ = verify_password(new_password, user_db.hashed_password)
     assert verified
