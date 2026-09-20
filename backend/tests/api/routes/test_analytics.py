@@ -886,3 +886,137 @@ def test_component_history_rejects_ambiguous_label_identity(
 
     assert response.status_code == 422
     assert "Ambiguous component identity" in response.json()["detail"]
+
+
+def test_component_history_reports_removed_missing_and_totals(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="component-history-states"
+    )
+    category = _create_history_category(db, ledger_id=ledger.id, code="STAT")
+    july = _create_history_obligation(
+        db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 7),
+        amount=Decimal("15.00"),
+    )
+    august = _create_history_obligation(
+        db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 8),
+        amount=Decimal("20.00"),
+    )
+    db.add_all(
+        [
+            ObligationComponent(
+                obligation_id=july.id,
+                type="fee",
+                label="Base fee",
+                amount=Decimal("10.00"),
+            ),
+            ObligationComponent(
+                obligation_id=july.id,
+                type="fee",
+                label="Temporary fee",
+                amount=Decimal("5.00"),
+            ),
+            ObligationComponent(
+                obligation_id=august.id,
+                type="fee",
+                label="Base fee",
+                amount=Decimal("20.00"),
+            ),
+        ]
+    )
+    db.commit()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/analytics/component-history"
+        f"?category_id={category.id}&end_year=2026&end_month=9&periods=3&match_by=label",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    components = {item["label"]: item for item in body["components"]}
+    assert [value["state"] for value in components["Base fee"]["values"]] == [
+        "added",
+        "changed",
+        "missing",
+    ]
+    assert [value["state"] for value in components["Temporary fee"]["values"]] == [
+        "added",
+        "removed",
+        "missing",
+    ]
+    assert [total["amount"] for total in body["totals"]] == [
+        "15.00",
+        "20.00",
+        None,
+    ]
+
+
+def test_component_history_matches_by_external_id_across_label_changes(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="component-history-external-id"
+    )
+    category = _create_history_category(db, ledger_id=ledger.id, code="EXTI")
+    august = _create_history_obligation(
+        db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 8),
+        amount=Decimal("10.00"),
+    )
+    september = _create_history_obligation(
+        db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 9),
+        amount=Decimal("10.00"),
+    )
+    db.add_all(
+        [
+            ObligationComponent(
+                obligation_id=august.id,
+                type="fee",
+                label="Old label",
+                amount=Decimal("10.00"),
+                source="provider",
+                external_id="stable-id",
+            ),
+            ObligationComponent(
+                obligation_id=september.id,
+                type="fee",
+                label="New label",
+                amount=Decimal("10.00"),
+                source="provider",
+                external_id="stable-id",
+            ),
+        ]
+    )
+    db.commit()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/analytics/component-history"
+        f"?category_id={category.id}&end_year=2026&end_month=9&periods=2&match_by=external_id",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["components"]) == 1
+    assert body["components"][0]["label"] == "New label"
+    assert [value["state"] for value in body["components"][0]["values"]] == [
+        "added",
+        "changed",
+    ]
