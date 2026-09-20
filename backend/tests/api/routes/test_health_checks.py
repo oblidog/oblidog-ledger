@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import OperationalError
@@ -50,22 +48,26 @@ def test_readiness_fails_without_exposing_database_error(
     assert "secret-password" not in response.text
 
 
-def test_readiness_has_bounded_latency(
-    client: TestClient,
+def test_database_check_sets_server_side_statement_timeout(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def timed_out(_awaitable, *, timeout):  # type: ignore[no-untyped-def]
-        assert timeout == utils.READINESS_TIMEOUT_SECONDS
-        if hasattr(_awaitable, "close"):
-            _awaitable.close()
-        raise TimeoutError
+    statements: list[str] = []
 
-    monkeypatch.setattr(asyncio, "wait_for", timed_out)
+    class FakeConnection:
+        def __enter__(self):  # type: ignore[no-untyped-def]
+            return self
 
-    response = client.get(f"{settings.API_V1_STR}/utils/readiness-check/")
+        def __exit__(self, *args):  # type: ignore[no-untyped-def]
+            return None
 
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Service unavailable"}
+        def execute(self, statement):  # type: ignore[no-untyped-def]
+            statements.append(str(statement))
+
+    monkeypatch.setattr(utils.engine, "connect", lambda: FakeConnection())
+
+    utils._check_database()
+
+    assert statements == ["SET LOCAL statement_timeout = 2000", "SELECT 1"]
 
 
 def test_readiness_recovers_after_database_returns(
