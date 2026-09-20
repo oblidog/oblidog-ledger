@@ -1,16 +1,28 @@
+import asyncio
 import os
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic.networks import EmailStr
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.deps import get_current_active_superuser
 from app.core.config import settings
+from app.core.db import engine
 from app.demo_seed import DEMO_EMAIL, DEMO_PASSWORD_ENV
 from app.schemas import Message
 from app.utils import generate_test_email, send_email
 
 router = APIRouter(prefix="/utils", tags=["utils"])
+READINESS_TIMEOUT_SECONDS = 3.0
+
+
+def _check_database() -> None:
+    """Execute the smallest useful database round-trip for readiness."""
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+
 
 
 @router.post(
@@ -50,4 +62,20 @@ def public_config() -> dict[str, Any]:
 
 @router.get("/health-check/")
 async def health_check() -> bool:
+    """Process liveness: does not depend on external services."""
+    return True
+
+
+@router.get("/readiness-check/")
+async def readiness_check() -> bool:
+    """Application readiness: require a bounded database round-trip."""
+    try:
+        await asyncio.wait_for(
+            asyncio.to_thread(_check_database), timeout=READINESS_TIMEOUT_SECONDS
+        )
+    except (TimeoutError, SQLAlchemyError):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service unavailable",
+        ) from None
     return True
