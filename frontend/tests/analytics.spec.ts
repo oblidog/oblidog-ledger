@@ -335,3 +335,40 @@ test("compares stable, added, removed and renamed components across six periods"
 
   await expect(table.getByRole("row")).toHaveCount(7)
 })
+
+
+test("shows component history endpoint errors and allows changing criterion", async ({
+  page,
+}) => {
+  const ledger = await createCategoryHistoryFixture()
+  let requestedMatchBy: string | undefined
+
+  await page.route("**/analytics/component-history?**", async (route) => {
+    const url = new URL(route.request().url())
+    requestedMatchBy = url.searchParams.get("match_by") ?? undefined
+    await route.fulfill({
+      status: 422,
+      contentType: "application/json",
+      json: {
+        detail:
+          "Ambiguous component identity 'fee:service fee'; select another matching criterion",
+      },
+    })
+  })
+
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  await expect
+    .poll(() => requestedMatchBy)
+    .toBe("label")
+  await expect(
+    page.getByText("Component history is unavailable", { exact: true }),
+  ).toBeVisible()
+
+  await page.getByRole("combobox", { name: "Compare by" }).click()
+  await page.getByRole("option", { name: "External ID" }).click()
+
+  await expect
+    .poll(() => requestedMatchBy)
+    .toBe("external_id")
+})
