@@ -119,7 +119,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
-          <label className="grid gap-1 text-sm font-medium">
+          <div className="grid gap-1 text-sm font-medium">
             <span>Category</span>
             <Select
               value={selectedCategoryId}
@@ -137,8 +137,8 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 ))}
               </SelectContent>
             </Select>
-          </label>
-          <label className="grid gap-1 text-sm font-medium">
+          </div>
+          <div className="grid gap-1 text-sm font-medium">
             <span>Compare by</span>
             <Select
               value={matchBy}
@@ -154,8 +154,8 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 <SelectItem value="external_id">External ID</SelectItem>
               </SelectContent>
             </Select>
-          </label>
-          <label className="grid gap-1 text-sm font-medium">
+          </div>
+          <div className="grid gap-1 text-sm font-medium">
             <span>Range ending</span>
             <Select
               value={periodKey(selectedPeriod)}
@@ -177,7 +177,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 ))}
               </SelectContent>
             </Select>
-          </label>
+          </div>
         </div>
       </div>
 
