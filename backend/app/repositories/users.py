@@ -11,6 +11,7 @@ USER_UPDATE_FIELDS = {
     "hashed_password",
     "is_active",
     "is_superuser",
+    "session_version",
 }
 
 
@@ -51,7 +52,7 @@ def create_user(
 
 
 def update_user(
-    *, session: Session, db_user: User, updates: dict[str, str | bool | None]
+    *, session: Session, db_user: User, updates: dict[str, str | bool | int | None]
 ) -> User:
     unexpected_fields = set(updates) - USER_UPDATE_FIELDS
     if unexpected_fields:

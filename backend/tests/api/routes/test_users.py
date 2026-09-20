@@ -10,7 +10,7 @@ from app.main import app
 from app.models import User
 from app.schemas import UserCreate
 from app.services import users as user_service
-from tests.utils.user import create_random_user
+from tests.utils.user import create_random_user, user_authentication_headers
 from tests.utils.utils import random_email, random_lower_string
 
 
@@ -196,46 +196,52 @@ def test_update_user_me(
 
 
 def test_update_password_me(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+    client: TestClient, db: Session
 ) -> None:
+    email = random_email()
+    current_password = random_lower_string()
     new_password = random_lower_string()
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=email, password=current_password),
+    )
+    token_headers = user_authentication_headers(
+        client=client, email=email, password=current_password
+    )
     data = {
-        "current_password": settings.FIRST_SUPERUSER_PASSWORD,
+        "current_password": current_password,
         "new_password": new_password,
     }
     r = client.patch(
         f"{settings.API_V1_STR}/users/me/password",
-        headers=superuser_token_headers,
+        headers=token_headers,
         json=data,
     )
     assert r.status_code == 200
     updated_user = r.json()
     assert updated_user["message"] == "Password updated successfully"
 
-    user_query = select(User).where(User.email == settings.FIRST_SUPERUSER)
+    user_query = select(User).where(User.email == email)
     user_db = db.scalars(user_query).first()
     assert user_db
-    assert user_db.email == settings.FIRST_SUPERUSER
+    assert user_db.email == email
     verified, _ = verify_password(new_password, user_db.hashed_password)
     assert verified
 
-    # Revert to the old password to keep consistency in test
-    old_data = {
-        "current_password": new_password,
-        "new_password": settings.FIRST_SUPERUSER_PASSWORD,
-    }
-    r = client.patch(
-        f"{settings.API_V1_STR}/users/me/password",
-        headers=superuser_token_headers,
-        json=old_data,
+    revoked = client.get(
+        f"{settings.API_V1_STR}/users/me", headers=token_headers
     )
-    db.refresh(user_db)
+    assert revoked.status_code == 401
+    assert revoked.json()["detail"] == "Session expired"
 
-    assert r.status_code == 200
-    verified, _ = verify_password(
-        settings.FIRST_SUPERUSER_PASSWORD, user_db.hashed_password
+    fresh_headers = user_authentication_headers(
+        client=client, email=email, password=new_password
     )
-    assert verified
+    fresh = client.get(
+        f"{settings.API_V1_STR}/users/me", headers=fresh_headers
+    )
+    assert fresh.status_code == 200
+    assert fresh.json()["id"] == str(user.id)
 
 
 def test_update_password_me_incorrect_password(
@@ -394,6 +400,7 @@ def test_update_user_partial_password_preserves_other_fields(
         ),
     )
     original_hash = user.hashed_password
+    original_session_version = user.session_version
     new_password = random_lower_string()
 
     r = client.patch(
@@ -413,6 +420,43 @@ def test_update_user_partial_password_preserves_other_fields(
     assert updated.hashed_password != original_hash
     verified, _ = verify_password(new_password, updated.hashed_password)
     assert verified
+    assert updated.session_version == original_session_version + 1
+
+
+def test_admin_password_replacement_revokes_only_target_user_sessions(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    email = random_email()
+    password = random_lower_string()
+    new_password = random_lower_string()
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=email, password=password),
+    )
+    user_headers = user_authentication_headers(
+        client=client, email=email, password=password
+    )
+
+    response = client.patch(
+        f"{settings.API_V1_STR}/users/{user.id}",
+        headers=superuser_token_headers,
+        json={"password": new_password},
+    )
+
+    assert response.status_code == 200
+    revoked = client.get(f"{settings.API_V1_STR}/users/me", headers=user_headers)
+    assert revoked.status_code == 401
+
+    fresh_headers = user_authentication_headers(
+        client=client, email=email, password=new_password
+    )
+    fresh = client.get(f"{settings.API_V1_STR}/users/me", headers=fresh_headers)
+    assert fresh.status_code == 200
+
+    admin_still_signed_in = client.get(
+        f"{settings.API_V1_STR}/users/me", headers=superuser_token_headers
+    )
+    assert admin_still_signed_in.status_code == 200
 
 
 def test_update_user_partial_flags_preserve_omitted_fields(

@@ -1,9 +1,12 @@
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
+import jwt
 from fastapi.testclient import TestClient
 from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import User
@@ -30,6 +33,34 @@ def test_get_access_token(client: TestClient) -> None:
     assert r.status_code == 200
     assert "access_token" in tokens
     assert tokens["access_token"]
+
+
+def test_legacy_token_is_version_one_until_password_changes(
+    client: TestClient, db: Session
+) -> None:
+    password = random_lower_string()
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=password),
+    )
+    legacy_token = jwt.encode(
+        {
+            "sub": str(user.id),
+            "exp": datetime.now(UTC) + timedelta(minutes=5),
+        },
+        settings.SECRET_KEY,
+        algorithm=security.ALGORITHM,
+    )
+    headers = {"Authorization": f"Bearer {legacy_token}"}
+
+    accepted = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
+    assert accepted.status_code == 200
+
+    user_service.set_user_password(
+        session=db, user=user, new_password=random_lower_string()
+    )
+    revoked = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
+    assert revoked.status_code == 401
 
 
 def test_get_access_token_incorrect_password(client: TestClient) -> None:
@@ -112,6 +143,15 @@ def test_reset_password(client: TestClient, db: Session) -> None:
     db.refresh(user)
     verified, _ = verify_password(new_password, user.hashed_password)
     assert verified
+
+    revoked = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
+    assert revoked.status_code == 401
+
+    fresh_headers = user_authentication_headers(
+        client=client, email=email, password=new_password
+    )
+    fresh = client.get(f"{settings.API_V1_STR}/users/me", headers=fresh_headers)
+    assert fresh.status_code == 200
 
 
 def test_reset_password_invalid_token(
