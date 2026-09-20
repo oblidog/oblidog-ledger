@@ -10,6 +10,7 @@ from app.models.integration import Integration, IntegrationCredential
 from app.models.ledger import Ledger, LedgerMembership
 from app.models.legacy_import_job import LegacyImportJob
 from app.models.obligation import Obligation, ObligationActionLog, ObligationComponent
+from app.models.password_reset_token import PasswordResetToken
 from app.models.report_delivery import ReportDelivery
 from app.models.system_run import SystemRun, SystemRunStep
 from app.models.user import User
@@ -30,6 +31,7 @@ __all__ = [
     "Obligation",
     "ObligationActionLog",
     "ObligationComponent",
+    "PasswordResetToken",
     "ReportDelivery",
     "SystemRun",
     "SystemRunStep",
