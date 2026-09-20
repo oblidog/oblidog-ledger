@@ -36,8 +36,8 @@ class SamePasswordError(Exception):
     pass
 
 
-def _build_user_updates(user_in: UserUpdate) -> dict[str, str | bool | None]:
-    updates: dict[str, str | bool | None] = user_in.model_dump(
+def _build_user_updates(user_in: UserUpdate) -> dict[str, str | bool | int | None]:
+    updates: dict[str, str | bool | int | None] = user_in.model_dump(
         exclude_unset=True,
         exclude={"password"},
     )
@@ -108,10 +108,14 @@ def update_user_me(
 
 
 def set_user_password(*, session: Session, user: User, new_password: str) -> User:
+    session.refresh(user, with_for_update=True)
     return user_repository.update_user(
         session=session,
         db_user=user,
-        updates={"hashed_password": get_password_hash(new_password)},
+        updates={
+            "hashed_password": get_password_hash(new_password),
+            "session_version": user.session_version + 1,
+        },
     )
 
 
@@ -160,6 +164,9 @@ def update_user_by_id(
             raise UserEmailAlreadyExistsError
 
     updates = _build_user_updates(user_in)
+    if user_in.password is not None:
+        session.refresh(db_user, with_for_update=True)
+        updates["session_version"] = db_user.session_version + 1
     if "email" in updates:
         updates["email"] = normalize_user_email(str(updates["email"]))
     return user_repository.update_user(
@@ -210,6 +217,7 @@ def ensure_initial_superuser(session: Session) -> None:
         db_user=user,
         updates={
             "hashed_password": get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+            "session_version": user.session_version + 1,
             "is_superuser": True,
             "is_active": True,
             "full_name": user.full_name,
