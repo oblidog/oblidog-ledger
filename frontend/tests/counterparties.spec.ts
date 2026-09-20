@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { firstSuperuser, firstSuperuserPassword } from "./config"
 
-const apiUrl = process.env.VITE_API_URL
+const apiUrl = process.env.VITE_API_PROXY_TARGET ?? process.env.VITE_API_URL
 if (!apiUrl) {
   throw new Error("VITE_API_URL is undefined")
 }
