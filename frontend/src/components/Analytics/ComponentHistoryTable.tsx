@@ -234,6 +234,7 @@ export function ComponentHistoryTable({
       matchBy,
     ],
     enabled: Boolean(categoryId),
+    retry: false,
   })
 
   return (
