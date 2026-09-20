@@ -1,4 +1,5 @@
 import logging
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -21,6 +22,12 @@ class EmailData:
     html_content: str
     subject: str
     text_content: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class PasswordResetTokenClaims:
+    user_id: uuid.UUID
+    token_id: uuid.UUID
 
 
 def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
@@ -129,24 +136,45 @@ def generate_user_invitation_email(
     return EmailData(html_content=html_content, subject=subject)
 
 
-def generate_password_reset_token(email: str) -> str:
-    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
-    now = datetime.now(UTC)
-    expires = now + delta
-    exp = expires.timestamp()
+def generate_password_reset_token(
+    *,
+    user_id: uuid.UUID,
+    token_id: uuid.UUID,
+    issued_at: datetime | None = None,
+    expires_at: datetime | None = None,
+) -> str:
+    now = issued_at or datetime.now(UTC)
+    expires = expires_at or (
+        now + timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
+    )
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email},
+        {
+            "exp": expires,
+            "iat": now,
+            "nbf": now,
+            "sub": str(user_id),
+            "jti": str(token_id),
+            "purpose": "password_reset",
+        },
         settings.SECRET_KEY,
         algorithm=security.ALGORITHM,
     )
     return encoded_jwt
 
 
-def verify_password_reset_token(token: str) -> str | None:
+def verify_password_reset_token(token: str) -> PasswordResetTokenClaims | None:
     try:
         decoded_token = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token,
+            settings.SECRET_KEY,
+            algorithms=[security.ALGORITHM],
+            options={"require": ["exp", "iat", "nbf", "sub", "jti", "purpose"]},
         )
-        return str(decoded_token["sub"])
-    except InvalidTokenError:
+        if decoded_token["purpose"] != "password_reset":
+            return None
+        return PasswordResetTokenClaims(
+            user_id=uuid.UUID(str(decoded_token["sub"])),
+            token_id=uuid.UUID(str(decoded_token["jti"])),
+        )
+    except (InvalidTokenError, KeyError, TypeError, ValueError):
         return None

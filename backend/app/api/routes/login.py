@@ -17,12 +17,11 @@ from app.core.config import settings
 from app.models import User
 from app.schemas import Message, NewPassword, Token, UserPublic
 from app.services import auth as auth_service
+from app.services import password_resets as password_reset_service
 from app.services import users as user_service
 from app.utils import (
-    generate_password_reset_token,
     generate_reset_password_email,
     send_email,
-    verify_password_reset_token,
 )
 
 router = APIRouter(tags=["login"])
@@ -101,10 +100,12 @@ def recover_password(email: str, session: SessionDep) -> Message:
 
     # Always return the same response to prevent email enumeration attacks
     # Only send email if user actually exists
-    if user:
-        password_reset_token = generate_password_reset_token(email=email)
+    if user and user.is_active:
+        delivery = password_reset_service.issue_password_reset(
+            session=session, user=user
+        )
         email_data = generate_reset_password_email(
-            email_to=user.email, email=email, token=password_reset_token
+            email_to=user.email, email=email, token=delivery.token
         )
         send_email(
             email_to=user.email,
@@ -121,18 +122,14 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     """
     Reset password
     """
-    email = verify_password_reset_token(token=body.token)
-    if not email:
+    try:
+        password_reset_service.reset_password(
+            session=session,
+            token=body.token,
+            new_password=body.new_password,
+        )
+    except password_reset_service.InvalidPasswordResetTokenError:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = user_service.get_user_by_email(session=session, email=email)
-    if not user:
-        # Don't reveal that the user doesn't exist - use same error as invalid token
-        raise HTTPException(status_code=400, detail="Invalid token")
-    elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    user_service.set_user_password(
-        session=session, user=user, new_password=body.new_password
-    )
     return Message(message="Password updated successfully")
 
 
@@ -152,9 +149,11 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
-    password_reset_token = generate_password_reset_token(email=email)
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    delivery = password_reset_service.issue_password_reset(session=session, user=user)
     email_data = generate_reset_password_email(
-        email_to=user.email, email=email, token=password_reset_token
+        email_to=user.email, email=email, token=delivery.token
     )
 
     return HTMLResponse(
