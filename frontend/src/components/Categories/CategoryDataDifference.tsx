@@ -85,6 +85,13 @@ function plainValueLabel(value: unknown, present: boolean) {
   return String(value)
 }
 
+function decimalPlaces(value: number) {
+  const [, fraction = "", exponentText] =
+    value.toString().match(/^[+-]?(?:\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/i) ?? []
+  const exponent = Number(exponentText ?? 0)
+  return Math.max(0, fraction.length - exponent)
+}
+
 function DifferenceBadge({
   difference,
 }: {
@@ -114,11 +121,18 @@ function DifferenceBadge({
     typeof difference.previousValue === "number"
   ) {
     const delta = difference.currentValue - difference.previousValue
+    const maximumFractionDigits = Math.min(
+      20,
+      Math.max(
+        decimalPlaces(difference.currentValue),
+        decimalPlaces(difference.previousValue),
+      ),
+    )
     return (
       <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10">
         <Pencil aria-hidden="true" />
         {new Intl.NumberFormat(undefined, {
-          maximumFractionDigits: 20,
+          maximumFractionDigits,
           signDisplay: "always",
         }).format(delta)}
       </Badge>
