@@ -12,6 +12,7 @@ function uniqueName(prefix: string) {
 
 test("manages category and obligation counterparties in contextual dialogs", async ({
   page,
+  playwright,
 }) => {
   const ledgerName = uniqueName("Counterparty ledger")
   const groupName = uniqueName("Utilities")
@@ -25,7 +26,8 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await page.getByRole("button", { name: "Create ledger" }).click()
   await page.getByRole("link", { name: ledgerName }).click()
 
-  const tokenResponse = await page.request.post(
+  const apiRequest = await playwright.request.newContext({ baseURL: apiUrl })
+  const tokenResponse = await apiRequest.post(
     `${apiUrl}/api/v1/login/access-token`,
     {
       form: {
@@ -43,13 +45,10 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   if (!ledgerId) throw new Error("Unable to resolve ledger id")
 
   const createCounterparty = async (name: string, shortName: string) => {
-    const response = await page.request.post(
-      `${apiUrl}/api/v1/counterparties`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { name, short_name: shortName },
-      },
-    )
+    const response = await apiRequest.post(`${apiUrl}/api/v1/counterparties`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name, short_name: shortName },
+    })
     expect(response.ok()).toBeTruthy()
     return (await response.json()) as { id: string; name: string }
   }
@@ -91,7 +90,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await expect(createCategoryDialog).toBeHidden()
 
   const readCategories = () =>
-    page.request.get(`${apiUrl}/api/v1/ledgers/${ledgerId}/categories`, {
+    apiRequest.get(`${apiUrl}/api/v1/ledgers/${ledgerId}/categories`, {
       headers: { Authorization: `Bearer ${token}` },
     })
 
@@ -156,7 +155,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     .click()
   await expect(createObligationDialog).toBeHidden()
 
-  const obligationsResponse = await page.request.get(
+  const obligationsResponse = await apiRequest.get(
     `${apiUrl}/api/v1/ledgers/${ledgerId}/obligations`,
     { headers: { Authorization: `Bearer ${token}` } },
   )
@@ -189,7 +188,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await expect(obligationCounterpartyDialog).toBeHidden()
 
   const readObligation = () =>
-    page.request.get(
+    apiRequest.get(
       `${apiUrl}/api/v1/ledgers/${ledgerId}/obligations/${obligation!.key}`,
       { headers: { Authorization: `Bearer ${token}` } },
     )
@@ -218,4 +217,5 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     counterparty_id: string | null
   }
   expect(obligationBody.counterparty_id).toBeNull()
+  await apiRequest.dispose()
 })
