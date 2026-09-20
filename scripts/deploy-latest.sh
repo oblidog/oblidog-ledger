@@ -54,7 +54,7 @@ compose() {
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
 }
 
-wait_for_backend_health() {
+wait_for_backend_readiness() {
   local deadline container_id status
   deadline=$((SECONDS + HEALTH_TIMEOUT))
 
@@ -66,7 +66,7 @@ wait_for_backend_health() {
 
       case "$status" in
         healthy)
-          log "Backend is healthy."
+          log "Backend is ready."
           return 0
           ;;
         unhealthy|exited|dead)
@@ -78,7 +78,7 @@ wait_for_backend_health() {
     sleep 2
   done
 
-  fail "Backend did not become healthy within ${HEALTH_TIMEOUT}s"
+  fail "Backend did not become ready within ${HEALTH_TIMEOUT}s"
 }
 
 require_command curl
@@ -144,8 +144,8 @@ compose pull
 log "Recreating production containers..."
 compose up -d --remove-orphans
 
-log "Waiting for backend health check..."
-wait_for_backend_health
+log "Waiting for backend readiness check..."
+wait_for_backend_readiness
 
 trap - ERR
 rm -f "$backup_file"
