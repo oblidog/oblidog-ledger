@@ -1,7 +1,7 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
-
+import { clearBrowserSessionState } from "@/browserSession"
 import {
   type Body_login_login_access_token as AccessToken,
   ApiError,
@@ -13,8 +13,13 @@ import {
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
-const isLoggedIn = () => {
-  return localStorage.getItem("access_token") !== null
+const isLoggedIn = async () => {
+  try {
+    await UsersService.readUserMe()
+    return true
+  } catch {
+    return false
+  }
 }
 
 const isCurrentUserSessionError = (error: unknown) =>
@@ -23,6 +28,7 @@ const isCurrentUserSessionError = (error: unknown) =>
 
 const useAuth = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
 
   const { data: user, error: currentUserError } = useQuery<
@@ -31,22 +37,21 @@ const useAuth = () => {
   >({
     queryKey: ["currentUser"],
     queryFn: () => UsersService.readUserMe(),
-    enabled: isLoggedIn(),
+    enabled: window.location.pathname !== "/login",
     retry: (failureCount, error) =>
       !isCurrentUserSessionError(error) && failureCount < 3,
   })
 
   useEffect(() => {
     if (!isCurrentUserSessionError(currentUserError)) return
-    localStorage.removeItem("access_token")
+    if (window.location.pathname === "/login") return
     window.location.replace("/login")
   }, [currentUserError])
 
   const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
+    await LoginService.loginSession({
       formData: data,
     })
-    localStorage.setItem("access_token", response.access_token)
   }
 
   const loginMutation = useMutation({
@@ -76,9 +81,14 @@ const useAuth = () => {
     onError: handleError.bind(showErrorToast),
   })
 
-  const logout = () => {
-    localStorage.removeItem("access_token")
-    navigate({ to: "/login" })
+  const logout = async () => {
+    try {
+      await LoginService.logout()
+    } finally {
+      clearBrowserSessionState()
+      queryClient.clear()
+      navigate({ to: "/login" })
+    }
   }
 
   return {

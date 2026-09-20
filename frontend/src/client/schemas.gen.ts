@@ -83,6 +83,66 @@ export const Body_login_login_access_tokenSchema = {
     title: 'Body_login-login_access_token'
 } as const;
 
+export const Body_login_login_sessionSchema = {
+    properties: {
+        grant_type: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: '^password$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Grant Type'
+        },
+        username: {
+            type: 'string',
+            title: 'Username'
+        },
+        password: {
+            type: 'string',
+            format: 'password',
+            title: 'Password'
+        },
+        scope: {
+            type: 'string',
+            title: 'Scope',
+            default: ''
+        },
+        client_id: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Client Id'
+        },
+        client_secret: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            format: 'password',
+            title: 'Client Secret'
+        }
+    },
+    type: 'object',
+    required: [
+        'username',
+        'password'
+    ],
+    title: 'Body_login-login_session'
+} as const;
+
 export const CategoriesPublicSchema = {
     properties: {
         data: {
@@ -772,6 +832,201 @@ export const CategoryUpdateSchema = {
         'data_source_policy'
     ],
     title: 'CategoryUpdate'
+} as const;
+
+export const ComponentHistoryGroupPublicSchema = {
+    properties: {
+        identity: {
+            type: 'string',
+            title: 'Identity'
+        },
+        label: {
+            type: 'string',
+            title: 'Label'
+        },
+        type: {
+            type: 'string',
+            title: 'Type'
+        },
+        source: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Source'
+        },
+        external_id: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Id'
+        },
+        values: {
+            items: {
+                $ref: '#/components/schemas/ComponentHistoryValuePublic'
+            },
+            type: 'array',
+            title: 'Values'
+        }
+    },
+    type: 'object',
+    required: [
+        'identity',
+        'label',
+        'type',
+        'source',
+        'external_id',
+        'values'
+    ],
+    title: 'ComponentHistoryGroupPublic'
+} as const;
+
+export const ComponentHistoryPublicSchema = {
+    properties: {
+        match_by: {
+            type: 'string',
+            enum: [
+                'label',
+                'external_id'
+            ],
+            title: 'Match By'
+        },
+        periods: {
+            items: {
+                $ref: '#/components/schemas/ObligationPeriodPublic'
+            },
+            type: 'array',
+            title: 'Periods'
+        },
+        components: {
+            items: {
+                $ref: '#/components/schemas/ComponentHistoryGroupPublic'
+            },
+            type: 'array',
+            title: 'Components'
+        },
+        totals: {
+            items: {
+                $ref: '#/components/schemas/ComponentHistoryTotalPublic'
+            },
+            type: 'array',
+            title: 'Totals'
+        }
+    },
+    type: 'object',
+    required: [
+        'match_by',
+        'periods',
+        'components',
+        'totals'
+    ],
+    title: 'ComponentHistoryPublic'
+} as const;
+
+export const ComponentHistoryTotalPublicSchema = {
+    properties: {
+        period: {
+            $ref: '#/components/schemas/ObligationPeriodPublic'
+        },
+        amount: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Amount'
+        }
+    },
+    type: 'object',
+    required: [
+        'period',
+        'amount'
+    ],
+    title: 'ComponentHistoryTotalPublic'
+} as const;
+
+export const ComponentHistoryValuePublicSchema = {
+    properties: {
+        period: {
+            $ref: '#/components/schemas/ObligationPeriodPublic'
+        },
+        amount: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Amount'
+        },
+        state: {
+            type: 'string',
+            enum: [
+                'added',
+                'present',
+                'changed',
+                'removed',
+                'missing'
+            ],
+            title: 'State'
+        },
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
+        },
+        source: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Source'
+        },
+        external_id: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'External Id'
+        }
+    },
+    type: 'object',
+    required: [
+        'period',
+        'amount',
+        'state'
+    ],
+    title: 'ComponentHistoryValuePublic'
 } as const;
 
 export const CounterpartiesPublicSchema = {

@@ -1,13 +1,16 @@
+import secrets
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
+from app.core.browser_auth import clear_session_cookie, set_session_cookie
 from app.core.config import settings
+from app.models import User
 from app.schemas import Message, NewPassword, Token, UserPublic
 from app.services import auth as auth_service
 from app.services import users as user_service
@@ -21,6 +24,17 @@ from app.utils import (
 router = APIRouter(tags=["login"])
 
 
+def _authenticate(session: SessionDep, form_data: OAuth2PasswordRequestForm) -> User:
+    user = auth_service.authenticate(
+        session=session, email=form_data.username, password=form_data.password
+    )
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return user
+
+
 @router.post("/login/access-token")
 def login_access_token(
     session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
@@ -28,13 +42,7 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = auth_service.authenticate(
-        session=session, email=form_data.username, password=form_data.password
-    )
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    user = _authenticate(session, form_data)
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_access_token(
@@ -43,6 +51,33 @@ def login_access_token(
             session_version=user.session_version,
         )
     )
+
+
+@router.post("/login/session", response_model=Message)
+def login_session(
+    response: Response,
+    session: SessionDep,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> Message:
+    """Create a browser session without exposing its bearer token to JavaScript."""
+    user = _authenticate(session, form_data)
+    csrf_token = secrets.token_urlsafe(32)
+    access_token = security.create_access_token(
+        user.id,
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        session_version=user.session_version,
+        csrf_token=csrf_token,
+    )
+    set_session_cookie(response, access_token)
+    response.headers[settings.CSRF_HEADER_NAME] = csrf_token
+    return Message(message="Session created")
+
+
+@router.post("/login/logout", response_model=Message)
+def logout(response: Response) -> Message:
+    """Clear the browser session cookie."""
+    clear_session_cookie(response)
+    return Message(message="Logged out")
 
 
 @router.post("/login/test-token", response_model=UserPublic)

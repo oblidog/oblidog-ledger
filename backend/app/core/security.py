@@ -20,7 +20,11 @@ ALGORITHM = "HS256"
 
 
 def create_access_token(
-    subject: str | Any, expires_delta: timedelta, *, session_version: int
+    subject: str | Any,
+    expires_delta: timedelta,
+    *,
+    session_version: int,
+    csrf_token: str | None = None,
 ) -> str:
     expire = datetime.now(UTC) + expires_delta
     to_encode = {
@@ -28,6 +32,8 @@ def create_access_token(
         "sub": str(subject),
         "session_version": session_version,
     }
+    if csrf_token is not None:
+        to_encode["csrf"] = csrf_token
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 

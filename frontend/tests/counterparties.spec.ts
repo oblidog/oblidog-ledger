@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { firstSuperuser, firstSuperuserPassword } from "./config"
 
 const apiUrl = process.env.VITE_API_URL
 if (!apiUrl) {
@@ -24,8 +25,19 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await page.getByRole("button", { name: "Create ledger" }).click()
   await page.getByRole("link", { name: ledgerName }).click()
 
-  const token = await page.evaluate(() => localStorage.getItem("access_token"))
-  if (!token) throw new Error("Missing access token")
+  const tokenResponse = await page.request.post(
+    `${apiUrl}/api/v1/login/access-token`,
+    {
+      form: {
+        username: firstSuperuser,
+        password: firstSuperuserPassword,
+      },
+    },
+  )
+  expect(tokenResponse.ok()).toBeTruthy()
+  const { access_token: token } = (await tokenResponse.json()) as {
+    access_token: string
+  }
 
   const ledgerId = new URL(page.url()).pathname.split("/")[2]
   if (!ledgerId) throw new Error("Unable to resolve ledger id")

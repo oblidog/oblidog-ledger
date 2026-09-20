@@ -44,11 +44,8 @@ export function CategoryDataCsvExportButton(
   const handleExport = async () => {
     setIsExporting(true)
     try {
-      const accessToken = localStorage.getItem("access_token")
       const response = await fetch(`${apiUrl}${exportUrl(props)}`, {
-        headers: accessToken
-          ? { Authorization: `Bearer ${accessToken}` }
-          : undefined,
+        credentials: "include",
       })
       if (!response.ok) {
         const payload = await response.json().catch(() => null)

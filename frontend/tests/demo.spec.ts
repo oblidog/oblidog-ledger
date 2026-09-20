@@ -77,12 +77,17 @@ test("hides restricted ledger navigation and redirects direct routes", async ({
   await expect(page.getByTestId("demo-banner")).toBeVisible()
   await expect(
     page.evaluate(() => localStorage.getItem("access_token")),
-  ).resolves.not.toBeNull()
+  ).resolves.toBeNull()
+  expect(
+    (await page.context().cookies()).some(
+      (cookie) => cookie.name === "oblidog_session" && cookie.httpOnly,
+    ),
+  ).toBeTruthy()
 
   await page.goto(`/ledgers/${ledgerId}/system-run`)
   await expect(page).toHaveURL(`/ledgers/${ledgerId}`)
   await expect(page.getByTestId("demo-banner")).toBeVisible()
   await expect(
     page.evaluate(() => localStorage.getItem("access_token")),
-  ).resolves.not.toBeNull()
+  ).resolves.toBeNull()
 })

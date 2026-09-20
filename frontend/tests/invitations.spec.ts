@@ -30,7 +30,7 @@ test("Admin invitation can be accepted and the recipient can sign in", async ({
   )?.[1]
   expect(invitationUrl).toBeTruthy()
 
-  await page.evaluate(() => localStorage.removeItem("access_token"))
+  await page.context().clearCookies()
   await page.goto(
     invitationUrl!.replace("http://localhost/", "http://localhost:5173/"),
   )
@@ -59,7 +59,7 @@ test("Admin invitation can be accepted and the recipient can sign in", async ({
   await page.getByRole("link", { name: "Go to login" }).click()
   await logInUser(page, email, password)
 
-  await page.evaluate(() => localStorage.removeItem("access_token"))
+  await page.context().clearCookies()
   await page.goto(
     invitationUrl!.replace("http://localhost/", "http://localhost:5173/"),
   )

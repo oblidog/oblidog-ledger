@@ -72,9 +72,6 @@ async function mockApi(page: Page, items: IntegrationPublic[] = []) {
     created_at: now,
     updated_at: now,
   }
-  await page.addInitScript(() =>
-    localStorage.setItem("access_token", "mock-session"),
-  )
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url())
     const path = url.pathname.replace(/\/$/, "")

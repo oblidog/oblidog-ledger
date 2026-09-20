@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    SESSION_COOKIE_NAME: str = "oblidog_session"
+    SESSION_COOKIE_SECURE: bool | None = None
+    SESSION_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
+    CSRF_HEADER_NAME: str = "X-CSRF-Token"
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "demo", "production"] = "local"
 
@@ -48,8 +52,15 @@ class Settings(BaseSettings):
     @property
     def all_cors_origins(self) -> list[str]:
         return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
-            self.FRONTEND_HOST
+            self.FRONTEND_HOST.rstrip("/")
         ]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def session_cookie_secure(self) -> bool:
+        if self.SESSION_COOKIE_SECURE is not None:
+            return self.SESSION_COOKIE_SECURE
+        return self.ENVIRONMENT in {"staging", "production"}
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
@@ -143,6 +154,9 @@ class Settings(BaseSettings):
         self._check_default_secret(
             "FIRST_SUPERUSER_PASSWORD", self.FIRST_SUPERUSER_PASSWORD
         )
+
+        if self.SESSION_COOKIE_SAMESITE == "none" and not self.session_cookie_secure:
+            raise ValueError("SESSION_COOKIE_SAMESITE=none requires a Secure cookie")
 
         return self
 

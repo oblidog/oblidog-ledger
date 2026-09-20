@@ -7,17 +7,14 @@ import {
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
-import { ApiError, client } from "./client"
+import { configureBrowserSession } from "./browserSession"
+import { ApiError } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
-import { apiUrl } from "./config"
 import "./index.css"
 import { routeTree } from "./routeTree.gen"
 
-client.setConfig({
-  auth: () => localStorage.getItem("access_token") || undefined,
-  baseURL: apiUrl,
-})
+configureBrowserSession()
 
 const handleApiError = (error: Error) => {
   if (!(error instanceof ApiError)) return
@@ -25,7 +22,6 @@ const handleApiError = (error: Error) => {
   const invalidSession = [401, 403].includes(error.response?.status ?? 0)
 
   if (invalidSession) {
-    localStorage.removeItem("access_token")
     window.location.replace("/login")
   }
 }
