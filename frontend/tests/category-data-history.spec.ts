@@ -322,7 +322,7 @@ test("renders schema-driven category history with versioning and formatters", as
     newestRow.getByRole("button", {
       name: "changed. Current: 1.0002. Previous: 1.0001",
     }),
-  ).toBeVisible()
+  ).toContainText("+0.0001")
   await expect(
     newestRow.getByRole("button", {
       name: "changed. Current: 2026-02-03. Previous: 2026-02-03",
