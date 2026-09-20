@@ -23,7 +23,7 @@ services:
     # volumes:
     #   - ./backend/config/legacy-import.yaml:/app/backend/config/legacy-import.yaml:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/health-check/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/readiness-check/"]
       interval: 10s
       timeout: 5s
       retries: 5
