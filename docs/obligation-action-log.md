@@ -1,7 +1,8 @@
 # Obligation action log
 
-`ObligationActionLog` is an append-only business audit trail. It records one
-entry for each successful logical mutation of an obligation; it is not an
+`ObligationActionLog` is an append-only business audit trail for the actions
+listed below. It is not a complete record of every write: appending an
+integration note, for example, does not create an action entry. It is not an
 event-sourcing store and does not replace application or integration logs.
 
 ## Recorded actions
@@ -40,5 +41,6 @@ The endpoint accepts `limit` (1-100, default 100) and `offset` (default 0), and
 returns `data` plus the total `count`. The same ledger access checks and
 not-found behavior as the obligation endpoints apply.
 
-Category data records, daily email presentation, and a frontend timeline are
-separate concerns and are not written to this log.
+Category data records and daily email presentation are separate concerns and
+are not written to this log. The obligation detail view displays this log as
+an action timeline.

@@ -1,9 +1,10 @@
-# Integration lifecycle and health design
+# Historical design: integration lifecycle and health
 
-Status: implementation contract for [#115](https://github.com/oblidog/oblidog-ledger/issues/115).
-The registry models, management/reporting endpoints and generated clients are
-implemented in stage 2; see [API usage](integration-api.md). Stage 4 adds the
-monitoring UI described below. External runner adoption remains stage 3.
+> Historical design note for [#115](https://github.com/oblidog/oblidog-ledger/issues/115).
+> This describes the earlier ledger-wide key and multi-category model. Oblidog
+> now uses a dedicated connection key and one category per integration, and the
+> monitoring UI is implemented. Do not use the API paths, data model, or rollout
+> steps below as current instructions. See the [current integration API](../integration-api.md).
 
 ## Decisions
 

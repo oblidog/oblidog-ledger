@@ -113,7 +113,7 @@ survive a reload, and can be discarded from either editing mode.
 ## Create an observation through the integration API
 
 Use the connection key of the integration assigned to the category. Replace the
-example API key, timestamp, fields, and external ID with your own values. The
+example connection key, timestamp, fields, and external ID with your own values. The
 record source is assigned automatically from the authenticated integration.
 
 ```bash
@@ -145,7 +145,7 @@ creating a duplicate.
 ```bash
 curl --silent --show-error --fail-with-body \
   --header "Authorization: Bearer fdg_live_your_api_key" \
-  "http://localhost:8000/api/v1/integration/categories/FLAT/data-records?limit=100"
+  "http://localhost:8000/api/v1/integration/category/data-records?limit=100"
 ```
 
 The list is ordered from newest to oldest. It supports `from`, `to`, `limit`,
@@ -154,7 +154,7 @@ and `offset` query parameters. To retrieve only the newest record, use:
 ```bash
 curl --silent --show-error --fail-with-body \
   --header "Authorization: Bearer fdg_live_your_api_key" \
-  "http://localhost:8000/api/v1/integration/categories/FLAT/data-records/latest"
+  "http://localhost:8000/api/v1/integration/category/data-records/latest"
 ```
 
 ## Difference pagination strategy
