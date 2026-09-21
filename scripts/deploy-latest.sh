@@ -124,7 +124,8 @@ rollback() {
   cp -p "$backup_file" "$ENV_FILE"
 
   if compose pull && compose up -d --remove-orphans; then
-    printf '[deploy] Containers restored to %s. Database migrations are not automatically rolled back.\n' "$current_tag" >&2
+    printf '[deploy] Containers restored to %s. Database migrations may already have been applied and were NOT rolled back.\n' "$current_tag" >&2
+    printf '[deploy] Verify schema compatibility before serving traffic. If incompatible, use a forward fix or restore the matching pre-deploy backup; see docs/operations/database-recovery.md.\n' >&2
   else
     printf '[deploy] ERROR: automatic container rollback failed. Manual intervention required.\n' >&2
   fi
