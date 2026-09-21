@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+umask 077
 
 ENV_FILE="${ENV_FILE:-.env}"
 BACKUP_DIR="${BACKUP_DIR:-backups}"
@@ -22,7 +23,12 @@ DEPLOYMENT_VARIANT="${DEPLOYMENT_VARIANT:-external}"
 [[ "$DEPLOYMENT_VARIANT" == "external" || "$DEPLOYMENT_VARIANT" == "standalone" ]] \
   || fail "DEPLOYMENT_VARIANT must be external or standalone"
 
-for name in POSTGRES_SERVER POSTGRES_PORT POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do
+required_variables=(POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD)
+if [[ "$DEPLOYMENT_VARIANT" == "external" ]]; then
+  required_variables+=(POSTGRES_SERVER POSTGRES_PORT)
+fi
+
+for name in "${required_variables[@]}"; do
   value="$(sed -n "s/^${name}=//p" "$ENV_FILE" | tail -n 1)"
   [[ -n "$value" ]] || fail "$name is missing in $ENV_FILE"
   printf -v "$name" '%s' "$value"
@@ -34,6 +40,13 @@ mkdir -p "$BACKUP_DIR"
 backup_dir_abs="$(cd "$BACKUP_DIR" && pwd)"
 backup_path="${backup_dir_abs}/oblidog-${POSTGRES_DB}-${timestamp}.dump"
 metadata_path="${backup_path}.metadata"
+backup_tmp="$(mktemp "${backup_dir_abs}/.oblidog-backup.XXXXXX")"
+metadata_tmp="$(mktemp "${backup_dir_abs}/.oblidog-metadata.XXXXXX")"
+
+cleanup() {
+  rm -f "$backup_tmp" "$metadata_tmp"
+}
+trap cleanup EXIT
 
 printf '[db-backup] Creating %s\n' "$backup_path"
 if [[ "$DEPLOYMENT_VARIANT" == "standalone" ]]; then
@@ -45,7 +58,7 @@ if [[ "$DEPLOYMENT_VARIANT" == "standalone" ]]; then
       --format custom \
       --no-owner \
       --no-acl \
-    >"$backup_path"
+    >"$backup_tmp"
   schema_version="$(
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T db \
       psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
@@ -56,7 +69,7 @@ else
   docker run --rm \
     --user "$(id -u):$(id -g)" \
     --env PGPASSWORD="$POSTGRES_PASSWORD" \
-    --volume "$backup_dir_abs:/backup" \
+    --volume "$backup_tmp:/backup/oblidog.dump" \
     "$POSTGRES_IMAGE" \
     pg_dump \
       --host "$POSTGRES_SERVER" \
@@ -66,7 +79,7 @@ else
       --format custom \
       --no-owner \
       --no-acl \
-      --file "/backup/$(basename "$backup_path")"
+      --file /backup/oblidog.dump
   schema_version="$(
     docker run --rm \
       --env PGPASSWORD="$POSTGRES_PASSWORD" \
@@ -82,7 +95,7 @@ else
   )"
 fi
 
-cat >"$metadata_path" <<EOF
+cat >"$metadata_tmp" <<EOF
 created_at_utc=$timestamp
 application_tag=${tag:-unknown}
 alembic_revision=${schema_version:-unknown}
@@ -90,7 +103,10 @@ database_name=$POSTGRES_DB
 postgres_image=$POSTGRES_IMAGE
 deployment_variant=$DEPLOYMENT_VARIANT
 EOF
-chmod 600 "$backup_path" "$metadata_path"
+chmod 600 "$backup_tmp" "$metadata_tmp"
+mv "$metadata_tmp" "$metadata_path"
+mv "$backup_tmp" "$backup_path"
+trap - EXIT
 
 printf '[db-backup] Backup complete: %s\n' "$backup_path"
 printf '[db-backup] Metadata: %s\n' "$metadata_path"
