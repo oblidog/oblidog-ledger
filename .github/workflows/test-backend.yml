@@ -154,7 +154,7 @@ jobs:
         if: steps.scope.outputs.run_heavy == 'true'
         shell: bash
         run: |
-          (cd backend && DEMO_PASSWORD=ci-demo-password uv run python app/demo_seed.py --date 2026-09-01)
+          (cd backend && DEMO_USER_PASSWORD=ci-demo-password uv run python app/demo_seed.py --date 2026-09-01)
           docker compose build backend
 
           backup_dir="$(mktemp -d)"
