@@ -118,7 +118,9 @@ curl -fsSL https://raw.githubusercontent.com/oblidog/oblidog-ledger/main/scripts
 ```
 
 The installer downloads `compose.yml`, a matching `.env` template, and the
-configuration validator.
+configuration validator. It also records the selected variant and refuses to
+replace it with another variant in the same directory. When updating an older,
+unmarked installation, pass its existing variant explicitly on the first run.
 
 Then:
 
