@@ -2,18 +2,17 @@
 set -euo pipefail
 
 variant="${1:-standalone}"
+compose_file="${2:-compose.yml}"
 
 case "$variant" in
   standalone)
-    compose_file="compose.standalone.yml"
     env_example=".env.standalone.example"
     ;;
   external)
-    compose_file="compose.production.yml"
     env_example=".env.production.example"
     ;;
   *)
-    echo "Usage: $0 [standalone|external]" >&2
+    echo "Usage: $0 [standalone|external] [compose-file]" >&2
     exit 2
     ;;
 esac

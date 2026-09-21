@@ -46,7 +46,7 @@ jobs:
             -e 's/replace-with-a-strong-password/ci-admin-password/' \
             -e 's/replace-with-the-database-password/ci-db-password/' \
             .env
-          ./scripts/validate-deployment.sh standalone
+          ./scripts/validate-deployment.sh standalone compose.standalone.yml
 
           cp .env.production.example .env
           sed -i \
@@ -55,7 +55,40 @@ jobs:
             -e 's/replace-with-the-database-password/ci-db-password/' \
             -e 's/postgres.example.com/postgres.internal/' \
             .env
-          ./scripts/validate-deployment.sh external
+          ./scripts/validate-deployment.sh external compose.production.yml
+
+          install_root="$PWD"
+          standalone_dir="$(mktemp -d)"
+          (
+            cd "$standalone_dir"
+            OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh" standalone
+            sed -i \
+              -e 's/replace-with-a-random-secret/ci-secret/' \
+              -e 's/replace-with-a-strong-password/ci-admin-password/' \
+              -e 's/replace-with-the-database-password/ci-db-password/' \
+              .env
+            ./validate-deployment.sh standalone
+          )
+
+          external_dir="$(mktemp -d)"
+          (
+            cd "$external_dir"
+            OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh" external
+            sed -i \
+              -e 's/replace-with-a-random-secret/ci-secret/' \
+              -e 's/replace-with-a-strong-password/ci-admin-password/' \
+              -e 's/replace-with-the-database-password/ci-db-password/' \
+              -e 's/postgres.example.com/postgres.internal/' \
+              .env
+            ./validate-deployment.sh external
+          )
+
+          legacy_dir="$(mktemp -d)"
+          touch "$legacy_dir/.env" "$legacy_dir/compose.yml"
+          if (cd "$legacy_dir" && OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh"); then
+            echo "Installer unexpectedly replaced an unmarked existing deployment." >&2
+            exit 1
+          fi
       - name: Determine test scope
         id: scope
         env:
