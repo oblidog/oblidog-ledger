@@ -1,0 +1,80 @@
+name: Database Recovery Drill
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    paths:
+      - ".github/workflows/database-recovery.yml"
+      - "scripts/db-backup.sh"
+      - "scripts/db-restore-drill.sh"
+      - "scripts/install.sh"
+      - "backend/app/alembic/**"
+      - "backend/app/demo_seed.py"
+      - "backend/Dockerfile"
+      - "compose*.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_NAME: Oblidog
+  DOMAIN: localhost
+  FRONTEND_HOST: http://localhost:5173
+  ENVIRONMENT: local
+  STACK_NAME: oblidog-ledger-recovery-ci
+  BACKEND_CORS_ORIGINS: http://localhost,http://localhost:5173
+  SECRET_KEY: ci-secret-key-not-for-production
+  FIRST_SUPERUSER: admin@example.com
+  FIRST_SUPERUSER_PASSWORD: ci-admin-password
+  POSTGRES_SERVER: localhost
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: findog
+  POSTGRES_USER: findog
+  POSTGRES_PASSWORD: ci-postgres-password
+  DOCKER_IMAGE_BACKEND: oblidog-ledger-backend
+  DOCKER_IMAGE_FRONTEND: oblidog-ledger-frontend
+
+jobs:
+  recovery-drill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Create CI environment file
+        run: cp .github/ci.env .env
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Start PostgreSQL
+        run: docker compose up -d --wait db
+      - name: Migrate and seed representative data
+        shell: bash
+        run: |
+          (cd backend && uv run bash scripts/prestart.sh)
+          (cd backend && DEMO_USER_PASSWORD=ci-demo-password uv run python app/demo_seed.py --date 2026-09-01)
+      - name: Build backend image
+        run: docker compose build backend
+      - name: Back up, restore, migrate, and validate
+        shell: bash
+        run: |
+          backup_dir="$(mktemp -d)"
+          DEPLOYMENT_VARIANT=standalone COMPOSE_FILE=compose.yml \
+            BACKUP_DIR="$backup_dir" ./scripts/db-backup.sh
+          dump_file="$(find "$backup_dir" -maxdepth 1 -name '*.dump' -type f -print -quit)"
+          test -n "$dump_file"
+          ./scripts/db-restore-drill.sh \
+            --dump "$dump_file" \
+            --backend-image "${DOCKER_IMAGE_BACKEND}:latest"
+      - name: Stop PostgreSQL
+        if: always()
+        run: docker compose down -v --remove-orphans

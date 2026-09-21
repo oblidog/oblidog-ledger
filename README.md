@@ -151,6 +151,9 @@ docker compose ps
 PostgreSQL data is stored in the named `postgres-data` volume and survives
 container recreation and `docker compose down`. Do not use
 `docker compose down --volumes` unless you intentionally want to delete it.
+The volume is not a backup. Before upgrading, follow the
+[database backup and recovery runbook](docs/operations/database-recovery.md),
+including its isolated restore-and-upgrade drill.
 
 #### External database and reverse proxy
 

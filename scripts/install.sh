@@ -36,6 +36,12 @@ esac
 curl -fsSL "$BASE_URL/$compose_source" -o compose.yml
 curl -fsSL "$BASE_URL/scripts/validate-deployment.sh" -o validate-deployment.sh
 chmod +x validate-deployment.sh
+mkdir -p scripts docs/operations
+curl -fsSL "$BASE_URL/scripts/db-backup.sh" -o scripts/db-backup.sh
+curl -fsSL "$BASE_URL/scripts/db-restore-drill.sh" -o scripts/db-restore-drill.sh
+curl -fsSL "$BASE_URL/docs/operations/database-recovery.md" \
+  -o docs/operations/database-recovery.md
+chmod +x scripts/db-backup.sh scripts/db-restore-drill.sh
 printf '%s\n' "$variant" > "$variant_file"
 
 if [ ! -f .env ]; then
