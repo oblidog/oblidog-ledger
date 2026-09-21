@@ -1,0 +1,98 @@
+services:
+  db:
+    image: postgres:18.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    env_file:
+      - .env
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app
+
+  prestart:
+    image: ghcr.io/oblidog/oblidog-ledger-backend:${TAG?Set TAG in .env}
+    restart: "no"
+    command: bash scripts/prestart.sh
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app
+
+  backend:
+    image: ghcr.io/oblidog/oblidog-ledger-backend:${TAG?Set TAG in .env}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/readiness-check/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    ports:
+      - "${BACKEND_BIND_ADDRESS:-0.0.0.0}:${BACKEND_PORT:-8000}:8000"
+    networks:
+      - app
+
+  scheduler:
+    image: ghcr.io/oblidog/oblidog-ledger-backend:${TAG?Set TAG in .env}
+    restart: unless-stopped
+    command: ["/app/backend/scripts/system-run-scheduler.sh"]
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: 5432
+      SYSTEM_RUN_SCHEDULE: ${SYSTEM_RUN_SCHEDULE:-5 0 * * *}
+      SYSTEM_RUN_TIMEZONE: ${SYSTEM_RUN_TIMEZONE:-Europe/Warsaw}
+      SYSTEM_RUN_STALE_AFTER_MINUTES: ${SYSTEM_RUN_STALE_AFTER_MINUTES:-120}
+      SYSTEM_RUN_TIMEOUT_SECONDS: ${SYSTEM_RUN_TIMEOUT_SECONDS:-3600}
+      TZ: ${SYSTEM_RUN_TIMEZONE:-Europe/Warsaw}
+    depends_on:
+      db:
+        condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
+    networks:
+      - app
+
+  frontend:
+    image: ghcr.io/oblidog/oblidog-ledger-frontend:${TAG?Set TAG in .env}
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_BIND_ADDRESS:-0.0.0.0}:${FRONTEND_PORT:-8080}:80"
+    networks:
+      - app
+
+volumes:
+  postgres-data:
+
+networks:
+  app:
