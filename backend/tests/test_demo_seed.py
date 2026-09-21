@@ -9,8 +9,19 @@ from sqlalchemy.orm import Session
 
 from app.core.security import verify_password
 from app.demo_seed import DEMO_EMAIL, DEMO_LEDGER_NAME, seed_demo
-from app.domain import ObligationLifecycle
-from app.models import Category, CategoryGroup, Ledger, Obligation, User
+from app.domain import EffectiveValueSourceMode, ObligationLifecycle
+from app.models import (
+    Category,
+    CategoryDataRecord,
+    CategoryDataSchema,
+    CategoryGroup,
+    Counterparty,
+    Integration,
+    Ledger,
+    Obligation,
+    ObligationComponent,
+    User,
+)
 
 REFERENCE_DATE = date(2026, 9, 7)
 DEMO_TEST_PASSWORD = "test-demo-password"
@@ -22,8 +33,11 @@ def cleanup_demo_data(db: Session) -> Generator[None, None, None]:
         user = db.scalar(select(User).where(User.email == DEMO_EMAIL))
         if user is None:
             return
-        ledgers = list(db.scalars(select(Ledger).where(Ledger.owner_user_id == user.id)))
+        ledgers = list(
+            db.scalars(select(Ledger).where(Ledger.owner_user_id == user.id))
+        )
         for ledger in ledgers:
+            db.execute(delete(Integration).where(Integration.ledger_id == ledger.id))
             db.delete(ledger)
         db.commit()
         db.execute(delete(User).where(User.id == user.id))
@@ -77,7 +91,9 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     assert result.reference_date == REFERENCE_DATE
 
     category_count = db.scalar(
-        select(func.count()).select_from(Category).where(Category.ledger_id == ledger.id)
+        select(func.count())
+        .select_from(Category)
+        .where(Category.ledger_id == ledger.id)
     )
     group_count = db.scalar(
         select(func.count())
@@ -89,14 +105,42 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
         .select_from(Obligation)
         .where(Obligation.ledger_id == ledger.id)
     )
-    assert category_count == 5
-    assert group_count == 3
-    assert obligation_count == 9
+    assert category_count == 15
+    assert group_count == 7
+    assert obligation_count == 45
+
+    integrations = list(
+        db.scalars(select(Integration).where(Integration.ledger_id == ledger.id))
+    )
+    categories = list(
+        db.scalars(select(Category).where(Category.ledger_id == ledger.id))
+    )
+    obligations = list(
+        db.scalars(select(Obligation).where(Obligation.ledger_id == ledger.id))
+    )
+    assert len(integrations) == 12
+    assert all(category.counterparty_id is not None for category in categories)
+    assert len({category.counterparty_id for category in categories}) == 10
+    assert all(obligation.counterparty_id is not None for obligation in obligations)
+    assert (
+        sum(
+            obligation.effective_value_source is EffectiveValueSourceMode.INTEGRATION
+            for obligation in obligations
+        )
+        == 36
+    )
+    assert (
+        sum(
+            obligation.effective_value_source is EffectiveValueSourceMode.MANUAL
+            for obligation in obligations
+        )
+        == 9
+    )
 
     overdue = _obligation(
         db,
         ledger_id=ledger.id,
-        code="ELEC",
+        code="WATR",
         year=2026,
         month=8,
     )
@@ -106,21 +150,12 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     upcoming = _obligation(
         db,
         ledger_id=ledger.id,
-        code="ELEC",
+        code="GASS",
         year=2026,
         month=9,
     )
     assert upcoming.lifecycle is ObligationLifecycle.READY
     assert upcoming.due_date is not None and upcoming.due_date > REFERENCE_DATE
-
-    collecting = _obligation(
-        db,
-        ledger_id=ledger.id,
-        code="INET",
-        year=2026,
-        month=9,
-    )
-    assert collecting.lifecycle is ObligationLifecycle.COLLECTING_DATA
 
     paid = _obligation(
         db,
@@ -149,6 +184,43 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     )
     assert future.lifecycle is ObligationLifecycle.READY
     assert future.due_date is not None and future.due_date > REFERENCE_DATE
+
+    assert (
+        db.scalar(
+            select(func.count())
+            .select_from(CategoryDataSchema)
+            .join(Category, Category.id == CategoryDataSchema.category_id)
+            .where(Category.ledger_id == ledger.id)
+        )
+        == 5
+    )
+    assert (
+        db.scalar(
+            select(func.count())
+            .select_from(CategoryDataRecord)
+            .join(Category, Category.id == CategoryDataRecord.category_id)
+            .where(Category.ledger_id == ledger.id)
+        )
+        == 15
+    )
+    assert (
+        db.scalar(
+            select(func.count())
+            .select_from(ObligationComponent)
+            .join(Obligation, Obligation.id == ObligationComponent.obligation_id)
+            .where(Obligation.ledger_id == ledger.id)
+        )
+        == 15
+    )
+
+    shared_counterparty = db.scalar(
+        select(Counterparty)
+        .join(Category, Category.counterparty_id == Counterparty.id)
+        .where(Category.ledger_id == ledger.id)
+        .group_by(Counterparty.id)
+        .having(func.count(Category.id) > 1)
+    )
+    assert shared_counterparty is not None
 
 
 def test_seed_demo_replaces_existing_demo_ledger(db: Session) -> None:
@@ -191,4 +263,4 @@ def test_seed_demo_replaces_existing_demo_ledger(db: Session) -> None:
         year=2026,
         month=9,
     )
-    assert restored.current_amount == Decimal("198.40")
+    assert restored.current_amount == Decimal("208.75")
