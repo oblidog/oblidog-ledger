@@ -1,115 +1,106 @@
-# Oblidog Ledger
-
 <p align="center">
-  <img src="frontend/public/assets/images/oblidog-logo.svg" alt="Oblidog Ledger" width="280" />
+  <a href="https://oblidog.com">
+    <img src="frontend/public/assets/images/oblidog-logo.svg" alt="Oblidog" width="280">
+  </a>
 </p>
 
-<p align="center"><strong>A calm, self-hosted home for recurring payments and obligations.</strong></p>
+<h2 align="center">Keep your payments on a leash.</h2>
 
-> **Early development:** Oblidog Ledger is actively evolving. The core ledger,
-> category, obligation, and access-control workflows are usable, while
-> integrations, automation, analytics, and parts of the product experience are
-> still being shaped.
+<p align="center">
+  A self-hosted home for recurring bills and household obligations.<br>
+  Know what is due, automate what you can, and keep the history.
+</p>
 
-Oblidog Ledger is a self-hosted application for keeping recurring household or
-small-team obligations under control. It is deliberately not another banking
-or budgeting dashboard: the central object is an **obligation** — something
-that needs to be known, prepared, paid, and eventually closed.
+Oblidog is not another budgeting dashboard. It is an operational view of the
+bills you actually need to handle—from the moment they arrive until they are
+paid.
 
-You keep control of the application and its data, can share a ledger with other
-users, and can progressively automate data collection through the API without
-making external integrations part of the core application.
+## Why Oblidog?
 
-## What it does today
+Bills rarely live in one place. Amounts arrive in provider portals, due dates
+land in emails, payments happen elsewhere, and a spreadsheet remembers only
+what someone took the time to type into it.
 
-- Organises recurring costs into category groups and categories.
-- Uses categories as templates for creating obligations for billing periods.
-- Creates and tracks obligations through an explicit lifecycle.
-- Supports shared ledgers with owner, editor, and viewer access.
-- Highlights upcoming and overdue payments while keeping completed obligations
-  clearly separated.
-- Stores structured, category-specific data alongside obligations.
-- Supports obligation components, so a total can be represented by individual
-  items such as invoices or charge components.
-- Exposes API operations intended for external integrations and automation.
-- Supports scoped API keys for machine-to-machine access to a ledger.
+Oblidog gives that work one clear workflow:
 
-For the precise obligation-state rules and available lifecycle actions, see the
-[obligation lifecycle](docs/obligation-lifecycle.md).
+- **Know what needs attention.** See upcoming, overdue, collecting-data,
+  ready-to-pay, and paid obligations across billing periods.
+- **Automate the repetitive parts.** Integrations can bring in amounts,
+  charge breakdowns, readings, provider data, and payment status.
+- **See what changed.** Keep each period's values and compare amounts,
+  components, and structured data instead of overwriting last month's row.
+- **Keep control of the data.** Run Oblidog on your own infrastructure and
+  decide which external jobs can update each category.
 
-For category-specific structured data and the JSON Schema used to validate it,
-see [category data records](docs/category-data-records.md).
+## From bill to history
 
-## Core concepts
+**Organize → Track → Automate → Pay → Compare**
 
-### Ledger
+Create a category for a recurring bill and Oblidog creates its obligations for
+each billing period. Fill them in manually, connect an integration, or combine
+both approaches. Oblidog keeps the current state visible while preserving the
+details of previous periods.
 
-A ledger is the shared workspace. It owns categories and obligations and defines
-who can access them.
+For example, a housing bill appears for September. An integration supplies the
+amount, its individual charge components, and the latest readings. Once the
+data is complete, the obligation becomes ready to pay. When payment is
+recognized, it is marked paid—but September's breakdown stays available for
+comparison with October.
 
-### Category
+Oblidog tracks the workflow; it does not initiate bank payments.
 
-A category describes a recurring type of obligation. Categories belong to
-category groups and provide the metadata used when obligations are created.
-They can also define a schema for structured data collected for that type of
-obligation.
+## Automation without lock-in
 
-### Obligation
+Oblidog is useful with manual entries, but integrations are where the routine
+work starts to disappear.
 
-An obligation represents one concrete payment or responsibility for a billing
-period. Its lifecycle separates incomplete data from an item that is ready to
-pay, paid, canceled, or reopened.
+Each integration is connected to one category with its own scoped connection
+key. An external job can:
 
-### Components and structured data
+- update the obligation for a billing period;
+- add or update its charge components;
+- store category-specific data such as invoices, consumption, or readings;
+- move the obligation through its lifecycle, including recognizing payment;
+- report its latest run and health back to Oblidog.
 
-Not every obligation is just a single amount. Components allow an obligation to
-carry a breakdown of its total, while category-defined structured data can hold
-domain-specific information such as invoice details, consumption, readings, or
-other integration-provided values.
+Provider-specific jobs run separately from the Ledger application, so you can
+use the integrations maintained by the Oblidog project or build a small adapter
+for your own provider. Oblidog does not claim to be a universal bill collector.
 
-## Automation and integrations
+The built-in System Run handles Oblidog's own scheduled work: creating
+obligations, estimating missing amounts, and sending reports when email is
+configured. It does not launch external provider integrations.
 
-Oblidog Ledger is designed so integrations can live outside the main
-application. A mail processor, provider-specific scraper, or scheduled job can
-use the API instead of being coupled to the backend.
+See the [integration API guide](docs/integration-api.md) and its
+[OpenAPI specification](openapi/integration.json) for the current contract.
 
-The integration surface is built around ledger-scoped API keys and explicit
-obligation operations. This keeps the core application useful on its own while
-allowing automation to be added incrementally.
+## What you can do
 
-The Python client is maintained separately in the
-[`oblidog-client-python`](https://github.com/oblidog/oblidog-client-python)
-repository and is generated from the Ledger OpenAPI specification.
+- Review obligations by period and lifecycle state.
+- Track totals, due dates, notes, and detailed bill components.
+- Compare recurring components and structured provider data over time.
+- Inspect the action history to understand what changed and when.
+- Share a ledger using owner, editor, and viewer roles.
+- Monitor the latest status of configured integrations.
+- Run the application with Docker Compose and included or external PostgreSQL.
 
-For registering external jobs and reporting their operational state using the
-existing ledger-scoped API keys, see the [integration registry API](docs/integration-api.md).
-The [integration lifecycle design](docs/integration-lifecycle.md) documents the
-model and the planned runner-adoption and monitoring-UI stages.
+## The model in one minute
 
-## Screenshots
+A **ledger** is a shared workspace. **Categories** describe recurring types of
+bills, such as electricity, housing, or mobile service. Each category produces
+an **obligation** for a billing period. An obligation moves from incomplete data
+to ready, paid, canceled, or error while retaining its amount, components,
+structured data, and history.
 
-The UI is still moving quickly, so screenshots are intentionally postponed
-until the main desktop and mobile navigation settles.
+For precise rules, see [obligation states and actions](docs/obligation-lifecycle.md),
+[structured category data](docs/category-data-records.md), and
+[obligation action history](docs/obligation-action-log.md).
 
-## Run it yourself
+## Quick start: self-host
 
-Two self-hosted Docker Compose variants are supported:
-
-- **Standalone** (recommended for a new installation) includes PostgreSQL,
-  persistent database storage, and a self-contained private network. Only the
-  frontend and API ports are published.
-- **External** keeps PostgreSQL and the reverse proxy outside this project. It
-  retains the existing `firefly_net` network and legacy
-  `findog-ledger-frontend` / `findog-ledger-backend` aliases for compatibility.
-
-Both variants use prebuilt images and require an immutable release tag. Docker
-Engine with the Compose plugin is the only prerequisite for the standalone
-variant.
-
-### Install
-
-Create a deployment directory and run the installer. There is no need to clone
-the application source code. The default is the standalone variant.
+The standalone installer sets up Docker Compose with PostgreSQL and persistent
+database storage. Docker Engine with the Compose plugin is the only
+prerequisite; a source checkout is not required.
 
 ```bash
 mkdir oblidog-ledger
@@ -117,143 +108,43 @@ cd oblidog-ledger
 curl -fsSL https://raw.githubusercontent.com/oblidog/oblidog-ledger/main/scripts/install.sh | bash
 ```
 
-The installer downloads `compose.yml`, a matching `.env` template, and the
-configuration validator. It also records the selected variant and refuses to
-replace it with another variant in the same directory. When updating an older,
-unmarked installation, pass its existing variant explicitly on the first run.
-
-Then:
-
-1. Edit `.env`. Replace all placeholder secrets and review the public URLs and
-   bind addresses. Use a published release for `TAG`, never `latest`.
-2. Validate the configuration, pull the images, and start the stack. PostgreSQL
-   must become healthy before `prestart` runs migrations; the application only
-   starts after migrations succeed.
+Edit `.env`: replace the placeholder secrets, choose a published immutable
+`TAG`, and review the public URLs and bind addresses. Then validate the
+configuration and start the stack:
 
 ```bash
 ./validate-deployment.sh standalone
 docker compose pull
 docker compose up -d
-```
-
-With the template defaults, open `http://localhost:8080`; the API is available
-at `http://localhost:8000`. To make the ports reachable only through a reverse
-proxy on the Docker host, set both `*_BIND_ADDRESS` values to `127.0.0.1` and
-set the public `FRONTEND_HOST`, `BACKEND_CORS_ORIGINS`, and `VITE_API_URL` URLs.
-The database has no published host port.
-
-Confirm that the services are healthy:
-
-```bash
 docker compose ps
 ```
 
-PostgreSQL data is stored in the named `postgres-data` volume and survives
-container recreation and `docker compose down`. Do not use
-`docker compose down --volumes` unless you intentionally want to delete it.
-The volume is not a backup. Before upgrading, follow the
-[database backup and recovery runbook](docs/operations/database-recovery.md),
-including its isolated restore-and-upgrade drill.
+With the template defaults, open `http://localhost:8080`. The `prestart`
+service applies database migrations before the application starts, and the
+database has no published host port.
 
-#### External database and reverse proxy
-
-Existing deployments can continue using the external variant unchanged. For a
-new external installation, pass `external` to the installer:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/oblidog/oblidog-ledger/main/scripts/install.sh | bash -s -- external
-```
-
-Set the external PostgreSQL connection values in `.env`, create the external
-`firefly_net` Docker network, and configure the reverse proxy to reach the
-legacy service aliases. Then validate and start it:
-
-```bash
-./validate-deployment.sh external
-docker compose pull
-docker compose up -d
-```
-
-### System Run scheduler
-
-The production stack includes a dedicated `scheduler` service. It stays running
-and uses cron to start a separate, one-shot System Run at each scheduled time;
-the one-shot process is limited by its timeout and records the run result in
-the application.
-
-By default, the run starts at 00:05 every day. Its schedule is
-`5 0 * * *` and it is evaluated in the configured `Europe/Warsaw` timezone.
-Configure these values in `.env` before starting or recreating the stack:
-
-```dotenv
-SYSTEM_RUN_SCHEDULE=5 0 * * *
-SYSTEM_RUN_TIMEZONE=Europe/Warsaw
-SYSTEM_RUN_TIMEOUT_SECONDS=3600
-SYSTEM_RUN_STALE_AFTER_MINUTES=120
-```
-
-`SYSTEM_RUN_SCHEDULE` is a standard five-field cron expression (minute, hour,
-day of month, month, day of week). Cron evaluates it in
-`SYSTEM_RUN_TIMEZONE`, including timezone changes such as daylight saving
-time. `SYSTEM_RUN_TIMEOUT_SECONDS` limits each one-shot execution;
-`SYSTEM_RUN_STALE_AFTER_MINUTES` determines when an interrupted run can be
-recovered as stale.
-
-Each System Run task has one of three modes: `disabled` never runs,
-`manual_only` can only be selected for a manual run, and `scheduled` runs on
-the cron schedule. Legacy import is `disabled` by default. To enable it, set
-`LEGACY_IMPORT_MODE` to `manual_only` or `scheduled`; both modes also require
-`LEGACY_IMPORT_LEDGER_ID`, `DROPBOX_API_KEY`, and a protected legacy-import
-configuration file referenced by `LEGACY_IMPORT_CONFIG_PATH`. See
-[`backend/config/legacy-import.example.yaml`](backend/config/legacy-import.example.yaml)
-for the configuration-file format. Mount the real file read-only at that path
-in both the `backend` and `scheduler` services.
-
-For day-two checks, confirm that the scheduler container is running and inspect
-its cron and one-shot output:
-
-```bash
-docker compose ps scheduler
-docker compose logs scheduler
-```
-
-In the application, open a ledger's **System Run** entry from the ledger menu
-to inspect run and per-step history, including skipped and failed tasks.
-
-### Upgrade
-
-Change `TAG` to the desired immutable release and run:
-
-```bash
-./validate-deployment.sh standalone # or: external
-docker compose pull
-docker compose up -d
-```
-
-Keep database backups and migration compatibility in mind before rolling a
-version back.
-
-### Releases
-
-Commitizen prepares a version bump and `CHANGELOG.md` on a release branch.
-After its pull request is merged, the finalizer creates an annotated tag and a
-draft GitHub Release containing the matching changelog section and integration
-OpenAPI asset. Publishing the reviewed draft builds the immutable backend and
-frontend images in GHCR and starts Python client regeneration.
+An external PostgreSQL and reverse proxy variant remains available for existing
+setups. Read the [self-hosting guide](docs/self-hosting.md) for both variants,
+proxy configuration, scheduler settings, upgrades, and the
+[database backup and recovery runbook](docs/operations/database-recovery.md)
+before deploying.
 
 ## Project status
 
-Oblidog Ledger is currently an early-stage project rather than a finished
-consumer product. The direction is to keep the core ledger small and predictable
-while building richer UX, external integrations, reporting, and automation on
-top of it.
+Oblidog is open-source software in active early development. The core bill
+workflow, shared ledgers, historical views, System Run automation, and
+integration API are available. The interface and integration setup will
+continue to evolve, and provider-specific integrations remain separate jobs.
 
-The project is developed in public under the
-[`oblidog`](https://github.com/oblidog) GitHub organisation.
+## Documentation
 
-## Branding and compatibility
+- [Self-hosting and operations](docs/self-hosting.md)
+- [Integration API guide](docs/integration-api.md) · [OpenAPI specification](openapi/integration.json)
+- [Obligation states and actions](docs/obligation-lifecycle.md)
+- [Structured category data](docs/category-data-records.md)
+- [Obligation action history](docs/obligation-action-log.md)
+- [Development setup](development.md) · [Backend](backend/README.md) · [Frontend](frontend/README.md)
 
-Oblidog is the current product name. The legacy `findog-legacy-adapter` and
-its repository remain in use only to import historical data. PostgreSQL names,
-Docker volumes, deployed network aliases, and secrets also retain their legacy
-identifiers until a separately coordinated infrastructure migration.
+Oblidog is developed in public by the
+[Oblidog GitHub organisation](https://github.com/oblidog) and released under
+the [MIT license](LICENSE).

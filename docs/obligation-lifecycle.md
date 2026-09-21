@@ -26,6 +26,7 @@ stateDiagram-v2
     COLLECTING_DATA --> CANCELED
     COLLECTING_DATA --> ERROR
     READY --> PAID
+    PAID --> PAID: idempotent
     READY --> COLLECTING_DATA
     READY --> ERROR
     PAID --> COLLECTING_DATA
@@ -38,12 +39,13 @@ stateDiagram-v2
 
 | From | To | Mechanism | Status |
 | --- | --- | --- | --- |
-| `DRAFT` | `COLLECTING_DATA` | `update_manual_obligation` after an actual manual change | Implemented |
+| `DRAFT` | `COLLECTING_DATA` | Manual or integration value update after an actual change | Implemented |
 | `DRAFT` | `ERROR` | `mark_obligation_error` | Implemented |
 | `COLLECTING_DATA` | `READY` | `mark_obligation_ready` | Implemented |
 | `COLLECTING_DATA` | `CANCELED` | `cancel_obligation` | Implemented |
 | `COLLECTING_DATA` | `ERROR` | `mark_obligation_error` | Implemented |
 | `READY` | `PAID` | `mark_obligation_paid` | Implemented |
+| `PAID` | `PAID` | Repeated `mark_obligation_paid` | Implemented (idempotent) |
 | `READY` | `COLLECTING_DATA` | `reopen_obligation` | Implemented |
 | `READY` | `ERROR` | `mark_obligation_error` | Implemented |
 | `PAID` | `COLLECTING_DATA` | `reopen_obligation` | Implemented |
@@ -62,7 +64,7 @@ and `ERROR` cannot be changed through the ordinary `PATCH` endpoint.
 | --- | --- | --- | --- |
 | `ensure_obligations_for_period` | — (creation) | Current period: `COLLECTING_DATA`; next period: `DRAFT` | Creates missing records with initial values; does not change existing ones |
 | `create_manual_obligation` | — (creation) | `COLLECTING_DATA`, or `READY` when `data_ready=true` | `lifecycle`, supplied manual values, their `*_state`/`*_source`, `effective_value_source`, and `notes` |
-| `update_manual_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied manual values, their `*_state`/`*_source`, `effective_value_source`, `notes`, and—after an actual draft change—`lifecycle` |
+| `update_manual_obligation` / `update_integration_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied values, their `*_state`/`*_source`, `effective_value_source`, and—after an actual draft change—`lifecycle`; manual updates may also change `notes` |
 | `mark_obligation_ready` | `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED`, and `issue_date_state=CONFIRMED` when `issue_date` is present |
 | `mark_obligation_paid` | `READY`; repeated calls for `PAID` are idempotent | `PAID` | On the first call: `lifecycle`, `paid_at=now(UTC)` |
 | `cancel_obligation` | `COLLECTING_DATA` | `CANCELED` | `lifecycle` |
@@ -86,7 +88,12 @@ All current actions require the ledger's `EDITOR` or `OWNER` role.
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/cancel` | `cancel_obligation` | Only `COLLECTING_DATA` |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/reopen` | `reopen_obligation` | Reopens `READY`, `PAID`, `CANCELED`, or `ERROR` |
 
-| `POST /api/v1/integration/obligations/{obligation_key}/error` | `mark_obligation_error` | Requires `ledger:write`; accepts every lifecycle and is idempotent for `ERROR` |
+Integration routes use a connection key bound to one category, rather than a
+ledger member role. Their obligation endpoints address a billing period as
+`{period}` (`YYYY-MM`), for example
+`POST /api/v1/integration/obligations/{period}/error`. This marks the obligation
+`ERROR` from any state and is idempotent when already `ERROR`. See the
+[integration API](integration-api.md) for the other contextual operations.
 
 `ERROR` is an alarm about invalid obligation data, not integration health. The
 latter belongs to the separate integration-state model. Integration diagnostics
