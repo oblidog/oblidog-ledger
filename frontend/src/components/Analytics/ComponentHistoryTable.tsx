@@ -98,7 +98,11 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
   useEffect(() => {
     const availableCategories = categories.data?.data
     if (!availableCategories?.length) return
-    if (!availableCategories.some((category) => category.id === selectedCategoryId)) {
+    if (
+      !availableCategories.some(
+        (category) => category.id === selectedCategoryId,
+      )
+    ) {
       setSelectedCategoryId(availableCategories[0].id)
     }
   }, [categories.data, selectedCategoryId])
@@ -166,7 +170,10 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                 if (next) setSelectedPeriod(next)
               }}
             >
-              <SelectTrigger className="w-full sm:w-40" aria-label="Range ending">
+              <SelectTrigger
+                className="w-full sm:w-40"
+                aria-label="Range ending"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -186,7 +193,8 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
           <AlertCircle />
           <AlertTitle>Categories are unavailable</AlertTitle>
           <AlertDescription>
-            Component comparison cannot be loaded until categories are available.
+            Component comparison cannot be loaded until categories are
+            available.
           </AlertDescription>
         </Alert>
       ) : (
@@ -265,7 +273,8 @@ export function ComponentHistoryTable({
         ) : !history.data?.components.length ? (
           <div className="rounded-lg border border-dashed p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              No components were recorded for this category in the selected range.
+              No components were recorded for this category in the selected
+              range.
             </p>
           </div>
         ) : (
@@ -332,15 +341,20 @@ export function ComponentHistoryTable({
                       {history.data.components.map((component) => {
                         const value = component.values[periodIndex]
                         return (
-                          <TableCell key={component.identity} className="align-top">
-                            {value?.amount !== null && value?.amount !== undefined ? (
+                          <TableCell
+                            key={component.identity}
+                            className="align-top"
+                          >
+                            {value?.amount !== null &&
+                            value?.amount !== undefined ? (
                               <div className="space-y-1">
                                 <span className="font-medium tabular-nums whitespace-nowrap">
                                   {formatAmount(value.amount, currency ?? null)}
                                 </span>
                                 {value.state !== "present" ? (
                                   <Badge variant="outline">
-                                    {value.state[0].toUpperCase() + value.state.slice(1)}
+                                    {value.state[0].toUpperCase() +
+                                      value.state.slice(1)}
                                   </Badge>
                                 ) : null}
                               </div>
@@ -356,7 +370,8 @@ export function ComponentHistoryTable({
                                 <span className="font-medium">Present</span>
                                 {value.state !== "present" ? (
                                   <Badge variant="outline">
-                                    {value.state[0].toUpperCase() + value.state.slice(1)}
+                                    {value.state[0].toUpperCase() +
+                                      value.state.slice(1)}
                                   </Badge>
                                 ) : null}
                               </div>
