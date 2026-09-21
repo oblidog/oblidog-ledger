@@ -64,18 +64,40 @@ jobs:
           (
             cd "$standalone_dir"
             OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh" standalone
+            test -x scripts/db-backup.sh
+            test -x scripts/db-restore-drill.sh
+            test -f docs/operations/database-recovery.md
             sed -i \
               -e 's/replace-with-a-random-secret/ci-secret/' \
               -e 's/replace-with-a-strong-password/ci-admin-password/' \
               -e 's/replace-with-the-database-password/ci-db-password/' \
               .env
             ./validate-deployment.sh standalone
+
+            fake_bin="$(mktemp -d)"
+            cat >"$fake_bin/docker" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [[ "$*" == *"SELECT version_num FROM alembic_version"* ]]; then
+            printf 'test-revision\n'
+          else
+            printf 'test-dump'
+          fi
+          EOF
+            chmod +x "$fake_bin/docker"
+            PATH="$fake_bin:$PATH" BACKUP_DIR="$standalone_dir/backups" \
+              ./scripts/db-backup.sh
+            test "$(find backups -name '*.dump' -type f | wc -l)" -eq 1
+            grep -q '^alembic_revision=test-revision$' backups/*.metadata
           )
 
           external_dir="$(mktemp -d)"
           (
             cd "$external_dir"
             OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh" external
+            test -x scripts/db-backup.sh
+            test -x scripts/db-restore-drill.sh
+            test -f docs/operations/database-recovery.md
             sed -i \
               -e 's/replace-with-a-random-secret/ci-secret/' \
               -e 's/replace-with-a-strong-password/ci-admin-password/' \
@@ -128,6 +150,21 @@ jobs:
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/prestart.sh
         working-directory: backend
+      - name: Exercise database backup and restore drill
+        if: steps.scope.outputs.run_heavy == 'true'
+        shell: bash
+        run: |
+          (cd backend && DEMO_PASSWORD=ci-demo-password uv run python app/demo_seed.py --date 2026-09-01)
+          docker compose build backend
+
+          backup_dir="$(mktemp -d)"
+          DEPLOYMENT_VARIANT=standalone COMPOSE_FILE=compose.yml \
+            BACKUP_DIR="$backup_dir" ./scripts/db-backup.sh
+          dump_file="$(find "$backup_dir" -maxdepth 1 -name '*.dump' -type f -print -quit)"
+          test -n "$dump_file"
+          ./scripts/db-restore-drill.sh \
+            --dump "$dump_file" \
+            --backend-image "${DOCKER_IMAGE_BACKEND}:latest"
       - name: Run tests
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
