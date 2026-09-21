@@ -40,11 +40,13 @@ source checkout without that marker it defaults to `external`; set
 when backing up the bundled PostgreSQL service.
 
 The helper creates a custom-format `pg_dump` with no ownership or ACL commands
-and a mode-0600 metadata file. The metadata records the UTC timestamp,
-application image tag, Alembic revision, database name, and PostgreSQL client
-image. Copy both files together. Encrypt them at rest and apply the locally
-defined retention policy. A successful `pg_dump` is not proof of recoverability;
-run the drill below.
+and publishes the mode-`0600` metadata before atomically moving the completed
+dump into place. Failed or interrupted attempts remove their temporary files,
+so a final dump name never identifies a partial backup. The metadata records the
+UTC timestamp, application image tag, Alembic revision, database name, and
+PostgreSQL client image. Copy both files together. Encrypt them at rest and
+apply the locally defined retention policy. A successful `pg_dump` is not proof
+of recoverability; run the drill below.
 
 Before a deployment, record and retain together:
 
