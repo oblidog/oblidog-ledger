@@ -40,6 +40,8 @@ jobs:
       - name: Validate deployment variants
         shell: bash
         run: |
+          bash -n scripts/db-backup.sh scripts/db-restore-drill.sh scripts/deploy-latest.sh
+
           cp .env.standalone.example .env
           sed -i \
             -e 's/replace-with-a-random-secret/ci-secret/' \
