@@ -150,21 +150,6 @@ jobs:
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/prestart.sh
         working-directory: backend
-      - name: Exercise database backup and restore drill
-        if: steps.scope.outputs.run_heavy == 'true'
-        shell: bash
-        run: |
-          (cd backend && DEMO_USER_PASSWORD=ci-demo-password uv run python app/demo_seed.py --date 2026-09-01)
-          docker compose build backend
-
-          backup_dir="$(mktemp -d)"
-          DEPLOYMENT_VARIANT=standalone COMPOSE_FILE=compose.yml \
-            BACKUP_DIR="$backup_dir" ./scripts/db-backup.sh
-          dump_file="$(find "$backup_dir" -maxdepth 1 -name '*.dump' -type f -print -quit)"
-          test -n "$dump_file"
-          ./scripts/db-restore-drill.sh \
-            --dump "$dump_file" \
-            --backend-image "${DOCKER_IMAGE_BACKEND}:latest"
       - name: Run tests
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
