@@ -1,86 +1,106 @@
-# Oblidog
+<p align="center">
+  <a href="https://oblidog.com">
+    <img src="frontend/public/assets/images/oblidog-logo.svg" alt="Oblidog" width="280">
+  </a>
+</p>
 
-[![Oblidog logo](frontend/public/assets/images/oblidog-logo.svg)](https://oblidog.com)
+<h2 align="center">Keep your payments on a leash.</h2>
 
-## Keep your payments on a leash
+<p align="center">
+  A self-hosted home for recurring bills and household obligations.<br>
+  Know what is due, automate what you can, and keep the history.
+</p>
 
-**A self-hosted app for recurring bills and household obligations. Know what's due, what changed, and what you've paid.**
-
-
-## A look around
-
-<!-- Screenshots to add: current Oblidog Dashboard, showing upcoming and overdue bills. -->
-<!-- Screenshots to add: Obligations, showing a billing period, payment states, and a bill's components. -->
-<!-- Screenshots to add: Custom data history and/or component comparison, showing changes between records or periods. -->
-
+Oblidog is not another budgeting dashboard. It is an operational view of the
+bills you actually need to handle—from the moment they arrive until they are
+paid.
 
 ## Why Oblidog?
 
-Oblidog isn't a budgeting app. It's an operational dashboard for bills you need to handle, from first amount to paid.
+Bills rarely live in one place. Amounts arrive in provider portals, due dates
+land in emails, payments happen elsewhere, and a spreadsheet remembers only
+what someone took the time to type into it.
 
-- **Know what needs attention:** see upcoming, overdue, ready-to-pay, and paid bills.
-- **See what changed:** compare amounts, bill components, and provider data across periods instead of overwriting last month's row.
-- **Keep control:** run Oblidog yourself and own the data.
+Oblidog gives that work one clear workflow:
 
-## Core concepts
+- **Know what needs attention.** See upcoming, overdue, collecting-data,
+  ready-to-pay, and paid obligations across billing periods.
+- **Automate the repetitive parts.** Integrations can bring in amounts,
+  charge breakdowns, readings, provider data, and payment status.
+- **See what changed.** Keep each period's values and compare amounts,
+  components, and structured data instead of overwriting last month's row.
+- **Keep control of the data.** Run Oblidog on your own infrastructure and
+  decide which external jobs can update each category.
 
-### Ledger
+## From bill to history
 
-A ledger is the shared workspace. It owns categories and obligations and defines
-who can access them.
+**Organize → Track → Automate → Pay → Compare**
 
-### Category
+Create a category for a recurring bill and Oblidog creates its obligations for
+each billing period. Fill them in manually, connect an integration, or combine
+both approaches. Oblidog keeps the current state visible while preserving the
+details of previous periods.
 
-A category describes a recurring type of obligation. Categories belong to
-category groups and provide the metadata used when obligations are created.
-They can also define a schema for structured data collected for that type of
-obligation.
+For example, a housing bill appears for September. An integration supplies the
+amount, its individual charge components, and the latest readings. Once the
+data is complete, the obligation becomes ready to pay. When payment is
+recognized, it is marked paid—but September's breakdown stays available for
+comparison with October.
 
-### Obligation
+Oblidog tracks the workflow; it does not initiate bank payments.
 
-An obligation represents one concrete payment or responsibility for a billing
-period. Its lifecycle separates incomplete data from an item that is ready to
-pay, paid, canceled, or reopened.
+## Automation without lock-in
 
-### Components and structured data
+Oblidog is useful with manual entries, but integrations are where the routine
+work starts to disappear.
 
-Not every obligation is just a single amount. Components allow an obligation to
-carry a breakdown of its total, while category-defined structured data can hold
-domain-specific information such as invoice details, consumption, readings, or
-other integration-provided values.
+Each integration is connected to one category with its own scoped connection
+key. An external job can:
 
-## How it works
+- update the obligation for a billing period;
+- add or update its charge components;
+- store category-specific data such as invoices, consumption, or readings;
+- move the obligation through its lifecycle, including recognizing payment;
+- report its latest run and health back to Oblidog.
 
-```mermaid
-flowchart LR
-    A["Category and schedule"] --> B["Bill for a period"]
-    B --> C["Details from you or an integration"]
-    C --> D["Ready to pay"]
-    D --> E["Marked paid"]
-    E --> F["History to compare"]
-```
+Provider-specific jobs run separately from the Ledger application, so you can
+use the integrations maintained by the Oblidog project or build a small adapter
+for your own provider. Oblidog does not claim to be a universal bill collector.
 
-For a September electricity bill, you or an integration add the amount and components; an integration can also record meter readings. After payment, you or the integration mark it paid, and September's details remain available to compare with October. Oblidog does not initiate bank payments.
+The built-in System Run handles Oblidog's own scheduled work: creating
+obligations, estimating missing amounts, and sending reports when email is
+configured. It does not launch external provider integrations.
 
-## Integrations and automation
-
-Oblidog works with manual entries. For automation, external jobs can use a scoped connection key to update obligations, add bill components and structured provider records, and change an obligation's state. An integration can report its last run and health to Oblidog; the app has an integrations view for monitoring those reports. You choose and run the provider-specific jobs separately—Oblidog does not ship a universal bill collector.
-
-The built-in System Run creates scheduled obligations, estimates missing amounts, and can send reports when email is configured. It does not launch external integration jobs. See the [integration API guide](docs/integration-api.md) and [self-hosting guide](docs/self-hosting.md) for setup details.
+See the [integration API guide](docs/integration-api.md) and its
+[OpenAPI specification](openapi/integration.json) for the current contract.
 
 ## What you can do
 
-- Review upcoming, overdue, ready-to-pay, and paid obligations across billing periods.
-- See amount history, compare recurring bill components, and inspect changes to structured provider records.
-- Mark bills ready, paid, canceled, or reopened; review an obligation's action history.
-- Share a ledger with owner, editor, and viewer roles.
-- Run your own deployment with Docker Compose, with included or external PostgreSQL.
+- Review obligations by period and lifecycle state.
+- Track totals, due dates, notes, and detailed bill components.
+- Compare recurring components and structured provider data over time.
+- Inspect the action history to understand what changed and when.
+- Share a ledger using owner, editor, and viewer roles.
+- Monitor the latest status of configured integrations.
+- Run the application with Docker Compose and included or external PostgreSQL.
+
+## The model in one minute
+
+A **ledger** is a shared workspace. **Categories** describe recurring types of
+bills, such as electricity, housing, or mobile service. Each category produces
+an **obligation** for a billing period. An obligation moves from incomplete data
+to ready, paid, canceled, or error while retaining its amount, components,
+structured data, and history.
+
+For precise rules, see [obligation states and actions](docs/obligation-lifecycle.md),
+[structured category data](docs/category-data-records.md), and
+[obligation action history](docs/obligation-action-log.md).
 
 ## Quick start: self-host
 
-The installer sets up a standalone Docker Compose deployment with PostgreSQL
-and persistent database storage. Docker Engine with the Compose plugin is the
-only prerequisite; a source checkout is not required.
+The standalone installer sets up Docker Compose with PostgreSQL and persistent
+database storage. Docker Engine with the Compose plugin is the only
+prerequisite; a source checkout is not required.
 
 ```bash
 mkdir oblidog-ledger
@@ -99,9 +119,9 @@ docker compose up -d
 docker compose ps
 ```
 
-The `prestart` service applies database migrations before the app starts. With
-the template defaults, open `http://localhost:8080`. The database has no
-published host port. The stack also includes a System Run scheduler.
+With the template defaults, open `http://localhost:8080`. The `prestart`
+service applies database migrations before the application starts, and the
+database has no published host port.
 
 An external PostgreSQL and reverse proxy variant remains available for existing
 setups. Read the [self-hosting guide](docs/self-hosting.md) for both variants,
@@ -111,7 +131,10 @@ before deploying.
 
 ## Project status
 
-Oblidog is in active early development. The core bill workflow, shared ledgers, history views, and integration API are available. Provider-specific jobs run outside Oblidog. Expect the interface and integration setup to evolve.
+Oblidog is open-source software in active early development. The core bill
+workflow, shared ledgers, historical views, System Run automation, and
+integration API are available. The interface and integration setup will
+continue to evolve, and provider-specific integrations remain separate jobs.
 
 ## Documentation
 
@@ -122,4 +145,6 @@ Oblidog is in active early development. The core bill workflow, shared ledgers, 
 - [Obligation action history](docs/obligation-action-log.md)
 - [Development setup](development.md) · [Backend](backend/README.md) · [Frontend](frontend/README.md)
 
-Oblidog is developed in public by the [Oblidog GitHub organisation](https://github.com/oblidog) and released under the [MIT license](LICENSE).
+Oblidog is developed in public by the
+[Oblidog GitHub organisation](https://github.com/oblidog) and released under
+the [MIT license](LICENSE).
