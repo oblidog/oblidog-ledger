@@ -1,6 +1,5 @@
-# Standalone production stack. Do not combine this file with compose.yml:
-# compose.yml defines a local PostgreSQL service, while production uses an
-# externally managed database configured in .env.
+# Production stack for an external database and reverse proxy. Do not combine
+# this file with compose.yml or compose.standalone.yml.
 services:
   prestart:
     image: ghcr.io/oblidog/oblidog-ledger-backend:${TAG?Set TAG in .env}

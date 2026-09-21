@@ -93,20 +93,23 @@ until the main desktop and mobile navigation settles.
 
 ## Run it yourself
 
-The production setup is designed for a self-hosted Docker Compose deployment.
-It uses prebuilt container images, an externally managed PostgreSQL database,
-and an existing reverse proxy network named `firefly_net`.
+Two self-hosted Docker Compose variants are supported:
 
-Before starting, make sure your server has Docker Compose, access to PostgreSQL,
-and a reverse proxy that can route your chosen frontend and API hostnames to
-the legacy `findog-ledger-frontend` and `findog-ledger-backend` aliases on
-that network. These aliases are deliberately retained for compatibility with
-existing reverse-proxy configuration; they are not product branding.
+- **Standalone** (recommended for a new installation) includes PostgreSQL,
+  persistent database storage, and a self-contained private network. Only the
+  frontend and API ports are published.
+- **External** keeps PostgreSQL and the reverse proxy outside this project. It
+  retains the existing `firefly_net` network and legacy
+  `findog-ledger-frontend` / `findog-ledger-backend` aliases for compatibility.
+
+Both variants use prebuilt images and require an immutable release tag. Docker
+Engine with the Compose plugin is the only prerequisite for the standalone
+variant.
 
 ### Install
 
 Create a deployment directory and run the installer. There is no need to clone
-the application source code.
+the application source code. The default is the standalone variant.
 
 ```bash
 mkdir oblidog-ledger
@@ -114,28 +117,56 @@ cd oblidog-ledger
 curl -fsSL https://raw.githubusercontent.com/oblidog/oblidog-ledger/main/scripts/install.sh | bash
 ```
 
-The installer downloads the production Compose file and environment template.
+The installer downloads `compose.yml`, a matching `.env` template, and the
+configuration validator.
 
 Then:
 
-1. Edit `.env` and set the values for your deployment. At minimum, choose an
-   immutable image `TAG`, public URLs, PostgreSQL credentials, a random
-   `SECRET_KEY`, and the first administrator account.
-2. Ensure the external Docker network exists and configure your reverse proxy
-   to forward the frontend and API hostnames to the aliases above.
-3. Pull and start the stack. The `prestart` service runs database migrations
-   before the application starts.
+1. Edit `.env`. Replace all placeholder secrets and review the public URLs and
+   bind addresses. Use a published release for `TAG`, never `latest`.
+2. Validate the configuration, pull the images, and start the stack. PostgreSQL
+   must become healthy before `prestart` runs migrations; the application only
+   starts after migrations succeed.
 
 ```bash
+./validate-deployment.sh standalone
 docker compose pull
 docker compose up -d
 ```
 
-Confirm that the services are healthy, then open the frontend URL configured in
-`.env`.
+With the template defaults, open `http://localhost:8080`; the API is available
+at `http://localhost:8000`. To make the ports reachable only through a reverse
+proxy on the Docker host, set both `*_BIND_ADDRESS` values to `127.0.0.1` and
+set the public `FRONTEND_HOST`, `BACKEND_CORS_ORIGINS`, and `VITE_API_URL` URLs.
+The database has no published host port.
+
+Confirm that the services are healthy:
 
 ```bash
 docker compose ps
+```
+
+PostgreSQL data is stored in the named `postgres-data` volume and survives
+container recreation and `docker compose down`. Do not use
+`docker compose down --volumes` unless you intentionally want to delete it.
+
+#### External database and reverse proxy
+
+Existing deployments can continue using the external variant unchanged. For a
+new external installation, pass `external` to the installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/oblidog/oblidog-ledger/main/scripts/install.sh | bash -s -- external
+```
+
+Set the external PostgreSQL connection values in `.env`, create the external
+`firefly_net` Docker network, and configure the reverse proxy to reach the
+legacy service aliases. Then validate and start it:
+
+```bash
+./validate-deployment.sh external
+docker compose pull
+docker compose up -d
 ```
 
 ### System Run scheduler
@@ -189,6 +220,7 @@ to inspect run and per-step history, including skipped and failed tasks.
 Change `TAG` to the desired immutable release and run:
 
 ```bash
+./validate-deployment.sh standalone # or: external
 docker compose pull
 docker compose up -d
 ```
