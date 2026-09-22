@@ -453,7 +453,9 @@ def _normalize_component_label(value: str) -> str:
     return " ".join(value.split()).casefold()
 
 
-def _component_history_identity(component: ObligationComponent, match_by: ComponentHistoryMatchBy) -> str:
+def _component_history_identity(
+    component: ObligationComponent, match_by: ComponentHistoryMatchBy
+) -> str:
     component_type = component.type
     if match_by == "label":
         return f"{component_type}:{_normalize_component_label(component.label)}"
@@ -489,11 +491,13 @@ def get_component_history(
 
     requested_periods = [end_period]
     for _ in range(periods - 1):
-        current = requested_periods[-1]
-        previous_month = current.month - 1
+        latest_period = requested_periods[-1]
+        previous_month = latest_period.month - 1
         requested_periods.append(
             BillingPeriod(
-                year=current.year - 1 if previous_month == 0 else current.year,
+                year=latest_period.year - 1
+                if previous_month == 0
+                else latest_period.year,
                 month=12 if previous_month == 0 else previous_month,
             )
         )
@@ -523,19 +527,19 @@ def get_component_history(
     descriptors: dict[str, ObligationComponent] = {}
     for period in requested_periods:
         obligation = obligations_by_period.get((period.year, period.month))
-        current: dict[str, ObligationComponent] = {}
+        period_components: dict[str, ObligationComponent] = {}
         for component in obligation.components if obligation else []:
             identity = _component_history_identity(component, match_by)
-            if identity in current:
+            if identity in period_components:
                 raise ValueError(
                     f"Ambiguous component identity '{identity}' in "
                     f"{period.year:04d}-{period.month:02d}; select another matching criterion"
                 )
-            current[identity] = component
+            period_components[identity] = component
             descriptors[identity] = component
             if identity not in ordered_identities:
                 ordered_identities.append(identity)
-        components_by_period.append(current)
+        components_by_period.append(period_components)
 
     groups: list[ComponentHistoryGroup] = []
     for identity in ordered_identities:
@@ -544,14 +548,17 @@ def get_component_history(
         previous_component: ObligationComponent | None = None
         seen = False
         for index, period in enumerate(requested_periods):
-            component = components_by_period[index].get(identity)
+            matched_component = components_by_period[index].get(identity)
             obligation_exists = (period.year, period.month) in obligations_by_period
-            if component is None:
+            if matched_component is None:
                 state: ComponentHistoryState = (
-                    "removed" if seen and obligation_exists and previous_component is not None
+                    "removed"
+                    if seen and obligation_exists and previous_component is not None
                     else "missing"
                 )
-                values.append(ComponentHistoryValue(period=period, amount=None, state=state))
+                values.append(
+                    ComponentHistoryValue(period=period, amount=None, state=state)
+                )
                 previous_component = None
                 continue
 
@@ -561,23 +568,23 @@ def get_component_history(
                 state = "added"
             else:
                 changed = (
-                    component.amount != previous_component.amount
-                    or component.label != previous_component.label
-                    or component.type != previous_component.type
+                    matched_component.amount != previous_component.amount
+                    or matched_component.label != previous_component.label
+                    or matched_component.type != previous_component.type
                 )
                 state = "changed" if changed else "present"
             values.append(
                 ComponentHistoryValue(
                     period=period,
-                    amount=component.amount,
+                    amount=matched_component.amount,
                     state=state,
-                    label=component.label,
-                    source=component.source,
-                    external_id=component.external_id,
+                    label=matched_component.label,
+                    source=matched_component.source,
+                    external_id=matched_component.external_id,
                 )
             )
             seen = True
-            previous_component = component
+            previous_component = matched_component
 
         groups.append(
             ComponentHistoryGroup(
@@ -591,7 +598,9 @@ def get_component_history(
         )
 
     totals: list[ComponentHistoryTotal] = []
-    for period, component_map in zip(requested_periods, components_by_period, strict=True):
+    for period, component_map in zip(
+        requested_periods, components_by_period, strict=True
+    ):
         amounts = [
             component.amount
             for component in component_map.values()
