@@ -75,6 +75,7 @@ test("hides restricted ledger navigation and redirects direct routes", async ({
   await page.goto(`/ledgers/${ledgerId}/settings`)
   await expect(page).toHaveURL(`/ledgers/${ledgerId}`)
   await expect(page.getByTestId("demo-banner")).toBeVisible()
+  await expect(page.getByLabel("Lifecycle")).toHaveValue("")
   await expect(
     page.evaluate(() => localStorage.getItem("access_token")),
   ).resolves.toBeNull()

@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.db import engine
 from app.domain import (
     BillingPeriod,
+    Currency,
     DataSourcePolicy,
     ObligationActionActor,
     ObligationKey,
@@ -402,6 +403,7 @@ def _create_categories(
             name=spec.name,
             description=spec.description,
             code=spec.code,
+            currency=Currency.EUR,
             data_source_policy=(
                 DataSourcePolicy.AUTOMATIC if automatic else DataSourcePolicy.MANUAL
             ),
