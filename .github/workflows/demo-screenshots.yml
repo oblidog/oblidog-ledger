@@ -50,6 +50,7 @@ jobs:
           docker compose run --rm
           -e DEMO_SCREENSHOTS=true
           -e DEMO_SCREENSHOT_DATE="$SCREENSHOT_REFERENCE_DATE"
+          -e VITE_DISABLE_DEVTOOLS=true
           playwright
           bunx playwright test tests/demo-screenshots.spec.ts
           --project=chromium
