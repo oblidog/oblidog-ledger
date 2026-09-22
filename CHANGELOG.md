@@ -1,3 +1,29 @@
+## v0.16.0 (2026-09-22)
+
+### Feat
+
+- **demo**: enrich canonical seed dataset (#411)
+- **ops**: add standalone Docker Compose deployment (#409)
+
+### Fix
+
+- **auth**: strengthen password reset token fingerprints (#424)
+- **demo**: keep overdue obligations representative (#420)
+- clean up repository type and format checks
+- **demo**: show all obligations and use EUR (#416)
+- **ops**: harden standalone deployment installer (#410)
+- hide floating-point noise in category data deltas (#408)
+- **ops**: add database-aware readiness checks (#407)
+- **auth**: make password reset tokens single-use (#406)
+- **auth**: move browser authentication to HttpOnly cookies (#405)
+- **auth**: invalidate sessions after password changes (#404)
+
+### Refactor
+
+- **demo**: add local counterparty logos (#415)
+- **analytics**: focus page on component history (#412)
+- **analytics**: add selectable component history matching (#403)
+
 ## v0.15.0 (2026-09-19)
 
 ### Feat
