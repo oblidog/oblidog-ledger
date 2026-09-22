@@ -78,10 +78,10 @@ async function periodTotalsBarFill(page: import("@playwright/test").Page) {
 }
 
 test("uses a theme-aware color for period total bars", async ({ page }) => {
-  const ledger = await createCategoryHistoryFixture()
+  await createCategoryHistoryFixture()
 
   await page.addInitScript(() => localStorage.setItem("vite-ui-theme", "light"))
-  await page.goto(`/ledgers/${ledger.id}/analytics`)
+  await page.goto("/")
 
   await expect(page.locator("html")).toHaveClass(/light/)
   const lightFill = await periodTotalsBarFill(page)
@@ -98,9 +98,9 @@ test("uses a theme-aware color for period total bars", async ({ page }) => {
 
 for (const width of [320, 375, 414]) {
   test(`keeps analytics charts readable at ${width}px`, async ({ page }) => {
-    const ledger = await createCategoryHistoryFixture()
+    await createCategoryHistoryFixture()
     await page.setViewportSize({ width, height: 844 })
-    await page.goto(`/ledgers/${ledger.id}/analytics`)
+    await page.goto("/")
 
     const charts = [
       {
@@ -166,7 +166,7 @@ for (const width of [320, 375, 414]) {
 test("shows amount progress as the primary payment metric", async ({
   page,
 }) => {
-  const ledger = await createCategoryHistoryFixture()
+  await createCategoryHistoryFixture()
   await page.route("**/analytics/period-summary?**", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -192,7 +192,7 @@ test("shows amount progress as the primary payment metric", async ({
     })
   })
 
-  await page.goto(`/ledgers/${ledger.id}/analytics`)
+  await page.goto("/")
 
   const progress = page.getByRole("region", {
     name: "Payment progress in PLN",
@@ -300,6 +300,15 @@ test("compares stable, added, removed and renamed components across six periods"
 
   await page.goto(`/ledgers/${ledger.id}/analytics`)
 
+  await expect(page.getByRole("link", { name: "Analytics" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "More insights are on the way" }),
+  ).toBeVisible()
+  await expect(page.getByText("Planned", { exact: true })).toHaveCount(3)
+
+  await page.getByRole("combobox", { name: "Compare by" }).click()
+  await page.getByRole("option", { name: "External ID" }).click()
+
   const table = page.getByTestId("component-history-table")
   await expect(table).toBeVisible()
   await expect(
@@ -331,4 +340,36 @@ test("compares stable, added, removed and renamed components across six periods"
   await expect(currentRow).toContainText("0.00 PLN")
 
   await expect(table.getByRole("row")).toHaveCount(7)
+})
+
+test("shows component history endpoint errors and allows changing criterion", async ({
+  page,
+}) => {
+  const ledger = await createCategoryHistoryFixture()
+  let requestedMatchBy: string | undefined
+
+  await page.route("**/analytics/component-history?**", async (route) => {
+    const url = new URL(route.request().url())
+    requestedMatchBy = url.searchParams.get("match_by") ?? undefined
+    await route.fulfill({
+      status: 422,
+      contentType: "application/json",
+      json: {
+        detail:
+          "Ambiguous component identity 'fee:service fee'; select another matching criterion",
+      },
+    })
+  })
+
+  await page.goto(`/ledgers/${ledger.id}/analytics`)
+
+  await expect.poll(() => requestedMatchBy).toBe("label")
+  await expect(
+    page.getByText("Component history is unavailable", { exact: true }),
+  ).toBeVisible()
+
+  await page.getByRole("combobox", { name: "Compare by" }).click()
+  await page.getByRole("option", { name: "External ID" }).click()
+
+  await expect.poll(() => requestedMatchBy).toBe("external_id")
 })

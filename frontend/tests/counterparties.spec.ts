@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
+import { firstSuperuser, firstSuperuserPassword } from "./config"
 
-const apiUrl = process.env.VITE_API_URL
+const apiUrl = process.env.VITE_API_PROXY_TARGET ?? process.env.VITE_API_URL
 if (!apiUrl) {
   throw new Error("VITE_API_URL is undefined")
 }
@@ -11,6 +12,7 @@ function uniqueName(prefix: string) {
 
 test("manages category and obligation counterparties in contextual dialogs", async ({
   page,
+  playwright,
 }) => {
   const ledgerName = uniqueName("Counterparty ledger")
   const groupName = uniqueName("Utilities")
@@ -24,20 +26,29 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await page.getByRole("button", { name: "Create ledger" }).click()
   await page.getByRole("link", { name: ledgerName }).click()
 
-  const token = await page.evaluate(() => localStorage.getItem("access_token"))
-  if (!token) throw new Error("Missing access token")
+  const apiRequest = await playwright.request.newContext({ baseURL: apiUrl })
+  const tokenResponse = await apiRequest.post(
+    `${apiUrl}/api/v1/login/access-token`,
+    {
+      form: {
+        username: firstSuperuser,
+        password: firstSuperuserPassword,
+      },
+    },
+  )
+  expect(tokenResponse.ok()).toBeTruthy()
+  const { access_token: token } = (await tokenResponse.json()) as {
+    access_token: string
+  }
 
   const ledgerId = new URL(page.url()).pathname.split("/")[2]
   if (!ledgerId) throw new Error("Unable to resolve ledger id")
 
   const createCounterparty = async (name: string, shortName: string) => {
-    const response = await page.request.post(
-      `${apiUrl}/api/v1/counterparties`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { name, short_name: shortName },
-      },
-    )
+    const response = await apiRequest.post(`${apiUrl}/api/v1/counterparties`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name, short_name: shortName },
+    })
     expect(response.ok()).toBeTruthy()
     return (await response.json()) as { id: string; name: string }
   }
@@ -79,7 +90,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await expect(createCategoryDialog).toBeHidden()
 
   const readCategories = () =>
-    page.request.get(`${apiUrl}/api/v1/ledgers/${ledgerId}/categories`, {
+    apiRequest.get(`${apiUrl}/api/v1/ledgers/${ledgerId}/categories`, {
       headers: { Authorization: `Bearer ${token}` },
     })
 
@@ -144,7 +155,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     .click()
   await expect(createObligationDialog).toBeHidden()
 
-  const obligationsResponse = await page.request.get(
+  const obligationsResponse = await apiRequest.get(
     `${apiUrl}/api/v1/ledgers/${ledgerId}/obligations`,
     { headers: { Authorization: `Bearer ${token}` } },
   )
@@ -177,7 +188,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   await expect(obligationCounterpartyDialog).toBeHidden()
 
   const readObligation = () =>
-    page.request.get(
+    apiRequest.get(
       `${apiUrl}/api/v1/ledgers/${ledgerId}/obligations/${obligation!.key}`,
       { headers: { Authorization: `Bearer ${token}` } },
     )
@@ -206,4 +217,5 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     counterparty_id: string | null
   }
   expect(obligationBody.counterparty_id).toBeNull()
+  await apiRequest.dispose()
 })

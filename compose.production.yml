@@ -1,6 +1,5 @@
-# Standalone production stack. Do not combine this file with compose.yml:
-# compose.yml defines a local PostgreSQL service, while production uses an
-# externally managed database configured in .env.
+# Production stack for an external database and reverse proxy. Do not combine
+# this file with compose.yml or compose.standalone.yml.
 services:
   prestart:
     image: ghcr.io/oblidog/oblidog-ledger-backend:${TAG?Set TAG in .env}
@@ -23,7 +22,7 @@ services:
     # volumes:
     #   - ./backend/config/legacy-import.yaml:/app/backend/config/legacy-import.yaml:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/health-check/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/readiness-check/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -68,7 +67,7 @@ services:
           - findog-ledger-frontend
 
   adminer:
-    image: adminer:latest
+    image: adminer:6.0.1
     restart: always
     environment:
       ADMINER_DEFAULT_SERVER: ${POSTGRES_SERVER?Set POSTGRES_SERVER in .env}

@@ -21,7 +21,7 @@ def demo_environment(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, N
 
 def test_demo_settings_disable_external_service_configuration() -> None:
     demo_settings = Settings(
-        _env_file=None,
+        _env_file=None,  # type: ignore[call-arg]
         PROJECT_NAME="Oblidog",
         ENVIRONMENT="demo",
         SECRET_KEY="test-secret-key",

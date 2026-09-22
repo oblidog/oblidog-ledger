@@ -1,4 +1,4 @@
-import { Home, ListChecks, Tags } from "lucide-react"
+import { ChartNoAxesCombined, Home, ListChecks, Tags } from "lucide-react"
 
 import type { Item } from "./Main"
 
@@ -11,11 +11,17 @@ export function primaryNavigation(ledgerId: string | null): Item[] {
             icon: ListChecks,
             title: "Obligations",
             path: `/ledgers/${ledgerId}`,
+            exact: true,
           },
           {
             icon: Tags,
             title: "Categories",
             path: `/ledgers/${ledgerId}/categories`,
+          },
+          {
+            icon: ChartNoAxesCombined,
+            title: "Analytics",
+            path: `/ledgers/${ledgerId}/analytics`,
           },
         ]
       : []),

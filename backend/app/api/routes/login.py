@@ -1,24 +1,41 @@
+import secrets
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
+from app.core.browser_auth import (
+    CSRF_HEADER_NAME,
+    clear_session_cookie,
+    set_session_cookie,
+)
 from app.core.config import settings
+from app.models import User
 from app.schemas import Message, NewPassword, Token, UserPublic
 from app.services import auth as auth_service
+from app.services import password_resets as password_reset_service
 from app.services import users as user_service
 from app.utils import (
-    generate_password_reset_token,
     generate_reset_password_email,
     send_email,
-    verify_password_reset_token,
 )
 
 router = APIRouter(tags=["login"])
+
+
+def _authenticate(session: SessionDep, form_data: OAuth2PasswordRequestForm) -> User:
+    user = auth_service.authenticate(
+        session=session, email=form_data.username, password=form_data.password
+    )
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return user
 
 
 @router.post("/login/access-token")
@@ -28,19 +45,42 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = auth_service.authenticate(
-        session=session, email=form_data.username, password=form_data.password
-    )
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    user = _authenticate(session, form_data)
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_access_token(
-            user.id, expires_delta=access_token_expires
+            user.id,
+            expires_delta=access_token_expires,
+            session_version=user.session_version,
         )
     )
+
+
+@router.post("/login/session", response_model=Message)
+def login_session(
+    response: Response,
+    session: SessionDep,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> Message:
+    """Create a browser session without exposing its bearer token to JavaScript."""
+    user = _authenticate(session, form_data)
+    csrf_token = secrets.token_urlsafe(32)
+    access_token = security.create_access_token(
+        user.id,
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        session_version=user.session_version,
+        csrf_token=csrf_token,
+    )
+    set_session_cookie(response, access_token)
+    response.headers[CSRF_HEADER_NAME] = csrf_token
+    return Message(message="Session created")
+
+
+@router.post("/login/logout", response_model=Message)
+def logout(response: Response) -> Message:
+    """Clear the browser session cookie."""
+    clear_session_cookie(response)
+    return Message(message="Logged out")
 
 
 @router.post("/login/test-token", response_model=UserPublic)
@@ -60,10 +100,12 @@ def recover_password(email: str, session: SessionDep) -> Message:
 
     # Always return the same response to prevent email enumeration attacks
     # Only send email if user actually exists
-    if user:
-        password_reset_token = generate_password_reset_token(email=email)
+    if user and user.is_active:
+        delivery = password_reset_service.issue_password_reset(
+            session=session, user=user
+        )
         email_data = generate_reset_password_email(
-            email_to=user.email, email=email, token=password_reset_token
+            email_to=user.email, email=email, token=delivery.token
         )
         send_email(
             email_to=user.email,
@@ -80,18 +122,14 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     """
     Reset password
     """
-    email = verify_password_reset_token(token=body.token)
-    if not email:
+    try:
+        password_reset_service.reset_password(
+            session=session,
+            token=body.token,
+            new_password=body.new_password,
+        )
+    except password_reset_service.InvalidPasswordResetTokenError:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = user_service.get_user_by_email(session=session, email=email)
-    if not user:
-        # Don't reveal that the user doesn't exist - use same error as invalid token
-        raise HTTPException(status_code=400, detail="Invalid token")
-    elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    user_service.set_user_password(
-        session=session, user=user, new_password=body.new_password
-    )
     return Message(message="Password updated successfully")
 
 
@@ -111,9 +149,11 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
-    password_reset_token = generate_password_reset_token(email=email)
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    delivery = password_reset_service.issue_password_reset(session=session, user=user)
     email_data = generate_reset_password_email(
-        email_to=user.email, email=email, token=password_reset_token
+        email_to=user.email, email=email, token=delivery.token
     )
 
     return HTMLResponse(

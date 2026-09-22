@@ -1,12 +1,8 @@
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { AlertCircle } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import {
-  CategoriesService,
-  type ObligationComponentPublic,
-  ObligationsService,
-} from "@/client"
+import { CategoriesService } from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -32,17 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  type ComponentHistoryMatchBy,
+  readComponentHistory,
+} from "@/features/analytics/componentHistoryApi"
 
 type Period = { year: number; month: number }
-
-type ComponentColumn = {
-  key: string
-  type: string
-  labels: string[]
-  source: string | null
-  externalId: string | null
-  firstSeenIndex: number
-}
 
 function currentPeriod(): Period {
   const now = new Date()
@@ -65,13 +56,6 @@ function periodLabel(period: Period) {
   }).format(new Date(period.year, period.month - 1, 1))
 }
 
-function componentIdentity(component: ObligationComponentPublic) {
-  if (component.source && component.external_id) {
-    return `external:${component.source}:${component.external_id}`
-  }
-  return `label:${component.type}:${component.label.trim().toLocaleLowerCase()}`
-}
-
 function formatAmount(amount: string, currency: string | null) {
   return `${Number(amount).toLocaleString("en-GB", {
     minimumFractionDigits: 2,
@@ -79,9 +63,26 @@ function formatAmount(amount: string, currency: string | null) {
   })}${currency ? ` ${currency}` : ""}`
 }
 
+function errorMessage(error: unknown) {
+  if (typeof error === "object" && error !== null && "detail" in error) {
+    return String((error as { detail: unknown }).detail)
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "error" in error &&
+    typeof (error as { error?: unknown }).error === "object"
+  ) {
+    const nested = (error as { error: { detail?: unknown } }).error
+    if (nested.detail) return String(nested.detail)
+  }
+  return "The selected comparison could not be loaded."
+}
+
 export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
   const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>()
+  const [matchBy, setMatchBy] = useState<ComponentHistoryMatchBy>("label")
   const categories = useQuery({
     queryFn: () => CategoriesService.readCategories({ ledgerId }),
     queryKey: ["categories", ledgerId],
@@ -112,7 +113,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
 
   return (
     <section className="space-y-4" aria-labelledby="component-history-heading">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
         <div>
           <h2 id="component-history-heading" className="text-xl font-semibold">
             Component comparison
@@ -121,7 +122,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
             Track how recurring bill components change across recent periods.
           </p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           <div className="grid gap-1 text-sm font-medium">
             <span>Category</span>
             <Select
@@ -138,6 +139,23 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
                     {category.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1 text-sm font-medium">
+            <span>Compare by</span>
+            <Select
+              value={matchBy}
+              onValueChange={(value) =>
+                setMatchBy(value as ComponentHistoryMatchBy)
+              }
+            >
+              <SelectTrigger className="w-full sm:w-44" aria-label="Compare by">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="label">Component label</SelectItem>
+                <SelectItem value="external_id">External ID</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -182,9 +200,10 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
       ) : (
         <ComponentHistoryTable
           ledgerId={ledgerId}
-          categoryCode={selectedCategory?.code}
+          categoryId={selectedCategory?.id}
           currency={selectedCategory?.currency}
           selectedPeriod={selectedPeriod}
+          matchBy={matchBy}
         />
       )}
     </section>
@@ -193,103 +212,38 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
 
 export function ComponentHistoryTable({
   ledgerId,
-  categoryCode,
+  categoryId,
   currency,
   selectedPeriod,
+  matchBy,
 }: {
   ledgerId: string
-  categoryCode: string | undefined
+  categoryId: string | undefined
   currency: string | null | undefined
   selectedPeriod: Period
+  matchBy: ComponentHistoryMatchBy
 }) {
-  const periods = useMemo(
-    () =>
-      Array.from({ length: 6 }, (_, index) =>
-        addMonths(selectedPeriod, index - 5),
-      ),
-    [selectedPeriod],
-  )
-  const obligations = useQuery({
+  const history = useQuery({
     queryFn: () =>
-      ObligationsService.readObligations({
+      readComponentHistory({
         ledgerId,
-        categoryCode,
+        categoryId: categoryId!,
+        endYear: selectedPeriod.year,
+        endMonth: selectedPeriod.month,
+        periods: 6,
+        matchBy,
       }),
     queryKey: [
       "analytics",
-      "component-history-obligations",
+      "component-history",
       ledgerId,
-      categoryCode,
+      categoryId,
+      selectedPeriod,
+      matchBy,
     ],
-    enabled: Boolean(categoryCode),
+    enabled: Boolean(categoryId),
+    retry: false,
   })
-  const obligationsByPeriod = useMemo(
-    () =>
-      new Map(
-        (obligations.data?.data ?? []).map((obligation) => [
-          `${obligation.period.year}-${String(obligation.period.month).padStart(2, "0")}`,
-          obligation,
-        ]),
-      ),
-    [obligations.data],
-  )
-  const obligationKeys = periods.map(
-    (period) => obligationsByPeriod.get(periodKey(period))?.key,
-  )
-  const componentQueries = useQueries({
-    queries: obligationKeys.map((obligationKey) => ({
-      queryFn: async () => {
-        if (!obligationKey) throw new Error("Missing obligation")
-        return ObligationsService.readObligationComponents({
-          ledgerId,
-          obligationKey,
-        })
-      },
-      queryKey: ["obligation-components", ledgerId, obligationKey],
-      enabled: Boolean(obligationKey),
-    })),
-  })
-
-  const isLoading =
-    obligations.isLoading || componentQueries.some((query) => query.isLoading)
-  const isError =
-    obligations.isError || componentQueries.some((query) => query.isError)
-
-  const componentsByPeriod = componentQueries.map(
-    (query) => query.data?.data ?? [],
-  )
-  const columns = useMemo(() => {
-    const byIdentity = new Map<string, ComponentColumn>()
-    componentsByPeriod.forEach((components, periodIndex) => {
-      components.forEach((component) => {
-        const key = componentIdentity(component)
-        const existing = byIdentity.get(key)
-        if (existing) {
-          if (!existing.labels.includes(component.label)) {
-            existing.labels.push(component.label)
-          }
-          return
-        }
-        byIdentity.set(key, {
-          key,
-          type: component.type,
-          labels: [component.label],
-          source: component.source,
-          externalId: component.external_id,
-          firstSeenIndex: periodIndex,
-        })
-      })
-    })
-    return [...byIdentity.values()].sort((left, right) => {
-      const leftLabel = left.labels[left.labels.length - 1]
-      const rightLabel = right.labels[right.labels.length - 1]
-      return (
-        left.firstSeenIndex - right.firstSeenIndex ||
-        leftLabel.localeCompare(rightLabel) ||
-        left.type.localeCompare(right.type)
-      )
-    })
-  }, [componentsByPeriod])
 
   return (
     <Card>
@@ -301,22 +255,22 @@ export function ComponentHistoryTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {!categoryCode ? (
+        {!categoryId ? (
           <p className="text-sm text-muted-foreground">
             Select a category to compare its components.
           </p>
-        ) : isLoading ? (
+        ) : history.isLoading ? (
           <Skeleton className="h-48 w-full" />
-        ) : isError ? (
+        ) : history.isError ? (
           <Alert variant="destructive">
             <AlertCircle />
             <AlertTitle>Component history is unavailable</AlertTitle>
             <AlertDescription>
-              Obligations or components for the selected range could not be
-              loaded.
+              {errorMessage(history.error)} Try another comparison criterion if
+              component identities are ambiguous.
             </AlertDescription>
           </Alert>
-        ) : columns.length === 0 ? (
+        ) : !history.data?.components.length ? (
           <div className="rounded-lg border border-dashed p-6 text-center">
             <p className="text-sm text-muted-foreground">
               No components were recorded for this category in the selected
@@ -334,105 +288,92 @@ export function ComponentHistoryTable({
                   <TableHead className="sticky left-0 z-10 min-w-32 bg-background">
                     Period
                   </TableHead>
-                  {columns.map((column) => {
-                    const currentLabel = column.labels[column.labels.length - 1]
-                    const previousLabels = column.labels.slice(0, -1)
-                    return (
-                      <TableHead
-                        key={column.key}
-                        className="min-w-44 whitespace-normal align-top"
-                      >
-                        <div className="space-y-1">
-                          <p className="break-words font-medium text-foreground">
-                            {currentLabel}
-                          </p>
-                          <Badge variant="secondary">{column.type}</Badge>
-                          {previousLabels.length ? (
+                  {history.data.components.map((component) => (
+                    <TableHead
+                      key={component.identity}
+                      className="min-w-44 whitespace-normal align-top"
+                    >
+                      <div className="space-y-1">
+                        <p className="break-words font-medium text-foreground">
+                          {component.label}
+                        </p>
+                        <Badge variant="secondary">{component.type}</Badge>
+                        {(() => {
+                          const previousLabels = [
+                            ...new Set(
+                              component.values
+                                .map((value) => value.label)
+                                .filter(
+                                  (label): label is string =>
+                                    Boolean(label) && label !== component.label,
+                                ),
+                            ),
+                          ]
+                          return previousLabels.length ? (
                             <p className="text-xs font-normal text-muted-foreground">
                               Previously: {previousLabels.join(", ")}
                             </p>
-                          ) : null}
-                          {column.source || column.externalId ? (
-                            <p className="break-all text-xs font-normal text-muted-foreground">
-                              {[column.source, column.externalId]
-                                .filter(Boolean)
-                                .join(" · ")}
-                            </p>
-                          ) : null}
-                        </div>
-                      </TableHead>
-                    )
-                  })}
+                          ) : null
+                        })()}
+                        {component.source || component.external_id ? (
+                          <p className="break-all text-xs font-normal text-muted-foreground">
+                            {[component.source, component.external_id]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        ) : null}
+                      </div>
+                    </TableHead>
+                  ))}
                   <TableHead className="min-w-36 text-right">
                     Shown total
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {periods.map((period, periodIndex) => {
-                  const obligation = obligationsByPeriod.get(periodKey(period))
-                  const periodComponents = componentsByPeriod[periodIndex]
-                  const componentMap = new Map(
-                    periodComponents.map((component) => [
-                      componentIdentity(component),
-                      component,
-                    ]),
-                  )
-                  const monetaryComponents = periodComponents.filter(
-                    (component) => component.amount !== null,
-                  )
-                  const total = monetaryComponents.reduce(
-                    (sum, component) => sum + Number(component.amount),
-                    0,
-                  )
-
+                {history.data.periods.map((period, periodIndex) => {
+                  const total = history.data.totals[periodIndex]?.amount
                   return (
                     <TableRow key={periodKey(period)}>
                       <TableCell className="sticky left-0 z-10 bg-background align-top font-medium whitespace-nowrap">
-                        <div>{periodLabel(period)}</div>
-                        {!obligation ? (
-                          <span className="text-xs font-normal text-muted-foreground">
-                            No obligation
-                          </span>
-                        ) : null}
+                        {periodLabel(period)}
                       </TableCell>
-                      {columns.map((column) => {
-                        const component = componentMap.get(column.key)
-                        const previousComponents =
-                          periodIndex > 0
-                            ? componentsByPeriod[periodIndex - 1]
-                            : []
-                        const existedPreviously = previousComponents.some(
-                          (item) => componentIdentity(item) === column.key,
-                        )
-                        const state = component
-                          ? !existedPreviously && periodIndex > 0
-                            ? "added"
-                            : "present"
-                          : existedPreviously && obligation
-                            ? "removed"
-                            : "missing"
-
+                      {history.data.components.map((component) => {
+                        const value = component.values[periodIndex]
                         return (
-                          <TableCell key={column.key} className="align-top">
-                            {component ? (
+                          <TableCell
+                            key={component.identity}
+                            className="align-top"
+                          >
+                            {value?.amount !== null &&
+                            value?.amount !== undefined ? (
                               <div className="space-y-1">
                                 <span className="font-medium tabular-nums whitespace-nowrap">
-                                  {component.amount === null
-                                    ? "Present"
-                                    : formatAmount(
-                                        component.amount,
-                                        currency ?? null,
-                                      )}
+                                  {formatAmount(value.amount, currency ?? null)}
                                 </span>
-                                {state === "added" ? (
-                                  <Badge variant="outline">Added</Badge>
+                                {value.state !== "present" ? (
+                                  <Badge variant="outline">
+                                    {value.state[0].toUpperCase() +
+                                      value.state.slice(1)}
+                                  </Badge>
                                 ) : null}
                               </div>
-                            ) : state === "removed" ? (
+                            ) : value?.state === "removed" ? (
                               <div className="space-y-1">
                                 <span className="text-muted-foreground">—</span>
                                 <Badge variant="outline">Removed</Badge>
+                              </div>
+                            ) : value?.state === "added" ||
+                              value?.state === "changed" ||
+                              value?.state === "present" ? (
+                              <div className="space-y-1">
+                                <span className="font-medium">Present</span>
+                                {value.state !== "present" ? (
+                                  <Badge variant="outline">
+                                    {value.state[0].toUpperCase() +
+                                      value.state.slice(1)}
+                                  </Badge>
+                                ) : null}
                               </div>
                             ) : (
                               <span className="text-muted-foreground">—</span>
@@ -441,9 +382,9 @@ export function ComponentHistoryTable({
                         )
                       })}
                       <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">
-                        {monetaryComponents.length > 0
-                          ? formatAmount(total.toFixed(2), currency ?? null)
-                          : "—"}
+                        {total === null || total === undefined
+                          ? "—"
+                          : formatAmount(total, currency ?? null)}
                       </TableCell>
                     </TableRow>
                   )

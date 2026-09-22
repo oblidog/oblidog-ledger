@@ -14,6 +14,7 @@ export type Item = {
   icon: LucideIcon
   title: string
   path: string
+  exact?: boolean
 }
 
 interface MainProps {
@@ -38,7 +39,9 @@ export function Main({ items }: MainProps) {
           {items.map((item) => {
             const isActive =
               currentPath === item.path ||
-              (item.path !== "/" && currentPath.startsWith(`${item.path}/`))
+              (!item.exact &&
+                item.path !== "/" &&
+                currentPath.startsWith(`${item.path}/`))
 
             return (
               <SidebarMenuItem key={item.title}>

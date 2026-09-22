@@ -5,6 +5,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from app.domain import BillingPeriod, ObligationLifecycle, ValueState
+from app.models import User
 from app.services.weekly_monthly_overview_report import (
     WeeklyMonthlyOverviewReport,
     _previous_period,
@@ -39,8 +40,8 @@ def test_previous_period_crosses_year_boundary() -> None:
 
 def test_delivery_key_uses_iso_week_year() -> None:
     report = WeeklyMonthlyOverviewReport()
-    context = SimpleNamespace(business_date=date(2027, 1, 1))
-    user = SimpleNamespace(id=UUID("00000000-0000-0000-0000-000000000001"))
+    context = SystemRunContext.create(effective_at=datetime(2027, 1, 1, tzinfo=UTC))
+    user = User(id=UUID("00000000-0000-0000-0000-000000000001"))
 
     assert report.delivery_key(user=user, context=context) == (
         "weekly:00000000-0000-0000-0000-000000000001:2026-W53"

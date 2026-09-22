@@ -1,15 +1,25 @@
+import hashlib
+import hmac
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
+from threading import Barrier
 from unittest.mock import patch
 
+import jwt
 from fastapi.testclient import TestClient
 from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.orm import Session
 
+from app.core import security
+from app.core.browser_auth import CSRF_HEADER_NAME
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
-from app.models import User
+from app.models import PasswordResetToken, User
 from app.schemas import UserCreate
+from app.services import password_resets as password_reset_service
 from app.services import users as user_service
-from app.utils import generate_password_reset_token
+from app.utils import verify_password_reset_token
 from tests.utils.user import user_authentication_headers
 from tests.utils.utils import random_email, random_lower_string
 
@@ -30,6 +40,172 @@ def test_get_access_token(client: TestClient) -> None:
     assert r.status_code == 200
     assert "access_token" in tokens
     assert tokens["access_token"]
+
+
+def test_browser_session_uses_http_only_cookie_and_csrf(client: TestClient) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        login = client.post(f"{settings.API_V1_STR}/login/session", data=login_data)
+
+        assert login.status_code == 200
+        assert login.json() == {"message": "Session created"}
+        assert "access_token" not in login.text
+        set_cookie = login.headers["set-cookie"]
+        assert f"{settings.SESSION_COOKIE_NAME}=" in set_cookie
+        assert "HttpOnly" in set_cookie
+        assert "Max-Age=" in set_cookie
+        assert "SameSite=lax" in set_cookie
+        csrf_token = login.headers[CSRF_HEADER_NAME]
+
+        current_user = client.get(f"{settings.API_V1_STR}/users/me")
+        assert current_user.status_code == 200
+        assert current_user.headers[CSRF_HEADER_NAME] == csrf_token
+
+        rejected = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Origin": settings.FRONTEND_HOST},
+        )
+        assert rejected.status_code == 403
+        assert rejected.json() == {"detail": "Invalid CSRF token"}
+
+        accepted = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={
+                "Origin": settings.FRONTEND_HOST,
+                CSRF_HEADER_NAME: csrf_token,
+            },
+        )
+        assert accepted.status_code == 200
+
+        logout = client.post(
+            f"{settings.API_V1_STR}/login/logout",
+            headers={CSRF_HEADER_NAME: csrf_token},
+        )
+        assert logout.status_code == 200
+        assert client.cookies.get(settings.SESSION_COOKIE_NAME) is None
+        assert "Max-Age=0" in logout.headers["set-cookie"]
+    finally:
+        client.cookies.clear()
+
+
+def test_explicit_bearer_takes_priority_over_browser_session_cookie(
+    client: TestClient,
+) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        access_login = client.post(
+            f"{settings.API_V1_STR}/login/access-token", data=login_data
+        )
+        access_token = access_login.json()["access_token"]
+        session_login = client.post(
+            f"{settings.API_V1_STR}/login/session", data=login_data
+        )
+        assert session_login.status_code == 200
+
+        accepted = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert accepted.status_code == 200
+
+        rejected = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Authorization": "Bearer invalid"},
+        )
+        assert rejected.status_code == 403
+    finally:
+        client.cookies.clear()
+
+
+def test_access_token_cannot_be_used_as_browser_session_cookie(
+    client: TestClient,
+) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        access_login = client.post(
+            f"{settings.API_V1_STR}/login/access-token", data=login_data
+        )
+        access_token = access_login.json()["access_token"]
+        client.cookies.set(settings.SESSION_COOKIE_NAME, access_token)
+
+        response = client.get(f"{settings.API_V1_STR}/users/me")
+
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Could not validate credentials"}
+    finally:
+        client.cookies.clear()
+
+
+def test_browser_login_rejects_untrusted_origin(client: TestClient) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    response = client.post(
+        f"{settings.API_V1_STR}/login/session",
+        data=login_data,
+        headers={"Origin": "https://attacker.example"},
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin is not allowed"}
+
+
+def test_browser_cors_explicitly_allows_credentials_and_csrf(
+    client: TestClient,
+) -> None:
+    response = client.options(
+        f"{settings.API_V1_STR}/login/session",
+        headers={
+            "Origin": settings.FRONTEND_HOST,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": CSRF_HEADER_NAME,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == settings.FRONTEND_HOST
+    assert response.headers["access-control-allow-credentials"] == "true"
+    assert (
+        CSRF_HEADER_NAME.lower()
+        in response.headers["access-control-allow-headers"].lower()
+    )
+
+
+def test_legacy_token_is_version_one_until_password_changes(
+    client: TestClient, db: Session
+) -> None:
+    password = random_lower_string()
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=password),
+    )
+    legacy_token = jwt.encode(
+        {
+            "sub": str(user.id),
+            "exp": datetime.now(UTC) + timedelta(minutes=5),
+        },
+        settings.SECRET_KEY,
+        algorithm=security.ALGORITHM,
+    )
+    headers = {"Authorization": f"Bearer {legacy_token}"}
+
+    accepted = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
+    assert accepted.status_code == 200
+
+    user_service.set_user_password(
+        session=db, user=user, new_password=random_lower_string()
+    )
+    revoked = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
+    assert revoked.status_code == 401
 
 
 def test_get_access_token_incorrect_password(client: TestClient) -> None:
@@ -83,6 +259,29 @@ def test_recovery_password_user_not_exits(
     }
 
 
+def test_recovery_html_content_rejects_inactive_user(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(
+            email=random_email(),
+            password=random_lower_string(),
+            is_active=False,
+        ),
+    )
+
+    response = client.post(
+        f"{settings.API_V1_STR}/password-recovery-html-content/{user.email}",
+        headers=superuser_token_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Inactive user"}
+
+
 def test_reset_password(client: TestClient, db: Session) -> None:
     email = random_email()
     password = random_lower_string()
@@ -96,7 +295,7 @@ def test_reset_password(client: TestClient, db: Session) -> None:
         is_superuser=False,
     )
     user = user_service.create_user(session=db, user_in=user_create)
-    token = generate_password_reset_token(email=email)
+    token = password_reset_service.issue_password_reset(session=db, user=user).token
     headers = user_authentication_headers(client=client, email=email, password=password)
     data = {"new_password": new_password, "token": token}
 
@@ -113,6 +312,46 @@ def test_reset_password(client: TestClient, db: Session) -> None:
     verified, _ = verify_password(new_password, user.hashed_password)
     assert verified
 
+    revoked = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
+    assert revoked.status_code == 401
+
+    fresh_headers = user_authentication_headers(
+        client=client, email=email, password=new_password
+    )
+    fresh = client.get(f"{settings.API_V1_STR}/users/me", headers=fresh_headers)
+    assert fresh.status_code == 200
+
+    reused = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": random_lower_string(), "token": token},
+    )
+    assert reused.status_code == 400
+    assert reused.json() == {"detail": "Invalid token"}
+
+
+def test_password_reset_token_hash_is_keyed_and_domain_separated() -> None:
+    token = "signed-reset-token"
+    token_id = uuid.UUID("5e88fce0-d47b-41e8-899b-7802e6e792f7")
+
+    token_hash = password_reset_service.hash_password_reset_token(
+        token=token,
+        token_id=token_id,
+    )
+    salt = hmac.digest(
+        settings.SECRET_KEY.encode(),
+        b"oblidog:password-reset-token:v1\0" + token_id.bytes,
+        "sha256",
+    )
+    expected = hashlib.pbkdf2_hmac(
+        "sha256",
+        token.encode(),
+        salt,
+        600_000,
+    ).hex()
+
+    assert token_hash == expected
+    assert len(token_hash) == 64
+
 
 def test_reset_password_invalid_token(
     client: TestClient, superuser_token_headers: dict[str, str]
@@ -128,6 +367,146 @@ def test_reset_password_invalid_token(
     assert "detail" in response
     assert r.status_code == 400
     assert response["detail"] == "Invalid token"
+
+
+def test_reset_password_rejects_expired_and_wrong_purpose_tokens(
+    client: TestClient, db: Session
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=random_lower_string()),
+    )
+    now = datetime.now(UTC)
+    base_claims = {
+        "iat": now - timedelta(hours=2),
+        "nbf": now - timedelta(hours=2),
+        "sub": str(user.id),
+        "jti": str(uuid.uuid4()),
+    }
+    expired = jwt.encode(
+        {
+            **base_claims,
+            "exp": now - timedelta(hours=1),
+            "purpose": "password_reset",
+        },
+        settings.SECRET_KEY,
+        algorithm=security.ALGORITHM,
+    )
+    wrong_purpose = jwt.encode(
+        {
+            **base_claims,
+            "exp": now + timedelta(hours=1),
+            "purpose": "access",
+        },
+        settings.SECRET_KEY,
+        algorithm=security.ALGORITHM,
+    )
+
+    for token in (expired, wrong_purpose):
+        response = client.post(
+            f"{settings.API_V1_STR}/reset-password/",
+            json={"new_password": random_lower_string(), "token": token},
+        )
+        assert response.status_code == 400
+        assert response.json() == {"detail": "Invalid token"}
+
+
+def test_reset_password_rejects_token_expired_in_persisted_state(
+    client: TestClient, db: Session
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=random_lower_string()),
+    )
+    token = password_reset_service.issue_password_reset(session=db, user=user).token
+    claims = verify_password_reset_token(token)
+    assert claims is not None
+    reset_token = db.get(PasswordResetToken, claims.token_id)
+    assert reset_token is not None
+    reset_token.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    db.commit()
+
+    response = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": random_lower_string(), "token": token},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid token"}
+
+
+def test_failed_password_validation_does_not_consume_reset_token(
+    client: TestClient, db: Session
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=random_lower_string()),
+    )
+    token = password_reset_service.issue_password_reset(session=db, user=user).token
+
+    invalid = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": "short", "token": token},
+    )
+    assert invalid.status_code == 422
+
+    valid = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": random_lower_string(), "token": token},
+    )
+    assert valid.status_code == 200
+
+
+def test_new_reset_token_invalidates_older_link(
+    client: TestClient, db: Session
+) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=random_lower_string()),
+    )
+    old_token = password_reset_service.issue_password_reset(session=db, user=user).token
+    new_token = password_reset_service.issue_password_reset(session=db, user=user).token
+
+    old_response = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": random_lower_string(), "token": old_token},
+    )
+    assert old_response.status_code == 400
+    assert old_response.json() == {"detail": "Invalid token"}
+
+    new_response = client.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={"new_password": random_lower_string(), "token": new_token},
+    )
+    assert new_response.status_code == 200
+
+
+def test_concurrent_password_resets_consume_token_once(db: Session) -> None:
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=random_lower_string()),
+    )
+    token = password_reset_service.issue_password_reset(session=db, user=user).token
+    bind = db.get_bind()
+    start = Barrier(2)
+
+    def reset() -> str:
+        with Session(bind=bind) as session:
+            start.wait()
+            try:
+                password_reset_service.reset_password(
+                    session=session,
+                    token=token,
+                    new_password=random_lower_string(),
+                )
+            except password_reset_service.InvalidPasswordResetTokenError:
+                return "rejected"
+            return "updated"
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(lambda _: reset(), range(2)))
+
+    assert sorted(results) == ["rejected", "updated"]
 
 
 def test_login_with_bcrypt_password_upgrades_to_argon2(

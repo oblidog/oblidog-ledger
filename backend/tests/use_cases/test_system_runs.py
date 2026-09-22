@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import cast
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
@@ -25,6 +26,7 @@ from app.use_cases.system_runs import (
     EnsureObligationsTask,
     SystemRunContext,
     SystemRunOrchestrator,
+    SystemRunTask,
     TaskResult,
 )
 from tests.conftest import TestingSessionLocal
@@ -62,8 +64,9 @@ class FakeTask:
         return self.ledgers
 
     def execute(
-        self, *, session: Session, ledger: Ledger, context: SystemRunContext
+        self, *, session: Session, ledger: Ledger | None, context: SystemRunContext
     ) -> TaskResult:
+        assert ledger is not None
         self.calls.append(ledger.id)
         if ledger.id in self.failing_ledger_ids:
             raise RuntimeError(f"failed {ledger.id}")
@@ -120,7 +123,9 @@ def test_context_is_persisted_and_uses_business_date(db: Session) -> None:
     ledger, _, _ = create_category_with_recurrence(db)
     context = _context()
 
-    orchestrator = SystemRunOrchestrator((EnsureObligationsTask(),))
+    orchestrator = SystemRunOrchestrator(
+        (cast(SystemRunTask, EnsureObligationsTask()),)
+    )
     run = orchestrator.run(session=db, context=context)
     orchestrator.run(session=db, context=context)
 

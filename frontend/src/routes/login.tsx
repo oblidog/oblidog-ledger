@@ -39,7 +39,7 @@ type FormData = z.infer<typeof formSchema>
 export const Route = createFileRoute("/login")({
   component: Login,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await isLoggedIn()) {
       throw redirect({
         to: "/",
       })
@@ -58,6 +58,9 @@ function Login() {
   const { loginMutation } = useAuth()
   const { data: appConfig } = usePublicAppConfig()
   const demoCredentials = appConfig?.demo_credentials
+  const passwordChanged =
+    new URLSearchParams(window.location.search).get("passwordChanged") ===
+    "true"
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -96,6 +99,16 @@ function Login() {
                 : "Access is limited to users invited by an administrator."}
             </p>
           </div>
+
+          {passwordChanged && (
+            <Alert data-testid="password-changed-message">
+              <Info />
+              <AlertTitle>Password updated</AlertTitle>
+              <AlertDescription>
+                Your sessions were signed out. Log in with your new password.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {appConfig?.is_demo && demoCredentials && (
             <Alert data-testid="demo-credentials">

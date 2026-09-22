@@ -8,10 +8,10 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
 
 from sqlalchemy import select, tuple_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.domain import BillingPeriod, ObligationLifecycle
-from app.models import Category, Obligation
+from app.models import Category, Obligation, ObligationComponent
 from app.use_cases.exceptions import CategoryNotFoundError
 
 
@@ -408,4 +408,214 @@ def _to_currency_cashflow(
         unscheduled_known_amount=summary.unscheduled,
         overdue_known_amount=summary.overdue,
         daily=daily,
+    )
+
+
+ComponentHistoryMatchBy = Literal["label", "external_id"]
+ComponentHistoryState = Literal["added", "present", "changed", "removed", "missing"]
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentHistoryValue:
+    period: BillingPeriod
+    amount: Decimal | None
+    state: ComponentHistoryState
+    label: str | None = None
+    source: str | None = None
+    external_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentHistoryGroup:
+    identity: str
+    label: str
+    type: str
+    source: str | None
+    external_id: str | None
+    values: list[ComponentHistoryValue]
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentHistoryTotal:
+    period: BillingPeriod
+    amount: Decimal | None
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentHistory:
+    match_by: ComponentHistoryMatchBy
+    periods: list[BillingPeriod]
+    components: list[ComponentHistoryGroup]
+    totals: list[ComponentHistoryTotal]
+
+
+def _normalize_component_label(value: str) -> str:
+    return " ".join(value.split()).casefold()
+
+
+def _component_history_identity(
+    component: ObligationComponent, match_by: ComponentHistoryMatchBy
+) -> str:
+    component_type = component.type
+    if match_by == "label":
+        return f"{component_type}:{_normalize_component_label(component.label)}"
+    source = component.source
+    external_id = component.external_id
+    if not source or not external_id:
+        raise ValueError(
+            "external_id matching requires source and external_id on every component"
+        )
+    return f"{source}:{external_id}"
+
+
+def get_component_history(
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    category_id: uuid.UUID,
+    end_period: BillingPeriod,
+    periods: int,
+    match_by: ComponentHistoryMatchBy,
+) -> ComponentHistory:
+    """Compare obligation components across a bounded continuous period range."""
+    if periods < 1 or periods > 24:
+        raise ValueError("periods must be between 1 and 24")
+
+    category = session.scalar(
+        select(Category).where(
+            Category.id == category_id, Category.ledger_id == ledger_id
+        )
+    )
+    if category is None:
+        raise CategoryNotFoundError
+
+    requested_periods = [end_period]
+    for _ in range(periods - 1):
+        latest_period = requested_periods[-1]
+        previous_month = latest_period.month - 1
+        requested_periods.append(
+            BillingPeriod(
+                year=latest_period.year - 1
+                if previous_month == 0
+                else latest_period.year,
+                month=12 if previous_month == 0 else previous_month,
+            )
+        )
+    requested_periods.reverse()
+    start_period = requested_periods[0]
+
+    obligations = list(
+        session.scalars(
+            select(Obligation)
+            .options(selectinload(Obligation.components))
+            .where(
+                Obligation.ledger_id == ledger_id,
+                Obligation.category_id == category_id,
+                tuple_(Obligation.period_year, Obligation.period_month).between(
+                    (start_period.year, start_period.month),
+                    (end_period.year, end_period.month),
+                ),
+            )
+        )
+    )
+    obligations_by_period = {
+        (item.period_year, item.period_month): item for item in obligations
+    }
+
+    components_by_period: list[dict[str, ObligationComponent]] = []
+    ordered_identities: list[str] = []
+    descriptors: dict[str, ObligationComponent] = {}
+    for period in requested_periods:
+        obligation = obligations_by_period.get((period.year, period.month))
+        period_components: dict[str, ObligationComponent] = {}
+        for component in obligation.components if obligation else []:
+            identity = _component_history_identity(component, match_by)
+            if identity in period_components:
+                raise ValueError(
+                    f"Ambiguous component identity '{identity}' in "
+                    f"{period.year:04d}-{period.month:02d}; select another matching criterion"
+                )
+            period_components[identity] = component
+            descriptors[identity] = component
+            if identity not in ordered_identities:
+                ordered_identities.append(identity)
+        components_by_period.append(period_components)
+
+    groups: list[ComponentHistoryGroup] = []
+    for identity in ordered_identities:
+        descriptor = descriptors[identity]
+        values: list[ComponentHistoryValue] = []
+        previous_component: ObligationComponent | None = None
+        seen = False
+        for index, period in enumerate(requested_periods):
+            matched_component = components_by_period[index].get(identity)
+            obligation_exists = (period.year, period.month) in obligations_by_period
+            if matched_component is None:
+                state: ComponentHistoryState = (
+                    "removed"
+                    if seen and obligation_exists and previous_component is not None
+                    else "missing"
+                )
+                values.append(
+                    ComponentHistoryValue(period=period, amount=None, state=state)
+                )
+                previous_component = None
+                continue
+
+            if not seen:
+                state = "added"
+            elif previous_component is None:
+                state = "added"
+            else:
+                changed = (
+                    matched_component.amount != previous_component.amount
+                    or matched_component.label != previous_component.label
+                    or matched_component.type != previous_component.type
+                )
+                state = "changed" if changed else "present"
+            values.append(
+                ComponentHistoryValue(
+                    period=period,
+                    amount=matched_component.amount,
+                    state=state,
+                    label=matched_component.label,
+                    source=matched_component.source,
+                    external_id=matched_component.external_id,
+                )
+            )
+            seen = True
+            previous_component = matched_component
+
+        groups.append(
+            ComponentHistoryGroup(
+                identity=identity,
+                label=descriptor.label,
+                type=descriptor.type,
+                source=descriptor.source,
+                external_id=descriptor.external_id,
+                values=values,
+            )
+        )
+
+    totals: list[ComponentHistoryTotal] = []
+    for period, component_map in zip(
+        requested_periods, components_by_period, strict=True
+    ):
+        amounts = [
+            component.amount
+            for component in component_map.values()
+            if component.amount is not None
+        ]
+        totals.append(
+            ComponentHistoryTotal(
+                period=period,
+                amount=sum(amounts, Decimal("0.00")) if amounts else None,
+            )
+        )
+
+    return ComponentHistory(
+        match_by=match_by,
+        periods=requested_periods,
+        components=groups,
+        totals=totals,
     )

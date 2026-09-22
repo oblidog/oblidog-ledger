@@ -114,7 +114,7 @@ function periodFromSearch() {
   return isValidPeriod(year, month) ? { year, month } : currentPeriod()
 }
 
-function filtersFromSearch() {
+function filtersFromSearch(defaultLifecycle: LifecycleFilter) {
   const period = periodFromSearch()
   if (typeof window === "undefined") {
     return {
@@ -122,7 +122,7 @@ function filtersFromSearch() {
       month: String(period.month),
       filterByPeriod: true,
       categoryCode: "",
-      lifecycle: "unpaid" as LifecycleFilter,
+      lifecycle: defaultLifecycle,
     }
   }
 
@@ -136,7 +136,7 @@ function filtersFromSearch() {
     lifecycle:
       lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
         ? lifecycleParam
-        : ("unpaid" as LifecycleFilter),
+        : defaultLifecycle,
   }
 }
 
@@ -232,11 +232,13 @@ function counterpartyFor(obligation: ObligationPublic) {
 export function ObligationWorkspace({
   ledgerId,
   canManageComponents,
+  defaultLifecycle = "unpaid",
 }: {
   ledgerId: string
   canManageComponents: boolean
+  defaultLifecycle?: LifecycleFilter
 }) {
-  const initialFilters = filtersFromSearch()
+  const initialFilters = filtersFromSearch(defaultLifecycle)
   const period = periodFromSearch()
   const [year, setYear] = useState(initialFilters.year)
   const [month, setMonth] = useState(initialFilters.month)

@@ -1,13 +1,20 @@
 import uuid
 from datetime import UTC, date, datetime, timedelta
-from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.domain import BillingPeriod, LedgerAccessRole, ObligationLifecycle
 from app.domain.business_calendar import BusinessCalendar
-from app.models import LedgerMembership, ObligationActionLog
+from app.models import (
+    Category,
+    Integration,
+    Ledger,
+    LedgerMembership,
+    Obligation,
+    ObligationActionLog,
+)
 from app.schemas.integrations import IntegrationCreate
 from app.services.daily_obligation_report import (
     DailyObligationReport,
@@ -50,7 +57,7 @@ def test_daily_report_assigns_due_obligations_to_sections(
     report_date: date,
     expected: str | None,
 ) -> None:
-    obligation = SimpleNamespace(
+    obligation = Obligation(
         lifecycle=lifecycle,
         due_date=due_date,
         period_year=2026,
@@ -62,13 +69,13 @@ def test_daily_report_assigns_due_obligations_to_sections(
             obligation, report_date, BillingPeriod.from_date(report_date), CALENDAR
         )
         == expected
-    )  # type: ignore[arg-type]
+    )
 
 
 def test_daily_report_marks_current_period_missing_due_dates_from_fifth_business_day() -> (
     None
 ):
-    obligation = SimpleNamespace(
+    obligation = Obligation(
         lifecycle=ObligationLifecycle.COLLECTING_DATA,
         due_date=None,
         period_year=2026,
@@ -78,11 +85,11 @@ def test_daily_report_marks_current_period_missing_due_dates_from_fifth_business
     assert (
         _section_for(obligation, date(2026, 9, 4), BillingPeriod(2026, 9), CALENDAR)
         is None
-    )  # type: ignore[arg-type]
+    )
     assert (
         _section_for(obligation, date(2026, 9, 7), BillingPeriod(2026, 9), CALENDAR)
         == "missing_due_date"
-    )  # type: ignore[arg-type]
+    )
 
 
 @pytest.mark.parametrize(
@@ -98,7 +105,7 @@ def test_daily_report_counts_weekends_and_polish_holidays_as_non_business_days(
     lifecycle: ObligationLifecycle, due_date: date, expected: str | None
 ) -> None:
     # 2026-06-04 (Corpus Christi) and the following weekend do not consume lead time.
-    obligation = SimpleNamespace(
+    obligation = Obligation(
         lifecycle=lifecycle,
         due_date=due_date,
         period_year=2026,
@@ -108,11 +115,11 @@ def test_daily_report_counts_weekends_and_polish_holidays_as_non_business_days(
     assert (
         _section_for(obligation, date(2026, 6, 3), BillingPeriod(2026, 6), CALENDAR)
         == expected
-    )  # type: ignore[arg-type]
+    )
 
 
 def test_daily_report_uses_fifth_business_day_for_missing_due_dates() -> None:
-    obligation = SimpleNamespace(
+    obligation = Obligation(
         lifecycle=ObligationLifecycle.COLLECTING_DATA,
         due_date=None,
         period_year=2026,
@@ -123,18 +130,18 @@ def test_daily_report_uses_fifth_business_day_for_missing_due_dates() -> None:
     assert (
         _section_for(obligation, date(2026, 1, 8), BillingPeriod(2026, 1), CALENDAR)
         is None
-    )  # type: ignore[arg-type]
+    )
     assert (
         _section_for(obligation, date(2026, 1, 9), BillingPeriod(2026, 1), CALENDAR)
         == "missing_due_date"
-    )  # type: ignore[arg-type]
+    )
 
 
 @pytest.mark.parametrize("due_date", [date(2026, 5, 1), date(2026, 12, 31), None])
 def test_daily_report_always_reports_errors_in_the_dedicated_section(
     due_date: date | None,
 ) -> None:
-    obligation = SimpleNamespace(
+    obligation = Obligation(
         lifecycle=ObligationLifecycle.ERROR,
         due_date=due_date,
         period_year=2025,
@@ -144,7 +151,7 @@ def test_daily_report_always_reports_errors_in_the_dedicated_section(
     assert (
         _section_for(obligation, date(2026, 6, 3), BillingPeriod(2026, 6), CALENDAR)
         == "errors"
-    )  # type: ignore[arg-type]
+    )
 
 
 def test_activity_window_is_previous_complete_local_day() -> None:
@@ -160,7 +167,7 @@ def test_activity_window_is_previous_complete_local_day() -> None:
 
 
 def test_activity_messages_use_invoice_wording_only_for_invoice_components() -> None:
-    invoice_log = SimpleNamespace(
+    invoice_log = ObligationActionLog(
         action="components_changed",
         changes={
             "components": {
@@ -176,15 +183,15 @@ def test_activity_messages_use_invoice_wording_only_for_invoice_components() -> 
         },
     )
 
-    assert _activity_messages(invoice_log) == [  # type: ignore[arg-type]
+    assert _activity_messages(invoice_log) == [
         "New invoice: September invoice (42.00)",
         "Component added: Heating (12.00)",
     ]
 
 
 def test_daily_report_renders_grouped_accessible_user_and_integration_activity(
-    db,
-) -> None:  # type: ignore[no-untyped-def]
+    db: Session,
+) -> None:
     ledger, _, category = create_category_with_recurrence(db)
     other_ledger, _, other_category = create_category_with_recurrence(db)
     obligation = obligation_use_cases.ensure_obligations_for_period(
@@ -197,9 +204,9 @@ def test_daily_report_renders_grouped_accessible_user_and_integration_activity(
     run_id = uuid.uuid4()
     occurred_at = datetime(2026, 9, 18, 12, tzinfo=UTC)
 
-    def add_log(  # type: ignore[no-untyped-def]
+    def add_log(
         *,
-        target,
+        target: Obligation,
         action: str,
         changes: dict[str, object],
         actor_type: str = "integration",
@@ -286,8 +293,8 @@ def test_daily_report_renders_grouped_accessible_user_and_integration_activity(
 
 
 def test_daily_report_includes_only_actionable_accessible_integration_health(
-    db,
-) -> None:  # type: ignore[no-untyped-def]
+    db: Session,
+) -> None:
     ledger, _, category = create_category_with_recurrence(db)
     inaccessible_ledger, _, inaccessible_category = create_category_with_recurrence(db)
     inactive_ledger, _, inactive_category = create_category_with_recurrence(db)
@@ -308,8 +315,11 @@ def test_daily_report_includes_only_actionable_accessible_integration_health(
     now = context.effective_at
 
     def create_integration(
-        name: str, *, target_ledger=ledger, target_category=category
-    ):  # type: ignore[no-untyped-def]
+        name: str,
+        *,
+        target_ledger: Ledger = ledger,
+        target_category: Category = category,
+    ) -> Integration:
         item, _, _ = integration_use_cases.create_integration(
             session=db,
             ledger_id=target_ledger.id,

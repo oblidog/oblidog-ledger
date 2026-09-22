@@ -39,7 +39,7 @@ from app.services import api_keys as api_key_service
 from app.services import users as user_service
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+    tokenUrl=f"{settings.API_V1_STR}/login/access-token", auto_error=False
 )
 
 
@@ -49,7 +49,7 @@ def get_db() -> Generator[Session, None, None]:
 
 
 SessionDep = Annotated[Session, Depends(get_db)]
-TokenDep = Annotated[str, Depends(reusable_oauth2)]
+TokenDep = Annotated[str | None, Depends(reusable_oauth2)]
 integration_bearer = HTTPBearer(
     auto_error=False,
     scheme_name="IntegrationApiKey",
@@ -89,13 +89,23 @@ def enforce_demo_request_capabilities(request: Request) -> None:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
-def get_current_user(session: SessionDep, token: TokenDep) -> User:
+def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> User:
+    uses_session_cookie = token is None
+    token = token or request.cookies.get(settings.SESSION_COOKIE_NAME)
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
         )
         token_data = TokenPayload(**payload)
         if token_data.sub is None:
+            raise ValueError
+        if uses_session_cookie and not token_data.csrf:
             raise ValueError
         user_id = uuid.UUID(token_data.sub)
     except (InvalidTokenError, ValidationError, ValueError):
@@ -106,6 +116,12 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
     user = user_service.get_user_by_id(session=session, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if token_data.session_version != user.session_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user

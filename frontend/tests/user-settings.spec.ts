@@ -142,9 +142,14 @@ test.describe("Change password", () => {
     await page.getByTestId("confirm-password-input").fill(newPassword)
     await page.getByRole("button", { name: "Update Password" }).click()
 
-    await expect(page.getByText("Password updated successfully")).toBeVisible()
+    await expect(page).toHaveURL(/\/login\?passwordChanged=true$/)
+    await expect(page.getByTestId("password-changed-message")).toContainText(
+      "Your sessions were signed out",
+    )
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem("access_token")))
+      .toBeNull()
 
-    await logOutUser(page)
     await logInUser(page, email, newPassword)
   })
 })

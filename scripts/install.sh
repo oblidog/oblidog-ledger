@@ -1,13 +1,52 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="https://raw.githubusercontent.com/oblidog/oblidog-ledger/main"
+BASE_URL="${OBLIDOG_INSTALL_BASE_URL:-https://raw.githubusercontent.com/oblidog/oblidog-ledger/main}"
+variant="${1:-standalone}"
+variant_file=".oblidog-deployment-variant"
 
-curl -fsSL "$BASE_URL/compose.production.yml" -o compose.yml
+if [[ -f "$variant_file" ]]; then
+  installed_variant="$(<"$variant_file")"
+  if [[ "$installed_variant" != "$variant" ]]; then
+    echo "This directory contains an '$installed_variant' deployment." >&2
+    echo "Refusing to replace it with '$variant'. Use a new directory to change variants." >&2
+    exit 1
+  fi
+elif [[ $# -eq 0 && ( -f .env || -f compose.yml ) ]]; then
+  echo "Existing deployment files found, but their variant is unknown." >&2
+  echo "Re-run with an explicit matching variant: standalone or external." >&2
+  exit 1
+fi
+
+case "$variant" in
+  standalone)
+    compose_source="compose.standalone.yml"
+    env_source=".env.standalone.example"
+    ;;
+  external)
+    compose_source="compose.production.yml"
+    env_source=".env.production.example"
+    ;;
+  *)
+    echo "Usage: install.sh [standalone|external]" >&2
+    exit 2
+    ;;
+esac
+
+curl -fsSL "$BASE_URL/$compose_source" -o compose.yml
+curl -fsSL "$BASE_URL/scripts/validate-deployment.sh" -o validate-deployment.sh
+chmod +x validate-deployment.sh
+mkdir -p scripts docs/operations
+curl -fsSL "$BASE_URL/scripts/db-backup.sh" -o scripts/db-backup.sh
+curl -fsSL "$BASE_URL/scripts/db-restore-drill.sh" -o scripts/db-restore-drill.sh
+curl -fsSL "$BASE_URL/docs/operations/database-recovery.md" \
+  -o docs/operations/database-recovery.md
+chmod +x scripts/db-backup.sh scripts/db-restore-drill.sh
+printf '%s\n' "$variant" > "$variant_file"
 
 if [ ! -f .env ]; then
-  curl -fsSL "$BASE_URL/.env.production.example" -o .env
-  echo "Created .env from production template."
+  curl -fsSL "$BASE_URL/$env_source" -o .env
+  echo "Created .env from $variant template."
 else
   echo ".env already exists; leaving it unchanged."
 fi
@@ -18,5 +57,6 @@ printf '%s\n' \
   "" \
   "Next steps:" \
   "  1. Edit .env" \
-  "  2. docker compose pull" \
-  "  3. docker compose up -d"
+  "  2. ./validate-deployment.sh $variant" \
+  "  3. docker compose pull" \
+  "  4. docker compose up -d"

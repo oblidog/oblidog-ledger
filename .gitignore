@@ -1,6 +1,7 @@
 .vscode/*
 !.vscode/extensions.json
 node_modules/
+__pycache__/
 /package-lock.json
 /test-results/
 /playwright-report/
@@ -12,6 +13,7 @@ node_modules/
 scripts/clone-database.env
 !.env.production.example
 !.env.demo.example
+!.env.standalone.example
 frontend/.env
 frontend/.env.*
 

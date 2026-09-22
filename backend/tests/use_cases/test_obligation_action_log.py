@@ -1,5 +1,6 @@
 import uuid
 from decimal import Decimal
+from typing import Any, cast
 
 import pytest
 from sqlalchemy import select
@@ -39,6 +40,25 @@ def _actions(db: Session, obligation_id: uuid.UUID) -> list[ObligationActionLog]
             .where(ObligationActionLog.obligation_id == obligation_id)
             .order_by(ObligationActionLog.created_at, ObligationActionLog.id)
         ).all()
+    )
+
+
+def _changes(log: ObligationActionLog) -> dict[str, Any]:
+    return cast(dict[str, Any], log.changes)
+
+
+def _upsert_component(
+    db: Session, obligation: Obligation, key: ObligationKey, amount: Decimal
+) -> obligation_use_cases.ComponentUpsertOutcome:
+    return obligation_use_cases.upsert_obligation_component(
+        session=db,
+        ledger_id=obligation.ledger_id,
+        key=key,
+        type="invoice",
+        label="September invoice",
+        source="NJU",
+        external_id="invoice-123",
+        amount=amount,
     )
 
 
@@ -135,9 +155,9 @@ def test_lifecycle_actions_include_implicit_state_and_paid_at_changes(
     }
     assert marked_paid.action == "marked_paid"
     assert marked_paid.changes["lifecycle"] == {"from": "ready", "to": "paid"}
-    assert marked_paid.changes["paid_at"]["to"] == paid_at.isoformat()
+    assert _changes(marked_paid)["paid_at"]["to"] == paid_at.isoformat()
     assert reopened.action == "reopened"
-    assert reopened.changes["paid_at"]["to"] is None
+    assert _changes(reopened)["paid_at"]["to"] is None
 
 
 def test_component_crud_records_bounded_diffs_and_integration_correlation(
@@ -166,7 +186,7 @@ def test_component_crud_records_bounded_diffs_and_integration_correlation(
     assert added.action == "components_changed"
     assert added.integration_id == integration_id
     assert added.run_id == run_id
-    assert added.changes["components"]["added"][0] == {
+    assert _changes(added)["components"]["added"][0] == {
         "id": str(component.id),
         "type": "charge",
         "label": "Heating",
@@ -186,7 +206,7 @@ def test_component_crud_records_bounded_diffs_and_integration_correlation(
         actor=actor,
     )
     updated = _actions(db, obligation.id)[-1]
-    entry = updated.changes["components"]["updated"][0]
+    entry = _changes(updated)["components"]["updated"][0]
     assert entry["label"] == "Heating"
     assert entry["changes"]["label"] == {
         "from": "Heating",
@@ -214,7 +234,7 @@ def test_component_crud_records_bounded_diffs_and_integration_correlation(
         actor=actor,
     )
     removed = _actions(db, obligation.id)[-1]
-    removed_snapshot = removed.changes["components"]["removed"][0]
+    removed_snapshot = _changes(removed)["components"]["removed"][0]
     assert removed_snapshot["label"] == "District heating"
     assert removed_snapshot["amount"] == "92.40"
 
@@ -223,30 +243,18 @@ def test_component_upsert_is_idempotent_and_logs_only_real_changes(
     db: Session,
 ) -> None:
     obligation, key = _setup(db)
-    arguments = {
-        "session": db,
-        "ledger_id": obligation.ledger_id,
-        "key": key,
-        "type": "invoice",
-        "label": "September invoice",
-        "source": "NJU",
-        "external_id": "invoice-123",
-        "amount": Decimal("50.00"),
-    }
-    created = obligation_use_cases.upsert_obligation_component(**arguments)
+    created = _upsert_component(db, obligation, key, Decimal("50.00"))
     assert created.result == MutationResult.CREATED
     after_create = len(_actions(db, obligation.id))
-    arguments["amount"] = Decimal("50.0")
-    unchanged = obligation_use_cases.upsert_obligation_component(**arguments)
+    unchanged = _upsert_component(db, obligation, key, Decimal("50.0"))
     assert unchanged.result == MutationResult.UNCHANGED
     assert len(_actions(db, obligation.id)) == after_create
 
-    arguments["amount"] = Decimal("55.00")
-    updated = obligation_use_cases.upsert_obligation_component(**arguments)
+    updated = _upsert_component(db, obligation, key, Decimal("55.00"))
     assert updated.result == MutationResult.UPDATED
     assert updated.component.id == created.component.id
     action = _actions(db, obligation.id)[-1]
-    assert action.changes["components"]["updated"][0]["changes"]["amount"] == {
+    assert _changes(action)["components"]["updated"][0]["changes"]["amount"] == {
         "from": "50.00",
         "to": "55.00",
     }

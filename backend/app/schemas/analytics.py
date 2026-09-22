@@ -94,3 +94,33 @@ class PeriodCashflowPublic(BaseModel):
     without_due_date_count: int
     is_complete: bool
     currency_summaries: list[CurrencyCashflowPublic]
+
+
+class ComponentHistoryValuePublic(BaseModel):
+    period: ObligationPeriodPublic
+    amount: Decimal | None
+    state: Literal["added", "present", "changed", "removed", "missing"]
+    label: str | None = None
+    source: str | None = None
+    external_id: str | None = None
+
+
+class ComponentHistoryGroupPublic(BaseModel):
+    identity: str
+    label: str
+    type: str
+    source: str | None
+    external_id: str | None
+    values: list[ComponentHistoryValuePublic]
+
+
+class ComponentHistoryTotalPublic(BaseModel):
+    period: ObligationPeriodPublic
+    amount: Decimal | None
+
+
+class ComponentHistoryPublic(BaseModel):
+    match_by: Literal["label", "external_id"]
+    periods: list[ObligationPeriodPublic]
+    components: list[ComponentHistoryGroupPublic]
+    totals: list[ComponentHistoryTotalPublic]

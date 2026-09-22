@@ -16,7 +16,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchPublicAppConfig } from "@/config"
 import useAuth from "@/hooks/useAuth"
-import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
   beforeLoad: async ({ location, params }) => {
@@ -33,6 +32,8 @@ export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
         params: { ledgerId: params.ledgerId },
       })
     }
+
+    return { appConfig }
   },
   component: LedgerDetails,
   head: () => ({ meta: [{ title: "Ledger - Oblidog" }] }),
@@ -43,7 +44,7 @@ function LedgerDetails() {
   const location = useLocation()
   const isWorkspace = location.pathname === `/ledgers/${ledgerId}`
   const { user: currentUser } = useAuth()
-  const { data: appConfig } = usePublicAppConfig()
+  const { appConfig } = Route.useRouteContext()
   const { data: ledger } = useSuspenseQuery({
     queryFn: () => LedgersService.readLedger({ ledgerId }),
     queryKey: ["ledger", ledgerId],
@@ -77,18 +78,14 @@ function LedgerDetails() {
             </p>
           </div>
           <div className="hidden gap-2 md:flex">
-            {ledger.owner_user_id === currentUser?.id &&
-              !appConfig?.is_demo && (
-                <Button variant="outline" asChild>
-                  <Link
-                    to="/ledgers/$ledgerId/system-run"
-                    params={{ ledgerId }}
-                  >
-                    <Play />
-                    System Run
-                  </Link>
-                </Button>
-              )}
+            {ledger.owner_user_id === currentUser?.id && !appConfig.is_demo && (
+              <Button variant="outline" asChild>
+                <Link to="/ledgers/$ledgerId/system-run" params={{ ledgerId }}>
+                  <Play />
+                  System Run
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" asChild>
               <Link to="/">Dashboard</Link>
             </Button>
@@ -98,7 +95,7 @@ function LedgerDetails() {
                 Categories
               </Link>
             </Button>
-            {!appConfig?.is_demo && (
+            {!appConfig.is_demo && (
               <Button variant="outline" size="icon" asChild>
                 <Link
                   to="/ledgers/$ledgerId/settings"
@@ -116,6 +113,7 @@ function LedgerDetails() {
         <ObligationWorkspace
           ledgerId={ledgerId}
           canManageComponents={canManageComponents}
+          defaultLifecycle={appConfig.is_demo ? "" : "unpaid"}
         />
       </Suspense>
     </div>

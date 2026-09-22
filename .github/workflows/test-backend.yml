@@ -37,6 +37,82 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Validate deployment variants
+        shell: bash
+        run: |
+          bash -n scripts/db-backup.sh scripts/db-restore-drill.sh scripts/deploy-latest.sh
+
+          cp .env.standalone.example .env
+          sed -i \
+            -e 's/replace-with-a-random-secret/ci-secret/' \
+            -e 's/replace-with-a-strong-password/ci-admin-password/' \
+            -e 's/replace-with-the-database-password/ci-db-password/' \
+            .env
+          ./scripts/validate-deployment.sh standalone compose.standalone.yml
+
+          cp .env.production.example .env
+          sed -i \
+            -e 's/replace-with-a-random-secret/ci-secret/' \
+            -e 's/replace-with-a-strong-password/ci-admin-password/' \
+            -e 's/replace-with-the-database-password/ci-db-password/' \
+            -e 's/postgres.example.com/postgres.internal/' \
+            .env
+          ./scripts/validate-deployment.sh external compose.production.yml
+
+          install_root="$PWD"
+          standalone_dir="$(mktemp -d)"
+          (
+            cd "$standalone_dir"
+            OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh" standalone
+            test -x scripts/db-backup.sh
+            test -x scripts/db-restore-drill.sh
+            test -f docs/operations/database-recovery.md
+            sed -i \
+              -e 's/replace-with-a-random-secret/ci-secret/' \
+              -e 's/replace-with-a-strong-password/ci-admin-password/' \
+              -e 's/replace-with-the-database-password/ci-db-password/' \
+              .env
+            ./validate-deployment.sh standalone
+
+            fake_bin="$(mktemp -d)"
+            cat >"$fake_bin/docker" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [[ "$*" == *"SELECT version_num FROM alembic_version"* ]]; then
+            printf 'test-revision\n'
+          else
+            printf 'test-dump'
+          fi
+          EOF
+            chmod +x "$fake_bin/docker"
+            PATH="$fake_bin:$PATH" BACKUP_DIR="$standalone_dir/backups" \
+              ./scripts/db-backup.sh
+            test "$(find backups -name '*.dump' -type f | wc -l)" -eq 1
+            grep -q '^alembic_revision=test-revision$' backups/*.metadata
+          )
+
+          external_dir="$(mktemp -d)"
+          (
+            cd "$external_dir"
+            OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh" external
+            test -x scripts/db-backup.sh
+            test -x scripts/db-restore-drill.sh
+            test -f docs/operations/database-recovery.md
+            sed -i \
+              -e 's/replace-with-a-random-secret/ci-secret/' \
+              -e 's/replace-with-a-strong-password/ci-admin-password/' \
+              -e 's/replace-with-the-database-password/ci-db-password/' \
+              -e 's/postgres.example.com/postgres.internal/' \
+              .env
+            ./validate-deployment.sh external
+          )
+
+          legacy_dir="$(mktemp -d)"
+          touch "$legacy_dir/.env" "$legacy_dir/compose.yml"
+          if (cd "$legacy_dir" && OBLIDOG_INSTALL_BASE_URL="file://$install_root" bash "$install_root/scripts/install.sh"); then
+            echo "Installer unexpectedly replaced an unmarked existing deployment." >&2
+            exit 1
+          fi
       - name: Determine test scope
         id: scope
         env:

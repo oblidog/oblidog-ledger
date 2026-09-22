@@ -3,7 +3,8 @@ import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type UpdatePassword, UsersService } from "@/client"
+import { clearBrowserSessionState } from "@/browserSession"
+import { LoginService, type UpdatePassword, UsersService } from "@/client"
 import {
   Form,
   FormControl,
@@ -39,7 +40,7 @@ const formSchema = z
 type FormData = z.infer<typeof formSchema>
 
 const ChangePassword = () => {
-  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const { showErrorToast } = useCustomToast()
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onSubmit",
@@ -54,9 +55,13 @@ const ChangePassword = () => {
   const mutation = useMutation({
     mutationFn: (data: UpdatePassword) =>
       UsersService.updatePasswordMe({ requestBody: data }),
-    onSuccess: () => {
-      showSuccessToast("Password updated successfully")
-      form.reset()
+    onSuccess: async () => {
+      try {
+        await LoginService.logout()
+      } finally {
+        clearBrowserSessionState()
+        window.location.replace("/login?passwordChanged=true")
+      }
     },
     onError: handleError.bind(showErrorToast),
   })

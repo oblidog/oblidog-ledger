@@ -18,9 +18,7 @@ def get_by_id(
 def get_by_token_hash(
     *, session: Session, token_hash: str, for_update: bool = False
 ) -> UserInvitation | None:
-    statement = select(UserInvitation).where(
-        UserInvitation.token_hash == token_hash
-    )
+    statement = select(UserInvitation).where(UserInvitation.token_hash == token_hash)
     if for_update:
         statement = statement.with_for_update()
     return session.scalar(statement)

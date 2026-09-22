@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domain import BillingPeriod
+from app.models import Category, Ledger
 from app.use_cases import categories as category_use_cases
 from app.use_cases import obligations as obligation_use_cases
 from tests.utils.ledger_domain import create_category_tree
@@ -16,7 +18,7 @@ from tests.utils.user import authentication_token_from_email
 
 def _create_integration(
     client: TestClient, db: Session
-) -> tuple[dict[str, object], dict[str, str], object, object]:
+) -> tuple[dict[str, Any], dict[str, str], Ledger, Category]:
     ledger, group, category = create_category_tree(db)
     headers = authentication_token_from_email(
         client=client, email=ledger.owner.email, db=db

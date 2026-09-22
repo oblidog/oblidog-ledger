@@ -1,0 +1,71 @@
+name: Demo Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE_FILE: compose.e2e.yml
+  COMPOSE_PROJECT_NAME: demo-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
+  DEMO_USER_PASSWORD: public-demo-password
+
+jobs:
+  capture:
+    name: Capture demo workspace
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set screenshot reference date
+        run: echo "SCREENSHOT_REFERENCE_DATE=$(TZ=Europe/Warsaw date +%Y-%m-15)" >> "$GITHUB_ENV"
+
+      - name: Verify Playwright package and Docker image versions match
+        run: |
+          package_version="$(node -p "require('./frontend/package.json').devDependencies['@playwright/test'].replace(/^[^0-9]*/, '')")"
+          image_version="$(sed -n 's|^FROM mcr.microsoft.com/playwright:v\([^-]*\)-.*|\1|p' frontend/Dockerfile.playwright)"
+          if [ -z "$image_version" ] || [ "$package_version" != "$image_version" ]; then
+            echo "::error::Playwright package ($package_version) and Docker image ($image_version) versions must match"
+            exit 1
+          fi
+
+      - name: Build isolated demo environment
+        run: docker compose build backend playwright
+
+      - name: Seed demo data
+        run: >-
+          docker compose run --rm
+          -e DEMO_USER_PASSWORD
+          backend python -m app.demo_seed --date "$SCREENSHOT_REFERENCE_DATE"
+
+      - name: Capture screenshots
+        run: >-
+          docker compose run --rm
+          -e DEMO_SCREENSHOTS=true
+          -e DEMO_SCREENSHOT_DATE="$SCREENSHOT_REFERENCE_DATE"
+          playwright
+          bunx playwright test tests/demo-screenshots.spec.ts
+          --project=chromium
+          --fail-on-flaky-tests
+          --trace=retain-on-failure
+          --reporter=line
+
+      - name: Upload screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: demo-screenshots-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: frontend/test-results/demo-screenshots
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Tear down demo environment
+        if: ${{ always() }}
+        run: docker compose down -v --remove-orphans

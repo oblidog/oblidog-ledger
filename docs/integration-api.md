@@ -1,157 +1,111 @@
-# Integration registry API
+# Integration API
 
-The registry tracks one configured external job per ledger, for example
-`nju-mario` and `nju-second`. Both may use the same existing ledger-scoped API
-key. Provider credentials, category mapping and cron/Task scheduling stay with
-the runner. This backend feature does not yet add runner reporting or a UI.
+An integration connects one external job to one category in an Oblidog ledger.
+The job runs outside Oblidog; the app stores its configuration, connection keys,
+and latest reported health. Provider credentials and scheduling stay with the
+external runner. The current API contract is also published as the
+[integration OpenAPI specification](../openapi/integration.json).
 
-## Register and manage an instance
+## Create and manage an integration
 
-Use the normal user token. Only the ledger owner can create or update an
-instance; members with ledger view access can read it.
+The ledger owner can use **Integrations → Add integration** or the user API:
 
-- `POST /api/v1/ledgers/{ledger_id}/integrations` creates an instance (201).
-- `GET /api/v1/ledgers/{ledger_id}/integrations` lists instances (`data`, `count`,
-  `limit` 1–100 and nonnegative `offset`).
-- `GET /api/v1/ledgers/{ledger_id}/integrations/{integration_id}` reads one.
-- `PATCH /api/v1/ledgers/{ledger_id}/integrations/{integration_id}` updates its
-  name, category associations, enabled flag or monitoring limits.
+```text
+POST /api/v1/ledgers/{ledger_id}/integrations
+```
 
-Example creation body:
+Send a name and one category from that ledger:
 
 ```json
 {
-  "key": "nju-mario",
-  "provider": "nju",
-  "name": "Mario's phone",
-  "category_ids": [],
-  "enabled": true,
-  "stale_after_seconds": 93600,
-  "run_timeout_seconds": 1800
+  "name": "Home electricity",
+  "category_id": "00000000-0000-0000-0000-000000000001"
 }
 ```
 
-Keys and provider identifiers are immutable lowercase slugs, at most 64
-characters. The key is unique within its ledger. Categories must belong to the
-same ledger; associations are descriptive and do not change API permissions.
-There is no delete endpoint; disable an instance to retire it.
+Creation returns the integration, its first credential, and a `connection_key`.
+Copy the full key immediately; it is returned only when created. The owner can
+generate another key with
+`POST /api/v1/ledgers/{ledger_id}/integrations/{integration_id}/credentials`
+and revoke one with
+`DELETE /api/v1/ledgers/{ledger_id}/integrations/{integration_id}/credentials/{credential_id}`.
+Rotation does not reset the integration's monitoring state.
 
-Every accepted mutation increments `revision`. Updates require
-`expected_revision` from the latest read. Omit unchanged properties; explicit
-nulls and unknown properties are rejected. Time limits must be positive, timeout
-must be smaller than the reporting limit, and limits cannot change during an
-unfinished run inside its timeout. Disabling remains allowed during execution.
+Ledger members with view access can list or inspect integrations with
+`GET /api/v1/ledgers/{ledger_id}/integrations` and
+`GET /api/v1/ledgers/{ledger_id}/integrations/{integration_id}`. Only the owner
+can update one with `PATCH` on the detail URL. Updates include an
+`expected_revision` from the latest read and may change the name, enabled flag,
+or monitoring time limits. The category is fixed after creation. Disable an
+integration to retire it; there is no delete endpoint.
 
-## Report a run using the existing API key
+The default run timeout is 1,800 seconds and the default reporting threshold is
+93,600 seconds. `run_timeout_seconds` must be shorter than
+`stale_after_seconds`. The Integrations screen shows current health, last run,
+last success, and reported changes. It refreshes periodically, but does not
+start or schedule external jobs.
 
-Send `Authorization: Bearer <OBLIDOG_API_KEY>`. Ledger identity comes exclusively
-from that key. Read requires `ledger:read`; start and finish require
-`ledger:write`. No additional scope or per-instance credential is needed.
+## Authenticate a runner
 
-1. `GET /api/v1/integration/instances/{integration_key}` reads configuration,
-   `revision`, latest execution and derived health.
-2. `POST /api/v1/integration/instances/{integration_key}/start` accepts:
+Send the connection key as `Authorization: Bearer <connection_key>` to
+`/api/v1/integration/...`. The key resolves the integration, its single category,
+and its ledger. The runner does not send a ledger ID, category code, or
+integration key to choose its authorization context. A key cannot access a
+different category's obligations or records.
 
-   ```json
-   {
-     "run_id": "6a1af7e0-0799-43bf-a8c1-497bcf827ac1",
-     "expected_revision": 0
-   }
-   ```
+`GET /api/v1/integration/context` returns the integration and category context.
+The main contextual operations are:
 
-3. After provider work and all intended synchronization complete,
-   `POST /api/v1/integration/instances/{integration_key}/finish` accepts:
+| Operation | Endpoint |
+| --- | --- |
+| Read or create structured category observations | `GET` / `POST /api/v1/integration/category/data-records` |
+| Read the latest observation | `GET /api/v1/integration/category/data-records/latest` |
+| Read the active category schema | `GET /api/v1/integration/category/schema` |
+| List obligations in this category | `GET /api/v1/integration/obligations` |
+| Read or update one billing period | `GET` / `PATCH /api/v1/integration/obligations/{period}` |
+| Upsert a bill component | `PUT /api/v1/integration/obligations/{period}/components/upsert` |
+| Mark an obligation ready or paid | `PATCH /api/v1/integration/obligations/{period}/ready`; `POST /api/v1/integration/obligations/{period}/mark-paid` |
 
-   ```json
-   {
-     "run_id": "6a1af7e0-0799-43bf-a8c1-497bcf827ac1",
-     "result": "success",
-     "changes_detected": false,
-     "error": null
-   }
-   ```
+`{period}` uses `YYYY-MM`, for example `2026-09`. Full obligation keys are
+temporarily accepted for client migration, but new clients should use periods.
+Other lifecycle and note operations are in the OpenAPI specification. See
+[category data records](category-data-records.md) and the
+[obligation lifecycle](obligation-lifecycle.md) for their rules.
 
-A success with no invoice or changes is healthy. `changes_detected: null` means
-unknown. On failure send `result: "failure"`, `changes_detected: null` and an
-`error` object: `{"code": "provider_failed", "message": "Provider unavailable"}`.
-Error codes use lowercase letters, digits and underscores (1–64 characters,
-starting with a letter); messages are nonblank and at most 1000 characters.
-The caller must sanitize messages: never send credentials, raw provider responses
-or tracebacks. A partially completed synchronization is a failed run, even if
-some business writes already committed.
+Component upsert returns `{ "component": ..., "result": ... }`, where `result`
+is `created`, `updated`, or `unchanged`. An identical retry is unchanged and
+does not add an obligation action entry. A category observation with the same
+source and external ID is also idempotent.
 
-## Upsert an obligation component
+## Report a run
 
-`PUT /api/v1/integration/obligations/{period}/components/upsert` returns the
-persisted component together with a mutation result:
+Read `GET /api/v1/integration/context` to obtain the current `revision`, then
+send a fresh UUID for this invocation:
 
-```json
-{
-  "component": {
-    "id": "b20b9f7a-cc55-4d3c-b8d2-67f9c9918d11",
-    "type": "invoice",
-    "label": "September invoice"
-  },
-  "result": "updated"
-}
+```text
+POST /api/v1/integration/runs/start
+{"run_id":"6a1af7e0-0799-43bf-a8c1-497bcf827ac1","expected_revision":0}
 ```
 
-`result` is `created` for a new external identity, `updated` when at least one
-persisted field changed, and `unchanged` for an identical retry. The ledger
-component-upsert endpoint uses the same response contract. This wrapper is an
-intentional breaking response-shape change: clients that previously read the
-component directly from the response body must now read `component`. Regenerate
-typed clients from the current OpenAPI document before deploying consumers. An
-`unchanged` response does not create an obligation action-log entry.
+After all provider work and intended Oblidog updates finish, report the result:
 
-All reporting success responses are 200 and return current public state.
-Timestamps come from the server. Identical retries of the current start or
-finish do not advance them or revision. Never reuse run IDs, never rerun a
-finished invocation, and never blindly refresh the revision to replay an old
-start. A finish must match the current run. After another start supersedes a
-timed-out run, its delayed finish is rejected. A late finish is accepted if its
-run is still current. Idempotency is limited to that retained current run.
+```text
+POST /api/v1/integration/runs/finish
+{"run_id":"6a1af7e0-0799-43bf-a8c1-497bcf827ac1","result":"success","changes_detected":false,"error":null}
+```
 
-Conflicts return 409 with `detail.code`: `duplicate_key`, `revision_conflict`,
-`integration_disabled`, `run_in_progress`, or `run_conflict`. OpenAPI declares
-`IntegrationConflictResponse` and its `IntegrationConflictCode` enum on all
-registry write endpoints. Unknown/cross-ledger
-instances or categories return 404, malformed bodies return 422, and key
-failures/missing scopes retain the existing 401/403 behavior. All registry
-operations are disabled in demo mode.
+A successful check without a new bill may report `changes_detected: false`;
+use `null` when the runner cannot determine whether data changed. For a failed
+run, send `result: "failure"`, `changes_detected: null`, and an `error` object
+with a stable lowercase code and a sanitized message. Never send credentials,
+raw provider responses, or tracebacks in that message. If some writes succeeded
+before a later failure, report failure.
 
-## Read operational health
-
-`execution_state` is `never_run`, `running`, `timed_out` or `finished`.
-`last_result` describes the latest completed attempt and survives a new start.
-`last_success_at` advances on every success, including a no-op, and survives
-subsequent failures. Success clears the previous error message.
-
-An unfinished run times out at its stored `current_deadline_at`, calculated as
-`current_started_at + run_timeout_seconds` when that run starts. Changes to the
-configured timeout apply only to future runs; retries, disabling/re-enabling,
-and configuration edits never move the current deadline.
-`is_stale` becomes true at the later of `enabled_at` and `last_finished_at`, plus
-`stale_after_seconds`. Starts and retries do not reset that reporting deadline.
-Disabled instances are not stale; re-enabling starts a new reporting grace period.
-
-`health` applies this precedence: disabled, timed out, stale, running, never run,
-last attempt failed (`error`), otherwise `healthy`. These values are derived at
-read time without a scheduler. Repeated failures remain errors despite recent
-reporting. Timeout means no received completion, not a proven provider failure.
-
-Disabling blocks new starts but permits the matching in-flight completion. It
-does not stop a container, revoke API access, or change any obligation. Host
-locks and process timeouts remain necessary: the registry protects health state,
-not concurrent business writes. There is no run history or automatic alerting.
-
-## Rollout
-
-Apply the normal Alembic migrations before deploying this backend. The deadline
-migration backfills previously started runs using the timeout stored at migration
-time; never-started instances keep a null deadline. Existing keys,
-observations, component sources and obligations are unchanged. No historic
-success is inferred from existing API-key usage. Register instances before
-opting runners into reporting through `OBLIDOG_INTEGRATION_KEY` in the later
-runner-adoption step. Python and frontend clients are generated from these API
-contracts; the separate Python client adds the public reporting facade.
+An identical retry of the current start or finish is safe. Do not reuse run
+UUIDs or rerun provider work after an already finished invocation. A finish
+must match the current run; an older run superseded after timeout cannot finish
+later. The registry retains current state and last result, not a full run
+history. Health is derived on read: disabled, timed out, stale, running, never
+run, error, or healthy. Disabling an integration blocks new starts but does not
+stop a runner process or revoke its key; revoke the key separately if needed.
+System Run does not launch integration jobs.
