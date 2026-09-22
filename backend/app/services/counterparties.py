@@ -44,7 +44,9 @@ def get_counterparty(*, session: Session, counterparty_id: uuid.UUID) -> Counter
 def list_counterparties(*, session: Session) -> list[Counterparty]:
     return list(
         session.scalars(
-            select(Counterparty).order_by(Counterparty.name.asc(), Counterparty.id.asc())
+            select(Counterparty).order_by(
+                Counterparty.name.asc(), Counterparty.id.asc()
+            )
         ).all()
     )
 
@@ -81,7 +83,9 @@ def create_counterparty(
 ) -> Counterparty:
     normalized_name = _normalize_name(name)
     existing = session.scalar(
-        select(Counterparty.id).where(func.lower(Counterparty.name) == normalized_name.lower())
+        select(Counterparty.id).where(
+            func.lower(Counterparty.name) == normalized_name.lower()
+        )
     )
     if existing is not None:
         raise DuplicateCounterpartyError
@@ -154,7 +158,9 @@ def delete_counterparty(*, session: Session, counterparty_id: uuid.UUID) -> None
     in_use = session.scalar(
         select(Category.id).where(Category.counterparty_id == counterparty_id).limit(1)
     ) or session.scalar(
-        select(Obligation.id).where(Obligation.counterparty_id == counterparty_id).limit(1)
+        select(Obligation.id)
+        .where(Obligation.counterparty_id == counterparty_id)
+        .limit(1)
     )
     if in_use is not None:
         raise CounterpartyInUseError

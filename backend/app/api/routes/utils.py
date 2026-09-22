@@ -25,7 +25,6 @@ def _check_database() -> None:
         connection.execute(text("SELECT 1"))
 
 
-
 @router.post(
     "/test-email/",
     dependencies=[Depends(get_current_active_superuser)],
@@ -50,9 +49,7 @@ def public_config() -> dict[str, Any]:
     is_demo = settings.ENVIRONMENT == "demo"
     password = os.environ.get(DEMO_PASSWORD_ENV) if is_demo else None
     credentials = (
-        {"email": DEMO_EMAIL, "password": password}
-        if is_demo and password
-        else None
+        {"email": DEMO_EMAIL, "password": password} if is_demo and password else None
     )
     return {
         "environment": settings.ENVIRONMENT,

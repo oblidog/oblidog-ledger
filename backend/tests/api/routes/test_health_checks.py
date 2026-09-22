@@ -4,6 +4,7 @@ from sqlalchemy.exc import OperationalError
 
 from app.api.routes import utils
 from app.core.config import settings
+from app.core.db import engine
 
 
 def test_liveness_does_not_depend_on_database(
@@ -63,7 +64,7 @@ def test_database_check_sets_server_side_statement_timeout(
         def execute(self, statement):  # type: ignore[no-untyped-def]
             statements.append(str(statement))
 
-    monkeypatch.setattr(utils.engine, "connect", lambda: FakeConnection())
+    monkeypatch.setattr(engine, "connect", lambda: FakeConnection())
 
     utils._check_database()
 

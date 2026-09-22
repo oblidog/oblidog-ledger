@@ -16,6 +16,7 @@ from app.domain import (
     RecurrenceUnit,
     ValueState,
 )
+from app.models import Obligation
 from app.use_cases import categories as category_use_cases
 from app.use_cases import ledgers as ledger_use_cases
 from app.use_cases import obligations as obligation_use_cases
@@ -23,7 +24,7 @@ from tests.utils.user import authentication_token_from_email, create_random_user
 from tests.utils.utils import random_lower_string
 
 
-def _create_ready_obligation(db: Session, *, ledger_id: uuid.UUID):
+def _create_ready_obligation(db: Session, *, ledger_id: uuid.UUID) -> Obligation:
     category_group = category_use_cases.create_category_group(
         session=db, ledger_id=ledger_id, name="Group"
     )

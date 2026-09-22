@@ -1,6 +1,7 @@
 import uuid
 from datetime import date
 from decimal import Decimal
+from typing import Self
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domain import BillingPeriod, Currency, ObligationKey, ObligationLifecycle
-from app.models import ObligationComponent
+from app.models import Category, Obligation, ObligationComponent
 from app.use_cases import categories as category_use_cases
 from app.use_cases import ledgers as ledger_use_cases
 from app.use_cases import obligations as obligation_use_cases
@@ -25,7 +26,7 @@ def _create_obligation(
     code: str,
     amount: Decimal | None,
     currency: Currency = Currency.PLN,
-):
+) -> Obligation:
     group = category_use_cases.create_category_group(
         session=db, ledger_id=ledger_id, name=f"group-{code}"
     )
@@ -61,7 +62,7 @@ def _create_history_category(
     ledger_id: uuid.UUID,
     currency: Currency = Currency.PLN,
     code: str = "HIST",
-):
+) -> Category:
     group = category_use_cases.create_category_group(
         session=db, ledger_id=ledger_id, name=f"group-{random_lower_string()}"
     )
@@ -82,7 +83,7 @@ def _create_history_obligation(
     category_code: str,
     period: BillingPeriod,
     amount: Decimal | None,
-):
+) -> Obligation:
     return obligation_use_cases.create_manual_obligation(
         session=db,
         ledger_id=ledger_id,
@@ -644,11 +645,11 @@ def test_period_totals_reject_an_inverted_range(
 
 
 def test_cashflow_separates_currencies_and_exposes_incomplete_unpaid_data(
-    client: TestClient, db: Session, monkeypatch
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class FrozenDate(date):
         @classmethod
-        def today(cls) -> date:
+        def today(cls) -> Self:
             return cls(2026, 8, 15)
 
     from app.use_cases import analytics as analytics_use_cases
@@ -775,7 +776,6 @@ def test_cashflow_for_empty_period_returns_an_empty_complete_summary(
     assert response.json()["unknown_amount_count"] == 0
     assert response.json()["without_due_date_count"] == 0
     assert response.json()["is_complete"] is True
-
 
 
 def test_component_history_matches_invoice_specific_ids_by_normalized_label(

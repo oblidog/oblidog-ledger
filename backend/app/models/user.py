@@ -11,7 +11,9 @@ from app.models.base import Base, get_datetime_utc
 class User(Base):
     __tablename__ = "user"
     __table_args__ = (
-        CheckConstraint("session_version >= 1", name="ck_user_session_version_positive"),
+        CheckConstraint(
+            "session_version >= 1", name="ck_user_session_version_positive"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

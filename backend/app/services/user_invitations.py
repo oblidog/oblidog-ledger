@@ -180,9 +180,7 @@ def inspect_invitation(*, session: Session, token: str) -> UserInvitation:
     return invitation
 
 
-def accept_invitation(
-    *, session: Session, token: str, new_password: str
-) -> User:
+def accept_invitation(*, session: Session, token: str, new_password: str) -> User:
     invitation = invitation_repository.get_by_token_hash(
         session=session,
         token_hash=hash_invitation_token(token),
@@ -193,9 +191,10 @@ def accept_invitation(
 
     now = datetime.now(UTC)
     _validate_usable(invitation, now=now)
-    if user_service.get_user_by_email(
-        session=session, email=invitation.email
-    ) is not None:
+    if (
+        user_service.get_user_by_email(session=session, email=invitation.email)
+        is not None
+    ):
         raise InvitationUserAlreadyExistsError
 
     user = User(

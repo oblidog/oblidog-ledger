@@ -195,9 +195,7 @@ def test_update_user_me(
     assert user_db.full_name == full_name
 
 
-def test_update_password_me(
-    client: TestClient, db: Session
-) -> None:
+def test_update_password_me(client: TestClient, db: Session) -> None:
     email = random_email()
     current_password = random_lower_string()
     new_password = random_lower_string()
@@ -229,18 +227,14 @@ def test_update_password_me(
     verified, _ = verify_password(new_password, user_db.hashed_password)
     assert verified
 
-    revoked = client.get(
-        f"{settings.API_V1_STR}/users/me", headers=token_headers
-    )
+    revoked = client.get(f"{settings.API_V1_STR}/users/me", headers=token_headers)
     assert revoked.status_code == 401
     assert revoked.json()["detail"] == "Session expired"
 
     fresh_headers = user_authentication_headers(
         client=client, email=email, password=new_password
     )
-    fresh = client.get(
-        f"{settings.API_V1_STR}/users/me", headers=fresh_headers
-    )
+    fresh = client.get(f"{settings.API_V1_STR}/users/me", headers=fresh_headers)
     assert fresh.status_code == 200
     assert fresh.json()["id"] == str(user.id)
 

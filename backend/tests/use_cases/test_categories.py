@@ -193,7 +193,7 @@ def test_update_category_changes_details_and_obligation_configuration(
         recurrence_interval=2,
         recurrence_unit=RecurrenceUnit.MONTH,
         first_due_date=date(2026, 1, 20),
-        currency="EUR",
+        currency=Currency.EUR,
     )
 
     assert updated.name == "Updated category"

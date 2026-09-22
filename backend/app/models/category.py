@@ -136,7 +136,9 @@ class Category(Base):
         back_populates="categories",
         overlaps="ledger,categories",
     )
-    counterparty: Mapped[Counterparty | None] = relationship(back_populates="categories")
+    counterparty: Mapped[Counterparty | None] = relationship(
+        back_populates="categories"
+    )
     obligations: Mapped[list[Obligation]] = relationship(
         back_populates="category",
         overlaps="ledger,obligations",

@@ -1,4 +1,5 @@
 import uuid
+from typing import Any, cast
 
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError
@@ -19,7 +20,7 @@ def _create_counterparty(
     superuser_token_headers: dict[str, str],
     *,
     name: str,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     response = client.post(
         f"{settings.API_V1_STR}/counterparties",
         headers=superuser_token_headers,
@@ -31,7 +32,7 @@ def _create_counterparty(
         },
     )
     assert response.status_code == 200
-    return response.json()
+    return cast(dict[str, Any], response.json())
 
 
 def _create_category(db: Session, *, owner_id: uuid.UUID) -> tuple[Ledger, Category]:
@@ -184,10 +185,14 @@ def test_counterparty_names_are_case_insensitively_unique_in_database(
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        constraint_name = getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+        constraint_name = getattr(
+            getattr(exc.orig, "diag", None), "constraint_name", None
+        )
         assert constraint_name == "uq_counterparty_name_lower"
     else:
-        raise AssertionError("case-insensitive duplicate counterparty name was accepted")
+        raise AssertionError(
+            "case-insensitive duplicate counterparty name was accepted"
+        )
 
 
 def test_counterparty_api_returns_conflict_for_case_insensitive_duplicate(

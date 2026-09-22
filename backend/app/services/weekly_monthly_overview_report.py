@@ -165,10 +165,12 @@ def _build_user_overviews(
         )
         previous_point, current_point = totals.points
         current_totals = {
-            item.currency: item.total_known_amount for item in current_point.currency_summaries
+            item.currency: item.total_known_amount
+            for item in current_point.currency_summaries
         }
         previous_totals = {
-            item.currency: item.total_known_amount for item in previous_point.currency_summaries
+            item.currency: item.total_known_amount
+            for item in previous_point.currency_summaries
         }
         paid_totals = {
             item.currency: item.paid_known_amount for item in payment.amount_summaries
@@ -221,7 +223,9 @@ def _summarize_currency(
     previous_complete: bool,
 ) -> CurrencyOverview:
     paid_count = sum(item.lifecycle is ObligationLifecycle.PAID for item in obligations)
-    ready_count = sum(item.lifecycle is ObligationLifecycle.READY for item in obligations)
+    ready_count = sum(
+        item.lifecycle is ObligationLifecycle.READY for item in obligations
+    )
     not_ready_count = sum(
         item.lifecycle not in {ObligationLifecycle.READY, ObligationLifecycle.PAID}
         for item in obligations

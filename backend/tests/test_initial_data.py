@@ -1,9 +1,13 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from app import initial_data
 
 
-def test_init_initializes_database_with_open_session(monkeypatch) -> None:
+def test_init_initializes_database_with_open_session(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     session = MagicMock()
     session_context = MagicMock()
     session_context.__enter__.return_value = session
