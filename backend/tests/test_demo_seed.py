@@ -175,7 +175,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     paid = _obligation(
         db,
         ledger_id=ledger.id,
-        code="STRM",
+        code="RENT",
         year=2026,
         month=9,
     )
@@ -236,6 +236,47 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
         .having(func.count(Category.id) > 1)
     )
     assert shared_counterparty is not None
+
+
+@pytest.mark.parametrize(
+    ("reference_date", "expected_overdue"),
+    [
+        (date(2026, 9, 1), 0),
+        (date(2026, 9, 15), 3),
+        (date(2026, 9, 30), 3),
+    ],
+)
+def test_current_demo_period_keeps_overdue_share_healthy(
+    db: Session,
+    reference_date: date,
+    expected_overdue: int,
+) -> None:
+    result = seed_demo(
+        session=db,
+        password=DEMO_TEST_PASSWORD,
+        reference_date=reference_date,
+    )
+
+    current_obligations = list(
+        db.scalars(
+            select(Obligation).where(
+                Obligation.ledger_id == result.ledger_id,
+                Obligation.period_year == reference_date.year,
+                Obligation.period_month == reference_date.month,
+            )
+        )
+    )
+    overdue = [
+        obligation
+        for obligation in current_obligations
+        if obligation.due_date is not None
+        and obligation.due_date < reference_date
+        and obligation.lifecycle is not ObligationLifecycle.PAID
+    ]
+
+    assert len(current_obligations) == 15
+    assert len(overdue) == expected_overdue
+    assert len(overdue) <= len(current_obligations) // 5
 
 
 def test_seed_demo_replaces_existing_demo_ledger(db: Session) -> None:
