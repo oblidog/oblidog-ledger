@@ -1,3 +1,4 @@
+import hashlib
 import hmac
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -8,7 +9,6 @@ from unittest.mock import patch
 import jwt
 from fastapi.testclient import TestClient
 from pwdlib.hashers.bcrypt import BcryptHasher
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core import security
@@ -19,6 +19,7 @@ from app.models import PasswordResetToken, User
 from app.schemas import UserCreate
 from app.services import password_resets as password_reset_service
 from app.services import users as user_service
+from app.utils import verify_password_reset_token
 from tests.utils.user import user_authentication_headers
 from tests.utils.utils import random_email, random_lower_string
 
@@ -330,19 +331,25 @@ def test_reset_password(client: TestClient, db: Session) -> None:
 
 def test_password_reset_token_hash_is_keyed_and_domain_separated() -> None:
     token = "signed-reset-token"
+    token_id = uuid.UUID("5e88fce0-d47b-41e8-899b-7802e6e792f7")
 
-    token_hash = password_reset_service.hash_password_reset_token(token)
-    expected = hmac.digest(
+    token_hash = password_reset_service.hash_password_reset_token(
+        token=token,
+        token_id=token_id,
+    )
+    salt = hmac.digest(
         settings.SECRET_KEY.encode(),
-        b"oblidog:password-reset-token:v1\0" + token.encode(),
+        b"oblidog:password-reset-token:v1\0" + token_id.bytes,
         "sha256",
-    ).hex()
-    hash_without_domain = hmac.digest(
-        settings.SECRET_KEY.encode(), token.encode(), "sha256"
+    )
+    expected = hashlib.pbkdf2_hmac(
+        "sha256",
+        token.encode(),
+        salt,
+        600_000,
     ).hex()
 
     assert token_hash == expected
-    assert token_hash != hash_without_domain
     assert len(token_hash) == 64
 
 
@@ -412,12 +419,9 @@ def test_reset_password_rejects_token_expired_in_persisted_state(
         user_in=UserCreate(email=random_email(), password=random_lower_string()),
     )
     token = password_reset_service.issue_password_reset(session=db, user=user).token
-    reset_token = db.scalar(
-        select(PasswordResetToken).where(
-            PasswordResetToken.token_hash
-            == password_reset_service.hash_password_reset_token(token)
-        )
-    )
+    claims = verify_password_reset_token(token)
+    assert claims is not None
+    reset_token = db.get(PasswordResetToken, claims.token_id)
     assert reset_token is not None
     reset_token.expires_at = datetime.now(UTC) - timedelta(seconds=1)
     db.commit()
