@@ -1,3 +1,9 @@
+## v0.16.1 (2026-09-22)
+
+### Fix
+
+- **demo**: hide TanStack devtools in screenshots (#428)
+
 ## v0.16.0 (2026-09-22)
 
 ### Feat
