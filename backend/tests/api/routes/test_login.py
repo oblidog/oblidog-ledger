@@ -1,3 +1,4 @@
+import hmac
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -325,6 +326,24 @@ def test_reset_password(client: TestClient, db: Session) -> None:
     )
     assert reused.status_code == 400
     assert reused.json() == {"detail": "Invalid token"}
+
+
+def test_password_reset_token_hash_is_keyed_and_domain_separated() -> None:
+    token = "signed-reset-token"
+
+    token_hash = password_reset_service.hash_password_reset_token(token)
+    expected = hmac.digest(
+        settings.SECRET_KEY.encode(),
+        b"oblidog:password-reset-token:v1\0" + token.encode(),
+        "sha256",
+    ).hex()
+    hash_without_domain = hmac.digest(
+        settings.SECRET_KEY.encode(), token.encode(), "sha256"
+    ).hex()
+
+    assert token_hash == expected
+    assert token_hash != hash_without_domain
+    assert len(token_hash) == 64
 
 
 def test_reset_password_invalid_token(

@@ -1,4 +1,4 @@
-import hashlib
+import hmac
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -17,6 +17,9 @@ class InvalidPasswordResetTokenError(Exception):
     pass
 
 
+_TOKEN_HASH_DOMAIN = b"oblidog:password-reset-token:v1\0"
+
+
 @dataclass(frozen=True, slots=True)
 class PasswordResetDelivery:
     token: str
@@ -24,7 +27,11 @@ class PasswordResetDelivery:
 
 
 def hash_password_reset_token(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+    return hmac.digest(
+        settings.SECRET_KEY.encode(),
+        _TOKEN_HASH_DOMAIN + token.encode(),
+        "sha256",
+    ).hex()
 
 
 def _lock_user(*, session: Session, user_id: uuid.UUID) -> User | None:
