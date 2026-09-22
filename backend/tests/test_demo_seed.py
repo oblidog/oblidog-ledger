@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import verify_password
 from app.demo_seed import DEMO_EMAIL, DEMO_LEDGER_NAME, seed_demo
-from app.domain import Currency, EffectiveValueSourceMode, ObligationLifecycle
+from app.domain import EffectiveValueSourceMode, ObligationLifecycle
 from app.models import (
     Category,
     CategoryDataRecord,
@@ -128,7 +128,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     )
     assert len(integrations) == 12
     assert all(category.counterparty_id is not None for category in categories)
-    assert all(category.currency is Currency.EUR for category in categories)
+    assert all(category.currency == "EUR" for category in categories)
     assert len(counterparties) == 10
     assert all(
         counterparty.logo_url is not None
@@ -136,7 +136,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
         for counterparty in counterparties
     )
     assert all(obligation.counterparty_id is not None for obligation in obligations)
-    assert all(obligation.currency is Currency.EUR for obligation in obligations)
+    assert all(obligation.currency == "EUR" for obligation in obligations)
     assert (
         sum(
             obligation.effective_value_source is EffectiveValueSourceMode.INTEGRATION
