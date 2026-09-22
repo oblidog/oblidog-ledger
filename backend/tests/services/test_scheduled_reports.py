@@ -72,4 +72,4 @@ def test_failed_deliveries_retry_without_duplicating_successes(db, monkeypatch) 
             select(ReportDelivery).where(ReportDelivery.user_id == first.id)
         ).status
         is ReportDeliveryStatus.SENT
-    )  # type: ignore[union-attr]
+    )

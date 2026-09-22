@@ -35,9 +35,7 @@ def test_schema_history_api_lists_and_reads_versions(
         category_id=category.id,
         schema=_schema("second"),
     )
-    base_url = (
-        f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-schemas"
-    )
+    base_url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-schemas"
 
     list_response = client.get(base_url, headers=headers)
     version_response = client.get(f"{base_url}/{first.version}", headers=headers)
@@ -92,9 +90,7 @@ def test_schema_history_api_returns_404_for_missing_resources(
         category_id=category.id,
         schema=_schema("value"),
     )
-    base_url = (
-        f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-schemas"
-    )
+    base_url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-schemas"
 
     missing_version = client.get(f"{base_url}/999", headers=headers)
 

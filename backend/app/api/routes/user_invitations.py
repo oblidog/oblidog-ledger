@@ -64,7 +64,9 @@ def _raise_http_error(exc: Exception) -> NoReturn:
     if isinstance(exc, invitation_service.InvitationRevokedError):
         raise HTTPException(status_code=410, detail="Invitation has been revoked")
     if isinstance(exc, invitation_service.InvitationAcceptedError):
-        raise HTTPException(status_code=409, detail="Invitation has already been accepted")
+        raise HTTPException(
+            status_code=409, detail="Invitation has already been accepted"
+        )
     if isinstance(exc, invitation_service.InvitationAlreadyExistsError):
         raise HTTPException(
             status_code=409, detail="An active invitation for this email already exists"
@@ -76,7 +78,9 @@ def _raise_http_error(exc: Exception) -> NoReturn:
     raise exc
 
 
-@admin_router.post("", response_model=UserInvitationPublic, status_code=status.HTTP_201_CREATED)
+@admin_router.post(
+    "", response_model=UserInvitationPublic, status_code=status.HTTP_201_CREATED
+)
 def create_invitation(
     *, session: SessionDep, current_user: CurrentUser, body: UserInvitationCreate
 ) -> UserInvitationPublic:
@@ -131,9 +135,7 @@ def revoke_invitation(invitation_id: uuid.UUID, session: SessionDep) -> Message:
 @public_router.get("/{token}", response_model=UserInvitationInspect)
 def inspect_invitation(token: str, session: SessionDep) -> UserInvitationInspect:
     try:
-        invitation = invitation_service.inspect_invitation(
-            session=session, token=token
-        )
+        invitation = invitation_service.inspect_invitation(session=session, token=token)
     except Exception as exc:
         _raise_http_error(exc)
     return UserInvitationInspect(

@@ -45,9 +45,7 @@ def _create_via_api(
 def _get_invitation(db: Session, invitation_id: str) -> UserInvitation:
     db.expire_all()
     invitation = db.scalar(
-        select(UserInvitation).where(
-            UserInvitation.id == uuid.UUID(invitation_id)
-        )
+        select(UserInvitation).where(UserInvitation.id == uuid.UUID(invitation_id))
     )
     assert invitation is not None
     return invitation
@@ -87,9 +85,7 @@ def test_invitation_email_is_sent_when_email_is_enabled(
         patch.object(settings, "EMAILS_FROM_EMAIL", "admin@example.com"),
         patch("app.api.routes.user_invitations.send_email") as send_email,
     ):
-        response, token = _create_via_api(
-            client, superuser_token_headers, email=email
-        )
+        response, token = _create_via_api(client, superuser_token_headers, email=email)
 
     assert response.status_code == 201
     send_email.assert_called_once()
@@ -202,9 +198,7 @@ def test_valid_invitation_can_be_inspected_and_accepted_once(
 
 
 def test_invalid_token_is_rejected(client: TestClient) -> None:
-    response = client.get(
-        f"{settings.API_V1_STR}/invitations/not-a-real-token"
-    )
+    response = client.get(f"{settings.API_V1_STR}/invitations/not-a-real-token")
     assert response.status_code == 404
 
 
@@ -264,8 +258,12 @@ def test_resend_rotates_token_and_refreshes_expiry(
         )
 
     assert resent.status_code == 200
-    assert client.get(f"{settings.API_V1_STR}/invitations/{old_token}").status_code == 404
-    assert client.get(f"{settings.API_V1_STR}/invitations/{new_token}").status_code == 200
+    assert (
+        client.get(f"{settings.API_V1_STR}/invitations/{old_token}").status_code == 404
+    )
+    assert (
+        client.get(f"{settings.API_V1_STR}/invitations/{new_token}").status_code == 200
+    )
     assert datetime.fromisoformat(resent.json()["expires_at"]) >= old_expiry
 
 
@@ -273,17 +271,13 @@ def test_expired_invitation_can_be_replaced(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     email = random_email()
-    created, _ = _create_via_api(
-        client, superuser_token_headers, email=email
-    )
+    created, _ = _create_via_api(client, superuser_token_headers, email=email)
     old = _get_invitation(db, created.json()["id"])
     old.expires_at = datetime.now(UTC) - timedelta(seconds=1)
     db.add(old)
     db.commit()
 
-    replacement, _ = _create_via_api(
-        client, superuser_token_headers, email=email
-    )
+    replacement, _ = _create_via_api(client, superuser_token_headers, email=email)
 
     assert replacement.status_code == 201
     db.refresh(old)
@@ -317,9 +311,7 @@ def test_service_invitation_permissions_come_from_stored_record(
     assert creator is not None
     delivery = invitation_service.create_invitation(
         session=db,
-        invitation_in=UserInvitationCreate(
-            email=random_email(), is_superuser=False
-        ),
+        invitation_in=UserInvitationCreate(email=random_email(), is_superuser=False),
         created_by=creator,
     )
 

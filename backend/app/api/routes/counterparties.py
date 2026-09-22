@@ -31,7 +31,9 @@ from app.use_cases.exceptions import ObligationNotFoundError
 router = APIRouter(tags=["counterparties"])
 
 
-def _counterparty_summary_or_none(counterparty: Any) -> CounterpartySummaryPublic | None:
+def _counterparty_summary_or_none(
+    counterparty: Any,
+) -> CounterpartySummaryPublic | None:
     if counterparty is None:
         return None
     return CounterpartySummaryPublic.model_validate(counterparty)
@@ -60,7 +62,9 @@ def search_counterparties(
         session=session, query=q, limit=limit
     )
     return CounterpartySearchPublic(
-        items=[CounterpartySummaryPublic.model_validate(item) for item in counterparties]
+        items=[
+            CounterpartySummaryPublic.model_validate(item) for item in counterparties
+        ]
     )
 
 

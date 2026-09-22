@@ -4,7 +4,7 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.domain import DataSourcePolicy, RecurrenceUnit
+from app.domain import Currency, DataSourcePolicy, RecurrenceUnit
 from app.models import Category, CategoryGroup, Ledger
 from app.use_cases import categories as category_use_cases
 from app.use_cases import ledgers as ledger_use_cases
@@ -50,7 +50,7 @@ def create_category_with_recurrence(
     category.recurrence_interval = recurrence_interval
     category.recurrence_unit = recurrence_unit
     category.first_due_date = first_due_date
-    category.currency = "PLN"
+    category.currency = Currency.PLN
     db.commit()
     db.refresh(category)
     return ledger, category_group, category

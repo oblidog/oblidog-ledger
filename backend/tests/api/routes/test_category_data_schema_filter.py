@@ -64,9 +64,7 @@ def test_data_records_api_filters_by_schema_version_and_composes_filters(
         data={"status": "ok"},
     )
 
-    base_url = (
-        f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-records"
-    )
+    base_url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-records"
     response = client.get(
         base_url,
         params={
@@ -160,9 +158,7 @@ def test_data_records_api_rejects_invalid_or_foreign_schema_version(
         schema=_status_schema(),
     )
 
-    url = (
-        f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-records"
-    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-records"
     foreign_version = client.get(
         url,
         params={"schema_version": foreign_second.version},

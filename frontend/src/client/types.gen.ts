@@ -5708,3 +5708,21 @@ export type UtilsHealthCheckResponses = {
 };
 
 export type UtilsHealthCheckResponse = UtilsHealthCheckResponses[keyof UtilsHealthCheckResponses];
+
+export type UtilsReadinessCheckData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/utils/readiness-check/';
+};
+
+export type UtilsReadinessCheckResponses = {
+    /**
+     * Response Utils-Readiness Check
+     *
+     * Successful Response
+     */
+    200: boolean;
+};
+
+export type UtilsReadinessCheckResponse = UtilsReadinessCheckResponses[keyof UtilsReadinessCheckResponses];
