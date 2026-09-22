@@ -59,6 +59,7 @@ class CounterpartySpec:
     key: str
     name: str
     short_name: str
+    logo_url: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,16 +75,39 @@ class CategorySpec:
 
 
 COUNTERPARTY_SPECS = (
-    CounterpartySpec("housing", "Zielona 12 Housing Association", "Zielona 12"),
-    CounterpartySpec("energy", "NorthGrid Energy", "NorthGrid"),
-    CounterpartySpec("city", "City Services", "City Services"),
-    CounterpartySpec("connect", "Connecta", "Connecta"),
-    CounterpartySpec("insurance", "SafeHarbor Insurance", "SafeHarbor"),
-    CounterpartySpec("media", "Northstar Media", "Northstar"),
-    CounterpartySpec("cloud", "SkyVault", "SkyVault"),
-    CounterpartySpec("fitness", "ActiveLife Club", "ActiveLife"),
-    CounterpartySpec("school", "Riverside Primary School", "Riverside"),
-    CounterpartySpec("transit", "Metro Transit", "Metro"),
+    CounterpartySpec(
+        "housing",
+        "Zielona 12 Housing Association",
+        "Zielona 12",
+        "/demo-logos/zielona-12.svg",
+    ),
+    CounterpartySpec(
+        "energy", "NorthGrid Energy", "NorthGrid", "/demo-logos/northgrid.svg"
+    ),
+    CounterpartySpec(
+        "city", "City Services", "City Services", "/demo-logos/city-services.svg"
+    ),
+    CounterpartySpec("connect", "Connecta", "Connecta", "/demo-logos/connecta.svg"),
+    CounterpartySpec(
+        "insurance",
+        "SafeHarbor Insurance",
+        "SafeHarbor",
+        "/demo-logos/safeharbor.svg",
+    ),
+    CounterpartySpec(
+        "media", "Northstar Media", "Northstar", "/demo-logos/northstar.svg"
+    ),
+    CounterpartySpec("cloud", "SkyVault", "SkyVault", "/demo-logos/skyvault.svg"),
+    CounterpartySpec(
+        "fitness", "ActiveLife Club", "ActiveLife", "/demo-logos/activelife.svg"
+    ),
+    CounterpartySpec(
+        "school",
+        "Riverside Primary School",
+        "Riverside",
+        "/demo-logos/riverside.svg",
+    ),
+    CounterpartySpec("transit", "Metro Transit", "Metro", "/demo-logos/metro.svg"),
 )
 
 
@@ -332,9 +356,11 @@ def _ensure_counterparties(*, session: Session) -> dict[str, Counterparty]:
                 session=session,
                 name=spec.name,
                 short_name=spec.short_name,
+                logo_url=spec.logo_url,
             )
         else:
             counterparty.short_name = spec.short_name
+            counterparty.logo_url = spec.logo_url
             session.commit()
             session.refresh(counterparty)
         counterparties[spec.key] = counterparty

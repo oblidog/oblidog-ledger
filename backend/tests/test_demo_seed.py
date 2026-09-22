@@ -118,9 +118,22 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     obligations = list(
         db.scalars(select(Obligation).where(Obligation.ledger_id == ledger.id))
     )
+    counterparty_ids = {
+        category.counterparty_id
+        for category in categories
+        if category.counterparty_id is not None
+    }
+    counterparties = list(
+        db.scalars(select(Counterparty).where(Counterparty.id.in_(counterparty_ids)))
+    )
     assert len(integrations) == 12
     assert all(category.counterparty_id is not None for category in categories)
-    assert len({category.counterparty_id for category in categories}) == 10
+    assert len(counterparties) == 10
+    assert all(
+        counterparty.logo_url is not None
+        and counterparty.logo_url.startswith("/demo-logos/")
+        for counterparty in counterparties
+    )
     assert all(obligation.counterparty_id is not None for obligation in obligations)
     assert (
         sum(
