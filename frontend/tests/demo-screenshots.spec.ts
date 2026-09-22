@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 
-const referenceDate = new Date("2026-09-07T12:00:00Z")
+const screenshotDate = process.env.DEMO_SCREENSHOT_DATE ?? "2026-09-15"
+const referenceDate = new Date(`${screenshotDate}T12:00:00Z`)
 const demoPassword = "public-demo-password"
 
 const mockDemoConfig = async (page: Page) => {

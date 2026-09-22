@@ -14,7 +14,6 @@ env:
   COMPOSE_FILE: compose.e2e.yml
   COMPOSE_PROJECT_NAME: demo-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
   DEMO_USER_PASSWORD: public-demo-password
-  SCREENSHOT_REFERENCE_DATE: "2026-09-07"
 
 jobs:
   capture:
@@ -24,6 +23,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      - name: Set screenshot reference date
+        run: echo "SCREENSHOT_REFERENCE_DATE=$(TZ=Europe/Warsaw date +%Y-%m-15)" >> "$GITHUB_ENV"
 
       - name: Verify Playwright package and Docker image versions match
         run: |
@@ -45,7 +47,10 @@ jobs:
 
       - name: Capture screenshots
         run: >-
-          docker compose run --rm -e DEMO_SCREENSHOTS=true playwright
+          docker compose run --rm
+          -e DEMO_SCREENSHOTS=true
+          -e DEMO_SCREENSHOT_DATE="$SCREENSHOT_REFERENCE_DATE"
+          playwright
           bunx playwright test tests/demo-screenshots.spec.ts
           --project=chromium
           --fail-on-flaky-tests

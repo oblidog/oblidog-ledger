@@ -536,14 +536,32 @@ def _seed_obligations(
     periods: tuple[BillingPeriod, BillingPeriod, BillingPeriod],
     categories: dict[str, Category],
     integrations: dict[str, Integration],
+    reference_date: date,
 ) -> None:
     previously_paid = {spec.code for spec in CATEGORY_SPECS} - {"WATR", "INET"}
-    currently_paid = {"RENT", "ELEC", "STRM", "CLDS"}
+    current_period = periods[1]
+    overdue_budget = len(CATEGORY_SPECS) // 5
+    due_days = {spec.code: spec.due_day for spec in CATEGORY_SPECS}
+    error_is_overdue = (
+        _date_in_period(current_period, due_days["MOBI"]) < reference_date
+    )
+    overdue_showcase = ("HOME", "TRNS", "GYMM")
+    current_overdue_codes = {
+        code
+        for code in overdue_showcase
+        if _date_in_period(current_period, due_days[code]) < reference_date
+    }
+    allowed_showcase_count = max(0, overdue_budget - int(error_is_overdue))
+    current_overdue_codes = {
+        code
+        for code in overdue_showcase[:allowed_showcase_count]
+        if code in current_overdue_codes
+    }
     for spec in CATEGORY_SPECS:
         for period_index, (period, amount) in enumerate(
             zip(periods, spec.amounts, strict=True)
         ):
-            _create_seed_obligation(
+            obligation = _create_seed_obligation(
                 session=session,
                 ledger_id=ledger_id,
                 category=categories[spec.code],
@@ -560,7 +578,10 @@ def _seed_obligations(
                 )
                 continue
             should_be_paid = (period_index == 0 and spec.code in previously_paid) or (
-                period_index == 1 and spec.code in currently_paid
+                period_index == 1
+                and obligation.due_date is not None
+                and obligation.due_date < reference_date
+                and spec.code not in current_overdue_codes
             )
             if not should_be_paid:
                 continue
@@ -824,6 +845,7 @@ def seed_demo(
         periods=obligation_periods,
         categories=categories,
         integrations=integrations,
+        reference_date=today,
     )
     _seed_category_data(
         session=session,
