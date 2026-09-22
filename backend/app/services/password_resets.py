@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -17,14 +18,28 @@ class InvalidPasswordResetTokenError(Exception):
     pass
 
 
+_TOKEN_HASH_DOMAIN = b"oblidog:password-reset-token:v1\0"
+_TOKEN_HASH_ITERATIONS = 600_000
+
+
 @dataclass(frozen=True, slots=True)
 class PasswordResetDelivery:
     token: str
     expires_at: datetime
 
 
-def hash_password_reset_token(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+def hash_password_reset_token(*, token: str, token_id: uuid.UUID) -> str:
+    salt = hmac.digest(
+        settings.SECRET_KEY.encode(),
+        _TOKEN_HASH_DOMAIN + token_id.bytes,
+        "sha256",
+    )
+    return hashlib.pbkdf2_hmac(
+        "sha256",
+        token.encode(),
+        salt,
+        _TOKEN_HASH_ITERATIONS,
+    ).hex()
 
 
 def _lock_user(*, session: Session, user_id: uuid.UUID) -> User | None:
@@ -54,7 +69,7 @@ def issue_password_reset(*, session: Session, user: User) -> PasswordResetDelive
         PasswordResetToken(
             id=token_id,
             user_id=locked_user.id,
-            token_hash=hash_password_reset_token(token),
+            token_hash=hash_password_reset_token(token=token, token_id=token_id),
             expires_at=expires_at,
         )
     )
@@ -75,7 +90,10 @@ def reset_password(*, session: Session, token: str, new_password: str) -> User:
     reset_token = token_repository.get_by_id_and_hash_for_update(
         session=session,
         token_id=claims.token_id,
-        token_hash=hash_password_reset_token(token),
+        token_hash=hash_password_reset_token(
+            token=token,
+            token_id=claims.token_id,
+        ),
     )
     now = datetime.now(UTC)
     if (
