@@ -32,21 +32,24 @@ The FastAPI function does not run migrations or seed data on startup.
 
 ## One-time database setup
 
-Run these commands once from a trusted environment with the Preview database
-URL and the backend variables above available to the process:
+On a trusted machine with Bash, Python 3 and `uv`, check out the PoC branch and
+run the interactive helper from the repository root:
 
 ```sh
-cd backend
-uv run alembic upgrade head
-uv run python -m app.initial_data
-uv run python -m app.demo_seed
+bash backend/scripts/prepare_vercel_demo.sh
 ```
 
-The last command needs `DEMO_USER_PASSWORD`. It replaces the demo user's
-existing sample ledger, so it is an explicit maintenance operation, not part
-of a deployment or function startup. Use the Neon **unpooled** URL for schema
-migrations if possible; the runtime can retain Neon's pooled `POSTGRES_URL`.
-Never point these commands at the private VPS database.
+In the Vercel project, open Storage -> `oblidog-demo` -> Open in Neon Console.
+Copy its connection string from **Connect** with **Connection pooling disabled**.
+The helper prompts for that URL and the exact admin and demo passwords stored
+for Preview. It does not print their values or write an `.env` file. It accepts
+only a direct `*.neon.tech` URL, displays the target host and database, and
+requires confirmation before writing. The local `SECRET_KEY` is temporary;
+the Vercel value stays unchanged. The script runs Alembic, initial admin setup,
+then the demo seed. The seed replaces the demo user's existing sample ledger,
+so run this only for intentional setup or refresh. Verify that the displayed
+target belongs to `oblidog-demo`; the URL alone cannot prove the Neon project
+name. Never use the private VPS database.
 
 ## Verification still required for #274
 
