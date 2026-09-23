@@ -33,23 +33,28 @@ The FastAPI function does not run migrations or seed data on startup.
 ## One-time database setup
 
 On a trusted machine with Bash, Python 3 and `uv`, check out the PoC branch and
-run the interactive helper from the repository root:
+run the helper from the repository root:
 
 ```sh
 bash backend/scripts/prepare_vercel_demo.sh
 ```
 
+The first run creates `.env.neon-demo.local` in the repository root with mode
+600. Fill in its three `KEY=VALUE` lines without shell quotes; this file is
+Git-ignored. On later runs, the helper reuses those values, so a failed migration
+does not require re-entering them. Keep this file on your trusted machine and
+do not share it or paste its contents into an issue.
+
 In the Vercel project, open Storage -> `oblidog-demo` -> Open in Neon Console.
 Copy its connection string from **Connect** with **Connection pooling disabled**.
-The helper prompts for that URL and the exact admin and demo passwords stored
-for Preview. It does not print their values or write an `.env` file. It accepts
-only a direct `*.neon.tech` URL, displays the target host and database, and
-requires confirmation before writing. The local `SECRET_KEY` is temporary;
-the Vercel value stays unchanged. The script runs Alembic, initial admin setup,
-then the demo seed. The seed replaces the demo user's existing sample ledger,
-so run this only for intentional setup or refresh. Verify that the displayed
-target belongs to `oblidog-demo`; the URL alone cannot prove the Neon project
-name. Never use the private VPS database.
+Use the exact admin and demo passwords stored for Preview. The helper accepts
+only a direct `*.neon.tech` URL, checks file permissions, displays the target
+host and database, and requires confirmation before writing. The local
+`SECRET_KEY` is temporary; the Vercel value stays unchanged. The script runs
+Alembic, initial admin setup, then the demo seed. The seed replaces the demo
+user's existing sample ledger, so run this only for intentional setup or
+refresh. Verify that the displayed target belongs to `oblidog-demo`; the URL
+alone cannot prove the Neon project name. Never use the private VPS database.
 
 ## Verification still required for #274
 
