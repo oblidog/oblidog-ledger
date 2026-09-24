@@ -55,6 +55,11 @@ for line_number, line in enumerate(env_file.read_text(encoding="utf-8").splitlin
     values[key] = value
 if set(values) != required or any(not value for value in values.values()):
     raise SystemExit("Fill all three values in .env.neon-demo.local before running setup.")
+for key in ("FIRST_SUPERUSER_PASSWORD", "DEMO_USER_PASSWORD"):
+    if not 8 <= len(values[key]) <= 128:
+        raise SystemExit(
+            f"{key} must contain 8 to 128 characters. No database operation was started."
+        )
 
 try:
     url = urlsplit(values["POSTGRES_URL"])
