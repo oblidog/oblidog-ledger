@@ -18,14 +18,25 @@ Set these backend variables in the Vercel **Preview** environment:
 | `FIRST_SUPERUSER` | Dedicated demo admin email, never a real account |
 | `FIRST_SUPERUSER_PASSWORD` | Strong, private password for that admin |
 | `SESSION_COOKIE_SECURE` | `true` for HTTPS |
-| `FRONTEND_HOST` | Exact frontend Preview origin, once it exists |
+| `SESSION_COOKIE_SAMESITE` | `none` for the cross-site frontend/backend session |
+| `FRONTEND_HOST` | `https://oblidog-ledger-frontend-git-dev-oblidog.vercel.app` |
 
 Neon supplies `POSTGRES_URL` for this environment. Do not put the URL or any
 password in Git, build logs, or a frontend variable. `DEMO_USER_PASSWORD` is
 needed for the optional sample dataset. The current `public-config` endpoint
 returns that demo password to the browser, so it must be a **dedicated disposable
-password**, never reused by another account. Protected Preview still requires
-Vercel Authentication before a visitor reaches the app.
+password**, never reused by another account. The frontend Preview uses
+`frontend/` as its root directory, the Vite preset, and Preview-only
+`VITE_API_URL=https://project-gs28u-git-dev-oblidog.vercel.app`.
+
+The backend `project-gs28u-git-dev-oblidog.vercel.app` branch alias has a
+Deployment Protection Exception. That alias is **publicly accessible**, while
+other protected backend deployment URLs retain their protection. Vercel
+Authentication intercepted cross-origin browser API requests with `302`/`401`
+responses lacking CORS headers. An OPTIONS allowlist alone cannot fix the
+blocked GET and POST requests. The frontend branch URL may remain protected by
+Vercel Authentication; the demo API and disposable demo credentials are public.
+Keep the database isolated and do not reuse any demo password.
 
 Changes to Vercel environment variables require a new Preview deployment.
 The FastAPI function does not run migrations or seed data on startup.
@@ -57,16 +68,22 @@ user's existing sample ledger, so run this only for intentional setup or
 refresh. Verify that the displayed target belongs to `oblidog-demo`; the URL
 alone cannot prove the Neon project name. Never use the private VPS database.
 
-## Verification still required for #274
+## Observed PoC result (2026-09-24)
 
-- After redeploy, check `/api/v1/utils/health-check/` and
-  `/api/v1/utils/readiness-check/` on the protected backend Preview URL.
-- Deploy the Vite frontend to a separate protected Preview project and set its
-  `VITE_API_URL` to the backend Preview origin at build time, or use a same-origin
-  `/api/*` rewrite. Verify deep links reload successfully.
-- From the frontend origin, check `public-config`, a credentialed login, and an
-  authenticated read. Set `FRONTEND_HOST` to that origin; cross-origin cookie
-  behavior and Vercel Authentication need browser verification before claiming
-  the frontend PoC is complete.
-- Do not connect the demo database to Production or publish the final domain as
-  part of this PoC.
+- The backend Preview served `/api/v1/utils/health-check/` and
+  `/api/v1/utils/readiness-check/` (`true`); Swagger login and
+  `GET /api/v1/ledgers/` returned one `Oblidog Demo` ledger.
+- The Vite frontend Preview served `/login` on Vercel. From the frontend `dev`
+  branch alias, browser login succeeded, the authenticated ledger loaded, and
+  sample obligations were visible with the public demo banner. This verifies
+  the frontend API URL, CORS, session cookie, and authenticated read in the
+  tested browser.
+- The demo database migrations, initial admin setup, and seed were run with
+  the one-time helper against the dedicated Neon project. These operations do
+  not run in a Vercel Function at startup. Periodic reset and production
+  controls belong to later demo issues.
+- The cross-origin request to a Vercel-authenticated backend Preview was the
+  deployment blocker. The branch-domain protection exception resolves this
+  for the PoC but makes that backend alias publicly reachable. Preserve this
+  constraint when designing the final public demo. No Production database
+  connection or final demo domain was configured for this PoC.
