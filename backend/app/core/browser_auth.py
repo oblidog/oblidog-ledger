@@ -1,5 +1,6 @@
 import secrets
 from datetime import UTC, datetime, timedelta
+from urllib.parse import urlsplit
 
 import jwt
 from fastapi import Request, Response, status
@@ -18,6 +19,29 @@ def request_uses_bearer_auth(request: Request) -> bool:
     authorization = request.headers.get("authorization", "")
     scheme, _, credentials = authorization.partition(" ")
     return scheme.lower() == "bearer" and bool(credentials)
+
+
+def request_has_same_origin(request: Request, origin: str) -> bool:
+    try:
+        parsed = urlsplit(origin)
+    except ValueError:
+        return False
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path
+        or parsed.query
+        or parsed.fragment
+    ):
+        return False
+
+    # The ASGI scheme can be HTTP behind a TLS-terminating proxy such as Vercel.
+    forwarded_scheme = request.headers.get("x-forwarded-proto", "").split(",", 1)[0]
+    return parsed.netloc.lower() == request.headers.get("host", "").lower() and (
+        parsed.scheme == request.url.scheme or parsed.scheme == forwarded_scheme.strip()
+    )
 
 
 def set_session_cookie(response: Response, token: str) -> None:
@@ -69,6 +93,7 @@ class BrowserSessionSecurityMiddleware(BaseHTTPMiddleware):
             if (
                 origin is not None
                 and origin.rstrip("/") not in settings.all_cors_origins
+                and not request_has_same_origin(request, origin)
             ):
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,

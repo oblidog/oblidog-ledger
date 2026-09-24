@@ -63,15 +63,28 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
-    POSTGRES_SERVER: str
+    # Marketplace integrations provide a complete URL; self-hosted deployments
+    # continue to use the individual POSTGRES_* settings below.
+    POSTGRES_URL: PostgresDsn | None = None
+    POSTGRES_SERVER: str | None = None
     POSTGRES_PORT: int = 5432
-    POSTGRES_USER: str
+    POSTGRES_USER: str | None = None
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
+        if self.POSTGRES_URL is not None:
+            url = str(self.POSTGRES_URL)
+            if url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+            elif url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg://", 1)
+            return PostgresDsn(url)
+
+        assert self.POSTGRES_USER is not None
+        assert self.POSTGRES_SERVER is not None
         return PostgresDsn.build(
             scheme="postgresql+psycopg",
             username=self.POSTGRES_USER,
@@ -148,6 +161,11 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
+        if self.POSTGRES_URL is None and (
+            not self.POSTGRES_SERVER or not self.POSTGRES_USER
+        ):
+            raise ValueError("Set POSTGRES_URL or both POSTGRES_SERVER and POSTGRES_USER")
+
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
         self._check_default_secret(
