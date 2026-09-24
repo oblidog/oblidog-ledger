@@ -14,7 +14,9 @@ export function MobileShell() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
-  const items = primaryNavigation(activeLedgerId)
+  const items = primaryNavigation(activeLedgerId).filter(
+    (item) => item.title !== "Analytics",
+  )
 
   return (
     <>
