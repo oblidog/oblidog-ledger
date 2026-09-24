@@ -159,6 +159,42 @@ def test_browser_login_rejects_untrusted_origin(client: TestClient) -> None:
     assert response.json() == {"detail": "Origin is not allowed"}
 
 
+def test_swagger_token_login_allows_same_origin_behind_tls_proxy(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        f"{settings.API_V1_STR}/login/access-token",
+        data={
+            "username": settings.FIRST_SUPERUSER,
+            "password": settings.FIRST_SUPERUSER_PASSWORD,
+        },
+        headers={
+            "Host": "preview.example.com",
+            "Origin": "https://preview.example.com",
+            "X-Forwarded-Proto": "https",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["access_token"]
+
+
+def test_swagger_token_login_rejects_other_origin_behind_tls_proxy(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        f"{settings.API_V1_STR}/login/access-token",
+        headers={
+            "Host": "preview.example.com",
+            "Origin": "https://attacker.example.com",
+            "X-Forwarded-Proto": "https",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin is not allowed"}
+
+
 def test_browser_cors_explicitly_allows_credentials_and_csrf(
     client: TestClient,
 ) -> None:
