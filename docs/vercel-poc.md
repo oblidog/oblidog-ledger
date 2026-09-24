@@ -41,10 +41,47 @@ Keep the database isolated and do not reuse any demo password.
 Changes to Vercel environment variables require a new Preview deployment.
 The FastAPI function does not run migrations or seed data on startup.
 
+## Demo database deployment lifecycle (#276)
+
+After the backend `dev` Preview deployment succeeds, open GitHub Actions ->
+**Demo Database Lifecycle** -> **Run workflow**, select branch `dev`, and choose:
+
+| Action | Effect |
+| --- | --- |
+| `migrate` (default) | Run `alembic upgrade head` for a normal update; keep existing demo data. |
+| `initialize` | Run migrations, create/update the dedicated demo admin, and run the canonical `app.demo_seed` entry point. This replaces the demo user's ledger. Enter `replace-demo-ledger` in the confirmation field. |
+
+The workflow file must also exist on the default `main` branch for GitHub to
+show the manual trigger; the database job itself is restricted to `dev`.
+
+Create the GitHub Actions environment `demo-preview` and add these **environment
+secrets** (not repository secrets): `DEMO_POSTGRES_URL` (the direct, unpooled
+connection URL for the isolated Neon database), `DEMO_NEON_HOST` (its exact
+unpooled hostname, entered separately), `DEMO_FIRST_SUPERUSER_PASSWORD`, and
+`DEMO_USER_PASSWORD`. Use the same admin and disposable demo passwords as
+backend Vercel Preview. Keep the dedicated demo superuser. Do not put the URL or
+passwords in workflow inputs or Git. Restrict who can administer this GitHub
+environment and, if available on your plan, require approval for its jobs.
+
+The workflow accepts only the `dev` ref. Its runner checks that the URL points
+to the exact independently configured unpooled Neon host and `neondb` database
+before running any database command, and forces `ENVIRONMENT=demo`. It never
+copies the production VPS connection. Steps fail the job if Alembic, admin setup,
+or seeding fails;
+inspect the failed step's logs and rerun the workflow after fixing the cause.
+No password or complete URL is printed. The generated signing key applies only
+to the short-lived runner process, not to Vercel.
+
+Vercel's Git integration deploys the code on `dev`; this manual database job is
+the deliberate follow-up to a successful backend Preview deployment. For a
+schema change that is incompatible with the currently deployed backend, plan
+the migration and deployment ordering before merging. Seeding is never part of
+normal deploys or function startup. Periodic reset remains tracked in #278.
+
 ## One-time database setup
 
-On a trusted machine with Bash, Python 3 and `uv`, check out the PoC branch and
-run the helper from the repository root:
+For manual recovery on a trusted machine with Bash, Python 3 and `uv`, check out
+`dev` and run the helper from the repository root:
 
 ```sh
 bash backend/scripts/prepare_vercel_demo.sh
