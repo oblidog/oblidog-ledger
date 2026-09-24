@@ -48,7 +48,8 @@ do not share it or paste its contents into an issue.
 In the Vercel project, open Storage -> `oblidog-demo` -> Open in Neon Console.
 Copy its connection string from **Connect** with **Connection pooling disabled**.
 Use the exact admin and demo passwords stored for Preview. The helper accepts
-only a direct `*.neon.tech` URL, checks file permissions, displays the target
+only a direct `*.neon.tech` URL, checks that both passwords have 8 to 128
+characters, checks file permissions, displays the target
 host and database, and requires confirmation before writing. The local
 `SECRET_KEY` is temporary; the Vercel value stays unchanged. The script runs
 Alembic, initial admin setup, then the demo seed. The seed replaces the demo
