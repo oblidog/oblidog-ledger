@@ -1,0 +1,49 @@
+name: Demo Database Lifecycle
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Migrate schema or initialize and replace the demo ledger
+        type: choice
+        options:
+          - migrate
+          - initialize
+        required: true
+        default: migrate
+      confirmation:
+        description: For initialize only, type replace-demo-ledger
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-database-lifecycle
+  cancel-in-progress: false
+
+jobs:
+  lifecycle:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: demo-preview
+    timeout-minutes: 20
+    env:
+      GITHUB_REF: ${{ github.ref }}
+      DEMO_POSTGRES_URL: ${{ secrets.DEMO_POSTGRES_URL }}
+      DEMO_NEON_HOST: ${{ secrets.DEMO_NEON_HOST }}
+      DEMO_FIRST_SUPERUSER_PASSWORD: ${{ secrets.DEMO_FIRST_SUPERUSER_PASSWORD }}
+      DEMO_USER_PASSWORD: ${{ secrets.DEMO_USER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v7
+      - name: Apply requested demo database operation
+        working-directory: backend
+        env:
+          DEMO_ACTION: ${{ inputs.action }}
+          DEMO_CONFIRMATION: ${{ inputs.confirmation }}
+        run: python scripts/run_vercel_demo_lifecycle.py "$DEMO_ACTION" --confirmation "$DEMO_CONFIRMATION"
