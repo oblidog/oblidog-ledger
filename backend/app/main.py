@@ -1,10 +1,11 @@
-from importlib.metadata import version
+import tomllib
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 
@@ -17,6 +18,18 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
+def get_app_version() -> str:
+    try:
+        return version("app")
+    except PackageNotFoundError:
+        # Vercel can run the source tree without installing the app distribution.
+        project_file = Path(__file__).resolve().parents[1] / "pyproject.toml"
+        with project_file.open("rb") as source:
+            project_version = tomllib.load(source)["project"]["version"]
+        assert isinstance(project_version, str)
+        return project_version
+
+
 # Demo is a public deployed environment, so it reports errors like staging and
 # production whenever a dedicated SENTRY_DSN is configured. Local stays silent.
 if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
@@ -25,7 +38,7 @@ if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="API for Oblidog.",
-    version=version("app"),
+    version=get_app_version(),
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=None,
     redoc_url=None,
@@ -40,7 +53,7 @@ def docs_favicon(_request: Request) -> FileResponse:
     )
 
 
-def swagger_ui(_request: Request):
+def swagger_ui(_request: Request) -> HTMLResponse:
     return get_swagger_ui_html(
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         title=f"{app.title} - Swagger UI",
@@ -48,7 +61,7 @@ def swagger_ui(_request: Request):
     )
 
 
-def redoc(_request: Request):
+def redoc(_request: Request) -> HTMLResponse:
     return get_redoc_html(
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         title=f"{app.title} - ReDoc",
