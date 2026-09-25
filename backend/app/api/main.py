@@ -7,6 +7,7 @@ from app.api.routes import (
     category_data_csv,
     category_data_schemas,
     counterparties,
+    demo_reset,
     integration,
     integrations,
     ledgers,
@@ -27,6 +28,7 @@ api_router.include_router(categories.router)
 api_router.include_router(category_data_csv.router)
 api_router.include_router(category_data_schemas.router)
 api_router.include_router(counterparties.router)
+api_router.include_router(demo_reset.router)
 api_router.include_router(integration.router)
 api_router.include_router(integrations.router)
 api_router.include_router(legacy_import.router)
