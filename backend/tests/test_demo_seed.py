@@ -22,6 +22,7 @@ from app.models import (
     ObligationComponent,
     User,
 )
+from app.use_cases.ledgers import create_ledger
 
 REFERENCE_DATE = date(2026, 9, 7)
 DEMO_TEST_PASSWORD = "test-demo-password"
@@ -236,6 +237,26 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
         .having(func.count(Category.id) > 1)
     )
     assert shared_counterparty is not None
+
+
+def test_reseed_removes_renamed_and_extra_demo_ledgers(db: Session) -> None:
+    first = seed_demo(
+        session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE
+    )
+    existing = db.get(Ledger, first.ledger_id)
+    assert existing is not None
+    existing.name = "Visitor renamed the demo"
+    db.commit()
+    create_ledger(session=db, owner_user_id=first.user_id, name="Visitor extra ledger")
+
+    second = seed_demo(
+        session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE
+    )
+    remaining = list(
+        db.scalars(select(Ledger).where(Ledger.owner_user_id == first.user_id))
+    )
+    assert [ledger.id for ledger in remaining] == [second.ledger_id]
+    assert remaining[0].name == DEMO_LEDGER_NAME
 
 
 @pytest.mark.parametrize(
