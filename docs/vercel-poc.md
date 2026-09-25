@@ -78,6 +78,36 @@ schema change that is incompatible with the currently deployed backend, plan
 the migration and deployment ordering before merging. Seeding is never part of
 normal deploys or function startup. Periodic reset remains tracked in #278.
 
+## Demo reset (#278)
+
+The backend has a hidden `GET /api/v1/demo/reset` operator endpoint. Configure
+`CRON_SECRET` (a unique random value of at least 16 characters) and
+`DEMO_NEON_HOST` (the exact **unpooled** Neon hostname) in backend Vercel
+**Preview**. Keep both values on the server; never put them in a Vite variable.
+Redeploy Preview after changing environment variables. The endpoint returns
+404 outside `ENVIRONMENT=demo`, 401 for missing/incorrect authorization, 503
+for missing configuration or an unexpected database target, and 409 when
+another reset is already running. It never applies migrations. A failed seed
+returns 500 and records the exception in function logs.
+
+For an intentional manual reset of the isolated demo, call the backend `dev`
+branch alias with `Authorization: Bearer <CRON_SECRET>` from a trusted shell.
+Keep the secret out of shell history and log files; use an environment variable
+read from a private local file or a password manager. Verify the demo ledger
+after the response. This replaces the current demo user's ledger and changes
+its ID; concurrent visitor edits may be lost.
+
+`backend/vercel.json` schedules the same endpoint once daily for the 03:00 UTC
+hour (Hobby may invoke it later within that hour), the maximum supported
+frequency on Hobby. Vercel Cron runs **only on Production**;
+it will not fire on the current `dev` Preview. Keep the Production block in
+place until the remaining #91 stages are ready. At go-live, configure the same
+`CRON_SECRET`, `DEMO_NEON_HOST`, `DEMO_USER_PASSWORD`, and isolated Neon URL for
+the intended demo Production deployment, then verify a manual call and the
+first scheduled invocation in Vercel Logs. The schedule is a single line in
+`backend/vercel.json` and can be changed in a reviewed PR. #278 remains open
+until the scheduled run is verified.
+
 ## One-time database setup
 
 For manual recovery on a trusted machine with Bash, Python 3 and `uv`, check out
