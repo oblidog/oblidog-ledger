@@ -43,12 +43,17 @@ def validate_demo_target(database_url: str, expected_host: str | None) -> None:
 
 
 def reset_demo_data(*, password: str) -> DemoSeedResult:
-    """Hold a PostgreSQL transaction lock across the seed's internal commits."""
+    """Keep the lock and all seed writes in one transaction until completion."""
     with engine.begin() as lock_connection:
         acquired = lock_connection.scalar(
             text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": _RESET_LOCK_KEY}
         )
         if not acquired:
             raise DemoResetBusyError("A demo reset is already running")
-        with Session(engine) as session:
+        # The canonical seeder and its use cases call Session.commit() repeatedly.
+        # Savepoints keep those commits inside the outer transaction, so an error
+        # restores the previous ledger instead of exposing a partial reset.
+        with Session(
+            bind=lock_connection, join_transaction_mode="create_savepoint"
+        ) as session:
             return seed_demo(session=session, password=password)
