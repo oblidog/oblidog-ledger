@@ -142,7 +142,7 @@ jobs:
       - name: Test demo lifecycle guard without database access
         if: steps.scope.outputs.run_heavy == 'true'
         working-directory: backend
-        run: uv run --locked pytest -q scripts/tests/test_demo_deployment_lifecycle.py
+        run: uv run --locked pytest -q scripts/tests
       - run: docker compose down -v --remove-orphans
         if: steps.scope.outputs.run_heavy == 'true'
       - run: docker compose up -d --wait db mailcatcher
