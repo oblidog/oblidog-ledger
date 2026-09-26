@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # Marketplace integrations provide a complete URL; self-hosted deployments
     # continue to use the individual POSTGRES_* settings below.
     POSTGRES_URL: PostgresDsn | None = None
+    # The reset endpoint requires an independently configured demo target.
+    DEMO_NEON_HOST: str | None = None
+    CRON_SECRET: str | None = None
     POSTGRES_SERVER: str | None = None
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str | None = None
@@ -164,7 +167,9 @@ class Settings(BaseSettings):
         if self.POSTGRES_URL is None and (
             not self.POSTGRES_SERVER or not self.POSTGRES_USER
         ):
-            raise ValueError("Set POSTGRES_URL or both POSTGRES_SERVER and POSTGRES_USER")
+            raise ValueError(
+                "Set POSTGRES_URL or both POSTGRES_SERVER and POSTGRES_USER"
+            )
 
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)

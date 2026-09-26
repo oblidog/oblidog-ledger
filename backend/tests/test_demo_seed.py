@@ -22,6 +22,8 @@ from app.models import (
     ObligationComponent,
     User,
 )
+from app.services import demo_reset as demo_reset_service
+from app.use_cases.ledgers import create_ledger
 
 REFERENCE_DATE = date(2026, 9, 7)
 DEMO_TEST_PASSWORD = "test-demo-password"
@@ -238,6 +240,26 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     assert shared_counterparty is not None
 
 
+def test_reseed_removes_renamed_and_extra_demo_ledgers(db: Session) -> None:
+    first = seed_demo(
+        session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE
+    )
+    existing = db.get(Ledger, first.ledger_id)
+    assert existing is not None
+    existing.name = "Visitor renamed the demo"
+    db.commit()
+    create_ledger(session=db, owner_user_id=first.user_id, name="Visitor extra ledger")
+
+    second = seed_demo(
+        session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE
+    )
+    remaining = list(
+        db.scalars(select(Ledger).where(Ledger.owner_user_id == first.user_id))
+    )
+    assert [ledger.id for ledger in remaining] == [second.ledger_id]
+    assert remaining[0].name == DEMO_LEDGER_NAME
+
+
 @pytest.mark.parametrize(
     ("reference_date", "expected_overdue"),
     [
@@ -320,3 +342,34 @@ def test_seed_demo_replaces_existing_demo_ledger(db: Session) -> None:
         month=9,
     )
     assert restored.current_amount == Decimal("208.75")
+
+
+def test_failed_reset_restores_previous_ledger(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first = seed_demo(
+        session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE
+    )
+    monkeypatch.setattr(demo_reset_service, "engine", db.get_bind())
+
+    def seed_then_fail(*, session: Session, password: str) -> None:
+        seed_demo(session=session, password=password, reference_date=REFERENCE_DATE)
+        raise RuntimeError("failure after internal commits")
+
+    monkeypatch.setattr(demo_reset_service, "seed_demo", seed_then_fail)
+    with pytest.raises(RuntimeError, match="failure after internal commits"):
+        demo_reset_service.reset_demo_data(password=DEMO_TEST_PASSWORD)
+
+    db.expire_all()
+    remaining = list(
+        db.scalars(select(Ledger).where(Ledger.owner_user_id == first.user_id))
+    )
+    assert [ledger.id for ledger in remaining] == [first.ledger_id]
+    assert (
+        db.scalar(
+            select(func.count())
+            .select_from(Obligation)
+            .where(Obligation.ledger_id == first.ledger_id)
+        )
+        == 45
+    )

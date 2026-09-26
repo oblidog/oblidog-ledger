@@ -326,17 +326,13 @@ def _ensure_demo_user(*, session: Session, password: str) -> User:
     return user
 
 
-def _remove_existing_demo_ledger(*, session: Session, user_id: uuid.UUID) -> None:
-    ledger = session.scalar(
-        select(Ledger).where(
-            Ledger.owner_user_id == user_id,
-            Ledger.name == DEMO_LEDGER_NAME,
-        )
+def _remove_existing_demo_ledgers(*, session: Session, user_id: uuid.UUID) -> None:
+    ledgers = list(
+        session.scalars(select(Ledger).where(Ledger.owner_user_id == user_id))
     )
-    if ledger is None:
-        return
-    session.execute(delete(Integration).where(Integration.ledger_id == ledger.id))
-    session.delete(ledger)
+    for ledger in ledgers:
+        session.execute(delete(Integration).where(Integration.ledger_id == ledger.id))
+        session.delete(ledger)
     session.commit()
 
 
@@ -817,7 +813,7 @@ def seed_demo(
     next_period = _shift_period(current, 1)
 
     user = _ensure_demo_user(session=session, password=password)
-    _remove_existing_demo_ledger(session=session, user_id=user.id)
+    _remove_existing_demo_ledgers(session=session, user_id=user.id)
     counterparties = _ensure_counterparties(session=session)
 
     ledger = create_ledger(
