@@ -126,15 +126,30 @@ Configure a Vercel Firewall rate-limit rule on the **backend** project
 `project-gs28u`, scoped to the public demo domain/Preview environment:
 
 1. In **Firewall → WAF → Custom Rules**, add a rule whose path starts with
-   `/api/v1/` and whose method is POST, PUT, PATCH, or DELETE. Rate-limit by
-   IP at an initial 60 requests per minute, with the exceeded action set to
-   **Log** while observing real traffic. Include OPTIONS in neither the match
-   nor a challenge rule, so CORS preflight continues to work. If the Hobby
-   project permits only one rate-limit rule, use this one for mutations and
-   login; GET responses remain subject to Vercel's automatic DDoS protection.
+   `/api/v1/` and whose method is not OPTIONS. Rate-limit by IP at an initial
+   60 requests per minute, with the exceeded action set to **Log** while
+   observing real traffic. This single rule covers authentication, mutations,
+   and expensive reads. OPTIONS is excluded so CORS preflight continues to
+   work. Hobby projects with one available rate-limit rule can use this rule.
+   From a CLI linked specifically to the backend project, the equivalent
+   draft rule is:
+
+   ```sh
+   vercel firewall rules add "Demo API rate limit" \
+     --condition '{"type":"path","op":"pre","value":"/api/v1/"}' \
+     --condition '{"type":"method","op":"neq","value":"OPTIONS"}' \
+     --condition '{"type":"environment","op":"eq","value":"preview"}' \
+     --action rate_limit --rate-limit-window 60 \
+     --rate-limit-requests 60 --rate-limit-keys ip \
+     --rate-limit-action log --yes
+   vercel firewall diff
+   ```
+
+   Review the project and draft before publishing it in Vercel. Repeat this
+   for Production only when the final public demo domain is configured.
 2. Review rule matches and normal login, ledger edits, and the hourly VM reset
-   in Firewall Traffic. The reset is a GET request with a separate secret, so
-   this mutation rule does not touch it. Switch the exceeded action to 429
+   in Firewall Traffic. The reset is a GET request with a separate secret; its
+   VM IP also has a rate-limit counter. Switch the exceeded action to 429
    rate limiting only after the observed match set is correct. Keep a note of
    the old setting for quick rollback.
 3. Enable the managed **Bot Protection** rule in Log mode; review its matches
