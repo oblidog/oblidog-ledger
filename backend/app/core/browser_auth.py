@@ -101,7 +101,16 @@ class BrowserSessionSecurityMiddleware(BaseHTTPMiddleware):
                 )
 
             csrf_token = session_csrf_token(request)
-            if csrf_token is not None and not request_uses_bearer_auth(request):
+            # OAuth2 password login authenticates with submitted credentials and
+            # returns a bearer token; a pre-existing browser cookie is irrelevant.
+            is_bearer_login = (
+                request.url.path == f"{settings.API_V1_STR}/login/access-token"
+            )
+            if (
+                csrf_token is not None
+                and not request_uses_bearer_auth(request)
+                and not is_bearer_login
+            ):
                 provided = request.headers.get(CSRF_HEADER_NAME)
                 if provided is None or not secrets.compare_digest(provided, csrf_token):
                     return JSONResponse(
