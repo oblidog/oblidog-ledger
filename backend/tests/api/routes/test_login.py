@@ -42,6 +42,41 @@ def test_get_access_token(client: TestClient) -> None:
     assert tokens["access_token"]
 
 
+def test_swagger_access_token_login_with_existing_browser_session(
+    client: TestClient,
+) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        session_login = client.post(
+            f"{settings.API_V1_STR}/login/session", data=login_data
+        )
+        assert session_login.status_code == 200
+
+        swagger_login = client.post(
+            f"{settings.API_V1_STR}/login/access-token",
+            data=login_data,
+            headers={
+                "Host": "preview.example.com",
+                "Origin": "https://preview.example.com",
+                "X-Forwarded-Proto": "https",
+            },
+        )
+        assert swagger_login.status_code == 200
+        assert swagger_login.json()["access_token"]
+
+        protected = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Origin": settings.FRONTEND_HOST},
+        )
+        assert protected.status_code == 403
+        assert protected.json() == {"detail": "Invalid CSRF token"}
+    finally:
+        client.cookies.clear()
+
+
 def test_browser_session_uses_http_only_cookie_and_csrf(client: TestClient) -> None:
     login_data = {
         "username": settings.FIRST_SUPERUSER,
