@@ -14,6 +14,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import engine
+from app.core.demo_identity import DEMO_EMAIL
 from app.domain import (
     BillingPeriod,
     Currency,
@@ -42,7 +43,6 @@ from app.use_cases.obligations import (
 
 logger = logging.getLogger(__name__)
 
-DEMO_EMAIL = "demo@oblidog.com"
 DEMO_LEDGER_NAME = "Oblidog Demo"
 DEMO_PASSWORD_ENV = "DEMO_USER_PASSWORD"
 _DEMO_UUID_NAMESPACE = uuid.UUID("5d1a6522-b2a3-4db9-b6c2-69db1fe69317")

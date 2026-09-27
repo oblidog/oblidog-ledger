@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.api.deps import enforce_demo_request_capabilities
+from app.api.deps import enforce_demo_request_capabilities, enforce_demo_write_policy
 from app.api.routes import (
     analytics,
     categories,
@@ -20,7 +20,12 @@ from app.api.routes import (
     utils,
 )
 
-api_router = APIRouter(dependencies=[Depends(enforce_demo_request_capabilities)])
+api_router = APIRouter(
+    dependencies=[
+        Depends(enforce_demo_request_capabilities),
+        Depends(enforce_demo_write_policy),
+    ]
+)
 api_router.include_router(login.router)
 api_router.include_router(ledgers.router)
 api_router.include_router(analytics.router)

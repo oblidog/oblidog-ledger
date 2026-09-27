@@ -18,6 +18,7 @@ def test_public_config_does_not_expose_demo_credentials_outside_demo(
     assert response.json() == {
         "environment": "local",
         "is_demo": False,
+        "demo_writes_enabled": True,
         "demo_credentials": None,
     }
 
@@ -35,6 +36,7 @@ def test_public_config_exposes_published_credentials_in_demo(
     assert response.json() == {
         "environment": "demo",
         "is_demo": True,
+        "demo_writes_enabled": True,
         "demo_credentials": {
             "email": DEMO_EMAIL,
             "password": "public-demo-password",

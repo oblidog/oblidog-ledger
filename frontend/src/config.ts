@@ -13,6 +13,7 @@ export interface DemoCredentials {
 export interface PublicAppConfig {
   environment: "local" | "staging" | "demo" | "production"
   is_demo: boolean
+  demo_writes_enabled: boolean
   demo_credentials: DemoCredentials | null
 }
 
