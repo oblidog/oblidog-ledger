@@ -22,6 +22,7 @@ from app.schemas import (
     LedgerUpdate,
     Message,
 )
+from app.services import demo_limits
 from app.services import users as user_service
 from app.use_cases import ledgers as ledger_use_cases
 from app.use_cases.exceptions import (
@@ -66,6 +67,14 @@ def read_ledgers(session: SessionDep, current_user: CurrentUser) -> Any:
 def create_ledger(
     *, session: SessionDep, current_user: CurrentUser, ledger_in: LedgerCreate
 ) -> Any:
+    demo_limits.remaining_capacity(
+        session,
+        owner_user_id=current_user.id,
+        model=Ledger,
+        predicate=Ledger.owner_user_id == current_user.id,
+        limit=demo_limits.MAX_LEDGERS,
+        resource="ledgers",
+    )
     ledger = ledger_use_cases.create_ledger(
         session=session,
         owner_user_id=current_user.id,

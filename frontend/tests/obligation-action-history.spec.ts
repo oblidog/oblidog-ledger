@@ -114,6 +114,7 @@ test("renders paginated lifecycle, value, and component action history", async (
   await page.goto(`/ledgers/${fixture.ledger.id}`)
   await page.getByLabel("Lifecycle").selectOption("")
   await page.getByText(fixture.categoryName, { exact: true }).click()
+  await page.getByRole("tab", { name: "Activity" }).click()
 
   const history = page.getByRole("region", { name: "Action history" })
   await expect(history).toBeVisible()

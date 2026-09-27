@@ -28,6 +28,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -41,6 +42,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ObligationWithCounterparty } from "@/features/counterparties/api"
 import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
@@ -563,49 +565,143 @@ export function ObligationWorkspace({
           open={selectedKey !== null}
           onOpenChange={(open) => !open && setSelectedKey(null)}
         >
-          <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{selected.data?.key ?? "Obligation"}</DialogTitle>
+          <DialogContent className="flex max-h-[min(90dvh,calc(100vh-2rem))] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
+            <DialogHeader className="shrink-0 border-b px-4 py-4 pr-12 text-left sm:px-6">
+              <DialogTitle className="break-all">
+                {selected.data?.key ?? "Obligation"}
+              </DialogTitle>
               <DialogDescription>Obligation details.</DialogDescription>
             </DialogHeader>
             {selected.data ? (
-              <div className="space-y-4 text-sm">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Lifecycle</span>
-                    <Badge variant="secondary">{selected.data.lifecycle}</Badge>
+              <Tabs
+                key={selected.data.key}
+                defaultValue="details"
+                className="min-h-0 min-w-0 flex-1 gap-0"
+              >
+                <TabsList className="mx-4 my-3 w-fit max-w-[calc(100%-2rem)] shrink-0 sm:mx-6">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="components">Components</TabsTrigger>
+                  <TabsTrigger value="activity">Activity</TabsTrigger>
+                </TabsList>
+                <TabsContent
+                  value="details"
+                  className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto px-4 pb-4 text-sm sm:px-6"
+                >
+                  <div className="min-w-0 space-y-4">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Lifecycle</span>
+                        <Badge variant="secondary">
+                          {selected.data.lifecycle}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">
+                          Effective value source
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={
+                            sourceBadgeClasses[
+                              selected.data.effective_value_source
+                            ] ?? sourceBadgeClasses.unknown
+                          }
+                        >
+                          {selected.data.effective_value_source}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-lg border p-3">
+                      <CounterpartyLogo
+                        counterparty={counterpartyFor(selected.data) ?? null}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium uppercase text-muted-foreground">
+                          Counterparty
+                        </p>
+                        <p className="truncate font-medium">
+                          {counterpartyFor(selected.data)?.short_name ||
+                            counterpartyFor(selected.data)?.name ||
+                            "Not assigned"}
+                        </p>
+                      </div>
+                    </div>
+                    {selected.data.notes ? (
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground font-medium">
+                          Notes
+                        </p>
+                        <p className="whitespace-pre-wrap break-words">
+                          {selected.data.notes}
+                        </p>
+                      </div>
+                    ) : null}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="text-muted-foreground border-b text-xs uppercase">
+                          <tr>
+                            <th className="pb-2 pr-4 font-medium">Field</th>
+                            <th className="pb-2 pr-4 font-medium">Value</th>
+                            <th className="pb-2 pr-4 font-medium">Status</th>
+                            <th className="pb-2 font-medium">Source</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <ObligationFieldDetails
+                            label="Current amount"
+                            value={`${selected.data.current_amount ?? "Unknown"} ${
+                              selected.data.currency ?? ""
+                            }`.trim()}
+                            state={selected.data.amount_state}
+                            source={selected.data.amount_source}
+                          />
+                          <ObligationFieldDetails
+                            label="Issue date"
+                            value={selected.data.issue_date ?? "Unknown"}
+                            state={selected.data.issue_date_state}
+                            source={selected.data.issue_date_source}
+                          />
+                          <ObligationFieldDetails
+                            label="Due date"
+                            value={selected.data.due_date ?? "Unknown"}
+                            state={selected.data.due_date_state}
+                            source={selected.data.due_date_source}
+                          />
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">
-                      Effective value source
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={
-                        sourceBadgeClasses[
-                          selected.data.effective_value_source
-                        ] ?? sourceBadgeClasses.unknown
-                      }
-                    >
-                      {selected.data.effective_value_source}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <CounterpartyLogo
-                    counterparty={counterpartyFor(selected.data) ?? null}
+                </TabsContent>
+                <TabsContent
+                  value="components"
+                  className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto px-4 pb-4 text-sm sm:px-6"
+                >
+                  <ObligationComponentsSection
+                    ledgerId={ledgerId}
+                    obligationKey={selected.data.key}
+                    currency={selected.data.currency}
+                    canManage={canManageComponents}
+                    onError={showErrorToast}
+                    onSuccess={showSuccessToast}
                   />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium uppercase text-muted-foreground">
-                      Counterparty
-                    </p>
-                    <p className="truncate font-medium">
-                      {counterpartyFor(selected.data)?.short_name ||
-                        counterpartyFor(selected.data)?.name ||
-                        "Not assigned"}
-                    </p>
-                  </div>
-                </div>
+                </TabsContent>
+                <TabsContent
+                  value="activity"
+                  className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto px-4 pb-4 text-sm sm:px-6"
+                >
+                  <ObligationActionHistory
+                    ledgerId={ledgerId}
+                    obligationKey={selected.data.key}
+                  />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <p className="min-h-0 overflow-y-auto px-4 py-4 text-sm text-muted-foreground sm:px-6">
+                Loading details…
+              </p>
+            )}
+            {selected.data ? (
+              <DialogFooter className="shrink-0 border-t px-4 py-3 sm:px-6">
                 <div className="flex flex-wrap gap-2">
                   {canMarkObligationReady(selected.data) ? (
                     <Button
@@ -660,62 +756,8 @@ export function ObligationWorkspace({
                     </Button>
                   ) : null}
                 </div>
-                {selected.data.notes ? (
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground font-medium">Notes</p>
-                    <p className="whitespace-pre-wrap">{selected.data.notes}</p>
-                  </div>
-                ) : null}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="text-muted-foreground border-b text-xs uppercase">
-                      <tr>
-                        <th className="pb-2 pr-4 font-medium">Field</th>
-                        <th className="pb-2 pr-4 font-medium">Value</th>
-                        <th className="pb-2 pr-4 font-medium">Status</th>
-                        <th className="pb-2 font-medium">Source</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <ObligationFieldDetails
-                        label="Current amount"
-                        value={`${selected.data.current_amount ?? "Unknown"} ${
-                          selected.data.currency ?? ""
-                        }`.trim()}
-                        state={selected.data.amount_state}
-                        source={selected.data.amount_source}
-                      />
-                      <ObligationFieldDetails
-                        label="Issue date"
-                        value={selected.data.issue_date ?? "Unknown"}
-                        state={selected.data.issue_date_state}
-                        source={selected.data.issue_date_source}
-                      />
-                      <ObligationFieldDetails
-                        label="Due date"
-                        value={selected.data.due_date ?? "Unknown"}
-                        state={selected.data.due_date_state}
-                        source={selected.data.due_date_source}
-                      />
-                    </tbody>
-                  </table>
-                </div>
-                <ObligationComponentsSection
-                  ledgerId={ledgerId}
-                  obligationKey={selected.data.key}
-                  currency={selected.data.currency}
-                  canManage={canManageComponents}
-                  onError={showErrorToast}
-                  onSuccess={showSuccessToast}
-                />
-                <ObligationActionHistory
-                  ledgerId={ledgerId}
-                  obligationKey={selected.data.key}
-                />
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Loading details…</p>
-            )}
+              </DialogFooter>
+            ) : null}
           </DialogContent>
         </Dialog>
         {editingObligation ? (

@@ -29,6 +29,7 @@ from app.schemas import (
     ObligationsPublic,
     ObligationUpdate,
 )
+from app.services import demo_limits
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import (
     CategoryNotFoundError,
@@ -113,11 +114,21 @@ def ensure_obligations(
         year=year if year is not None else today.year,
         month=month if month is not None else today.month,
     )
+    remaining = demo_limits.remaining_capacity(
+        session,
+        owner_user_id=ledger.owner_user_id,
+        model=Obligation,
+        predicate=Obligation.ledger_id == ledger.id,
+        limit=demo_limits.MAX_OBLIGATIONS,
+        resource="obligations per ledger",
+        allow_full=True,
+    )
     created = obligation_use_cases.ensure_obligations_for_period(
         session=session,
         ledger_id=ledger.id,
         period=period,
         actor=actor,
+        max_new=remaining,
     )
     return EnsuredObligationsPublic(
         created_keys=[obligation.business_key for obligation in created],
@@ -156,6 +167,14 @@ def create_obligation(
     obligation_in: ObligationCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
+    demo_limits.remaining_capacity(
+        session,
+        owner_user_id=ledger.owner_user_id,
+        model=Obligation,
+        predicate=Obligation.ledger_id == ledger.id,
+        limit=demo_limits.MAX_OBLIGATIONS,
+        resource="obligations per ledger",
+    )
     try:
         obligation = obligation_use_cases.create_manual_obligation(
             session=session,
@@ -256,6 +275,7 @@ def add_obligation_component(
     component_in: ObligationComponentCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
+    capped = demo_limits.demo_owner_locked(session, ledger.owner_user_id)
     try:
         component = obligation_use_cases.add_obligation_component(
             session=session,
@@ -263,6 +283,7 @@ def add_obligation_component(
             key=_parse_obligation_key(obligation_key),
             **component_in.model_dump(),
             actor=actor,
+            max_components=demo_limits.MAX_COMPONENTS if capped else None,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
@@ -285,6 +306,7 @@ def upsert_obligation_component(
     component_in: ObligationComponentUpsert,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
+    capped = demo_limits.demo_owner_locked(session, ledger.owner_user_id)
     try:
         outcome = obligation_use_cases.upsert_obligation_component(
             session=session,
@@ -292,6 +314,7 @@ def upsert_obligation_component(
             key=_parse_obligation_key(obligation_key),
             **component_in.model_dump(),
             actor=actor,
+            max_components=demo_limits.MAX_COMPONENTS if capped else None,
         )
     except ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")

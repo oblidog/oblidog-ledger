@@ -14,6 +14,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import engine
+from app.core.demo_identity import DEMO_EMAIL
 from app.domain import (
     BillingPeriod,
     Currency,
@@ -42,7 +43,6 @@ from app.use_cases.obligations import (
 
 logger = logging.getLogger(__name__)
 
-DEMO_EMAIL = "demo@oblidog.com"
 DEMO_LEDGER_NAME = "Oblidog Demo"
 DEMO_PASSWORD_ENV = "DEMO_USER_PASSWORD"
 _DEMO_UUID_NAMESPACE = uuid.UUID("5d1a6522-b2a3-4db9-b6c2-69db1fe69317")
@@ -326,17 +326,13 @@ def _ensure_demo_user(*, session: Session, password: str) -> User:
     return user
 
 
-def _remove_existing_demo_ledger(*, session: Session, user_id: uuid.UUID) -> None:
-    ledger = session.scalar(
-        select(Ledger).where(
-            Ledger.owner_user_id == user_id,
-            Ledger.name == DEMO_LEDGER_NAME,
-        )
+def _remove_existing_demo_ledgers(*, session: Session, user_id: uuid.UUID) -> None:
+    ledgers = list(
+        session.scalars(select(Ledger).where(Ledger.owner_user_id == user_id))
     )
-    if ledger is None:
-        return
-    session.execute(delete(Integration).where(Integration.ledger_id == ledger.id))
-    session.delete(ledger)
+    for ledger in ledgers:
+        session.execute(delete(Integration).where(Integration.ledger_id == ledger.id))
+        session.delete(ledger)
     session.commit()
 
 
@@ -817,7 +813,7 @@ def seed_demo(
     next_period = _shift_period(current, 1)
 
     user = _ensure_demo_user(session=session, password=password)
-    _remove_existing_demo_ledger(session=session, user_id=user.id)
+    _remove_existing_demo_ledgers(session=session, user_id=user.id)
     counterparties = _ensure_counterparties(session=session)
 
     ledger = create_ledger(
