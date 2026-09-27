@@ -54,6 +54,7 @@ def public_config() -> dict[str, Any]:
     return {
         "environment": settings.ENVIRONMENT,
         "is_demo": is_demo,
+        "demo_writes_enabled": not is_demo or settings.DEMO_WRITES_ENABLED,
         "demo_credentials": credentials,
     }
 

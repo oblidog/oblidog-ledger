@@ -108,6 +108,46 @@ first scheduled invocation in Vercel Logs. The schedule is a single line in
 `backend/vercel.json` and can be changed in a reviewed PR. #278 remains open
 until the scheduled run is verified.
 
+## Public demo abuse controls (#273)
+
+Set `DEMO_WRITES_ENABLED=true` on the backend Preview deployment. If the shared
+demo is being abused, set it to `false` and redeploy Preview; the frontend
+reads the public flag and shows a read-only banner. Login, logout, GET requests,
+and the operator-only GET reset remain available. POST, PUT, PATCH, and DELETE
+to other API routes return 403. This switch only applies to `ENVIRONMENT=demo`.
+The server limits demo request bodies to 64 KiB and JSON strings to 2048
+characters, with bounds on JSON nesting and item count. Shared demo ownership
+is limited to 3 ledgers, 20 groups and 50 categories per ledger, 300
+obligations per ledger, 20 components per obligation, and 5 schema versions
+per category. A quota rejection returns 409; payload rejection returns 413.
+The counts include archived items. The reset clears disposable data.
+
+Configure a Vercel Firewall rate-limit rule on the **backend** project
+`project-gs28u`, scoped to the public demo domain/Preview environment:
+
+1. In **Firewall → WAF → Custom Rules**, add a rule whose path starts with
+   `/api/v1/` and whose method is POST, PUT, PATCH, or DELETE. Rate-limit by
+   IP at an initial 60 requests per minute, with the exceeded action set to
+   **Log** while observing real traffic. Include OPTIONS in neither the match
+   nor a challenge rule, so CORS preflight continues to work. If the Hobby
+   project permits only one rate-limit rule, use this one for mutations and
+   login; GET responses remain subject to Vercel's automatic DDoS protection.
+2. Review rule matches and normal login, ledger edits, and the hourly VM reset
+   in Firewall Traffic. The reset is a GET request with a separate secret, so
+   this mutation rule does not touch it. Switch the exceeded action to 429
+   rate limiting only after the observed match set is correct. Keep a note of
+   the old setting for quick rollback.
+3. Enable the managed **Bot Protection** rule in Log mode; review its matches
+   before moving to challenge for clearly automated traffic. Keep login and
+   cross-origin API calls usable in a normal browser. Do not globally challenge
+   every API request, as the browser cannot complete an HTML challenge inside
+   a JSON fetch.
+
+The firewall is project-level configuration in Vercel, not part of
+`backend/vercel.json`; verify the published rule and its traffic in the Vercel
+dashboard after deployment. The API logs record quota, payload, and read-only
+rejections without request bodies, tokens, or passwords.
+
 ## One-time database setup
 
 For manual recovery on a trusted machine with Bash, Python 3 and `uv`, check out

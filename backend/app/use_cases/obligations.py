@@ -33,6 +33,7 @@ from app.models import (
     ObligationComponent,
 )
 from app.services import obligations as obligation_service
+from app.services.demo_limits import MAX_COMPONENTS, MAX_OBLIGATIONS, reject_limit
 from app.use_cases.exceptions import (
     CategoryNotFoundError,
     DuplicateObligationComponentError,
@@ -177,6 +178,7 @@ def ensure_obligations_for_period(
     ledger_id: uuid.UUID,
     period: BillingPeriod,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    max_new: int | None = None,
 ) -> list[Obligation]:
     _require_ledger(session=session, ledger_id=ledger_id)
 
@@ -185,6 +187,9 @@ def ensure_obligations_for_period(
         ledger_id=ledger_id,
         current_period=period,
     )
+    if max_new is not None and len(created) > max_new:
+        session.rollback()
+        reject_limit("obligations per ledger", MAX_OBLIGATIONS)
     for obligation in created:
         _record_action(
             session=session,
@@ -854,10 +859,24 @@ def add_obligation_component(
     external_id: str | None = None,
     metadata: dict[str, object] | None = None,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    max_components: int | None = None,
 ) -> ObligationComponent:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
     )
+    if (
+        max_components is not None
+        and (
+            session.scalar(
+                select(func.count())
+                .select_from(ObligationComponent)
+                .where(ObligationComponent.obligation_id == obligation.id)
+            )
+            or 0
+        )
+        >= max_components
+    ):
+        reject_limit("components per obligation", MAX_COMPONENTS)
     component = ObligationComponent(
         obligation_id=obligation.id,
         type=type,
@@ -1013,6 +1032,7 @@ def upsert_obligation_component(
     amount: Decimal | None = None,
     metadata: dict[str, object] | None = None,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    max_components: int | None = None,
 ) -> ComponentUpsertOutcome:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
@@ -1027,6 +1047,19 @@ def upsert_obligation_component(
     created = component is None
     before: dict[str, object] | None = None
     if component is None:
+        if (
+            max_components is not None
+            and (
+                session.scalar(
+                    select(func.count())
+                    .select_from(ObligationComponent)
+                    .where(ObligationComponent.obligation_id == obligation.id)
+                )
+                or 0
+            )
+            >= max_components
+        ):
+            reject_limit("components per obligation", MAX_COMPONENTS)
         component = ObligationComponent(
             obligation_id=obligation.id,
             type=type,

@@ -1,3 +1,4 @@
+import logging
 import uuid
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
@@ -41,6 +42,7 @@ from app.services import users as user_service
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token", auto_error=False
 )
+logger = logging.getLogger(__name__)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -87,6 +89,28 @@ def enforce_demo_request_capabilities(request: Request) -> None:
         ensure_capability(capability)
     except CapabilityDisabledError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
+
+
+def enforce_demo_write_policy(request: Request) -> None:
+    if settings.ENVIRONMENT != "demo" or settings.DEMO_WRITES_ENABLED:
+        return
+    if request.method in {"GET", "HEAD", "OPTIONS"}:
+        return
+    # Login, logout and session renewal must work while the ledger is read-only.
+    if request.url.path in {
+        f"{settings.API_V1_STR}/login/access-token",
+        f"{settings.API_V1_STR}/login/session",
+        f"{settings.API_V1_STR}/login/logout",
+        f"{settings.API_V1_STR}/login/test-token",
+    }:
+        return
+    route = request.scope.get("route")
+    logger.warning(
+        "Demo write blocked method=%s route=%s",
+        request.method,
+        getattr(route, "path", "unknown"),
+    )
+    raise HTTPException(status_code=403, detail="Demo is temporarily read-only")
 
 
 def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> User:

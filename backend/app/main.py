@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.main import api_router
 from app.core.browser_auth import CSRF_HEADER_NAME, BrowserSessionSecurityMiddleware
 from app.core.config import settings
+from app.core.demo_request_limits import DemoRequestLimitsMiddleware
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
@@ -75,6 +76,7 @@ app.add_route("/redoc", redoc)
 
 
 app.add_middleware(BrowserSessionSecurityMiddleware)
+app.add_middleware(DemoRequestLimitsMiddleware)
 
 # Set all CORS enabled origins
 if settings.all_cors_origins:

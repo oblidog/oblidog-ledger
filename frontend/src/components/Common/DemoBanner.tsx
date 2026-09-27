@@ -14,10 +14,13 @@ export function DemoBanner() {
       data-testid="demo-banner"
     >
       <Info />
-      <AlertTitle>Public demo</AlertTitle>
+      <AlertTitle>
+        {appConfig.demo_writes_enabled ? "Public demo" : "Public demo · read-only"}
+      </AlertTitle>
       <AlertDescription>
-        This is a shared demo environment. Changes are visible to other visitors
-        and the demo data is periodically reset.
+        {appConfig.demo_writes_enabled
+          ? "This is a shared demo environment. Changes are visible to other visitors and the demo data is periodically reset."
+          : "The demo is temporarily read-only. You can sign in and explore the existing data; changes are paused."}
       </AlertDescription>
     </Alert>
   )

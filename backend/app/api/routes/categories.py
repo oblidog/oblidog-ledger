@@ -30,6 +30,7 @@ from app.schemas import (
     CategoryPublic,
     CategoryUpdate,
 )
+from app.services import demo_limits
 from app.use_cases import categories as category_use_cases
 from app.use_cases import category_data_records as category_data_record_use_cases
 from app.use_cases.exceptions import (
@@ -107,6 +108,14 @@ def create_category_group(
     category_group_in: CategoryGroupCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
+    demo_limits.remaining_capacity(
+        session,
+        owner_user_id=ledger.owner_user_id,
+        model=CategoryGroup,
+        predicate=CategoryGroup.ledger_id == ledger.id,
+        limit=demo_limits.MAX_GROUPS,
+        resource="category groups per ledger",
+    )
     try:
         category_group = category_use_cases.create_category_group(
             session=session,
@@ -202,6 +211,14 @@ def create_category(
     category_in: CategoryCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
+    demo_limits.remaining_capacity(
+        session,
+        owner_user_id=ledger.owner_user_id,
+        model=Category,
+        predicate=Category.ledger_id == ledger.id,
+        limit=demo_limits.MAX_CATEGORIES,
+        resource="categories per ledger",
+    )
     try:
         category = category_use_cases.create_category(
             session=session,
@@ -380,6 +397,14 @@ def create_category_data_schema(
     category_schema_in: CategoryDataSchemaCreate,
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
+    demo_limits.remaining_capacity(
+        session,
+        owner_user_id=ledger.owner_user_id,
+        model=CategoryDataSchema,
+        predicate=CategoryDataSchema.category_id == category_id,
+        limit=demo_limits.MAX_SCHEMA_VERSIONS,
+        resource="schema versions per category",
+    )
     try:
         category_schema = category_use_cases.set_category_data_schema(
             session=session,
