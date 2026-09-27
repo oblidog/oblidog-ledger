@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     # Marketplace integrations provide a complete URL; self-hosted deployments
     # continue to use the individual POSTGRES_* settings below.
     POSTGRES_URL: PostgresDsn | None = None
+    # Neon provides a direct connection alongside the pooled application URL.
+    POSTGRES_URL_NON_POOLING: PostgresDsn | None = None
     # The reset endpoint requires an independently configured demo target.
     DEMO_NEON_HOST: str | None = None
     CRON_SECRET: str | None = None

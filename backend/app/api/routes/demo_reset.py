@@ -39,8 +39,14 @@ def reset_demo(request: Request, response: Response) -> dict[str, str]:
         logger.error("Demo reset unavailable: demo password is missing or invalid")
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+    direct_url = str(settings.POSTGRES_URL_NON_POOLING or settings.POSTGRES_URL or "")
     try:
-        validate_demo_target(str(settings.POSTGRES_URL or ""), settings.DEMO_NEON_HOST)
+        validate_demo_target(direct_url, settings.DEMO_NEON_HOST)
+        validate_demo_target(
+            str(settings.POSTGRES_URL or ""),
+            settings.DEMO_NEON_HOST,
+            allow_pooler=True,
+        )
     except InvalidDemoTargetError:
         logger.error(
             "Demo reset refused: configured database target is not the demo Neon endpoint"
@@ -48,7 +54,7 @@ def reset_demo(request: Request, response: Response) -> dict[str, str]:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE) from None
 
     try:
-        result = reset_demo_data(password=password)
+        result = reset_demo_data(password=password, database_url=direct_url)
     except DemoResetBusyError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Demo reset already running"
