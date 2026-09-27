@@ -30,6 +30,7 @@ def reset_route(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(route.settings, "CRON_SECRET", "long-test-cron-secret")
     monkeypatch.setattr(route.settings, "DEMO_NEON_HOST", DEMO_HOST)
     monkeypatch.setattr(route.settings, "POSTGRES_URL", PostgresDsn(DEMO_URL))
+    monkeypatch.setattr(route.settings, "POSTGRES_URL_NON_POOLING", None)
     return route
 
 
@@ -89,13 +90,46 @@ def test_reset_refuses_other_database(
     assert error.value.status_code == 503
 
 
+def test_reset_uses_direct_neon_url_for_pooled_application(
+    reset_route, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pooled_url = DEMO_URL.replace(".c-12", "-pooler.c-12")
+    monkeypatch.setattr(reset_route.settings, "POSTGRES_URL", PostgresDsn(pooled_url))
+    monkeypatch.setattr(
+        reset_route.settings, "POSTGRES_URL_NON_POOLING", PostgresDsn(DEMO_URL)
+    )
+    seed = Mock(return_value=SimpleNamespace(reference_date=date(2026, 9, 25)))
+    monkeypatch.setattr(reset_route, "reset_demo_data", seed)
+
+    assert _reset(reset_route, "long-test-cron-secret")["status"] == "ok"
+    seed.assert_called_once_with(password="demo-password", database_url=DEMO_URL)
+
+
+def test_reset_rejects_mismatched_direct_url(
+    reset_route, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        reset_route.settings,
+        "POSTGRES_URL_NON_POOLING",
+        PostgresDsn("postgresql://owner:password@ep-other.neon.tech/neondb"),
+    )
+    seed = Mock()
+    monkeypatch.setattr(reset_route, "reset_demo_data", seed)
+
+    with pytest.raises(HTTPException) as error:
+        _reset(reset_route, "long-test-cron-secret")
+    assert error.value.status_code == 503
+    seed.assert_not_called()
+
+
 def test_reset_reseeds_without_migrations(
     reset_route, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     observed = []
 
-    def fake_seed(*, password: str):
+    def fake_seed(*, password: str, database_url: str):
         observed.append(password)
+        assert database_url == DEMO_URL
         return SimpleNamespace(reference_date=date(2026, 9, 25))
 
     monkeypatch.setattr(reset_route, "reset_demo_data", fake_seed)
@@ -109,8 +143,9 @@ def test_reset_reseeds_without_migrations(
 def test_reset_busy_returns_conflict(
     reset_route, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def busy(*, password: str):
+    def busy(*, password: str, database_url: str):
         assert password == "demo-password"
+        assert database_url == DEMO_URL
         raise reset_route.DemoResetBusyError("busy")
 
     monkeypatch.setattr(reset_route, "reset_demo_data", busy)
@@ -137,3 +172,30 @@ def test_reset_lock_rejects_overlapping_runs(
     with pytest.raises(service.DemoResetBusyError):
         service.reset_demo_data(password="demo-password")
     seed.assert_not_called()
+
+
+def test_hosted_reset_connects_to_direct_url_and_disposes_engine(
+    reset_route, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert reset_route.settings.ENVIRONMENT == "demo"
+    service = importlib.import_module("app.services.demo_reset")
+    connection = Mock()
+    connection.scalar.return_value = False
+    direct_engine = Mock()
+
+    @contextmanager
+    def direct_connection():
+        yield connection
+
+    direct_engine.begin = direct_connection
+    create_engine = Mock(return_value=direct_engine)
+    monkeypatch.setattr(service, "create_engine", create_engine)
+
+    with pytest.raises(service.DemoResetBusyError):
+        service.reset_demo_data(password="demo-password", database_url=DEMO_URL)
+
+    create_engine.assert_called_once_with(
+        DEMO_URL.replace("postgresql://", "postgresql+psycopg://", 1),
+        pool_pre_ping=True,
+    )
+    direct_engine.dispose.assert_called_once_with()
