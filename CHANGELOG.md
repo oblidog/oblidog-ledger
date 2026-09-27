@@ -1,3 +1,22 @@
+## v0.17.0 (2026-09-27)
+
+### Feat
+
+- **demo**: cap shared data and add read-only fallback (#273) (#446)
+- **demo**: protect manual reset and configure daily Vercel Cron (#278) (#440)
+- **demo**: prepare FastAPI Preview for Neon (#431)
+
+### Fix
+
+- **demo**: use direct Neon URL for hosted reset (#445)
+- **auth**: allow Swagger token login with browser session (#443)
+- **backend**: show Oblidog version and favicon in API docs (#439)
+- **frontend**: hide Analytics from mobile bottom navigation (#438)
+
+### Refactor
+
+- **frontend**: improve obligation details dialog with tabs (#447)
+
 ## v0.16.1 (2026-09-22)
 
 ### Fix
