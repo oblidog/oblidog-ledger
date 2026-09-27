@@ -15,12 +15,14 @@ export function DemoBanner() {
     >
       <Info />
       <AlertTitle>
-        {appConfig.demo_writes_enabled ? "Public demo" : "Public demo · read-only"}
+        {appConfig.demo_writes_enabled === false
+          ? "Public demo · read-only"
+          : "Public demo"}
       </AlertTitle>
       <AlertDescription>
-        {appConfig.demo_writes_enabled
-          ? "This is a shared demo environment. Changes are visible to other visitors and the demo data is periodically reset."
-          : "The demo is temporarily read-only. You can sign in and explore the existing data; changes are paused."}
+        {appConfig.demo_writes_enabled === false
+          ? "The demo is temporarily read-only. You can sign in and explore the existing data; changes are paused."
+          : "This is a shared demo environment. Changes are visible to other visitors and the demo data is periodically reset."}
       </AlertDescription>
     </Alert>
   )
