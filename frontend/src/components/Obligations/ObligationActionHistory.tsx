@@ -96,7 +96,7 @@ function FieldDiff({ name, change }: { name: string; change: Change }) {
       <dt className="text-muted-foreground">
         {fieldLabels[name] ?? humanize(name)}
       </dt>
-      <dd className="min-w-0 break-words">
+      <dd className="min-w-0 break-all">
         <span className="line-through decoration-muted-foreground/60">
           {formatValue(change.from)}
         </span>
@@ -134,7 +134,7 @@ function ComponentDiffs({ changes }: { changes: ComponentChanges }) {
           key={`${kind}-${component.id ?? component.label ?? index}`}
           className="rounded-md border bg-background/60 px-3 py-2"
         >
-          <p className="font-medium">
+          <p className="break-all font-medium">
             <span
               className={
                 kind === "added"
@@ -273,10 +273,7 @@ export function ObligationActionHistory({
   const actions = history.data?.pages.flatMap((page) => page.data) ?? []
 
   return (
-    <section
-      aria-labelledby="obligation-action-history"
-      className="border-t pt-4"
-    >
+    <section aria-labelledby="obligation-action-history" className="min-w-0">
       <div className="mb-3 flex items-center gap-2">
         <Clock3 className="text-muted-foreground size-4" />
         <h2 id="obligation-action-history" className="font-medium">

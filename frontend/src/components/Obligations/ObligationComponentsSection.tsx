@@ -330,10 +330,7 @@ export function ObligationComponentsSection({
   })
 
   return (
-    <section
-      className="space-y-3 border-t pt-4"
-      aria-labelledby="components-heading"
-    >
+    <section className="min-w-0 space-y-3" aria-labelledby="components-heading">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 id="components-heading" className="font-semibold">

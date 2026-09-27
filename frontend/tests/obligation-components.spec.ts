@@ -71,6 +71,11 @@ test("manages manual obligation components and keeps integration components read
     route.fulfill({ status: 500, contentType: "application/json", body: "{}" }),
   )
   await page.getByText(fixture.categoryName, { exact: true }).click()
+  await expect(page.getByRole("tab", { name: "Details" })).toHaveAttribute(
+    "data-state",
+    "active",
+  )
+  await page.getByRole("tab", { name: "Components" }).click()
   await expect(page.getByText("Unable to load components.")).toBeVisible({
     timeout: 15_000,
   })
@@ -116,6 +121,7 @@ test("manages manual obligation components and keeps integration components read
   })
   await page.reload()
   await page.getByText(fixture.categoryName, { exact: true }).click()
+  await page.getByRole("tab", { name: "Components" }).click()
   await expect(page.getByText("Integration", { exact: true })).toBeVisible()
   await expect(page.getByText("provider", { exact: true })).toBeVisible()
   await expect(
@@ -155,6 +161,7 @@ test("renders monetary and informational components in a scannable table", async
 
   await page.goto(`/ledgers/${fixture.ledger.id}`)
   await page.getByText(fixture.categoryName, { exact: true }).click()
+  await page.getByRole("tab", { name: "Components" }).click()
 
   const table = page
     .getByRole("table")
@@ -206,6 +213,7 @@ test("does not show component management actions to viewers", async ({
   await logInUser(viewerPage, viewerEmail, viewerPassword)
   await viewerPage.goto(`/ledgers/${fixture.ledger.id}`)
   await viewerPage.getByText(fixture.categoryName, { exact: true }).click()
+  await viewerPage.getByRole("tab", { name: "Components" }).click()
 
   await expect(
     viewerPage.getByText("No components for this obligation."),
