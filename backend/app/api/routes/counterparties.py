@@ -189,7 +189,7 @@ def read_obligation_counterparty(
         obligation = obligation_use_cases.get_obligation_by_key(
             session=session, ledger_id=ledger.id, key=key
         )
-    except (ValueError, ObligationNotFoundError):
+    except ValueError, ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
     return _counterparty_summary_or_none(obligation.counterparty)
 
@@ -210,7 +210,7 @@ def assign_obligation_counterparty(
         obligation = obligation_use_cases.get_obligation_by_key(
             session=session, ledger_id=ledger.id, key=key
         )
-    except (ValueError, ObligationNotFoundError):
+    except ValueError, ObligationNotFoundError:
         raise HTTPException(status_code=404, detail="Obligation not found")
     if assignment.counterparty_id is not None:
         try:

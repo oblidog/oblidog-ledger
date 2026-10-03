@@ -132,7 +132,7 @@ jobs:
         if: steps.scope.outputs.run_heavy == 'true'
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install uv
         if: steps.scope.outputs.run_heavy == 'true'
         uses: astral-sh/setup-uv@v7

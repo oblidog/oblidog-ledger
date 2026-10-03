@@ -176,5 +176,5 @@ def verify_password_reset_token(token: str) -> PasswordResetTokenClaims | None:
             user_id=uuid.UUID(str(decoded_token["sub"])),
             token_id=uuid.UUID(str(decoded_token["jti"])),
         )
-    except (InvalidTokenError, KeyError, TypeError, ValueError):
+    except InvalidTokenError, KeyError, TypeError, ValueError:
         return None
