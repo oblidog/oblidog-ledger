@@ -2,10 +2,11 @@
 
 import logging
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 from findog_legacy_adapter import load_payment_book_from_dropbox
 
+from app.core.business_date import business_today
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.domain import BillingPeriod, LegacyImportJobStatus, TaskRunMode
@@ -54,7 +55,7 @@ def run_legacy_import_job(job_id: uuid.UUID) -> None:
             job_id,
             len(payment_book.payment_list),
         )
-        today = date.today()
+        today = business_today()
         with SessionLocal() as session:
             job = session.get(LegacyImportJob, job_id)
             if job is None:

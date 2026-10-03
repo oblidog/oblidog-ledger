@@ -13,6 +13,7 @@ from typing import Any
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from app.core.business_date import business_today
 from app.core.db import engine
 from app.core.demo_identity import DEMO_EMAIL as DEMO_EMAIL
 from app.domain import (
@@ -806,7 +807,7 @@ def seed_demo(
     password: str,
     reference_date: date | None = None,
 ) -> DemoSeedResult:
-    today = reference_date or date.today()
+    today = reference_date or business_today()
     current = BillingPeriod.from_date(today)
     previous = _shift_period(current, -1)
     two_months_ago = _shift_period(current, -2)

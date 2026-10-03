@@ -132,11 +132,11 @@ def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> 
         if uses_session_cookie and not token_data.csrf:
             raise ValueError
         user_id = uuid.UUID(token_data.sub)
-    except InvalidTokenError, ValidationError, ValueError:
+    except (InvalidTokenError, ValidationError, ValueError) as caught_error:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
-        )
+        ) from caught_error
     user = user_service.get_user_by_id(session=session, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

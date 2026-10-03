@@ -27,6 +27,8 @@ from app.services.weekly_monthly_overview_report import WeeklyMonthlyOverviewRep
 from app.use_cases import legacy_import as legacy_import_use_cases
 from app.use_cases import obligations as obligation_use_cases
 
+_UTC_TIMEZONE = ZoneInfo("UTC")
+
 
 @dataclass(frozen=True, slots=True)
 class SystemRunContext:
@@ -40,7 +42,7 @@ class SystemRunContext:
         cls,
         *,
         effective_at: datetime | None = None,
-        timezone: ZoneInfo = ZoneInfo("UTC"),
+        timezone: ZoneInfo = _UTC_TIMEZONE,
         trigger: SystemRunTrigger = SystemRunTrigger.SCHEDULED,
     ) -> SystemRunContext:
         value = effective_at or datetime.now(timezone)

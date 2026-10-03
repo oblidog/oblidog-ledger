@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import select
 
 from app.api.deps import SessionDep, get_current_active_superuser
@@ -65,7 +65,9 @@ def read_system_run_tasks() -> Any:
 
 @router.post("/", response_model=SystemRunPublic)
 def start_system_run(
-    *, session: SessionDep, run_in: SystemRunStart = SystemRunStart()
+    *,
+    session: SessionDep,
+    run_in: SystemRunStart = Body(default_factory=SystemRunStart),
 ) -> Any:
     manual_tasks = set(run_in.manual_task_names)
     known_tasks = {task.name: task for task in SYSTEM_RUN_TASK_REGISTRY}
