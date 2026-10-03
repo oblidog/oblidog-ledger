@@ -13,7 +13,6 @@ import { useEffect, useState } from "react"
 
 import {
   CategoriesService,
-  type ObligationLifecycle,
   type ObligationPublic,
   ObligationsService,
 } from "@/client"
@@ -48,183 +47,24 @@ import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import {
+  canCancelObligation,
+  canEditObligation,
+  canMarkObligationPaid,
+  canMarkObligationReady,
+  canReopenObligation,
+  dueDateRange,
+  isValidPeriod,
+  lifecycleFilterLabel,
+  lifecycleOptions,
+  monthInputValue,
+  parseMonthInput,
+  parseObligationFilters,
+  serializeObligationFilters,
+  type LifecycleFilter,
+} from "./obligationLogic"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
-
-type LifecycleFilter = ObligationLifecycle | "" | "unpaid"
-
-const lifecycleOptions: LifecycleFilter[] = [
-  "",
-  "unpaid",
-  "draft",
-  "collecting_data",
-  "ready",
-  "paid",
-  "canceled",
-  "error",
-]
-
-const stateBadgeClasses: Record<string, string> = {
-  unknown:
-    "border-slate-500/30 bg-slate-500/15 text-slate-700 dark:text-slate-300",
-  estimated:
-    "border-amber-500/30 bg-amber-500/15 text-amber-800 dark:text-amber-300",
-  confirmed:
-    "border-emerald-500/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
-  overridden:
-    "border-violet-500/30 bg-violet-500/15 text-violet-800 dark:text-violet-300",
-}
-
-const sourceBadgeClasses: Record<string, string> = {
-  unknown: stateBadgeClasses.unknown,
-  automatic: "border-sky-500/30 bg-sky-500/15 text-sky-800 dark:text-sky-300",
-  manual:
-    "border-indigo-500/30 bg-indigo-500/15 text-indigo-800 dark:text-indigo-300",
-  mixed:
-    "border-violet-500/30 bg-violet-500/15 text-violet-800 dark:text-violet-300",
-}
-
-const lifecycleBadgeClasses: Record<ObligationLifecycle, string> = {
-  draft:
-    "border-slate-500/30 bg-slate-500/15 text-slate-700 dark:text-slate-300",
-  collecting_data:
-    "border-amber-500/30 bg-amber-500/15 text-amber-800 dark:text-amber-300",
-  ready: "border-sky-500/30 bg-sky-500/15 text-sky-800 dark:text-sky-300",
-  paid: "border-emerald-500/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
-  canceled:
-    "border-slate-500/30 bg-slate-500/15 text-slate-700 dark:text-slate-300",
-  error: "border-red-500/30 bg-red-500/15 text-red-800 dark:text-red-300",
-}
-
-const dueDateStatusClasses = {
-  unknown: "text-muted-foreground",
-  safe: "text-emerald-700 dark:text-emerald-300",
-  soon: "text-amber-700 dark:text-amber-300",
-  urgent: "text-red-700 dark:text-red-300",
-}
-
-function currentPeriod() {
-  const now = new Date()
-  return { year: now.getFullYear(), month: now.getMonth() + 1 }
-}
-
-function periodFromSearch() {
-  if (typeof window === "undefined") return currentPeriod()
-  const params = new URLSearchParams(window.location.search)
-  const year = Number(params.get("year"))
-  const month = Number(params.get("month"))
-  return isValidPeriod(year, month) ? { year, month } : currentPeriod()
-}
-
-function filtersFromSearch(defaultLifecycle: LifecycleFilter) {
-  const period = periodFromSearch()
-  if (typeof window === "undefined") {
-    return {
-      year: String(period.year),
-      month: String(period.month),
-      filterByPeriod: true,
-      categoryCode: "",
-      lifecycle: defaultLifecycle,
-    }
-  }
-
-  const params = new URLSearchParams(window.location.search)
-  const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
-  return {
-    year: String(period.year),
-    month: String(period.month),
-    filterByPeriod: params.get("period") !== "all",
-    categoryCode: (params.get("category") ?? "").toUpperCase().slice(0, 4),
-    lifecycle:
-      lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
-        ? lifecycleParam
-        : defaultLifecycle,
-  }
-}
-
-function lifecycleFilterLabel(lifecycle: LifecycleFilter) {
-  if (lifecycle === "unpaid") return "Unpaid"
-  return lifecycle
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
-}
-
-function dueDateRange(year: number, month: number) {
-  const minimum = new Date(Date.UTC(year, month - 1, 1))
-  const maximum = new Date(Date.UTC(year, month, 0))
-  let businessDays = 0
-
-  while (businessDays < 7) {
-    maximum.setUTCDate(maximum.getUTCDate() + 1)
-    const day = maximum.getUTCDay()
-    if (day !== 0 && day !== 6) {
-      businessDays += 1
-    }
-  }
-
-  return {
-    min: minimum.toISOString().slice(0, 10),
-    max: maximum.toISOString().slice(0, 10),
-  }
-}
-
-function isValidPeriod(year: number, month: number) {
-  return (
-    Number.isInteger(year) &&
-    year >= 1 &&
-    year <= 9999 &&
-    Number.isInteger(month) &&
-    month >= 1 &&
-    month <= 12
-  )
-}
-
-function monthInputValue(year: string, month: string) {
-  const parsedYear = Number(year)
-  const parsedMonth = Number(month)
-  if (!isValidPeriod(parsedYear, parsedMonth)) {
-    return ""
-  }
-  return `${String(parsedYear).padStart(4, "0")}-${String(parsedMonth).padStart(2, "0")}`
-}
-
-function parseMonthInput(value: string) {
-  const [year, month] = value.split("-").map(Number)
-  if (!isValidPeriod(year, month)) {
-    return null
-  }
-  return { year: String(year), month: String(month) }
-}
-
-function canMarkObligationReady(obligation: ObligationPublic) {
-  return (
-    obligation.lifecycle === "collecting_data" &&
-    obligation.current_amount !== null &&
-    obligation.due_date !== null &&
-    obligation.amount_state !== "unknown" &&
-    obligation.due_date_state !== "unknown"
-  )
-}
-
-function canEditObligation(obligation: ObligationPublic) {
-  return (
-    obligation.lifecycle === "draft" ||
-    obligation.lifecycle === "collecting_data"
-  )
-}
-
-function canCancelObligation(obligation: ObligationPublic) {
-  return obligation.lifecycle === "collecting_data"
-}
-
-function canMarkObligationPaid(obligation: ObligationPublic) {
-  return obligation.lifecycle === "ready"
-}
-
-function canReopenObligation(obligation: ObligationPublic) {
-  return ["ready", "paid", "canceled", "error"].includes(obligation.lifecycle)
-}
 
 function counterpartyFor(obligation: ObligationPublic) {
   return (obligation as ObligationPublic & ObligationWithCounterparty)
@@ -240,8 +80,12 @@ export function ObligationWorkspace({
   canManageComponents: boolean
   defaultLifecycle?: LifecycleFilter
 }) {
-  const initialFilters = filtersFromSearch(defaultLifecycle)
   const period = periodFromSearch()
+  const initialFilters = parseObligationFilters(
+    typeof window === "undefined" ? "" : window.location.search,
+    defaultLifecycle,
+    period,
+  )
   const [year, setYear] = useState(initialFilters.year)
   const [month, setMonth] = useState(initialFilters.month)
   const [filterByPeriod, setFilterByPeriod] = useState(
@@ -268,23 +112,13 @@ export function ObligationWorkspace({
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const params = new URLSearchParams(window.location.search)
-    params.delete("year")
-    params.delete("month")
-    params.delete("period")
-    params.delete("category")
-    params.delete("lifecycle")
-
-    if (filterByPeriod && hasValidPeriodFilter) {
-      params.set("year", String(filterYear))
-      params.set("month", String(filterMonth))
-    } else if (!filterByPeriod) {
-      params.set("period", "all")
-    }
-    if (categoryCode) params.set("category", categoryCode)
-    if (lifecycle) params.set("lifecycle", lifecycle)
-
-    const search = params.toString()
+    const search = serializeObligationFilters(window.location.search, {
+      year,
+      month,
+      filterByPeriod,
+      categoryCode,
+      lifecycle,
+    })
     const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`
     window.history.replaceState(window.history.state, "", nextUrl)
   }, [
