@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 
 import {
   CategoriesService,
+  type ObligationLifecycle,
   type ObligationPublic,
   ObligationsService,
 } from "@/client"
@@ -65,6 +66,58 @@ import {
 } from "./obligationLogic"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
+
+const stateBadgeClasses: Record<string, string> = {
+  unknown:
+    "border-slate-500/30 bg-slate-500/15 text-slate-700 dark:text-slate-300",
+  estimated:
+    "border-amber-500/30 bg-amber-500/15 text-amber-800 dark:text-amber-300",
+  confirmed:
+    "border-emerald-500/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
+  overridden:
+    "border-violet-500/30 bg-violet-500/15 text-violet-800 dark:text-violet-300",
+}
+
+const sourceBadgeClasses: Record<string, string> = {
+  unknown: stateBadgeClasses.unknown,
+  automatic: "border-sky-500/30 bg-sky-500/15 text-sky-800 dark:text-sky-300",
+  manual:
+    "border-indigo-500/30 bg-indigo-500/15 text-indigo-800 dark:text-indigo-300",
+  mixed:
+    "border-violet-500/30 bg-violet-500/15 text-violet-800 dark:text-violet-300",
+}
+
+const lifecycleBadgeClasses: Record<ObligationLifecycle, string> = {
+  draft:
+    "border-slate-500/30 bg-slate-500/15 text-slate-700 dark:text-slate-300",
+  collecting_data:
+    "border-amber-500/30 bg-amber-500/15 text-amber-800 dark:text-amber-300",
+  ready: "border-sky-500/30 bg-sky-500/15 text-sky-800 dark:text-sky-300",
+  paid: "border-emerald-500/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
+  canceled:
+    "border-slate-500/30 bg-slate-500/15 text-slate-700 dark:text-slate-300",
+  error: "border-red-500/30 bg-red-500/15 text-red-800 dark:text-red-300",
+}
+
+const dueDateStatusClasses = {
+  unknown: "text-muted-foreground",
+  safe: "text-emerald-700 dark:text-emerald-300",
+  soon: "text-amber-700 dark:text-amber-300",
+  urgent: "text-red-700 dark:text-red-300",
+}
+
+function currentPeriod() {
+  const now = new Date()
+  return { year: now.getFullYear(), month: now.getMonth() + 1 }
+}
+
+function periodFromSearch() {
+  if (typeof window === "undefined") return currentPeriod()
+  const params = new URLSearchParams(window.location.search)
+  const year = Number(params.get("year"))
+  const month = Number(params.get("month"))
+  return isValidPeriod(year, month) ? { year, month } : currentPeriod()
+}
 
 function counterpartyFor(obligation: ObligationPublic) {
   return (obligation as ObligationPublic & ObligationWithCounterparty)
