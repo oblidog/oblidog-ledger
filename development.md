@@ -144,6 +144,17 @@ Configured hooks currently cover:
 - frontend SDK regeneration when backend API files change
 - `commitizen` commit message validation on the `commit-msg` hook
 
+The `Backend Quality` GitHub Actions workflow also runs `backend/scripts/lint.sh`
+on every pull request, including release and back-sync PRs. It checks all backend
+Python files with strict mypy, then checks application lint and formatting with
+Ruff. The check fails on errors and does not require a database or apply fixes.
+
+Run the same checks locally from `backend/`:
+
+```bash
+uv run --locked bash scripts/lint.sh
+```
+
 #### Install hooks
 
 The backend dev dependencies include both `pre-commit` and `commitizen`.

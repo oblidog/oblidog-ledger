@@ -14,7 +14,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import engine
-from app.core.demo_identity import DEMO_EMAIL
+from app.core.demo_identity import DEMO_EMAIL as DEMO_EMAIL
 from app.domain import (
     BillingPeriod,
     Currency,

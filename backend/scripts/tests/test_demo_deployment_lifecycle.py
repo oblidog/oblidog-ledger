@@ -5,12 +5,13 @@ from __future__ import annotations
 import importlib.util
 import subprocess
 from pathlib import Path
+from types import ModuleType
 from unittest.mock import patch
 
 import pytest
 
 
-def _load_lifecycle():
+def _load_lifecycle() -> ModuleType:
     path = Path(__file__).parents[1] / "run_vercel_demo_lifecycle.py"
     spec = importlib.util.spec_from_file_location("demo_lifecycle", path)
     assert spec and spec.loader
