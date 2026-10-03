@@ -10,6 +10,7 @@ from typing import Literal
 from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.business_date import business_today
 from app.domain import BillingPeriod, ObligationLifecycle
 from app.models import Category, Obligation, ObligationComponent
 from app.use_cases.exceptions import CategoryNotFoundError
@@ -350,7 +351,7 @@ def get_remaining_period_cashflow(
             )
         )
     )
-    as_of_date = date.today()
+    as_of_date = business_today()
     unknown_amount_count = sum(item.current_amount is None for item in obligations)
     without_due_date_count = sum(item.due_date is None for item in obligations)
     amounts_by_currency: defaultdict[str | None, _CashflowAccumulator] = defaultdict(

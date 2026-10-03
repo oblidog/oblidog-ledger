@@ -43,21 +43,23 @@ def integration_errors(session: Session) -> Iterator[None]:
     except (
         use_cases.IntegrationNotFoundError,
         use_cases.IntegrationCategoryNotFoundError,
-    ):
+    ) as caught_error:
         session.rollback()
-        raise HTTPException(status_code=404, detail="Integration or category not found")
+        raise HTTPException(
+            status_code=404, detail="Integration or category not found"
+        ) from caught_error
     except use_cases.IntegrationConflictError as exc:
         session.rollback()
         raise HTTPException(
             status_code=409,
             detail=IntegrationConflictDetail(code=exc.code).model_dump(mode="json"),
-        )
-    except use_cases.IntegrationLimitsError:
+        ) from exc
+    except use_cases.IntegrationLimitsError as caught_error:
         session.rollback()
         raise HTTPException(
             status_code=422,
             detail="run_timeout_seconds must be less than stale_after_seconds",
-        )
+        ) from caught_error
 
 
 @router.get("/ledgers/{ledger_id}/integrations", response_model=IntegrationsPublic)

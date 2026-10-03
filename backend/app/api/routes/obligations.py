@@ -1,5 +1,4 @@
 import uuid
-from datetime import date
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,6 +9,7 @@ from app.api.deps import (
     require_ledger_edit_access,
     require_ledger_view_access,
 )
+from app.core.business_date import business_today
 from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
 from app.models import Ledger, Obligation
 from app.schemas import (
@@ -109,7 +109,7 @@ def ensure_obligations(
     month: int | None = Query(default=None, ge=1, le=12),
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
-    today = date.today()
+    today = business_today()
     period = BillingPeriod(
         year=year if year is not None else today.year,
         month=month if month is not None else today.month,
@@ -191,15 +191,19 @@ def create_obligation(
             notes=obligation_in.notes,
             actor=actor,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except ManualObligationNotAllowedError:
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except ManualObligationNotAllowedError as caught_error:
         raise HTTPException(
             status_code=422,
             detail="Manual obligations are not allowed for automatic categories",
-        )
-    except DuplicateObligationError:
-        raise HTTPException(status_code=409, detail="Obligation already exists")
+        ) from caught_error
+    except DuplicateObligationError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Obligation already exists"
+        ) from caught_error
 
     return to_obligation_public(obligation)
 
@@ -227,8 +231,10 @@ def read_obligation_components(
             ledger_id=ledger.id,
             key=_parse_obligation_key(obligation_key),
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return ObligationComponentsPublic(
         data=[to_obligation_component_public(component) for component in components],
         count=len(components),
@@ -255,8 +261,10 @@ def read_obligation_actions(
             limit=limit,
             offset=offset,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return ObligationActionsPublic(
         data=[ObligationActionPublic.model_validate(action) for action in actions],
         count=count,
@@ -285,12 +293,14 @@ def add_obligation_component(
             actor=actor,
             max_components=demo_limits.MAX_COMPONENTS if capped else None,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except DuplicateObligationComponentError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except DuplicateObligationComponentError as caught_error:
         raise HTTPException(
             status_code=409, detail="Obligation component already exists"
-        )
+        ) from caught_error
     return to_obligation_component_public(component)
 
 
@@ -316,8 +326,10 @@ def upsert_obligation_component(
             actor=actor,
             max_components=demo_limits.MAX_COMPONENTS if capped else None,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return ObligationComponentUpsertResult(
         component=to_obligation_component_public(outcome.component),
         result=outcome.result,
@@ -346,14 +358,18 @@ def update_obligation_component(
             **component_in.model_dump(exclude_unset=True),
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationComponentNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation component not found")
-    except DuplicateObligationComponentError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationComponentNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation component not found"
+        ) from caught_error
+    except DuplicateObligationComponentError as caught_error:
         raise HTTPException(
             status_code=409, detail="Obligation component already exists"
-        )
+        ) from caught_error
     return to_obligation_component_public(component)
 
 
@@ -377,10 +393,14 @@ def remove_obligation_component(
             component_id=component_id,
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationComponentNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation component not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationComponentNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation component not found"
+        ) from caught_error
 
 
 @router.patch(
@@ -408,13 +428,15 @@ def update_obligation(
             **obligation_in.model_dump(exclude_unset=True),
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationReadOnlyError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationReadOnlyError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Only draft and collecting data obligations can be edited",
-        )
+        ) from caught_error
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -444,8 +466,10 @@ def mark_obligation_ready(
             key=key,
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -475,13 +499,15 @@ def mark_obligation_paid(
             key=key,
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationInvalidLifecycleError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationInvalidLifecycleError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Only ready obligations can be marked as paid",
-        )
+        ) from caught_error
 
     return to_obligation_public(obligation)
 
@@ -509,13 +535,15 @@ def cancel_obligation(
             key=key,
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationInvalidLifecycleError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationInvalidLifecycleError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Only obligations collecting data can be canceled",
-        )
+        ) from caught_error
 
     return to_obligation_public(obligation)
 
@@ -543,13 +571,15 @@ def reopen_obligation(
             key=key,
             actor=actor,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationInvalidLifecycleError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationInvalidLifecycleError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Only ready, paid, canceled, or error obligations can be reopened",
-        )
+        ) from caught_error
 
     return to_obligation_public(obligation)
 
@@ -575,7 +605,9 @@ def read_obligation(
             ledger_id=ledger.id,
             key=key,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
 
     return to_obligation_public(obligation)

@@ -123,8 +123,10 @@ def create_category_group(
             name=category_group_in.name,
             description=category_group_in.description,
         )
-    except DuplicateCategoryGroupError:
-        raise HTTPException(status_code=409, detail="Category group already exists")
+    except DuplicateCategoryGroupError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category group already exists"
+        ) from caught_error
 
     return _to_category_group_public(category_group)
 
@@ -148,12 +150,16 @@ def update_category_group(
             name=category_group_in.name,
             description=category_group_in.description,
         )
-    except CategoryGroupNotFoundError:
-        raise HTTPException(status_code=404, detail="Category group not found")
-    except DuplicateCategoryGroupError:
-        raise HTTPException(status_code=409, detail="Category group already exists")
+    except CategoryGroupNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category group not found"
+        ) from caught_error
+    except DuplicateCategoryGroupError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category group already exists"
+        ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     return _to_category_group_public(category_group)
 
@@ -174,13 +180,15 @@ def archive_category_group(
             ledger_id=ledger.id,
             category_group_id=category_group_id,
         )
-    except CategoryGroupNotFoundError:
-        raise HTTPException(status_code=404, detail="Category group not found")
-    except CategoryGroupHasActiveChildrenError:
+    except CategoryGroupNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category group not found"
+        ) from caught_error
+    except CategoryGroupHasActiveChildrenError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Category group has active categories",
-        )
+        ) from caught_error
 
     return _to_category_group_public(category_group)
 
@@ -233,21 +241,31 @@ def create_category(
             first_due_date=category_in.first_due_date,
             currency=category_in.currency,
         )
-    except CategoryGroupNotFoundError:
-        raise HTTPException(status_code=404, detail="Category group not found")
-    except CrossLedgerReferenceError:
-        raise HTTPException(status_code=404, detail="Category group not found")
-    except DuplicateCategoryError:
-        raise HTTPException(status_code=409, detail="Category already exists")
-    except DuplicateCategoryCodeError:
-        raise HTTPException(status_code=409, detail="Category code already exists")
-    except InvalidCategoryCodeError:
+    except CategoryGroupNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category group not found"
+        ) from caught_error
+    except CrossLedgerReferenceError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category group not found"
+        ) from caught_error
+    except DuplicateCategoryError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category already exists"
+        ) from caught_error
+    except DuplicateCategoryCodeError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category code already exists"
+        ) from caught_error
+    except InvalidCategoryCodeError as caught_error:
         raise HTTPException(
             status_code=422,
             detail="Category code must contain exactly four uppercase English letters",
-        )
-    except CategoryGroupArchivedError:
-        raise HTTPException(status_code=409, detail="Category group is archived")
+        ) from caught_error
+    except CategoryGroupArchivedError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category group is archived"
+        ) from caught_error
 
     return _to_category_public(category)
 
@@ -277,23 +295,33 @@ def update_category(
             first_due_date=category_in.first_due_date,
             currency=category_in.currency,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryGroupNotFoundError:
-        raise HTTPException(status_code=404, detail="Category group not found")
-    except CategoryGroupArchivedError:
-        raise HTTPException(status_code=409, detail="Category group is archived")
-    except DuplicateCategoryError:
-        raise HTTPException(status_code=409, detail="Category already exists")
-    except DuplicateCategoryCodeError:
-        raise HTTPException(status_code=409, detail="Category code already exists")
-    except InvalidCategoryCodeError:
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryGroupNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category group not found"
+        ) from caught_error
+    except CategoryGroupArchivedError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category group is archived"
+        ) from caught_error
+    except DuplicateCategoryError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category already exists"
+        ) from caught_error
+    except DuplicateCategoryCodeError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Category code already exists"
+        ) from caught_error
+    except InvalidCategoryCodeError as caught_error:
         raise HTTPException(
             status_code=422,
             detail="Category code must contain exactly four uppercase English letters",
-        )
+        ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     return _to_category_public(category)
 
@@ -332,10 +360,14 @@ def read_category_data_records(
             observed_from=observed_from,
             observed_to=observed_to,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data schema not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data schema not found"
+        ) from caught_error
     return CategoryDataRecordsPublic(
         data=[_to_category_data_record_public(record) for record in records],
         count=count,
@@ -358,10 +390,14 @@ def read_latest_category_data_record(
             ledger_id=ledger.id,
             category_id=category_id,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data records not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data records not found"
+        ) from caught_error
     return _to_category_data_record_public(record)
 
 
@@ -379,10 +415,14 @@ def read_category_data_schema(
         category_schema = category_use_cases.get_category_data_schema(
             session=session, ledger_id=ledger.id, category_id=category_id
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data schema not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data schema not found"
+        ) from caught_error
     return _to_category_data_schema_public(category_schema)
 
 
@@ -412,15 +452,19 @@ def create_category_data_schema(
             category_id=category_id,
             schema=category_schema_in.definition,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
     except InvalidCategoryDataSchemaError as exc:
-        raise HTTPException(status_code=422, detail=f"Invalid JSON Schema: {exc}")
+        raise HTTPException(
+            status_code=422, detail=f"Invalid JSON Schema: {exc}"
+        ) from exc
     except IncompatibleCategoryDataSchemaError as exc:
         raise HTTPException(
             status_code=409,
             detail=f"Schema is incompatible with existing category data: {exc}",
-        )
+        ) from exc
     return _to_category_data_schema_public(category_schema)
 
 
@@ -440,8 +484,10 @@ def archive_category(
             ledger_id=ledger.id,
             category_id=category_id,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
 
     return _to_category_public(category)
 
@@ -462,12 +508,14 @@ def restore_category(
             ledger_id=ledger.id,
             category_id=category_id,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryGroupArchivedError:
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryGroupArchivedError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Category group must be active before restoring a category",
-        )
+        ) from caught_error
 
     return _to_category_public(category)

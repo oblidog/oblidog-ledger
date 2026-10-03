@@ -87,8 +87,10 @@ def read_latest_integration_category_data_record(
             ledger_id=context.ledger.id,
             category_id=context.category.id,
         )
-    except CategoryNotFoundError, CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data record not found")
+    except (CategoryNotFoundError, CategoryDataSchemaNotFoundError) as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data record not found"
+        ) from caught_error
     return _to_category_data_record_public(category_data)
 
 
@@ -117,8 +119,10 @@ def read_integration_category_data_records(
             observed_from=observed_from,
             observed_to=observed_to,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
     return CategoryDataRecordsPublic(
         data=[_to_category_data_record_public(record) for record in records],
         count=count,
@@ -140,14 +144,16 @@ def create_integration_category_data_record(
             source=context.integration.name,
             external_id=category_data_in.external_id,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
             status_code=409, detail="Category data schema not configured"
-        )
+        ) from caught_error
     except CategoryDataValidationError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _to_category_data_record_public(category_data)
 
 
@@ -161,10 +167,14 @@ def read_integration_category_data_schema(
             ledger_id=context.ledger.id,
             category_id=context.category.id,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data schema not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data schema not found"
+        ) from caught_error
     return _to_category_data_schema_public(category_schema)
 
 
@@ -213,8 +223,10 @@ def _resolve_integration_obligation_key(
 def _not_found_as_http(call: Any) -> ObligationPublic:
     try:
         return to_obligation_public(call())
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
 
 
 @router.get("/obligations", response_model=ObligationsPublic)
@@ -264,8 +276,10 @@ def read_integration_obligation_components(
         components = obligation_use_cases.list_obligation_components(
             session=context.session, ledger_id=context.ledger.id, key=key
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return ObligationComponentsPublic(
         data=[to_obligation_component_public(component) for component in components],
         count=len(components),
@@ -291,8 +305,10 @@ def upsert_integration_obligation_component(
             actor=_integration_action_actor(context),
             **component_in.model_dump(),
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return ObligationComponentUpsertResult(
         component=to_obligation_component_public(outcome.component),
         result=outcome.result,
@@ -314,13 +330,15 @@ def update_integration_obligation(
             actor=_integration_action_actor(context),
             **obligation_in.model_dump(exclude_unset=True),
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationReadOnlyError:
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationReadOnlyError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Only draft and collecting data obligations can be edited",
-        )
+        ) from caught_error
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return to_obligation_public(obligation)
@@ -337,10 +355,14 @@ def _run_integration_action(
             key=key,
             actor=_integration_action_actor(context),
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
-    except ObligationInvalidLifecycleError:
-        raise HTTPException(status_code=409, detail="Invalid obligation lifecycle")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
+    except ObligationInvalidLifecycleError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Invalid obligation lifecycle"
+        ) from caught_error
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return to_obligation_public(obligation)
@@ -421,6 +443,8 @@ def append_integration_obligation_note(
             integration_name=context.integration.name,
             text=note_in.text,
         )
-    except ObligationNotFoundError:
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except ObligationNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return to_obligation_public(obligation)

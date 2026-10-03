@@ -48,10 +48,10 @@ def update_user_me(
         return user_service.update_user_me(
             session=session, current_user=current_user, user_in=user_in
         )
-    except user_service.UserEmailAlreadyExistsError:
+    except user_service.UserEmailAlreadyExistsError as caught_error:
         raise HTTPException(
             status_code=409, detail="User with this email already exists"
-        )
+        ) from caught_error
 
 
 @router.patch("/me/password", response_model=Message)
@@ -68,12 +68,14 @@ def update_password_me(
             current_password=body.current_password,
             new_password=body.new_password,
         )
-    except user_service.IncorrectPasswordError:
-        raise HTTPException(status_code=400, detail="Incorrect password")
-    except user_service.SamePasswordError:
+    except user_service.IncorrectPasswordError as caught_error:
+        raise HTTPException(
+            status_code=400, detail="Incorrect password"
+        ) from caught_error
+    except user_service.SamePasswordError as caught_error:
         raise HTTPException(
             status_code=400, detail="New password cannot be the same as the current one"
-        )
+        ) from caught_error
     return Message(message="Password updated successfully")
 
 
@@ -92,10 +94,10 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     try:
         user_service.delete_user_me(session=session, current_user=current_user)
-    except user_service.SelfDeleteForbiddenError:
+    except user_service.SelfDeleteForbiddenError as caught_error:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
-        )
+        ) from caught_error
     return Message(message="User deleted successfully")
 
 
@@ -115,13 +117,13 @@ def read_user_by_id(
         return user_service.get_user_for_view(
             session=session, current_user=current_user, user_id=user_id
         )
-    except user_service.InsufficientPrivilegesError:
+    except user_service.InsufficientPrivilegesError as caught_error:
         raise HTTPException(
             status_code=403,
             detail="The user doesn't have enough privileges",
-        )
-    except user_service.UserNotFoundError:
-        raise HTTPException(status_code=404, detail="User not found")
+        ) from caught_error
+    except user_service.UserNotFoundError as caught_error:
+        raise HTTPException(status_code=404, detail="User not found") from caught_error
 
 
 @router.patch(
@@ -145,15 +147,15 @@ def update_user(
             user_id=user_id,
             user_in=user_in,
         )
-    except user_service.UserNotFoundError:
+    except user_service.UserNotFoundError as caught_error:
         raise HTTPException(
             status_code=404,
             detail="The user with this id does not exist in the system",
-        )
-    except user_service.UserEmailAlreadyExistsError:
+        ) from caught_error
+    except user_service.UserEmailAlreadyExistsError as caught_error:
         raise HTTPException(
             status_code=409, detail="User with this email already exists"
-        )
+        ) from caught_error
 
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
@@ -167,10 +169,10 @@ def delete_user(
         user_service.delete_user_by_id(
             session=session, current_user=current_user, user_id=user_id
         )
-    except user_service.UserNotFoundError:
-        raise HTTPException(status_code=404, detail="User not found")
-    except user_service.SelfDeleteForbiddenError:
+    except user_service.UserNotFoundError as caught_error:
+        raise HTTPException(status_code=404, detail="User not found") from caught_error
+    except user_service.SelfDeleteForbiddenError as caught_error:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
-        )
+        ) from caught_error
     return Message(message="User deleted successfully")

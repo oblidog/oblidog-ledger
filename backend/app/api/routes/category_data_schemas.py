@@ -48,8 +48,10 @@ def read_category_data_schemas(
             ledger_id=ledger.id,
             category_id=category_id,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
 
     return CategoryDataSchemasPublic(
         data=[
@@ -80,9 +82,13 @@ def read_category_data_schema_version(
                 version=version,
             )
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data schema not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data schema not found"
+        ) from caught_error
 
     return _to_category_data_schema_public(category_schema)
