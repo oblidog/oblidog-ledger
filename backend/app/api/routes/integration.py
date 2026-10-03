@@ -87,7 +87,7 @@ def read_latest_integration_category_data_record(
             ledger_id=context.ledger.id,
             category_id=context.category.id,
         )
-    except (CategoryNotFoundError, CategoryDataSchemaNotFoundError):
+    except CategoryNotFoundError, CategoryDataSchemaNotFoundError:
         raise HTTPException(status_code=404, detail="Category data record not found")
     return _to_category_data_record_public(category_data)
 

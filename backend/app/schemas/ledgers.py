@@ -22,7 +22,7 @@ class LedgerShare(BaseModel):
     role: LedgerAccessRole
 
     @model_validator(mode="after")
-    def validate_target(self) -> "LedgerShare":
+    def validate_target(self) -> LedgerShare:
         if self.user_id is not None and self.email is not None:
             raise ValueError("Provide only one share target")
         if self.user_id is None and self.email is None:

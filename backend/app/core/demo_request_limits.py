@@ -71,7 +71,7 @@ class DemoRequestLimitsMiddleware:
         ):
             try:
                 data = json.loads(body)
-            except (ValueError, UnicodeDecodeError):
+            except ValueError, UnicodeDecodeError:
                 data = None  # FastAPI reports malformed JSON in the usual way.
             if data is not None and not _valid_json(data, 0, [MAX_JSON_NODES]):
                 await self._reject(

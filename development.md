@@ -112,6 +112,24 @@ Depending on your workflow, you could want to exclude it from Git, for example i
 
 One way to do it could be to add each environment variable to your CI/CD system, and updating the `compose.yml` file to read that specific env var instead of reading the `.env` file.
 
+## Python version
+
+The backend uses Python 3.14 in Docker, CI, local development, and the Vercel
+demo. The root `.python-version` pins the uv workspace interpreter;
+`backend/.python-version` also pins deployments with `backend/` as their project
+root.
+
+Install the interpreter and sync the workspace from the repository root:
+
+```bash
+uv python install 3.14
+uv sync --frozen
+```
+
+An existing virtual environment created with an older Python version will be
+recreated by uv when syncing. The host system Python does not determine the
+interpreter inside the backend Docker image.
+
 ## Pre-commit and Commitizen
 
 The repository uses `.pre-commit-config.yaml` for local git hooks and `commitizen`

@@ -45,7 +45,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
 logger = logging.getLogger(__name__)
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     with SessionLocal() as session:
         yield session
 
@@ -132,7 +132,7 @@ def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> 
         if uses_session_cookie and not token_data.csrf:
             raise ValueError
         user_id = uuid.UUID(token_data.sub)
-    except (InvalidTokenError, ValidationError, ValueError):
+    except InvalidTokenError, ValidationError, ValueError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",

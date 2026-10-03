@@ -33,7 +33,7 @@ class ObligationCreate(BaseModel):
     notes: str | None = None
 
     @model_validator(mode="after")
-    def require_confirmed_values_when_data_is_ready(self) -> "ObligationCreate":
+    def require_confirmed_values_when_data_is_ready(self) -> ObligationCreate:
         if self.data_ready and (self.current_amount is None or self.due_date is None):
             raise ValueError(
                 "current_amount and due_date are required when data_ready is true"
@@ -93,7 +93,7 @@ class ObligationComponentUpdate(BaseModel):
 
 class ObligationComponentUpsert(ObligationComponentCreate):
     @model_validator(mode="after")
-    def require_external_identity(self) -> "ObligationComponentUpsert":
+    def require_external_identity(self) -> ObligationComponentUpsert:
         if self.source is None or self.external_id is None:
             raise ValueError("source and external_id are required for upsert")
         return self
