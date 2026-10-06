@@ -56,3 +56,20 @@ class CounterpartiesPublic(BaseModel):
 
 class CounterpartySearchPublic(BaseModel):
     items: list[CounterpartySummaryPublic]
+
+
+class CategoryCounterpartyApply(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    counterparty_id: uuid.UUID
+    period_year: int = Field(ge=1, le=9999)
+    period_month: int = Field(ge=1, le=12)
+    overwrite: bool = False
+
+
+class CategoryCounterpartyPreview(BaseModel):
+    counterparty: CounterpartySummaryPublic
+    period_year: int
+    period_month: int
+    periods: list[str]
+    count: int

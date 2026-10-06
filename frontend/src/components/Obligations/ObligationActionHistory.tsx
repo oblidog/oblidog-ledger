@@ -29,6 +29,7 @@ const fieldLabels: Record<string, string> = {
   due_date: "Due date",
   paid_at: "Paid at",
   notes: "Notes",
+  counterparty: "Counterparty",
   amount_state: "Amount status",
   amount_source: "Amount source",
   issue_date_state: "Issue date status",
@@ -172,7 +173,8 @@ function ActionDetails({ action }: { action: ObligationActionPublic }) {
     ? (componentValue as ComponentChanges)
     : null
   const fields = Object.entries(action.changes).filter(
-    ([name, value]) => name !== "components" && isChange(value),
+    ([name, value]) =>
+      name !== "components" && name !== "counterparty_id" && isChange(value),
   ) as [string, Change][]
   const hasKnownDetails = fields.length > 0 || components !== null
 
