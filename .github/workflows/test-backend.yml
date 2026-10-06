@@ -37,6 +37,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Validate deployment variants
         shell: bash
         run: |
@@ -113,18 +115,17 @@ jobs:
             echo "Installer unexpectedly replaced an unmarked existing deployment." >&2
             exit 1
           fi
+      - name: Test CI scope policy
+        run: python3 -m unittest discover -s tests -p 'test_ci_test_scope.py'
       - name: Determine test scope
         id: scope
         env:
           HEAD_REF: ${{ github.head_ref }}
-        shell: bash
-        run: |
-          if [[ "$HEAD_REF" == release/v* || "$HEAD_REF" == sync/main-to-dev-* ]]; then
-            echo "Skipping heavy backend tests for trusted release metadata or back-sync PR."
-            echo "run_heavy=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_heavy=true" >> "$GITHUB_OUTPUT"
-          fi
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SAME_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        run: python3 scripts/ci_test_scope.py
       - name: Create CI environment file
         if: steps.scope.outputs.run_heavy == 'true'
         run: cp .github/ci.env .env
