@@ -112,7 +112,10 @@ function LedgerDetails() {
       <Suspense fallback={<ObligationWorkspaceSkeleton />}>
         <ObligationWorkspace
           ledgerId={ledgerId}
-          canManageComponents={canManageComponents}
+          canEdit={
+            canManageComponents &&
+            (!appConfig.is_demo || appConfig.demo_writes_enabled)
+          }
           defaultLifecycle={appConfig.is_demo ? "" : "unpaid"}
         />
       </Suspense>
