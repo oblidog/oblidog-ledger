@@ -178,7 +178,7 @@ for (const entryPoint of ["tile", "details"] as const) {
     await openConfirmation()
     await expect(confirmation).toBeVisible()
     await expect(confirmation.getByText(fixture.key, { exact: true })).toBeVisible()
-    await expect(confirmation.getByText(/125\\.00/)).toBeVisible()
+    await expect(confirmation.getByText(/125\.00/)).toBeVisible()
     expect(paymentRequests).toBe(0)
     await confirmation.getByRole("button", { name: "Cancel", exact: true }).click()
     await expect(confirmation).toBeHidden()
