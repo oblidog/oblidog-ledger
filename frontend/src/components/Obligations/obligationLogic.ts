@@ -128,7 +128,8 @@ export function lifecycleFilterLabel(lifecycle: LifecycleFilter) {
 
 export function canMarkObligationReady(obligation: ObligationPublic) {
   return (
-    obligation.lifecycle === "collecting_data" &&
+    (obligation.lifecycle === "draft" ||
+      obligation.lifecycle === "collecting_data") &&
     obligation.current_amount !== null &&
     obligation.due_date !== null &&
     obligation.amount_state !== "unknown" &&
