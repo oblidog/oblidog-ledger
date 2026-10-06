@@ -9,7 +9,7 @@ import {
   Plus,
   RotateCcw,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   CategoriesService,
@@ -48,6 +48,8 @@ import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { ObligationActionHistory } from "./ObligationActionHistory"
+import { ObligationComponentsSection } from "./ObligationComponentsSection"
 import {
   canCancelObligation,
   canEditObligation,
@@ -56,16 +58,17 @@ import {
   canReopenObligation,
   dueDateRange,
   isValidPeriod,
+  type LifecycleFilter,
   lifecycleFilterLabel,
   lifecycleOptions,
   monthInputValue,
   parseMonthInput,
   parseObligationFilters,
   serializeObligationFilters,
-  type LifecycleFilter,
 } from "./obligationLogic"
-import { ObligationActionHistory } from "./ObligationActionHistory"
-import { ObligationComponentsSection } from "./ObligationComponentsSection"
+
+const touchDialogClasses =
+  "[&_[data-slot=dialog-close]]:size-11 [&_[data-slot=dialog-close]]:top-2 [&_[data-slot=dialog-close]]:right-2 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center"
 
 const stateBadgeClasses: Record<string, string> = {
   unknown:
@@ -126,11 +129,11 @@ function counterpartyFor(obligation: ObligationPublic) {
 
 export function ObligationWorkspace({
   ledgerId,
-  canManageComponents,
+  canEdit,
   defaultLifecycle = "unpaid",
 }: {
   ledgerId: string
-  canManageComponents: boolean
+  canEdit: boolean
   defaultLifecycle?: LifecycleFilter
 }) {
   const period = periodFromSearch()
@@ -153,6 +156,8 @@ export function ObligationWorkspace({
     useState<ObligationPublic | null>(null)
   const [paymentConfirmation, setPaymentConfirmation] =
     useState<ObligationPublic | null>(null)
+  const actionLock = useRef(false)
+  const [actionPending, setActionPending] = useState(false)
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
   const invalidateActionHistory = (obligationKey: string) =>
@@ -176,14 +181,7 @@ export function ObligationWorkspace({
     })
     const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`
     window.history.replaceState(window.history.state, "", nextUrl)
-  }, [
-    categoryCode,
-    filterByPeriod,
-    filterMonth,
-    filterYear,
-    hasValidPeriodFilter,
-    lifecycle,
-  ])
+  }, [categoryCode, filterByPeriod, month, year, lifecycle])
 
   const obligations = useQuery({
     queryFn: () =>
@@ -261,13 +259,13 @@ export function ObligationWorkspace({
         obligationKey: obligation.key,
       }),
     onError: handleError.bind(showErrorToast),
-    onSuccess: (_, obligation) => {
+    onSuccess: async (_, obligation) => {
       showSuccessToast("Obligation marked as ready")
       invalidateActionHistory(obligation.key)
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligations", ledgerId],
       })
     },
@@ -279,13 +277,13 @@ export function ObligationWorkspace({
         obligationKey: obligation.key,
       }),
     onError: handleError.bind(showErrorToast),
-    onSuccess: (_, obligation) => {
+    onSuccess: async (_, obligation) => {
       showSuccessToast("Obligation reopened")
       invalidateActionHistory(obligation.key)
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligations", ledgerId],
       })
     },
@@ -297,13 +295,13 @@ export function ObligationWorkspace({
         obligationKey: obligation.key,
       }),
     onError: handleError.bind(showErrorToast),
-    onSuccess: (_, obligation) => {
+    onSuccess: async (_, obligation) => {
       showSuccessToast("Obligation canceled")
       invalidateActionHistory(obligation.key)
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligations", ledgerId],
       })
     },
@@ -315,38 +313,57 @@ export function ObligationWorkspace({
         obligationKey: obligation.key,
       }),
     onError: handleError.bind(showErrorToast),
-    onSuccess: (_, obligation) => {
+    onSuccess: async (_, obligation) => {
       setPaymentConfirmation(null)
       showSuccessToast("Obligation marked as paid")
       invalidateActionHistory(obligation.key)
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
       })
-      void queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["obligations", ledgerId],
       })
     },
   })
 
+  const runAction = async (
+    action: typeof markReady,
+    obligation: ObligationPublic,
+  ) => {
+    if (!canEdit || actionLock.current) return
+    actionLock.current = true
+    setActionPending(true)
+    try {
+      await action.mutateAsync(obligation)
+    } catch {
+      // The mutation reports the error; keep the current view for retry.
+    } finally {
+      actionLock.current = false
+      setActionPending(false)
+    }
+  }
+
   return (
-    <section>
-      <div className="flex items-center justify-between gap-4">
+    <section className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold md:text-2xl">Obligations</h1>
           <p className="mt-1 hidden text-sm text-muted-foreground md:block">
             Review and add manual obligations for this ledger.
           </p>
         </div>
-        <CreateObligationDialog
-          ledgerId={ledgerId}
-          defaultPeriod={
-            filterByPeriod && hasValidPeriodFilter
-              ? { year: filterYear, month: filterMonth }
-              : period
-          }
-          onError={showErrorToast}
-          onSuccess={showSuccessToast}
-        />
+        {canEdit ? (
+          <CreateObligationDialog
+            ledgerId={ledgerId}
+            defaultPeriod={
+              filterByPeriod && hasValidPeriodFilter
+                ? { year: filterYear, month: filterMonth }
+                : period
+            }
+            onError={showErrorToast}
+            onSuccess={showSuccessToast}
+          />
+        ) : null}
       </div>
       <div className="mt-4 space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
@@ -429,24 +446,21 @@ export function ObligationWorkspace({
             No obligations match these filters.
           </p>
         ) : null}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {!obligations.isError
             ? visibleObligations?.map((obligation) => (
                 <ObligationTile
                   key={obligation.key}
                   ledgerId={ledgerId}
                   obligation={obligation}
-                  canEditCounterparty={canManageComponents}
+                  canWrite={canEdit}
+                  disabled={actionPending}
                   onEdit={() => setEditingObligation(obligation)}
-                  onCancel={() => cancel.mutate(obligation)}
+                  onCancel={() => void runAction(cancel, obligation)}
                   onMarkPaid={() => setPaymentConfirmation(obligation)}
-                  onMarkReady={() => markReady.mutate(obligation)}
-                  onReopen={() => reopen.mutate(obligation)}
+                  onMarkReady={() => void runAction(markReady, obligation)}
+                  onReopen={() => void runAction(reopen, obligation)}
                   onSelect={() => setSelectedKey(obligation.key)}
-                  markingReady={markReady.isPending}
-                  canceling={cancel.isPending}
-                  markingPaid={markPaid.isPending}
-                  reopening={reopen.isPending}
                 />
               ))
             : null}
@@ -455,7 +469,9 @@ export function ObligationWorkspace({
           open={selectedKey !== null}
           onOpenChange={(open) => !open && setSelectedKey(null)}
         >
-          <DialogContent className="flex max-h-[min(90dvh,calc(100vh-2rem))] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
+          <DialogContent
+            className={`flex max-h-[min(90dvh,calc(100vh-2rem))] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl ${touchDialogClasses}`}
+          >
             <DialogHeader className="shrink-0 border-b px-4 py-4 pr-12 text-left sm:px-6">
               <DialogTitle className="break-all">
                 {selected.data?.key ?? "Obligation"}
@@ -468,7 +484,7 @@ export function ObligationWorkspace({
                 defaultValue="details"
                 className="min-h-0 min-w-0 flex-1 gap-0"
               >
-                <TabsList className="mx-4 my-3 w-fit max-w-[calc(100%-2rem)] shrink-0 sm:mx-6">
+                <TabsList className="mx-4 my-3 h-14 w-fit max-w-[calc(100%-2rem)] shrink-0 sm:mx-6">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="components">Components</TabsTrigger>
                   <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -527,8 +543,8 @@ export function ObligationWorkspace({
                       </div>
                     ) : null}
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                        <thead className="text-muted-foreground border-b text-xs uppercase">
+                      <table className="block w-full text-left text-sm md:table">
+                        <thead className="hidden text-muted-foreground border-b text-xs uppercase md:table-header-group">
                           <tr>
                             <th className="pb-2 pr-4 font-medium">Field</th>
                             <th className="pb-2 pr-4 font-medium">Value</th>
@@ -536,7 +552,7 @@ export function ObligationWorkspace({
                             <th className="pb-2 font-medium">Source</th>
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="block space-y-3 md:table-row-group md:space-y-0">
                           <ObligationFieldDetails
                             label="Current amount"
                             value={`${selected.data.current_amount ?? "Unknown"} ${
@@ -570,7 +586,7 @@ export function ObligationWorkspace({
                     ledgerId={ledgerId}
                     obligationKey={selected.data.key}
                     currency={selected.data.currency}
-                    canManage={canManageComponents}
+                    canManage={canEdit}
                     onError={showErrorToast}
                     onSuccess={showSuccessToast}
                   />
@@ -586,18 +602,32 @@ export function ObligationWorkspace({
                 </TabsContent>
               </Tabs>
             ) : (
-              <p className="min-h-0 overflow-y-auto px-4 py-4 text-sm text-muted-foreground sm:px-6">
-                Loading details…
-              </p>
+              <div className="px-4 py-4 text-sm sm:px-6">
+                {selected.isError ? (
+                  <>
+                    <p role="alert">Unable to load obligation details.</p>
+                    <Button
+                      className="mt-2 min-h-11"
+                      variant="outline"
+                      onClick={() => void selected.refetch()}
+                    >
+                      Try again
+                    </Button>
+                  </>
+                ) : (
+                  <p>Loading details…</p>
+                )}
+              </div>
             )}
-            {selected.data ? (
+            {selected.data && canEdit ? (
               <DialogFooter className="shrink-0 border-t px-4 py-3 sm:px-6">
                 <div className="flex flex-wrap gap-2">
                   {canMarkObligationReady(selected.data) ? (
                     <Button
                       size="sm"
-                      disabled={markReady.isPending}
-                      onClick={() => markReady.mutate(selected.data)}
+                      className="min-h-11"
+                      disabled={actionPending}
+                      onClick={() => void runAction(markReady, selected.data)}
                     >
                       <CircleCheck />
                       Mark as ready
@@ -607,8 +637,9 @@ export function ObligationWorkspace({
                     <Button
                       variant="destructive"
                       size="sm"
-                      disabled={cancel.isPending}
-                      onClick={() => cancel.mutate(selected.data)}
+                      className="min-h-11"
+                      disabled={actionPending}
+                      onClick={() => void runAction(cancel, selected.data)}
                     >
                       <Ban />
                       Cancel
@@ -617,7 +648,8 @@ export function ObligationWorkspace({
                   {canMarkObligationPaid(selected.data) ? (
                     <Button
                       size="sm"
-                      disabled={markPaid.isPending}
+                      className="min-h-11"
+                      disabled={actionPending}
                       onClick={() => setPaymentConfirmation(selected.data)}
                     >
                       <CreditCard />
@@ -628,8 +660,9 @@ export function ObligationWorkspace({
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={reopen.isPending}
-                      onClick={() => reopen.mutate(selected.data)}
+                      className="min-h-11"
+                      disabled={actionPending}
+                      onClick={() => void runAction(reopen, selected.data)}
                     >
                       <RotateCcw />
                       Reopen
@@ -639,6 +672,8 @@ export function ObligationWorkspace({
                     <Button
                       variant="outline"
                       size="sm"
+                      className="min-h-11"
+                      disabled={actionPending}
                       onClick={() => setEditingObligation(selected.data)}
                     >
                       <Pencil />
@@ -653,16 +688,17 @@ export function ObligationWorkspace({
         <Dialog
           open={paymentConfirmation !== null}
           onOpenChange={(open) => {
-            if (!open && !markPaid.isPending) setPaymentConfirmation(null)
+            if (!open && !actionPending) setPaymentConfirmation(null)
           }}
         >
           <DialogContent
+            className={touchDialogClasses}
             onEscapeKeyDown={(event) => {
-              if (markPaid.isPending) event.preventDefault()
+              if (actionPending) event.preventDefault()
             }}
             onInteractOutside={(event) => event.preventDefault()}
           >
-            <DialogHeader>
+            <DialogHeader className="pr-10">
               <DialogTitle>Mark obligation as paid?</DialogTitle>
               <DialogDescription>
                 Confirm that you have paid this obligation.
@@ -684,14 +720,16 @@ export function ObligationWorkspace({
             ) : null}
             <DialogFooter>
               <Button
+                className="min-h-11"
                 variant="outline"
-                disabled={markPaid.isPending}
+                disabled={actionPending}
                 onClick={() => setPaymentConfirmation(null)}
               >
                 Cancel
               </Button>
               <LoadingButton
-                loading={markPaid.isPending}
+                className="min-h-11"
+                loading={actionPending}
                 disabled={
                   paymentConfirmation === null ||
                   !canMarkObligationPaid(paymentConfirmation)
@@ -700,9 +738,9 @@ export function ObligationWorkspace({
                   if (
                     paymentConfirmation !== null &&
                     canMarkObligationPaid(paymentConfirmation) &&
-                    !markPaid.isPending
+                    !actionPending
                   ) {
-                    markPaid.mutate(paymentConfirmation)
+                    void runAction(markPaid, paymentConfirmation)
                   }
                 }}
               >
@@ -775,31 +813,25 @@ function paidDateLabel(paidAt: string | null) {
 function ObligationTile({
   ledgerId,
   obligation,
-  canEditCounterparty,
+  canWrite,
+  disabled,
   onEdit,
   onCancel,
   onMarkPaid,
   onMarkReady,
   onReopen,
   onSelect,
-  markingReady,
-  canceling,
-  markingPaid,
-  reopening,
 }: {
   ledgerId: string
   obligation: ObligationPublic
-  canEditCounterparty: boolean
+  canWrite: boolean
+  disabled: boolean
   onEdit: () => void
   onCancel: () => void
   onMarkPaid: () => void
   onMarkReady: () => void
   onReopen: () => void
   onSelect: () => void
-  markingReady: boolean
-  canceling: boolean
-  markingPaid: boolean
-  reopening: boolean
 }) {
   const amount =
     obligation.current_amount !== null
@@ -807,16 +839,16 @@ function ObligationTile({
       : "Amount unknown"
   const dueDateStatus = businessDaysUntil(obligation.due_date)
   const isPaid = obligation.lifecycle === "paid"
-  const canCancel = canCancelObligation(obligation)
-  const canMarkPaid = canMarkObligationPaid(obligation)
-  const canMarkReady = canMarkObligationReady(obligation)
-  const canEdit = canEditObligation(obligation)
-  const canReopen = canReopenObligation(obligation)
+  const canCancel = canWrite && canCancelObligation(obligation)
+  const canMarkPaid = canWrite && canMarkObligationPaid(obligation)
+  const canMarkReady = canWrite && canMarkObligationReady(obligation)
+  const canEdit = canWrite && canEditObligation(obligation)
+  const canReopen = canWrite && canReopenObligation(obligation)
   const counterparty = counterpartyFor(obligation) ?? null
 
   return (
     <div
-      className={`group rounded-xl border p-4 text-card-foreground shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring ${
+      className={`group min-w-0 rounded-xl border p-4 text-card-foreground shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring ${
         isPaid
           ? "border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15"
           : dueDateStatus.isUrgent
@@ -838,72 +870,81 @@ function ObligationTile({
             </p>
           </div>
         </button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Actions for ${obligation.name}`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <EllipsisVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {canEditCounterparty ? (
-              <ObligationCounterpartyDialog
-                ledgerId={ledgerId}
-                obligation={obligation}
-                trigger={
-                  <DropdownMenuItem
-                    onSelect={(event) => event.preventDefault()}
-                  >
-                    <Building2 />
-                    Counterparty
-                  </DropdownMenuItem>
-                }
-              />
-            ) : null}
-            {canMarkReady ? (
-              <DropdownMenuItem disabled={markingReady} onSelect={onMarkReady}>
-                <CircleCheck />
-                Mark as ready
-              </DropdownMenuItem>
-            ) : null}
-            {canCancel ? (
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={canceling}
-                onSelect={onCancel}
+        {canWrite ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="size-11"
+                disabled={disabled}
+                aria-label={`Actions for ${obligation.name}`}
+                onClick={(event) => event.stopPropagation()}
               >
-                <Ban />
-                Cancel
-              </DropdownMenuItem>
-            ) : null}
-            {canMarkPaid ? (
-              <DropdownMenuItem disabled={markingPaid} onSelect={onMarkPaid}>
-                <CreditCard />
-                Mark as paid
-              </DropdownMenuItem>
-            ) : null}
-            {canReopen ? (
-              <DropdownMenuItem disabled={reopening} onSelect={onReopen}>
-                <RotateCcw />
-                Reopen
-              </DropdownMenuItem>
-            ) : null}
-            {canEdit ? (
-              <DropdownMenuItem onSelect={onEdit}>
-                <Pencil />
-                Edit
-              </DropdownMenuItem>
-            ) : null}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <EllipsisVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="[&_[role=menuitem]]:min-h-11"
+            >
+              {canWrite ? (
+                <ObligationCounterpartyDialog
+                  ledgerId={ledgerId}
+                  obligation={obligation}
+                  trigger={
+                    <DropdownMenuItem
+                      onSelect={(event) => event.preventDefault()}
+                    >
+                      <Building2 />
+                      Counterparty
+                    </DropdownMenuItem>
+                  }
+                />
+              ) : null}
+              {canMarkReady ? (
+                <DropdownMenuItem disabled={disabled} onSelect={onMarkReady}>
+                  <CircleCheck />
+                  Mark as ready
+                </DropdownMenuItem>
+              ) : null}
+              {canCancel ? (
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={disabled}
+                  onSelect={onCancel}
+                >
+                  <Ban />
+                  Cancel
+                </DropdownMenuItem>
+              ) : null}
+              {canMarkPaid ? (
+                <DropdownMenuItem disabled={disabled} onSelect={onMarkPaid}>
+                  <CreditCard />
+                  Mark as paid
+                </DropdownMenuItem>
+              ) : null}
+              {canReopen ? (
+                <DropdownMenuItem disabled={disabled} onSelect={onReopen}>
+                  <RotateCcw />
+                  Reopen
+                </DropdownMenuItem>
+              ) : null}
+              {canEdit ? (
+                <DropdownMenuItem disabled={disabled} onSelect={onEdit}>
+                  <Pencil />
+                  Edit
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </div>
       <button type="button" className="w-full text-left" onClick={onSelect}>
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <p className="text-xl font-semibold tabular-nums">{amount}</p>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="break-all text-xl font-semibold tabular-nums">
+            {amount}
+          </p>
           <Badge
             variant="outline"
             className={lifecycleBadgeClasses[obligation.lifecycle]}
@@ -925,7 +966,7 @@ function ObligationTile({
             <p className="text-muted-foreground text-xs font-medium uppercase">
               Due date
             </p>
-            <div className="mt-1 flex items-baseline justify-between gap-3">
+            <div className="mt-1 flex flex-wrap items-baseline justify-between gap-3">
               <p className="font-medium tabular-nums">
                 {obligation.due_date ?? "Unknown"}
               </p>
@@ -938,6 +979,29 @@ function ObligationTile({
           </div>
         )}
       </button>
+      {canMarkReady || canMarkPaid || canEdit ? (
+        <LoadingButton
+          className="mt-4 min-h-11 w-full md:hidden"
+          loading={disabled}
+          disabled={disabled}
+          onClick={
+            canMarkPaid ? onMarkPaid : canMarkReady ? onMarkReady : onEdit
+          }
+        >
+          {canMarkPaid ? (
+            <CreditCard />
+          ) : canMarkReady ? (
+            <CircleCheck />
+          ) : (
+            <Pencil />
+          )}
+          {canMarkPaid
+            ? "Mark as paid"
+            : canMarkReady
+              ? "Mark as ready"
+              : "Complete data"}
+        </LoadingButton>
+      ) : null}
     </div>
   )
 }
@@ -961,6 +1025,7 @@ function EditObligationDialog({
   const [issueDate, setIssueDate] = useState("")
   const [dueDate, setDueDate] = useState("")
   const [notes, setNotes] = useState("")
+  const submitLock = useRef(false)
   const queryClient = useQueryClient()
   const dueDateLimits = dueDateRange(
     obligation.period.year,
@@ -1041,8 +1106,10 @@ function EditObligationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent
+        className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${touchDialogClasses}`}
+      >
+        <DialogHeader className="pr-10">
           <DialogTitle>Edit obligation</DialogTitle>
           <DialogDescription>
             Update manually entered values and notes.
@@ -1109,10 +1176,19 @@ function EditObligationDialog({
             />
           </div>
           <LoadingButton
-            className="w-full"
+            className="min-h-11 w-full"
             loading={mutation.isPending}
             disabled={!hasChanges || dueDateOutOfRange || issueDateAfterDueDate}
-            onClick={() => mutation.mutate()}
+            onClick={() => {
+              if (submitLock.current) return
+              submitLock.current = true
+              void mutation
+                .mutateAsync()
+                .catch(() => {})
+                .finally(() => {
+                  submitLock.current = false
+                })
+            }}
           >
             Save changes
           </LoadingButton>
@@ -1134,14 +1210,17 @@ function ObligationFieldDetails({
   source: string
 }) {
   return (
-    <tr className="border-b last:border-0">
-      <td className="text-muted-foreground whitespace-nowrap py-3 pr-4 font-medium">
+    <tr className="grid grid-cols-2 gap-2 rounded-lg border p-3 md:table-row md:rounded-none md:border-x-0 md:border-t-0 md:p-0 md:last:border-0">
+      <td className="col-span-2 text-muted-foreground font-medium md:whitespace-nowrap md:py-3 md:pr-4">
         {label}
       </td>
-      <td className="whitespace-nowrap py-3 pr-4 font-semibold tabular-nums">
+      <td className="col-span-2 break-words font-semibold tabular-nums md:whitespace-nowrap md:py-3 md:pr-4">
         {value}
       </td>
-      <td className="whitespace-nowrap py-3 pr-4">
+      <td className="min-w-0 md:whitespace-nowrap md:py-3 md:pr-4">
+        <span className="mb-1 block text-xs text-muted-foreground md:hidden">
+          Status
+        </span>
         <Badge
           variant="outline"
           className={stateBadgeClasses[state] ?? stateBadgeClasses.unknown}
@@ -1149,7 +1228,10 @@ function ObligationFieldDetails({
           {state}
         </Badge>
       </td>
-      <td className="whitespace-nowrap py-3">
+      <td className="min-w-0 md:whitespace-nowrap md:py-3">
+        <span className="mb-1 block text-xs text-muted-foreground md:hidden">
+          Source
+        </span>
         <Badge
           variant="outline"
           className={sourceBadgeClasses[source] ?? sourceBadgeClasses.unknown}
@@ -1188,6 +1270,7 @@ function CreateObligationDialog({
     setYear(String(defaultPeriod.year))
     setMonth(String(defaultPeriod.month))
   }, [defaultPeriod.month, defaultPeriod.year, open])
+  const submitLock = useRef(false)
   const queryClient = useQueryClient()
   const categories = useQuery({
     queryFn: () => CategoriesService.readCategories({ ledgerId }),
@@ -1245,8 +1328,10 @@ function CreateObligationDialog({
           New obligation
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent
+        className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${touchDialogClasses}`}
+      >
+        <DialogHeader className="pr-10">
           <DialogTitle>Create manual obligation</DialogTitle>
           <DialogDescription>
             Choose a category and billing period.
@@ -1358,7 +1443,7 @@ function CreateObligationDialog({
             />
           </div>
           <LoadingButton
-            className="w-full"
+            className="min-h-11 w-full"
             loading={mutation.isPending}
             disabled={
               !categoryCode ||
@@ -1368,7 +1453,16 @@ function CreateObligationDialog({
               issueDateAfterDueDate ||
               (dataReady && (!currentAmount || !dueDate))
             }
-            onClick={() => mutation.mutate()}
+            onClick={() => {
+              if (submitLock.current) return
+              submitLock.current = true
+              void mutation
+                .mutateAsync()
+                .catch(() => {})
+                .finally(() => {
+                  submitLock.current = false
+                })
+            }}
           >
             Create obligation
           </LoadingButton>
