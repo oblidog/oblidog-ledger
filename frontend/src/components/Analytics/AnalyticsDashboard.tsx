@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
 import { AlertCircle, ArrowRight, BarChart3 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -220,13 +219,6 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
           <p className="mt-1 text-muted-foreground">
             Review payment progress, the payment schedule, and period totals.
           </p>
-          <Link
-            className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-            to="/ledgers/$ledgerId/categories"
-            params={{ ledgerId }}
-          >
-            Explore category history <ArrowRight className="size-4" />
-          </Link>
         </div>
         <div className="grid gap-1 text-sm font-medium">
           Selected period

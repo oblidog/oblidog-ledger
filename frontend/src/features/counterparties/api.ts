@@ -8,6 +8,53 @@ const oauthSecurity = [
   },
 ] as const
 
+export type CategoryCounterpartyPreview = {
+  counterparty: CounterpartySummary
+  period_year: number
+  period_month: number
+  periods: string[]
+  count: number
+}
+
+export async function previewCategoryCounterpartyApply(
+  ledgerId: string,
+  categoryId: string,
+  overwrite: boolean,
+) {
+  const response = await client.get({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations",
+    path: { ledger_id: ledgerId, category_id: categoryId },
+    query: { overwrite },
+  })
+  return response.data as CategoryCounterpartyPreview
+}
+
+export async function applyCategoryCounterparty(
+  ledgerId: string,
+  categoryId: string,
+  preview: CategoryCounterpartyPreview,
+  overwrite: boolean,
+) {
+  const response = await client.post({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations",
+    path: { ledger_id: ledgerId, category_id: categoryId },
+    body: {
+      counterparty_id: preview.counterparty.id,
+      period_year: preview.period_year,
+      period_month: preview.period_month,
+      overwrite,
+    },
+    headers: { "Content-Type": "application/json" },
+  })
+  return response.data as { message: string }
+}
+
 export type CounterpartySummary = {
   id: string
   name: string

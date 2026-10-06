@@ -84,12 +84,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ApplyCategoryCounterpartyDialog } from "@/features/counterparties/ApplyCategoryCounterpartyDialog"
 import {
   assignCategoryCounterparty,
   type CategoryWithCounterparty,
   type CounterpartySummary,
 } from "@/features/counterparties/api"
 import { CategoryCounterpartyField } from "@/features/counterparties/CategoryCounterpartyField"
+import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -1206,6 +1208,20 @@ function CategoryActions({
               </DropdownMenuItem>
             }
           />
+          <ApplyCategoryCounterpartyDialog
+            ledgerId={ledgerId}
+            categoryId={category.id}
+            categoryName={category.name}
+            disabled={!categoryCounterparty(category)}
+            trigger={
+              <DropdownMenuItem
+                disabled={!categoryCounterparty(category)}
+                onSelect={(event) => event.preventDefault()}
+              >
+                Apply counterparty to obligations
+              </DropdownMenuItem>
+            }
+          />
           <DropdownMenuSeparator />
           {category.is_active ? (
             <DropdownMenuItem
@@ -1459,6 +1475,18 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
             >
               {row.original.name}
             </p>
+            <div className="mt-1 flex max-w-56 items-center gap-2 text-sm text-muted-foreground">
+              <CounterpartyLogo
+                counterparty={categoryCounterparty(row.original)}
+                className="size-5"
+              />
+              <span
+                className="truncate"
+                title={categoryCounterparty(row.original)?.name}
+              >
+                {categoryCounterparty(row.original)?.name || "Not assigned"}
+              </span>
+            </div>
             {row.original.description && (
               <p className="max-w-56 truncate text-sm text-muted-foreground">
                 {row.original.description}

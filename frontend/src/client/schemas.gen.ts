@@ -237,6 +237,77 @@ export const CategoryAmountHistoryPublicSchema = {
     title: 'CategoryAmountHistoryPublic'
 } as const;
 
+export const CategoryCounterpartyApplySchema = {
+    properties: {
+        counterparty_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Counterparty Id'
+        },
+        period_year: {
+            type: 'integer',
+            maximum: 9999,
+            minimum: 1,
+            title: 'Period Year'
+        },
+        period_month: {
+            type: 'integer',
+            maximum: 12,
+            minimum: 1,
+            title: 'Period Month'
+        },
+        overwrite: {
+            type: 'boolean',
+            title: 'Overwrite',
+            default: false
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'counterparty_id',
+        'period_year',
+        'period_month'
+    ],
+    title: 'CategoryCounterpartyApply'
+} as const;
+
+export const CategoryCounterpartyPreviewSchema = {
+    properties: {
+        counterparty: {
+            $ref: '#/components/schemas/CounterpartySummaryPublic'
+        },
+        period_year: {
+            type: 'integer',
+            title: 'Period Year'
+        },
+        period_month: {
+            type: 'integer',
+            title: 'Period Month'
+        },
+        periods: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Periods'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'counterparty',
+        'period_year',
+        'period_month',
+        'periods',
+        'count'
+    ],
+    title: 'CategoryCounterpartyPreview'
+} as const;
+
 export const CategoryCreateSchema = {
     properties: {
         category_group_id: {

@@ -1,16 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useLocation,
-} from "@tanstack/react-router"
-import { ArrowLeft, Tags } from "lucide-react"
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router"
+import { Tags } from "lucide-react"
 import { Suspense } from "react"
 
 import { LedgersService } from "@/client"
 import CategoryWorkspace from "@/components/Categories/CategoryWorkspace"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -34,12 +28,6 @@ function LedgerCategories() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <Button variant="ghost" size="sm" className="w-fit" asChild>
-          <Link to="/ledgers/$ledgerId" params={{ ledgerId }}>
-            <ArrowLeft />
-            Back to obligations
-          </Link>
-        </Button>
         <div>
           <div className="mb-2 flex items-center gap-2">
             <Tags className="size-5 text-primary" />

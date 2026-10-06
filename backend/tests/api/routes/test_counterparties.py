@@ -278,3 +278,130 @@ def test_category_counterparty_is_copied_only_when_obligation_is_created(
     )
     assert response.status_code == 200
     assert response.json()["counterparty"]["id"] == second["id"]
+
+
+def test_apply_category_counterparty_limits_periods_and_audits_changes(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+    monkeypatch: Any,
+) -> None:
+    from datetime import date
+
+    from sqlalchemy import select
+
+    from app.api.routes import counterparties as routes
+    from app.models import ObligationActionLog
+
+    monkeypatch.setattr(routes, "business_today", lambda: date(2026, 12, 31))
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger, category = _create_category(db, owner_id=owner.id)
+    other_ledger, other_category = _create_category(db, owner_id=owner.id)
+    first = _create_counterparty(
+        client, superuser_token_headers, name=random_lower_string()
+    )
+    second = _create_counterparty(
+        client, superuser_token_headers, name=random_lower_string()
+    )
+    obligations = []
+    for period in (
+        BillingPeriod(2026, 11),
+        BillingPeriod(2026, 12),
+        BillingPeriod(2027, 1),
+        BillingPeriod(2027, 2),
+    ):
+        obligation, _ = obligation_service.get_or_create_obligation(
+            session=db, category=category, period=period
+        )
+        obligations.append(obligation)
+    obligations[2].counterparty_id = uuid.UUID(second["id"])
+    unrelated, _ = obligation_service.get_or_create_obligation(
+        session=db, category=other_category, period=BillingPeriod(2026, 12)
+    )
+    category.counterparty_id = uuid.UUID(first["id"])
+    db.commit()
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/counterparty/obligations"
+    preview = client.get(url, headers=headers)
+    assert preview.status_code == 200
+    assert preview.json()["periods"] == ["2026-12", "2027-01"]
+    assert preview.json()["count"] == 1
+    body = {"counterparty_id": first["id"], "period_year": 2026, "period_month": 12}
+    applied = client.post(url, headers=headers, json=body)
+    assert applied.status_code == 200
+    assert applied.json()["message"] == "Counterparty applied to 1 obligations"
+    for obligation in [*obligations, unrelated]:
+        db.refresh(obligation)
+    assert obligations[0].counterparty_id is None
+    assert obligations[1].counterparty_id == uuid.UUID(first["id"])
+    assert obligations[2].counterparty_id == uuid.UUID(second["id"])
+    assert obligations[3].counterparty_id is None
+    assert unrelated.counterparty_id is None
+    logs = list(
+        db.scalars(
+            select(ObligationActionLog).where(
+                ObligationActionLog.obligation_id == obligations[1].id
+            )
+        )
+    )
+    assert len(logs) == 1
+    assert logs[0].actor_id == owner.id
+    assert logs[0].changes["counterparty"] == {"from": None, "to": first["name"]}
+    assert (
+        client.post(url, headers=headers, json=body).json()["message"]
+        == "Counterparty applied to 0 obligations"
+    )
+    assert (
+        client.get(url, headers=headers, params={"overwrite": True}).json()["count"]
+        == 1
+    )
+    body["overwrite"] = True
+    assert client.post(url, headers=headers, json=body).status_code == 200
+    db.refresh(obligations[2])
+    assert obligations[2].counterparty_id == uuid.UUID(first["id"])
+    assert (
+        client.get(url, headers=headers, params={"overwrite": True}).json()["count"]
+        == 0
+    )
+    assert other_ledger.id != ledger.id
+
+
+def test_apply_counterparty_rejects_stale_preview_and_wrong_ledger(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+    monkeypatch: Any,
+) -> None:
+    from datetime import date
+
+    from app.api.routes import counterparties as routes
+
+    monkeypatch.setattr(routes, "business_today", lambda: date(2026, 10, 6))
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger, category = _create_category(db, owner_id=owner.id)
+    other_ledger, _ = _create_category(db, owner_id=owner.id)
+    counterparty = _create_counterparty(
+        client, superuser_token_headers, name=random_lower_string()
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/counterparty/obligations"
+    assert client.get(url, headers=headers).status_code == 409
+    category.counterparty_id = uuid.UUID(counterparty["id"])
+    db.commit()
+    body = {
+        "counterparty_id": counterparty["id"],
+        "period_year": 2026,
+        "period_month": 9,
+    }
+    assert client.post(url, headers=headers, json=body).status_code == 409
+    body.update(period_month=10, counterparty_id=str(uuid.uuid4()))
+    assert client.post(url, headers=headers, json=body).status_code == 409
+    wrong_url = f"{settings.API_V1_STR}/ledgers/{other_ledger.id}/categories/{category.id}/counterparty/obligations"
+    assert client.get(wrong_url, headers=headers).status_code == 404
+    assert client.post(wrong_url, headers=headers, json=body).status_code == 404
+    outsider = create_random_user(db)
+    outsider_headers = authentication_token_from_email(
+        client=client, email=outsider.email, db=db
+    )
+    assert client.get(url, headers=outsider_headers).status_code == 404
+    assert client.post(url, headers=outsider_headers, json=body).status_code == 404

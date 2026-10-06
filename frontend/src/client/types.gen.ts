@@ -128,6 +128,51 @@ export type CategoryAmountHistoryPublic = {
 };
 
 /**
+ * CategoryCounterpartyApply
+ */
+export type CategoryCounterpartyApply = {
+    /**
+     * Counterparty Id
+     */
+    counterparty_id: string;
+    /**
+     * Period Year
+     */
+    period_year: number;
+    /**
+     * Period Month
+     */
+    period_month: number;
+    /**
+     * Overwrite
+     */
+    overwrite?: boolean;
+};
+
+/**
+ * CategoryCounterpartyPreview
+ */
+export type CategoryCounterpartyPreview = {
+    counterparty: CounterpartySummaryPublic;
+    /**
+     * Period Year
+     */
+    period_year: number;
+    /**
+     * Period Month
+     */
+    period_month: number;
+    /**
+     * Periods
+     */
+    periods: Array<string>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * CategoryCreate
  */
 export type CategoryCreate = {
@@ -3629,6 +3674,79 @@ export type CategoriesReadCategoryDataSchemaVersionResponses = {
 };
 
 export type CategoriesReadCategoryDataSchemaVersionResponse = CategoriesReadCategoryDataSchemaVersionResponses[keyof CategoriesReadCategoryDataSchemaVersionResponses];
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: {
+        /**
+         * Overwrite
+         */
+        overwrite?: boolean;
+    };
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations';
+};
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyError = CounterpartiesPreviewCategoryCounterpartyApplyErrors[keyof CounterpartiesPreviewCategoryCounterpartyApplyErrors];
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryCounterpartyPreview;
+};
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyResponse = CounterpartiesPreviewCategoryCounterpartyApplyResponses[keyof CounterpartiesPreviewCategoryCounterpartyApplyResponses];
+
+export type CounterpartiesApplyCategoryCounterpartyData = {
+    body: CategoryCounterpartyApply;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations';
+};
+
+export type CounterpartiesApplyCategoryCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesApplyCategoryCounterpartyError = CounterpartiesApplyCategoryCounterpartyErrors[keyof CounterpartiesApplyCategoryCounterpartyErrors];
+
+export type CounterpartiesApplyCategoryCounterpartyResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type CounterpartiesApplyCategoryCounterpartyResponse = CounterpartiesApplyCategoryCounterpartyResponses[keyof CounterpartiesApplyCategoryCounterpartyResponses];
 
 export type CounterpartiesReadCounterpartiesData = {
     body?: never;

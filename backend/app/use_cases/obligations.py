@@ -172,6 +172,36 @@ def _require_ledger(*, session: Session, ledger_id: uuid.UUID) -> Ledger:
     return ledger
 
 
+def assign_counterparty_with_audit(
+    *,
+    session: Session,
+    obligation: Obligation,
+    counterparty_id: uuid.UUID,
+    counterparty_name: str,
+    actor: ObligationActionActor,
+) -> None:
+    """Stage an assignment and its audit entry in the caller's transaction."""
+    previous_id = obligation.counterparty_id
+    if previous_id == counterparty_id:
+        return
+    previous_name = obligation.counterparty.name if obligation.counterparty else None
+    obligation.counterparty_id = counterparty_id
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.VALUES_UPDATED,
+        actor=actor,
+        changes={
+            "counterparty": {"from": previous_name, "to": counterparty_name},
+            "counterparty_id": {
+                "from": str(previous_id) if previous_id else None,
+                "to": str(counterparty_id),
+            },
+        },
+        metadata={"source": "category_counterparty_apply"},
+    )
+
+
 def ensure_obligations_for_period(
     *,
     session: Session,
