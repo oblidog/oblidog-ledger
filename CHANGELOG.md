@@ -1,3 +1,10 @@
+## v0.17.1 (2026-10-06)
+
+### Fix
+
+- **obligations**: allow draft confirmation and confirm payment actions (#457)
+- **deps**: bump emails (#454)
+
 ## v0.17.0 (2026-09-27)
 
 ### Feat
