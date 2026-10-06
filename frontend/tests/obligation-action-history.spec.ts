@@ -149,9 +149,11 @@ for (const entryPoint of ["tile", "details"] as const) {
       ledgerId: fixture.ledger.id,
       obligationKey: fixture.key,
     })
+    const paymentPath = `/api/v1/ledgers/${fixture.ledger.id}/obligations/${fixture.key}/mark-paid`
     let paymentRequests = 0
     page.on("request", (request) => {
-      if (request.method() === "POST" && request.url().endsWith("/mark-paid")) {
+      if (request.method() === "POST" &&
+        new URL(request.url()).pathname === paymentPath) {
         paymentRequests += 1
       }
     })
@@ -189,7 +191,16 @@ for (const entryPoint of ["tile", "details"] as const) {
     })).lifecycle).toBe("ready")
 
     await openConfirmation()
+    await expect(confirmation).toBeVisible()
+    const paymentResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === paymentPath,
+    )
     await confirmation.getByRole("button", { name: "Mark as paid" }).click()
+    const paymentResponse = await paymentResponsePromise
+    expect(paymentResponse.status()).toBe(200)
+    expect((await paymentResponse.json()).lifecycle).toBe("paid")
     await expect(confirmation).toBeHidden()
     expect(paymentRequests).toBe(1)
     expect((await ObligationsService.readObligation({
