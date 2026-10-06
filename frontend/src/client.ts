@@ -124,6 +124,9 @@ export const AnalyticsService = {
   ),
 }
 export const CategoriesService = {
+  previewPaymentSchedule: request(
+    generated.CategoriesService.previewPaymentSchedule<true>,
+  ),
   archiveCategory: request(generated.CategoriesService.archiveCategory<true>),
   archiveCategoryGroup: request(
     generated.CategoriesService.archiveCategoryGroup<true>,

@@ -1963,6 +1963,51 @@ export type PeriodPaymentSummaryPublic = {
 export type RecurrenceUnit = 'month' | 'year';
 
 /**
+ * SchedulePreviewPublic
+ */
+export type SchedulePreviewPublic = {
+    /**
+     * Period Year
+     */
+    period_year: number | null;
+    /**
+     * Period Month
+     */
+    period_month: number | null;
+    /**
+     * Scheduled Date
+     */
+    scheduled_date: string | null;
+    /**
+     * Due Date
+     */
+    due_date: string | null;
+    /**
+     * Calendar Country
+     */
+    calendar_country: string;
+};
+
+/**
+ * SchedulePreviewRequest
+ */
+export type SchedulePreviewRequest = {
+    /**
+     * First Due Date
+     */
+    first_due_date: string;
+    /**
+     * Recurrence Interval
+     */
+    recurrence_interval: number;
+    recurrence_unit: RecurrenceUnit;
+    /**
+     * Reference Date
+     */
+    reference_date?: string | null;
+};
+
+/**
  * SystemRunPublic
  */
 export type SystemRunPublic = {
@@ -3165,6 +3210,36 @@ export type AnalyticsReadRemainingPeriodCashflowResponses = {
 };
 
 export type AnalyticsReadRemainingPeriodCashflowResponse = AnalyticsReadRemainingPeriodCashflowResponses[keyof AnalyticsReadRemainingPeriodCashflowResponses];
+
+export type CategoriesPreviewPaymentScheduleData = {
+    body: SchedulePreviewRequest;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/schedule-preview';
+};
+
+export type CategoriesPreviewPaymentScheduleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CategoriesPreviewPaymentScheduleError = CategoriesPreviewPaymentScheduleErrors[keyof CategoriesPreviewPaymentScheduleErrors];
+
+export type CategoriesPreviewPaymentScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    200: SchedulePreviewPublic;
+};
+
+export type CategoriesPreviewPaymentScheduleResponse = CategoriesPreviewPaymentScheduleResponses[keyof CategoriesPreviewPaymentScheduleResponses];
 
 export type CategoriesReadCategoryGroupsData = {
     body?: never;

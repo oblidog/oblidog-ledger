@@ -100,3 +100,27 @@ ledger member role. Their obligation endpoints address a billing period as
 `ERROR` is an alarm about invalid obligation data, not integration health. The
 latter belongs to the separate integration-state model. Integration diagnostics
 may be appended through the integration-only notes endpoint.
+
+## Payment schedule and due-date preview
+
+Category recurrence is anchored to `first_due_date` and advances by the configured
+number of months or years. Each occurrence keeps the original day of the month,
+clamped to the last valid day in a short month. The effective due date moves back
+to the nearest working day, skipping weekends and public holidays according to
+`BUSINESS_CALENDAR_COUNTRY` (default `PL`). This may put the due date in the
+previous month; the obligation still belongs to its original billing period.
+
+`POST /api/v1/ledgers/{ledger_id}/categories/schedule-preview` accepts
+`first_due_date`, `recurrence_interval`, `recurrence_unit`, and an optional
+`reference_date`. Without a reference date it uses today's date in
+`SYSTEM_RUN_TIMEZONE`. It returns `period_year`, `period_month`, `scheduled_date`,
+`due_date`, and `calendar_country` for the first effective due date on or after
+that date, including today. Date and period fields are null if the next occurrence
+would exceed the supported date range.
+
+The preview requires ledger view access, supports unsaved category forms, and
+performs no writes. It uses the same domain calculator as obligation generation
+and remains available in a read-only demo. It forecasts newly generated dates;
+it does not report existing obligations or overwrite dates already stored,
+including dates supplied by users or integrations. The validation window for
+manual due dates remains a separate rule.

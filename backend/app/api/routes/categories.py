@@ -9,6 +9,10 @@ from app.api.deps import (
     require_ledger_edit_access,
     require_ledger_view_access,
 )
+from app.core.business_date import business_today
+from app.core.config import settings
+from app.domain.business_calendar import BusinessCalendar
+from app.domain.payment_schedule import next_payment
 from app.models import (
     Category,
     CategoryDataRecord,
@@ -30,6 +34,7 @@ from app.schemas import (
     CategoryPublic,
     CategoryUpdate,
 )
+from app.schemas.categories import SchedulePreviewPublic, SchedulePreviewRequest
 from app.services import demo_limits
 from app.use_cases import categories as category_use_cases
 from app.use_cases import category_data_records as category_data_record_use_cases
@@ -49,6 +54,32 @@ from app.use_cases.exceptions import (
 )
 
 router = APIRouter(tags=["categories"])
+
+
+@router.post(
+    "/ledgers/{ledger_id}/categories/schedule-preview",
+    response_model=SchedulePreviewPublic,
+)
+def preview_payment_schedule(
+    *,
+    schedule_in: SchedulePreviewRequest,
+    _ledger: Ledger = Depends(require_ledger_view_access),
+) -> SchedulePreviewPublic:
+    """Preview an unsaved schedule without creating or changing obligations."""
+    payment = next_payment(
+        first_due_date=schedule_in.first_due_date,
+        interval=schedule_in.recurrence_interval,
+        unit=schedule_in.recurrence_unit,
+        reference_date=schedule_in.reference_date or business_today(),
+        calendar=BusinessCalendar(settings.BUSINESS_CALENDAR_COUNTRY),
+    )
+    return SchedulePreviewPublic(
+        period_year=payment.period.year if payment else None,
+        period_month=payment.period.month if payment else None,
+        scheduled_date=payment.scheduled_date if payment else None,
+        due_date=payment.due_date if payment else None,
+        calendar_country=settings.BUSINESS_CALENDAR_COUNTRY,
+    )
 
 
 def _to_category_group_public(category_group: CategoryGroup) -> CategoryGroupPublic:
