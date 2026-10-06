@@ -151,6 +151,8 @@ export function ObligationWorkspace({
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
+  const [paymentConfirmation, setPaymentConfirmation] =
+    useState<ObligationPublic | null>(null)
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
   const invalidateActionHistory = (obligationKey: string) =>
@@ -314,6 +316,7 @@ export function ObligationWorkspace({
       }),
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
+      setPaymentConfirmation(null)
       showSuccessToast("Obligation marked as paid")
       invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
@@ -436,7 +439,7 @@ export function ObligationWorkspace({
                   canEditCounterparty={canManageComponents}
                   onEdit={() => setEditingObligation(obligation)}
                   onCancel={() => cancel.mutate(obligation)}
-                  onMarkPaid={() => markPaid.mutate(obligation)}
+                  onMarkPaid={() => setPaymentConfirmation(obligation)}
                   onMarkReady={() => markReady.mutate(obligation)}
                   onReopen={() => reopen.mutate(obligation)}
                   onSelect={() => setSelectedKey(obligation.key)}
@@ -615,7 +618,7 @@ export function ObligationWorkspace({
                     <Button
                       size="sm"
                       disabled={markPaid.isPending}
-                      onClick={() => markPaid.mutate(selected.data)}
+                      onClick={() => setPaymentConfirmation(selected.data)}
                     >
                       <CreditCard />
                       Mark as paid
@@ -645,6 +648,67 @@ export function ObligationWorkspace({
                 </div>
               </DialogFooter>
             ) : null}
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={paymentConfirmation !== null}
+          onOpenChange={(open) => {
+            if (!open && !markPaid.isPending) setPaymentConfirmation(null)
+          }}
+        >
+          <DialogContent
+            onEscapeKeyDown={(event) => {
+              if (markPaid.isPending) event.preventDefault()
+            }}
+            onInteractOutside={(event) => event.preventDefault()}
+          >
+            <DialogHeader>
+              <DialogTitle>Mark obligation as paid?</DialogTitle>
+              <DialogDescription>
+                Confirm that you have paid this obligation.
+              </DialogDescription>
+            </DialogHeader>
+            {paymentConfirmation ? (
+              <div className="min-w-0 space-y-1">
+                <p className="break-words font-medium">
+                  {paymentConfirmation.name}
+                </p>
+                <p className="break-all text-sm text-muted-foreground">
+                  {paymentConfirmation.key}
+                </p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {paymentConfirmation.current_amount}{" "}
+                  {paymentConfirmation.currency}
+                </p>
+              </div>
+            ) : null}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                disabled={markPaid.isPending}
+                onClick={() => setPaymentConfirmation(null)}
+              >
+                Cancel
+              </Button>
+              <LoadingButton
+                loading={markPaid.isPending}
+                disabled={
+                  paymentConfirmation === null ||
+                  !canMarkObligationPaid(paymentConfirmation)
+                }
+                onClick={() => {
+                  if (
+                    paymentConfirmation !== null &&
+                    canMarkObligationPaid(paymentConfirmation) &&
+                    !markPaid.isPending
+                  ) {
+                    markPaid.mutate(paymentConfirmation)
+                  }
+                }}
+              >
+                Mark as paid
+              </LoadingButton>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
         {editingObligation ? (

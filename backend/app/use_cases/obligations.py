@@ -608,8 +608,13 @@ def mark_obligation_ready(
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
     )
-    if obligation.lifecycle is not ObligationLifecycle.COLLECTING_DATA:
-        raise ValueError("Only obligations collecting data can be marked as ready")
+    if obligation.lifecycle not in {
+        ObligationLifecycle.DRAFT,
+        ObligationLifecycle.COLLECTING_DATA,
+    }:
+        raise ValueError(
+            "Only draft and collecting data obligations can be marked as ready"
+        )
     if obligation.current_amount is None or obligation.due_date is None:
         raise ValueError("current_amount and due_date are required to mark ready")
     if (

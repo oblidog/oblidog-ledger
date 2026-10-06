@@ -131,3 +131,81 @@ test("renders paginated lifecycle, value, and component action history", async (
   await expect(history.getByText("Updated obligation")).toBeVisible()
   await expect(history.getByText("Created obligation")).toBeVisible()
 })
+
+for (const entryPoint of ["tile", "details"] as const) {
+  test(`payment from ${entryPoint} requires confirmation and can be canceled`, async ({
+    page,
+  }) => {
+    const fixture = await createFixture()
+    await ObligationsService.updateObligation({
+      ledgerId: fixture.ledger.id,
+      obligationKey: fixture.key,
+      requestBody: {
+        current_amount: "125.00",
+        due_date: new Date().toISOString().slice(0, 10),
+      },
+    })
+    await ObligationsService.markObligationReady({
+      ledgerId: fixture.ledger.id,
+      obligationKey: fixture.key,
+    })
+    const paymentPath = `/api/v1/ledgers/${fixture.ledger.id}/obligations/${fixture.key}/mark-paid`
+    let paymentRequests = 0
+    page.on("request", (request) => {
+      if (request.method() === "POST" &&
+        new URL(request.url()).pathname === paymentPath) {
+        paymentRequests += 1
+      }
+    })
+    await page.goto(`/ledgers/${fixture.ledger.id}`)
+    await page.getByLabel("Lifecycle").selectOption("")
+
+    const openConfirmation = async () => {
+      if (entryPoint === "tile") {
+        await page.getByRole("button", {
+          name: `Actions for ${fixture.categoryName}`,
+        }).click()
+        await page.getByRole("menuitem", { name: "Mark as paid" }).click()
+      } else {
+        const details = page.getByRole("dialog", { name: fixture.key })
+        if (!(await details.isVisible())) {
+          await page.getByText(fixture.categoryName, { exact: true }).click()
+        }
+        await details.getByRole("button", { name: "Mark as paid" }).click()
+      }
+    }
+    const confirmation = page.getByRole("dialog", {
+      name: "Mark obligation as paid?",
+    })
+    await openConfirmation()
+    await expect(confirmation).toBeVisible()
+    await expect(confirmation.getByText(fixture.key, { exact: true })).toBeVisible()
+    await expect(confirmation.getByText(/125\.00/)).toBeVisible()
+    expect(paymentRequests).toBe(0)
+    await confirmation.getByRole("button", { name: "Cancel", exact: true }).click()
+    await expect(confirmation).toBeHidden()
+    expect(paymentRequests).toBe(0)
+    expect((await ObligationsService.readObligation({
+      ledgerId: fixture.ledger.id,
+      obligationKey: fixture.key,
+    })).lifecycle).toBe("ready")
+
+    await openConfirmation()
+    await expect(confirmation).toBeVisible()
+    const paymentResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === paymentPath,
+    )
+    await confirmation.getByRole("button", { name: "Mark as paid" }).click()
+    const paymentResponse = await paymentResponsePromise
+    expect(paymentResponse.status()).toBe(200)
+    expect((await paymentResponse.json()).lifecycle).toBe("paid")
+    await expect(confirmation).toBeHidden()
+    expect(paymentRequests).toBe(1)
+    expect((await ObligationsService.readObligation({
+      ledgerId: fixture.ledger.id,
+      obligationKey: fixture.key,
+    })).lifecycle).toBe("paid")
+  })
+}

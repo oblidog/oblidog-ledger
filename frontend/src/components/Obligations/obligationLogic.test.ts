@@ -115,6 +115,32 @@ describe("obligation action availability", () => {
     expect(canMarkObligationReady(obligation({ due_date: null }))).toBeFalse()
   })
 
+  test("complete drafts can be confirmed without editing, including zero amounts", () => {
+    expect(
+      canMarkObligationReady(
+        obligation({
+          lifecycle: "draft",
+          current_amount: "0.00",
+          amount_state: "estimated",
+          due_date_state: "estimated",
+        }),
+      ),
+    ).toBeTrue()
+    for (const overrides of [
+      { current_amount: null },
+      { due_date: null },
+      { amount_state: "unknown" as const },
+      { due_date_state: "unknown" as const },
+    ]) {
+      expect(
+        canMarkObligationReady(obligation({ lifecycle: "draft", ...overrides })),
+      ).toBeFalse()
+    }
+    for (const lifecycle of ["ready", "paid", "canceled", "error"] as const) {
+      expect(canMarkObligationReady(obligation({ lifecycle }))).toBeFalse()
+    }
+  })
+
   test("lifecycle gates edit, cancel, paid and reopen actions", () => {
     expect(canEditObligation(obligation({ lifecycle: "draft" }))).toBeTrue()
     expect(canCancelObligation(obligation())).toBeTrue()
