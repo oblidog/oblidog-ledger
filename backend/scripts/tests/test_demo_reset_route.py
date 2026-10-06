@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import importlib
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
+from typing import NoReturn, cast
 from unittest.mock import Mock
 
 import pytest
@@ -18,7 +20,7 @@ DEMO_URL = f"postgresql://owner:password@{DEMO_HOST}/neondb?sslmode=require"
 
 
 @pytest.fixture
-def reset_route(monkeypatch: pytest.MonkeyPatch):
+def reset_route(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     monkeypatch.setenv("PROJECT_NAME", "Test Demo")
     monkeypatch.setenv("FIRST_SUPERUSER", "admin@example.com")
     monkeypatch.setenv("FIRST_SUPERUSER_PASSWORD", "test-password")
@@ -48,12 +50,12 @@ def _request(secret: str | None = None) -> Request:
     )
 
 
-def _reset(route, secret: str | None = None):
-    return route.reset_demo(_request(secret), Response())
+def _reset(route: ModuleType, secret: str | None = None) -> dict[str, str]:
+    return cast(dict[str, str], route.reset_demo(_request(secret), Response()))
 
 
 def test_reset_unavailable_outside_demo(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(reset_route.settings, "ENVIRONMENT", "production")
     with pytest.raises(HTTPException) as error:
@@ -61,13 +63,13 @@ def test_reset_unavailable_outside_demo(
     assert error.value.status_code == 404
 
 
-def test_reset_requires_server_secret(reset_route) -> None:
+def test_reset_requires_server_secret(reset_route: ModuleType) -> None:
     with pytest.raises(HTTPException) as error:
         _reset(reset_route)
     assert error.value.status_code == 401
 
 
-def test_registered_route_rejects_unauthenticated_http(reset_route) -> None:
+def test_registered_route_rejects_unauthenticated_http(reset_route: ModuleType) -> None:
     from app.main import app
 
     assert reset_route.settings.ENVIRONMENT == "demo"
@@ -78,7 +80,7 @@ def test_registered_route_rejects_unauthenticated_http(reset_route) -> None:
 
 
 def test_reset_refuses_other_database(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         reset_route.settings,
@@ -91,7 +93,7 @@ def test_reset_refuses_other_database(
 
 
 def test_reset_uses_direct_neon_url_for_pooled_application(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     pooled_url = DEMO_URL.replace(".c-12", "-pooler.c-12")
     monkeypatch.setattr(reset_route.settings, "POSTGRES_URL", PostgresDsn(pooled_url))
@@ -106,7 +108,7 @@ def test_reset_uses_direct_neon_url_for_pooled_application(
 
 
 def test_reset_rejects_mismatched_direct_url(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         reset_route.settings,
@@ -123,11 +125,11 @@ def test_reset_rejects_mismatched_direct_url(
 
 
 def test_reset_reseeds_without_migrations(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     observed = []
 
-    def fake_seed(*, password: str, database_url: str):
+    def fake_seed(*, password: str, database_url: str) -> SimpleNamespace:
         observed.append(password)
         assert database_url == DEMO_URL
         return SimpleNamespace(reference_date=date(2026, 9, 25))
@@ -141,9 +143,9 @@ def test_reset_reseeds_without_migrations(
 
 
 def test_reset_busy_returns_conflict(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def busy(*, password: str, database_url: str):
+    def busy(*, password: str, database_url: str) -> NoReturn:
         assert password == "demo-password"
         assert database_url == DEMO_URL
         raise reset_route.DemoResetBusyError("busy")
@@ -155,7 +157,7 @@ def test_reset_busy_returns_conflict(
 
 
 def test_reset_lock_rejects_overlapping_runs(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert reset_route.settings.ENVIRONMENT == "demo"
     service = importlib.import_module("app.services.demo_reset")
@@ -163,7 +165,7 @@ def test_reset_lock_rejects_overlapping_runs(
     connection.scalar.return_value = False
 
     @contextmanager
-    def locked_connection():
+    def locked_connection() -> Iterator[Mock]:
         yield connection
 
     monkeypatch.setattr(service.engine, "begin", locked_connection)
@@ -175,7 +177,7 @@ def test_reset_lock_rejects_overlapping_runs(
 
 
 def test_hosted_reset_connects_to_direct_url_and_disposes_engine(
-    reset_route, monkeypatch: pytest.MonkeyPatch
+    reset_route: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert reset_route.settings.ENVIRONMENT == "demo"
     service = importlib.import_module("app.services.demo_reset")
@@ -184,7 +186,7 @@ def test_hosted_reset_connects_to_direct_url_and_disposes_engine(
     direct_engine = Mock()
 
     @contextmanager
-    def direct_connection():
+    def direct_connection() -> Iterator[Mock]:
         yield connection
 
     direct_engine.begin = direct_connection

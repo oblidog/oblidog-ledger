@@ -1,7 +1,6 @@
 import uuid
 from datetime import date
 from decimal import Decimal
-from typing import Self
 
 import pytest
 from fastapi.testclient import TestClient
@@ -647,14 +646,11 @@ def test_period_totals_reject_an_inverted_range(
 def test_cashflow_separates_currencies_and_exposes_incomplete_unpaid_data(
     client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    class FrozenDate(date):
-        @classmethod
-        def today(cls) -> Self:
-            return cls(2026, 8, 15)
-
     from app.use_cases import analytics as analytics_use_cases
 
-    monkeypatch.setattr(analytics_use_cases, "date", FrozenDate)
+    monkeypatch.setattr(
+        analytics_use_cases, "business_today", lambda: date(2026, 8, 15)
+    )
     owner = create_random_user(db)
     headers = authentication_token_from_email(client=client, email=owner.email, db=db)
     ledger = ledger_use_cases.create_ledger(

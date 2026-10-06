@@ -20,6 +20,7 @@ field.
 ```mermaid
 stateDiagram-v2
     [*] --> DRAFT
+    DRAFT --> READY
     DRAFT --> COLLECTING_DATA
     DRAFT --> ERROR
     COLLECTING_DATA --> READY
@@ -40,6 +41,7 @@ stateDiagram-v2
 | From | To | Mechanism | Status |
 | --- | --- | --- | --- |
 | `DRAFT` | `COLLECTING_DATA` | Manual or integration value update after an actual change | Implemented |
+| `DRAFT` | `READY` | `mark_obligation_ready` with complete data; no edit required | Implemented |
 | `DRAFT` | `ERROR` | `mark_obligation_error` | Implemented |
 | `COLLECTING_DATA` | `READY` | `mark_obligation_ready` | Implemented |
 | `COLLECTING_DATA` | `CANCELED` | `cancel_obligation` | Implemented |
@@ -65,7 +67,7 @@ and `ERROR` cannot be changed through the ordinary `PATCH` endpoint.
 | `ensure_obligations_for_period` | — (creation) | Current period: `COLLECTING_DATA`; next period: `DRAFT` | Creates missing records with initial values; does not change existing ones |
 | `create_manual_obligation` | — (creation) | `COLLECTING_DATA`, or `READY` when `data_ready=true` | `lifecycle`, supplied manual values, their `*_state`/`*_source`, `effective_value_source`, and `notes` |
 | `update_manual_obligation` / `update_integration_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied values, their `*_state`/`*_source`, `effective_value_source`, and—after an actual draft change—`lifecycle`; manual updates may also change `notes` |
-| `mark_obligation_ready` | `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED`, and `issue_date_state=CONFIRMED` when `issue_date` is present |
+| `mark_obligation_ready` | `DRAFT`, `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED`, and `issue_date_state=CONFIRMED` when `issue_date` is present |
 | `mark_obligation_paid` | `READY`; repeated calls for `PAID` are idempotent | `PAID` | On the first call: `lifecycle`, `paid_at=now(UTC)` |
 | `cancel_obligation` | `COLLECTING_DATA` | `CANCELED` | `lifecycle` |
 | `reopen_obligation` | `READY`, `PAID`, `CANCELED`, `ERROR` | `COLLECTING_DATA` | `lifecycle`, `paid_at=None`; does not change amount, dates, their states, or sources |
@@ -83,7 +85,7 @@ All current actions require the ledger's `EDITOR` or `OWNER` role.
 | Endpoint | Use case | Notes |
 | --- | --- | --- |
 | `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}` | `update_manual_obligation` | Only `DRAFT` and `COLLECTING_DATA` |
-| `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/ready` | `mark_obligation_ready` | Requires at least an estimated amount and due date |
+| `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/ready` | `mark_obligation_ready` | Accepts `DRAFT` and `COLLECTING_DATA`; requires at least an estimated amount and due date |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/mark-paid` | `mark_obligation_paid` | Idempotent for `PAID` |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/cancel` | `cancel_obligation` | Only `COLLECTING_DATA` |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/reopen` | `reopen_obligation` | Reopens `READY`, `PAID`, `CANCELED`, or `ERROR` |

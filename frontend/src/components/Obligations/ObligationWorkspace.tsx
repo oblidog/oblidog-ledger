@@ -48,21 +48,24 @@ import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import {
+  canCancelObligation,
+  canEditObligation,
+  canMarkObligationPaid,
+  canMarkObligationReady,
+  canReopenObligation,
+  dueDateRange,
+  isValidPeriod,
+  lifecycleFilterLabel,
+  lifecycleOptions,
+  monthInputValue,
+  parseMonthInput,
+  parseObligationFilters,
+  serializeObligationFilters,
+  type LifecycleFilter,
+} from "./obligationLogic"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
-
-type LifecycleFilter = ObligationLifecycle | "" | "unpaid"
-
-const lifecycleOptions: LifecycleFilter[] = [
-  "",
-  "unpaid",
-  "draft",
-  "collecting_data",
-  "ready",
-  "paid",
-  "canceled",
-  "error",
-]
 
 const stateBadgeClasses: Record<string, string> = {
   unknown:
@@ -116,116 +119,6 @@ function periodFromSearch() {
   return isValidPeriod(year, month) ? { year, month } : currentPeriod()
 }
 
-function filtersFromSearch(defaultLifecycle: LifecycleFilter) {
-  const period = periodFromSearch()
-  if (typeof window === "undefined") {
-    return {
-      year: String(period.year),
-      month: String(period.month),
-      filterByPeriod: true,
-      categoryCode: "",
-      lifecycle: defaultLifecycle,
-    }
-  }
-
-  const params = new URLSearchParams(window.location.search)
-  const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
-  return {
-    year: String(period.year),
-    month: String(period.month),
-    filterByPeriod: params.get("period") !== "all",
-    categoryCode: (params.get("category") ?? "").toUpperCase().slice(0, 4),
-    lifecycle:
-      lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
-        ? lifecycleParam
-        : defaultLifecycle,
-  }
-}
-
-function lifecycleFilterLabel(lifecycle: LifecycleFilter) {
-  if (lifecycle === "unpaid") return "Unpaid"
-  return lifecycle
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
-}
-
-function dueDateRange(year: number, month: number) {
-  const minimum = new Date(Date.UTC(year, month - 1, 1))
-  const maximum = new Date(Date.UTC(year, month, 0))
-  let businessDays = 0
-
-  while (businessDays < 7) {
-    maximum.setUTCDate(maximum.getUTCDate() + 1)
-    const day = maximum.getUTCDay()
-    if (day !== 0 && day !== 6) {
-      businessDays += 1
-    }
-  }
-
-  return {
-    min: minimum.toISOString().slice(0, 10),
-    max: maximum.toISOString().slice(0, 10),
-  }
-}
-
-function isValidPeriod(year: number, month: number) {
-  return (
-    Number.isInteger(year) &&
-    year >= 1 &&
-    year <= 9999 &&
-    Number.isInteger(month) &&
-    month >= 1 &&
-    month <= 12
-  )
-}
-
-function monthInputValue(year: string, month: string) {
-  const parsedYear = Number(year)
-  const parsedMonth = Number(month)
-  if (!isValidPeriod(parsedYear, parsedMonth)) {
-    return ""
-  }
-  return `${String(parsedYear).padStart(4, "0")}-${String(parsedMonth).padStart(2, "0")}`
-}
-
-function parseMonthInput(value: string) {
-  const [year, month] = value.split("-").map(Number)
-  if (!isValidPeriod(year, month)) {
-    return null
-  }
-  return { year: String(year), month: String(month) }
-}
-
-function canMarkObligationReady(obligation: ObligationPublic) {
-  return (
-    obligation.lifecycle === "collecting_data" &&
-    obligation.current_amount !== null &&
-    obligation.due_date !== null &&
-    obligation.amount_state !== "unknown" &&
-    obligation.due_date_state !== "unknown"
-  )
-}
-
-function canEditObligation(obligation: ObligationPublic) {
-  return (
-    obligation.lifecycle === "draft" ||
-    obligation.lifecycle === "collecting_data"
-  )
-}
-
-function canCancelObligation(obligation: ObligationPublic) {
-  return obligation.lifecycle === "collecting_data"
-}
-
-function canMarkObligationPaid(obligation: ObligationPublic) {
-  return obligation.lifecycle === "ready"
-}
-
-function canReopenObligation(obligation: ObligationPublic) {
-  return ["ready", "paid", "canceled", "error"].includes(obligation.lifecycle)
-}
-
 function counterpartyFor(obligation: ObligationPublic) {
   return (obligation as ObligationPublic & ObligationWithCounterparty)
     .counterparty
@@ -240,8 +133,12 @@ export function ObligationWorkspace({
   canManageComponents: boolean
   defaultLifecycle?: LifecycleFilter
 }) {
-  const initialFilters = filtersFromSearch(defaultLifecycle)
   const period = periodFromSearch()
+  const initialFilters = parseObligationFilters(
+    typeof window === "undefined" ? "" : window.location.search,
+    defaultLifecycle,
+    period,
+  )
   const [year, setYear] = useState(initialFilters.year)
   const [month, setMonth] = useState(initialFilters.month)
   const [filterByPeriod, setFilterByPeriod] = useState(
@@ -253,6 +150,8 @@ export function ObligationWorkspace({
   )
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [editingObligation, setEditingObligation] =
+    useState<ObligationPublic | null>(null)
+  const [paymentConfirmation, setPaymentConfirmation] =
     useState<ObligationPublic | null>(null)
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
@@ -268,23 +167,13 @@ export function ObligationWorkspace({
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const params = new URLSearchParams(window.location.search)
-    params.delete("year")
-    params.delete("month")
-    params.delete("period")
-    params.delete("category")
-    params.delete("lifecycle")
-
-    if (filterByPeriod && hasValidPeriodFilter) {
-      params.set("year", String(filterYear))
-      params.set("month", String(filterMonth))
-    } else if (!filterByPeriod) {
-      params.set("period", "all")
-    }
-    if (categoryCode) params.set("category", categoryCode)
-    if (lifecycle) params.set("lifecycle", lifecycle)
-
-    const search = params.toString()
+    const search = serializeObligationFilters(window.location.search, {
+      year,
+      month,
+      filterByPeriod,
+      categoryCode,
+      lifecycle,
+    })
     const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`
     window.history.replaceState(window.history.state, "", nextUrl)
   }, [
@@ -427,6 +316,7 @@ export function ObligationWorkspace({
       }),
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, obligation) => {
+      setPaymentConfirmation(null)
       showSuccessToast("Obligation marked as paid")
       invalidateActionHistory(obligation.key)
       void queryClient.invalidateQueries({
@@ -549,7 +439,7 @@ export function ObligationWorkspace({
                   canEditCounterparty={canManageComponents}
                   onEdit={() => setEditingObligation(obligation)}
                   onCancel={() => cancel.mutate(obligation)}
-                  onMarkPaid={() => markPaid.mutate(obligation)}
+                  onMarkPaid={() => setPaymentConfirmation(obligation)}
                   onMarkReady={() => markReady.mutate(obligation)}
                   onReopen={() => reopen.mutate(obligation)}
                   onSelect={() => setSelectedKey(obligation.key)}
@@ -728,7 +618,7 @@ export function ObligationWorkspace({
                     <Button
                       size="sm"
                       disabled={markPaid.isPending}
-                      onClick={() => markPaid.mutate(selected.data)}
+                      onClick={() => setPaymentConfirmation(selected.data)}
                     >
                       <CreditCard />
                       Mark as paid
@@ -758,6 +648,67 @@ export function ObligationWorkspace({
                 </div>
               </DialogFooter>
             ) : null}
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={paymentConfirmation !== null}
+          onOpenChange={(open) => {
+            if (!open && !markPaid.isPending) setPaymentConfirmation(null)
+          }}
+        >
+          <DialogContent
+            onEscapeKeyDown={(event) => {
+              if (markPaid.isPending) event.preventDefault()
+            }}
+            onInteractOutside={(event) => event.preventDefault()}
+          >
+            <DialogHeader>
+              <DialogTitle>Mark obligation as paid?</DialogTitle>
+              <DialogDescription>
+                Confirm that you have paid this obligation.
+              </DialogDescription>
+            </DialogHeader>
+            {paymentConfirmation ? (
+              <div className="min-w-0 space-y-1">
+                <p className="break-words font-medium">
+                  {paymentConfirmation.name}
+                </p>
+                <p className="break-all text-sm text-muted-foreground">
+                  {paymentConfirmation.key}
+                </p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {paymentConfirmation.current_amount}{" "}
+                  {paymentConfirmation.currency}
+                </p>
+              </div>
+            ) : null}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                disabled={markPaid.isPending}
+                onClick={() => setPaymentConfirmation(null)}
+              >
+                Cancel
+              </Button>
+              <LoadingButton
+                loading={markPaid.isPending}
+                disabled={
+                  paymentConfirmation === null ||
+                  !canMarkObligationPaid(paymentConfirmation)
+                }
+                onClick={() => {
+                  if (
+                    paymentConfirmation !== null &&
+                    canMarkObligationPaid(paymentConfirmation) &&
+                    !markPaid.isPending
+                  ) {
+                    markPaid.mutate(paymentConfirmation)
+                  }
+                }}
+              >
+                Mark as paid
+              </LoadingButton>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
         {editingObligation ? (

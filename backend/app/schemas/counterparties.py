@@ -22,7 +22,7 @@ class CounterpartyUpdate(BaseModel):
     website_url: str | None = Field(default=None, max_length=2048)
 
     @model_validator(mode="after")
-    def reject_null_name(self) -> "CounterpartyUpdate":
+    def reject_null_name(self) -> CounterpartyUpdate:
         if "name" in self.model_fields_set and self.name is None:
             raise ValueError("name cannot be null")
         return self

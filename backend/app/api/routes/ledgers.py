@@ -136,11 +136,11 @@ def delete_all_categories(
             session=session,
             ledger_id=ledger.id,
         )
-    except LedgerCategoriesInUseError:
+    except LedgerCategoriesInUseError as caught_error:
         raise HTTPException(
             status_code=409,
             detail="Categories cannot be deleted while ledger obligations exist",
-        )
+        ) from caught_error
 
     return Message(message="All ledger categories deleted")
 
@@ -183,12 +183,16 @@ def share_ledger(
             target_user_id=target_user_id,
             role=share_in.role,
         )
-    except LedgerNotFoundError:
-        raise HTTPException(status_code=404, detail="Ledger not found")
-    except UserNotFoundError:
-        raise HTTPException(status_code=404, detail="User not found")
-    except LedgerAccessConflictError:
-        raise HTTPException(status_code=409, detail="Ledger membership conflict")
+    except LedgerNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Ledger not found"
+        ) from caught_error
+    except UserNotFoundError as caught_error:
+        raise HTTPException(status_code=404, detail="User not found") from caught_error
+    except LedgerAccessConflictError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Ledger membership conflict"
+        ) from caught_error
 
     return _to_ledger_member_public(membership)
 
@@ -208,10 +212,14 @@ def update_ledger_member(
             target_user_id=user_id,
             role=member_in.role,
         )
-    except LedgerMembershipNotFoundError:
-        raise HTTPException(status_code=404, detail="Ledger member not found")
-    except LedgerAccessConflictError:
-        raise HTTPException(status_code=409, detail="Owner access cannot be changed")
+    except LedgerMembershipNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Ledger member not found"
+        ) from caught_error
+    except LedgerAccessConflictError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Owner access cannot be changed"
+        ) from caught_error
 
     return _to_ledger_member_public(membership)
 
@@ -229,9 +237,13 @@ def remove_ledger_member(
             ledger_id=ledger.id,
             target_user_id=user_id,
         )
-    except LedgerMembershipNotFoundError:
-        raise HTTPException(status_code=404, detail="Ledger member not found")
-    except LedgerAccessConflictError:
-        raise HTTPException(status_code=409, detail="Owner access cannot be removed")
+    except LedgerMembershipNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Ledger member not found"
+        ) from caught_error
+    except LedgerAccessConflictError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Owner access cannot be removed"
+        ) from caught_error
 
     return Message(message="Ledger member removed")

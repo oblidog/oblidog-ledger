@@ -77,6 +77,16 @@ Notice that every time the backend OpenAPI schema changes, you should regenerate
 - Admin user management is limited to superusers.
 - Ledger, membership sharing, and category management are available.
 
+## Fast Frontend Tests
+
+Pure date, filter serialization, formatting, and action-eligibility rules use Bun's built-in test runner. They do not require Docker, PostgreSQL, or a running API:
+
+```bash
+bun run --filter frontend test:unit
+```
+
+Keep deterministic domain and interaction rules in the fast suite. Use Playwright for cross-layer workflows that need the browser, API, authentication, or database.
+
 ## End-to-End Testing with Playwright
 
 The frontend includes end-to-end tests using Playwright. Run them in the dedicated, isolated Compose project:

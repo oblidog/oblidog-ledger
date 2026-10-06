@@ -78,7 +78,7 @@ class IntegrationPublic(BaseModel):
     ledger_id: uuid.UUID
     name: str
     category_id: uuid.UUID
-    credentials: list["IntegrationCredentialPublic"]
+    credentials: list[IntegrationCredentialPublic]
     enabled: bool
     created_at: datetime
     updated_at: datetime

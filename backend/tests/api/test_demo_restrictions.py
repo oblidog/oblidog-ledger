@@ -20,7 +20,7 @@ from tests.utils.user import authentication_token_from_email, create_random_user
 
 
 @pytest.fixture
-def demo_environment(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+def demo_environment(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
     monkeypatch.setattr(settings, "ENVIRONMENT", "demo")
     yield
 

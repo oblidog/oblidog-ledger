@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from urllib.parse import urlsplit
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session
 
 from app.core.db import engine
@@ -65,7 +65,7 @@ def reset_demo_data(
             reset_engine.dispose()
 
 
-def _reset_with_engine(reset_engine, *, password: str) -> DemoSeedResult:
+def _reset_with_engine(reset_engine: Engine, *, password: str) -> DemoSeedResult:
     with reset_engine.begin() as lock_connection:
         acquired = lock_connection.scalar(
             text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": _RESET_LOCK_KEY}

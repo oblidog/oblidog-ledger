@@ -86,8 +86,10 @@ def read_category_amount_history(
             from_period=from_period,
             to_period=to_period,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -173,8 +175,10 @@ def read_component_history(
             periods=periods,
             match_by=match_by,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

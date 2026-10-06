@@ -78,8 +78,10 @@ def read_counterparty(
         counterparty = counterparty_service.get_counterparty(
             session=session, counterparty_id=counterparty_id
         )
-    except counterparty_service.CounterpartyNotFoundError:
-        raise HTTPException(status_code=404, detail="Counterparty not found")
+    except counterparty_service.CounterpartyNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Counterparty not found"
+        ) from caught_error
     return CounterpartyPublic.model_validate(counterparty)
 
 
@@ -94,10 +96,12 @@ def create_counterparty(
         counterparty = counterparty_service.create_counterparty(
             session=session, **counterparty_in.model_dump()
         )
-    except counterparty_service.DuplicateCounterpartyError:
-        raise HTTPException(status_code=409, detail="Counterparty already exists")
+    except counterparty_service.DuplicateCounterpartyError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Counterparty already exists"
+        ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return CounterpartyPublic.model_validate(counterparty)
 
 
@@ -115,12 +119,16 @@ def update_counterparty(
             counterparty_id=counterparty_id,
             **counterparty_in.model_dump(exclude_unset=True),
         )
-    except counterparty_service.CounterpartyNotFoundError:
-        raise HTTPException(status_code=404, detail="Counterparty not found")
-    except counterparty_service.DuplicateCounterpartyError:
-        raise HTTPException(status_code=409, detail="Counterparty already exists")
+    except counterparty_service.CounterpartyNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Counterparty not found"
+        ) from caught_error
+    except counterparty_service.DuplicateCounterpartyError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Counterparty already exists"
+        ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return CounterpartyPublic.model_validate(counterparty)
 
 
@@ -135,10 +143,14 @@ def delete_counterparty(
         counterparty_service.delete_counterparty(
             session=session, counterparty_id=counterparty_id
         )
-    except counterparty_service.CounterpartyNotFoundError:
-        raise HTTPException(status_code=404, detail="Counterparty not found")
-    except counterparty_service.CounterpartyInUseError:
-        raise HTTPException(status_code=409, detail="Counterparty is in use")
+    except counterparty_service.CounterpartyNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Counterparty not found"
+        ) from caught_error
+    except counterparty_service.CounterpartyInUseError as caught_error:
+        raise HTTPException(
+            status_code=409, detail="Counterparty is in use"
+        ) from caught_error
     return Message(message="Counterparty deleted")
 
 
@@ -166,8 +178,10 @@ def assign_category_counterparty(
             counterparty_service.get_counterparty(
                 session=session, counterparty_id=assignment.counterparty_id
             )
-        except counterparty_service.CounterpartyNotFoundError:
-            raise HTTPException(status_code=404, detail="Counterparty not found")
+        except counterparty_service.CounterpartyNotFoundError as caught_error:
+            raise HTTPException(
+                status_code=404, detail="Counterparty not found"
+            ) from caught_error
     category.counterparty_id = assignment.counterparty_id
     session.commit()
     session.refresh(category)
@@ -189,8 +203,10 @@ def read_obligation_counterparty(
         obligation = obligation_use_cases.get_obligation_by_key(
             session=session, ledger_id=ledger.id, key=key
         )
-    except (ValueError, ObligationNotFoundError):
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except (ValueError, ObligationNotFoundError) as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     return _counterparty_summary_or_none(obligation.counterparty)
 
 
@@ -210,15 +226,19 @@ def assign_obligation_counterparty(
         obligation = obligation_use_cases.get_obligation_by_key(
             session=session, ledger_id=ledger.id, key=key
         )
-    except (ValueError, ObligationNotFoundError):
-        raise HTTPException(status_code=404, detail="Obligation not found")
+    except (ValueError, ObligationNotFoundError) as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Obligation not found"
+        ) from caught_error
     if assignment.counterparty_id is not None:
         try:
             counterparty_service.get_counterparty(
                 session=session, counterparty_id=assignment.counterparty_id
             )
-        except counterparty_service.CounterpartyNotFoundError:
-            raise HTTPException(status_code=404, detail="Counterparty not found")
+        except counterparty_service.CounterpartyNotFoundError as caught_error:
+            raise HTTPException(
+                status_code=404, detail="Counterparty not found"
+            ) from caught_error
     obligation.counterparty_id = assignment.counterparty_id
     session.commit()
     session.refresh(obligation)

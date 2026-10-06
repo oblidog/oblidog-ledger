@@ -34,12 +34,16 @@ def export_category_data_records_csv(
             observed_from=observed_from,
             observed_to=observed_to,
         )
-    except CategoryNotFoundError:
-        raise HTTPException(status_code=404, detail="Category not found")
-    except CategoryDataSchemaNotFoundError:
-        raise HTTPException(status_code=404, detail="Category data schema not found")
+    except CategoryNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category not found"
+        ) from caught_error
+    except CategoryDataSchemaNotFoundError as caught_error:
+        raise HTTPException(
+            status_code=404, detail="Category data schema not found"
+        ) from caught_error
     except category_data_csv.UnsupportedCategoryDataCsvSchemaError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     return Response(
         content=content.encode("utf-8"),

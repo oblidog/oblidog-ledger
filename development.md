@@ -112,6 +112,24 @@ Depending on your workflow, you could want to exclude it from Git, for example i
 
 One way to do it could be to add each environment variable to your CI/CD system, and updating the `compose.yml` file to read that specific env var instead of reading the `.env` file.
 
+## Python version
+
+The backend uses Python 3.14 in Docker, CI, local development, and the Vercel
+demo. The root `.python-version` pins the uv workspace interpreter;
+`backend/.python-version` also pins deployments with `backend/` as their project
+root.
+
+Install the interpreter and sync the workspace from the repository root:
+
+```bash
+uv python install 3.14
+uv sync --frozen
+```
+
+An existing virtual environment created with an older Python version will be
+recreated by uv when syncing. The host system Python does not determine the
+interpreter inside the backend Docker image.
+
 ## Pre-commit and Commitizen
 
 The repository uses `.pre-commit-config.yaml` for local git hooks and `commitizen`
@@ -125,6 +143,23 @@ Configured hooks currently cover:
 - backend `mypy`
 - frontend SDK regeneration when backend API files change
 - `commitizen` commit message validation on the `commit-msg` hook
+
+The `Backend Quality` GitHub Actions workflow also runs `backend/scripts/lint.sh`
+on every pull request, including release and back-sync PRs. It checks all backend
+Python files with strict mypy, then checks lint and formatting across the backend
+with Ruff. The check fails on errors and does not require a database or apply fixes.
+
+Ruff also checks timezone-aware date/time usage, logging, and explicit exception
+chaining. FastAPI parameter markers and the integration dependency factory are
+allowed in default arguments; other calls remain checked. Alembic migrations
+are excluded. Naive datetime fixtures are allowed only in the legacy importer
+test module that deliberately covers old workbook values.
+
+Run the same checks locally from `backend/`:
+
+```bash
+uv run --locked bash scripts/lint.sh
+```
 
 #### Install hooks
 

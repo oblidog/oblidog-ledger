@@ -72,7 +72,7 @@ async def readiness_check() -> bool:
         await asyncio.wait_for(
             asyncio.to_thread(_check_database), timeout=READINESS_TIMEOUT_SECONDS
         )
-    except (TimeoutError, SQLAlchemyError):
+    except TimeoutError, SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Service unavailable",

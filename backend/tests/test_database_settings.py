@@ -1,10 +1,20 @@
+from typing import TypedDict, Unpack
+
 import pytest
-from pydantic import ValidationError
+from pydantic import PostgresDsn, ValidationError
 
 from app.core.config import Settings
 
 
-def _settings(**overrides: str) -> Settings:
+class _DatabaseOverrides(TypedDict, total=False):
+    POSTGRES_URL: PostgresDsn
+    POSTGRES_SERVER: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+
+
+def _settings(**overrides: Unpack[_DatabaseOverrides]) -> Settings:
     return Settings(
         _env_file=None,  # type: ignore[call-arg]
         PROJECT_NAME="Oblidog",
@@ -16,7 +26,7 @@ def _settings(**overrides: str) -> Settings:
 
 def test_neon_url_uses_psycopg_and_preserves_connection_options() -> None:
     settings = _settings(
-        POSTGRES_URL=(
+        POSTGRES_URL=PostgresDsn(
             "postgresql://demo:secret@ep-example-pooler.us-east-1.aws.neon.tech/"
             "neondb?sslmode=require&channel_binding=require"
         ),

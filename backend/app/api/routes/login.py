@@ -128,8 +128,8 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
             token=body.token,
             new_password=body.new_password,
         )
-    except password_reset_service.InvalidPasswordResetTokenError:
-        raise HTTPException(status_code=400, detail="Invalid token")
+    except password_reset_service.InvalidPasswordResetTokenError as caught_error:
+        raise HTTPException(status_code=400, detail="Invalid token") from caught_error
     return Message(message="Password updated successfully")
 
 

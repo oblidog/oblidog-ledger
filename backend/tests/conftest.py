@@ -54,7 +54,7 @@ TestingSessionLocal = sessionmaker(
 )
 
 
-def override_get_db() -> Generator[Session, None, None]:
+def override_get_db() -> Generator[Session]:
     with TestingSessionLocal() as session:
         yield session
 
@@ -68,7 +68,7 @@ def run_test_migrations() -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def db() -> Generator[Session, None, None]:
+def db() -> Generator[Session]:
     run_test_migrations()
     with TestingSessionLocal() as session:
         session.execute(delete(IntegrationCredential))
@@ -109,7 +109,7 @@ def db() -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="module")
-def client() -> Generator[TestClient, None, None]:
+def client() -> Generator[TestClient]:
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
