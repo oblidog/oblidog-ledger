@@ -10,7 +10,6 @@ from app.api.deps import (
     require_ledger_view_access,
 )
 from app.core.business_date import business_today
-from app.core.config import settings
 from app.domain.business_calendar import BusinessCalendar
 from app.domain.payment_schedule import next_payment
 from app.models import (
@@ -63,7 +62,7 @@ router = APIRouter(tags=["categories"])
 def preview_payment_schedule(
     *,
     schedule_in: SchedulePreviewRequest,
-    _ledger: Ledger = Depends(require_ledger_view_access),
+    ledger: Ledger = Depends(require_ledger_view_access),
 ) -> SchedulePreviewPublic:
     """Preview an unsaved schedule without creating or changing obligations."""
     payment = next_payment(
@@ -71,14 +70,14 @@ def preview_payment_schedule(
         interval=schedule_in.recurrence_interval,
         unit=schedule_in.recurrence_unit,
         reference_date=schedule_in.reference_date or business_today(),
-        calendar=BusinessCalendar(settings.BUSINESS_CALENDAR_COUNTRY),
+        calendar=BusinessCalendar(ledger.business_calendar_country),
     )
     return SchedulePreviewPublic(
         period_year=payment.period.year if payment else None,
         period_month=payment.period.month if payment else None,
         scheduled_date=payment.scheduled_date if payment else None,
         due_date=payment.due_date if payment else None,
-        calendar_country=settings.BUSINESS_CALENDAR_COUNTRY,
+        calendar_country=ledger.business_calendar_country,
     )
 
 

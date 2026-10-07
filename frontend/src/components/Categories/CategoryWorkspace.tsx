@@ -34,6 +34,7 @@ import {
   type CategoryGroupUpdate,
   type CategoryPublic,
   type CategoryUpdate,
+  LedgersService,
 } from "@/client"
 import { CategoryCustomDataDialog } from "@/components/Categories/CategoryCustomDataDialog"
 import {
@@ -585,6 +586,10 @@ function CreateCategoryDialog({
   ledgerId: string
   groups: { id: string; name: string; is_active: boolean }[]
 }) {
+  const { data: ledger } = useSuspenseQuery({
+    queryKey: ["ledger", ledgerId],
+    queryFn: () => LedgersService.readLedger({ ledgerId }),
+  })
   const [open, setOpen] = useState(false)
   const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(
     null,
@@ -603,9 +608,13 @@ function CreateCategoryDialog({
       recurrence_interval: 1,
       recurrence_unit: "month",
       first_due_date: "",
-      currency: "PLN",
+      currency: ledger.default_currency,
     },
   })
+  useEffect(() => {
+    if (!open)
+      form.resetField("currency", { defaultValue: ledger.default_currency })
+  }, [open, ledger.default_currency, form])
   const mutation = useMutation({
     mutationFn: async (data: CategoryCreate) => {
       const created = await CategoriesService.createCategory({

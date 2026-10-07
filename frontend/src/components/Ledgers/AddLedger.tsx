@@ -6,6 +6,10 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { type LedgerCreate, LedgersService } from "@/client"
+import {
+  LedgerPreferenceFields,
+  useLedgerPreferenceOptions,
+} from "@/components/LedgerSettings/LedgerPreferences"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -37,6 +41,11 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 export function AddLedger() {
+  const options = useLedgerPreferenceOptions()
+  const [country, setCountry] = useState(
+    options.default_business_calendar_country,
+  )
+  const [currency, setCurrency] = useState(options.default_currency)
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -51,6 +60,8 @@ export function AddLedger() {
     onSuccess: () => {
       showSuccessToast("Ledger created successfully")
       form.reset()
+      setCountry(options.default_business_calendar_country)
+      setCurrency(options.default_currency)
       setOpen(false)
     },
     onError: handleError.bind(showErrorToast),
@@ -63,6 +74,8 @@ export function AddLedger() {
     mutation.mutate({
       name: data.name,
       description: data.description || null,
+      business_calendar_country: country,
+      default_currency: currency,
     })
   }
 
@@ -108,6 +121,13 @@ export function AddLedger() {
                   <FormMessage />
                 </FormItem>
               )}
+            />
+            <LedgerPreferenceFields
+              country={country}
+              currency={currency}
+              onCountryChange={setCountry}
+              onCurrencyChange={setCurrency}
+              disabled={mutation.isPending}
             />
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>

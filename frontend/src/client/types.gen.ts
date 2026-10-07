@@ -202,7 +202,7 @@ export type CategoryCreate = {
      * First Due Date
      */
     first_due_date?: string | null;
-    currency?: Currency;
+    currency?: Currency | null;
 };
 
 /**
@@ -450,7 +450,7 @@ export type CategoryUpdate = {
      * First Due Date
      */
     first_due_date?: string | null;
-    currency?: Currency;
+    currency?: Currency | null;
 };
 
 /**
@@ -1209,6 +1209,11 @@ export type LedgerAccessRole = 'owner' | 'editor' | 'viewer';
  */
 export type LedgerCreate = {
     /**
+     * Business Calendar Country
+     */
+    business_calendar_country?: string | null;
+    default_currency?: Currency;
+    /**
      * Name
      */
     name: string;
@@ -1267,6 +1272,25 @@ export type LedgerMembersPublic = {
 };
 
 /**
+ * LedgerPreferenceOptions
+ */
+export type LedgerPreferenceOptions = {
+    /**
+     * Countries
+     */
+    countries: Array<string>;
+    /**
+     * Currencies
+     */
+    currencies: Array<Currency>;
+    /**
+     * Default Business Calendar Country
+     */
+    default_business_calendar_country: string;
+    default_currency: Currency;
+};
+
+/**
  * LedgerPublic
  */
 export type LedgerPublic = {
@@ -1278,6 +1302,11 @@ export type LedgerPublic = {
      * Owner User Id
      */
     owner_user_id: string;
+    /**
+     * Business Calendar Country
+     */
+    business_calendar_country: string;
+    default_currency: Currency;
     /**
      * Name
      */
@@ -1315,6 +1344,11 @@ export type LedgerShare = {
  * LedgerUpdate
  */
 export type LedgerUpdate = {
+    /**
+     * Business Calendar Country
+     */
+    business_calendar_country?: string | null;
+    default_currency?: Currency | null;
     /**
      * Name
      */
@@ -2564,6 +2598,22 @@ export type LoginRecoverPasswordHtmlContentResponses = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = LoginRecoverPasswordHtmlContentResponses[keyof LoginRecoverPasswordHtmlContentResponses];
+
+export type LedgersReadLedgerPreferenceOptionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ledgers/preference-options';
+};
+
+export type LedgersReadLedgerPreferenceOptionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: LedgerPreferenceOptions;
+};
+
+export type LedgersReadLedgerPreferenceOptionsResponse = LedgersReadLedgerPreferenceOptionsResponses[keyof LedgersReadLedgerPreferenceOptionsResponses];
 
 export type LedgersReadLedgersData = {
     body?: never;

@@ -8,7 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.domain import (
     BillingPeriod,
     CurrentValueSource,
@@ -28,7 +27,7 @@ def _due_date_for_period(*, category: Category, period: BillingPeriod) -> date |
     return payment_for_period(
         first_due_date=category.first_due_date,
         period=period,
-        calendar=BusinessCalendar(settings.BUSINESS_CALENDAR_COUNTRY),
+        calendar=BusinessCalendar(category.ledger.business_calendar_country),
     ).due_date
 
 

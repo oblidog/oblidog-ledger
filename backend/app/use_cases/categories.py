@@ -368,9 +368,9 @@ def create_category(
     recurrence_interval: int | None = None,
     recurrence_unit: RecurrenceUnit | None = None,
     first_due_date: date | None = None,
-    currency: Currency = Currency.PLN,
+    currency: Currency | None = None,
 ) -> Category:
-    _require_ledger(session=session, ledger_id=ledger_id)
+    ledger = _require_ledger(session=session, ledger_id=ledger_id)
     normalized_name = _normalize_name(name)
 
     category_group = session.scalar(
@@ -424,7 +424,7 @@ def create_category(
         recurrence_interval=recurrence_interval,
         recurrence_unit=recurrence_unit,
         first_due_date=first_due_date,
-        currency=currency,
+        currency=currency if currency is not None else ledger.default_currency,
     )
     session.add(category)
     session.commit()
@@ -444,7 +444,7 @@ def update_category(
     recurrence_interval: int | None = None,
     recurrence_unit: RecurrenceUnit | None = None,
     first_due_date: date | None = None,
-    currency: Currency = Currency.PLN,
+    currency: Currency | None = None,
 ) -> Category:
     _require_ledger(session=session, ledger_id=ledger_id)
     category = session.scalar(
@@ -489,7 +489,8 @@ def update_category(
     category.recurrence_interval = recurrence_interval
     category.recurrence_unit = recurrence_unit
     category.first_due_date = first_due_date
-    category.currency = currency
+    if currency is not None:
+        category.currency = currency
     session.commit()
     session.refresh(category)
     return category

@@ -7,6 +7,22 @@ from datetime import date, timedelta
 import holidays
 
 
+def supported_calendar_countries() -> list[str]:
+    """Return supported two-letter country codes, excluding aliases."""
+    return sorted(
+        code
+        for code in holidays.list_supported_countries(include_aliases=False)
+        if len(code) == 2
+    )
+
+
+def validate_calendar_country(value: str) -> str:
+    country = value.strip().upper()
+    if country not in supported_calendar_countries():
+        raise ValueError("Unsupported business calendar country")
+    return country
+
+
 class BusinessCalendar:
     """Calendar of working days for a configured country.
 

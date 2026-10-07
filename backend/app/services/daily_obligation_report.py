@@ -135,7 +135,7 @@ def _select_sections(
     *, session: Session, user: User, report_date: date
 ) -> dict[str, list[DailyReportItem]]:
     period = BillingPeriod.from_date(report_date)
-    calendar = BusinessCalendar(settings.BUSINESS_CALENDAR_COUNTRY)
+    calendars: dict[str, BusinessCalendar] = {}
     obligations = session.scalars(
         select(Obligation)
         .join(LedgerMembership, LedgerMembership.ledger_id == Obligation.ledger_id)
@@ -145,6 +145,10 @@ def _select_sections(
     ).unique()
     sections: dict[str, list[DailyReportItem]] = defaultdict(list)
     for obligation in obligations:
+        country = obligation.ledger.business_calendar_country
+        if country not in calendars:
+            calendars[country] = BusinessCalendar(country)
+        calendar = calendars[country]
         section = _section_for(obligation, report_date, period, calendar)
         if section is not None:
             sections[section].append(_item(obligation))

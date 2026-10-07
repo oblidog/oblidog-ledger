@@ -1,17 +1,36 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+    model_validator,
+)
 
-from app.domain import LedgerAccessRole
+from app.domain import Currency, LedgerAccessRole
+from app.domain.business_calendar import validate_calendar_country
 
 
-class LedgerCreate(BaseModel):
+class LedgerPreferencesInput(BaseModel):
+    business_calendar_country: str | None = None
+
+    @field_validator("business_calendar_country")
+    @classmethod
+    def validate_country(cls, value: str | None) -> str | None:
+        return validate_calendar_country(value) if value is not None else None
+
+
+class LedgerCreate(LedgerPreferencesInput):
+    default_currency: Currency = Currency.PLN
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
 
 
-class LedgerUpdate(BaseModel):
+class LedgerUpdate(LedgerPreferencesInput):
+    default_currency: Currency | None = None
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
 
@@ -39,6 +58,8 @@ class LedgerPublic(BaseModel):
 
     id: uuid.UUID
     owner_user_id: uuid.UUID
+    business_calendar_country: str
+    default_currency: Currency
     name: str
     description: str | None
     created_at: datetime
@@ -64,3 +85,10 @@ class LedgerMemberPublic(BaseModel):
 class LedgerMembersPublic(BaseModel):
     data: list[LedgerMemberPublic]
     count: int
+
+
+class LedgerPreferenceOptions(BaseModel):
+    countries: list[str]
+    currencies: list[Currency]
+    default_business_calendar_country: str
+    default_currency: Currency

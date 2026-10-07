@@ -107,7 +107,7 @@ Category recurrence is anchored to `first_due_date` and advances by the configur
 number of months or years. Each occurrence keeps the original day of the month,
 clamped to the last valid day in a short month. The effective due date moves back
 to the nearest working day, skipping weekends and public holidays according to
-`BUSINESS_CALENDAR_COUNTRY` (default `PL`). This may put the due date in the
+the ledger's `business_calendar_country`. This may put the due date in the
 previous month; the obligation still belongs to its original billing period.
 
 `POST /api/v1/ledgers/{ledger_id}/categories/schedule-preview` accepts
@@ -124,3 +124,25 @@ and remains available in a read-only demo. It forecasts newly generated dates;
 it does not report existing obligations or overwrite dates already stored,
 including dates supplied by users or integrations. The validation window for
 manual due dates remains a separate rule.
+
+## Ledger preferences
+
+Each ledger persists `business_calendar_country` and `default_currency`. Owners
+can choose these when creating a ledger and edit them in Settings → Preferences.
+Viewers and editors can read them but cannot change them. Countries are the
+canonical two-letter codes supported by `holidays`; currencies are the existing
+supported currencies. `GET /api/v1/ledgers/preference-options` returns both lists
+and initial defaults for an authenticated user.
+
+The migration copies `BUSINESS_CALENDAR_COUNTRY` into existing ledgers and sets
+`default_currency` to `PLN`, preserving the previous defaults. The environment
+variable remains only a bootstrap default for creating a new ledger. Changing
+it later does not alter saved ledgers. Calendar changes affect newly generated
+obligation dates, schedule previews and report working-day calculations, without
+rewriting existing dates. Reports select the calendar separately for each ledger.
+
+A new category copies the ledger default currency when currency is omitted (or
+null) in the API request. An explicit category currency overrides the default.
+Omitting currency in a category update preserves its existing currency. Changing
+a ledger's default currency never modifies existing categories or obligations,
+and does not convert or combine amounts across currencies.

@@ -378,8 +378,14 @@ export const CategoryCreateSchema = {
             title: 'First Due Date'
         },
         currency: {
-            $ref: '#/components/schemas/Currency',
-            default: 'PLN'
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/Currency'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -892,8 +898,14 @@ export const CategoryUpdateSchema = {
             title: 'First Due Date'
         },
         currency: {
-            $ref: '#/components/schemas/Currency',
-            default: 'PLN'
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/Currency'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     additionalProperties: false,
@@ -2411,6 +2423,21 @@ export const LedgerAccessRoleSchema = {
 
 export const LedgerCreateSchema = {
     properties: {
+        business_calendar_country: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Business Calendar Country'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency',
+            default: 'PLN'
+        },
         name: {
             type: 'string',
             maxLength: 255,
@@ -2520,6 +2547,40 @@ export const LedgerMembersPublicSchema = {
     title: 'LedgerMembersPublic'
 } as const;
 
+export const LedgerPreferenceOptionsSchema = {
+    properties: {
+        countries: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Countries'
+        },
+        currencies: {
+            items: {
+                $ref: '#/components/schemas/Currency'
+            },
+            type: 'array',
+            title: 'Currencies'
+        },
+        default_business_calendar_country: {
+            type: 'string',
+            title: 'Default Business Calendar Country'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency'
+        }
+    },
+    type: 'object',
+    required: [
+        'countries',
+        'currencies',
+        'default_business_calendar_country',
+        'default_currency'
+    ],
+    title: 'LedgerPreferenceOptions'
+} as const;
+
 export const LedgerPublicSchema = {
     properties: {
         id: {
@@ -2531,6 +2592,13 @@ export const LedgerPublicSchema = {
             type: 'string',
             format: 'uuid',
             title: 'Owner User Id'
+        },
+        business_calendar_country: {
+            type: 'string',
+            title: 'Business Calendar Country'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency'
         },
         name: {
             type: 'string',
@@ -2562,6 +2630,8 @@ export const LedgerPublicSchema = {
     required: [
         'id',
         'owner_user_id',
+        'business_calendar_country',
+        'default_currency',
         'name',
         'description',
         'created_at',
@@ -2609,6 +2679,27 @@ export const LedgerShareSchema = {
 
 export const LedgerUpdateSchema = {
     properties: {
+        business_calendar_country: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Business Calendar Country'
+        },
+        default_currency: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/Currency'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
         name: {
             type: 'string',
             maxLength: 255,
