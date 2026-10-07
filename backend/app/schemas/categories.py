@@ -186,3 +186,20 @@ class CategoryDataSchemaPublic(BaseModel):
             "is_active": self.is_active,
             "created_at": self.created_at,
         }
+
+
+class SchedulePreviewRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    first_due_date: date
+    recurrence_interval: int = Field(gt=0)
+    recurrence_unit: RecurrenceUnit
+    reference_date: date | None = None
+
+
+class SchedulePreviewPublic(BaseModel):
+    period_year: int | None
+    period_month: int | None
+    scheduled_date: date | None
+    due_date: date | None
+    calendar_country: str

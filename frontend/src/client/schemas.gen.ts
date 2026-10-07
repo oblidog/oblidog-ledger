@@ -3964,6 +3964,108 @@ export const RecurrenceUnitSchema = {
     title: 'RecurrenceUnit'
 } as const;
 
+export const SchedulePreviewPublicSchema = {
+    properties: {
+        period_year: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Period Year'
+        },
+        period_month: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Period Month'
+        },
+        scheduled_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Scheduled Date'
+        },
+        due_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Due Date'
+        },
+        calendar_country: {
+            type: 'string',
+            title: 'Calendar Country'
+        }
+    },
+    type: 'object',
+    required: [
+        'period_year',
+        'period_month',
+        'scheduled_date',
+        'due_date',
+        'calendar_country'
+    ],
+    title: 'SchedulePreviewPublic'
+} as const;
+
+export const SchedulePreviewRequestSchema = {
+    properties: {
+        first_due_date: {
+            type: 'string',
+            format: 'date',
+            title: 'First Due Date'
+        },
+        recurrence_interval: {
+            type: 'integer',
+            exclusiveMinimum: 0,
+            title: 'Recurrence Interval'
+        },
+        recurrence_unit: {
+            $ref: '#/components/schemas/RecurrenceUnit'
+        },
+        reference_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reference Date'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'first_due_date',
+        'recurrence_interval',
+        'recurrence_unit'
+    ],
+    title: 'SchedulePreviewRequest'
+} as const;
+
 export const SystemRunPublicSchema = {
     properties: {
         id: {

@@ -175,36 +175,6 @@ function obligationModeDescription(mode: "manual" | "automatic" | "hybrid") {
   return "Obligations follow the schedule and can also be created manually."
 }
 
-function nextPaymentDate(
-  firstDueDate: string | undefined,
-  interval: number | undefined,
-  unit: "month" | "year" | undefined,
-): Date | undefined {
-  if (!firstDueDate || !interval || !unit) return undefined
-
-  const [year, month, day] = firstDueDate.split("-").map(Number)
-  if (!year || !month || !day) return undefined
-
-  const addMonths = (value: Date, months: number) => {
-    const targetMonth = value.getMonth() + months
-    const targetYear = value.getFullYear() + Math.floor(targetMonth / 12)
-    const normalizedMonth = ((targetMonth % 12) + 12) % 12
-    const lastDay = new Date(targetYear, normalizedMonth + 1, 0).getDate()
-    return new Date(targetYear, normalizedMonth, Math.min(day, lastDay))
-  }
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  let occurrence = new Date(year, month - 1, day)
-  const monthsToAdd = unit === "year" ? interval * 12 : interval
-
-  while (occurrence <= today) {
-    occurrence = addMonths(occurrence, monthsToAdd)
-  }
-
-  return occurrence
-}
-
 function recurrencePreset(
   interval: number | undefined,
   unit: "month" | "year" | undefined,
@@ -216,9 +186,11 @@ function recurrencePreset(
 }
 
 function PaymentScheduleFields<T extends FieldValues>({
+  ledgerId,
   control,
   onPresetChange,
 }: {
+  ledgerId: string
   control: Control<T>
   onPresetChange: (preset: string) => void
 }) {
@@ -235,11 +207,45 @@ function PaymentScheduleFields<T extends FieldValues>({
     name: "first_due_date" as Path<T>,
   }) as string | undefined
   const preset = recurrencePreset(interval, unit)
-  const nextDueDate = nextPaymentDate(
-    firstDueDate,
-    interval ?? 1,
-    unit ?? "month",
+  const schedule = useMemo(
+    () => ({
+      first_due_date: firstDueDate ?? "",
+      recurrence_interval: interval ?? 0,
+      recurrence_unit: unit ?? "month",
+    }),
+    [firstDueDate, interval, unit],
   )
+  const [debouncedSchedule, setDebouncedSchedule] = useState(schedule)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSchedule(schedule), 300)
+    return () => window.clearTimeout(timer)
+  }, [schedule])
+  const valid = Boolean(
+    firstDueDate &&
+      interval &&
+      Number.isInteger(interval) &&
+      interval > 0 &&
+      unit,
+  )
+  const settled = schedule === debouncedSchedule
+  const preview = useQuery({
+    queryKey: ["schedule-preview", ledgerId, debouncedSchedule],
+    queryFn: () =>
+      CategoriesService.previewPaymentSchedule({
+        ledgerId,
+        requestBody: debouncedSchedule,
+      }),
+    enabled: valid && settled,
+    staleTime: 0,
+    retry: false,
+  })
+  const nextDueDate = valid && settled ? preview.data?.due_date : undefined
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(`${value}T12:00:00`))
 
   return (
     <section className="space-y-4 border-t pt-4">
@@ -336,17 +342,33 @@ function PaymentScheduleFields<T extends FieldValues>({
       )}
       <div className="rounded-md bg-muted p-3">
         <p className="text-sm font-medium">Next payment</p>
-        {nextDueDate ? (
+        {!valid ? (
           <p className="mt-1 text-sm text-muted-foreground">
-            {new Intl.DateTimeFormat("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            }).format(nextDueDate)}
+            Choose a valid first payment date and recurrence to see the next
+            payment.
           </p>
+        ) : !settled || preview.isFetching ? (
+          <p className="mt-1 text-sm text-muted-foreground" role="status">
+            Calculating schedule…
+          </p>
+        ) : preview.isError ? (
+          <p className="mt-1 text-sm text-destructive" role="alert">
+            Could not load the payment schedule.
+          </p>
+        ) : nextDueDate ? (
+          <div className="mt-1 text-sm text-muted-foreground">
+            <p>{formatDate(nextDueDate)}</p>
+            {preview.data?.scheduled_date &&
+              preview.data.scheduled_date !== nextDueDate && (
+                <p>
+                  Moved from {formatDate(preview.data.scheduled_date)} to the
+                  previous working day ({preview.data.calendar_country}).
+                </p>
+              )}
+          </div>
         ) : (
           <p className="mt-1 text-sm text-muted-foreground">
-            Choose the first payment due date to see the next occurrence.
+            No upcoming payment in the supported date range.
           </p>
         )}
       </div>
@@ -759,6 +781,7 @@ function CreateCategoryDialog({
             </section>
             {form.watch("data_source_policy") !== "manual" && (
               <PaymentScheduleFields
+                ledgerId={ledgerId}
                 control={form.control}
                 onPresetChange={(preset) => {
                   if (preset === "monthly") {
@@ -1015,6 +1038,7 @@ function EditCategoryDialog({
             </p>
             {form.watch("data_source_policy") !== "manual" && (
               <PaymentScheduleFields
+                ledgerId={ledgerId}
                 control={form.control}
                 onPresetChange={(preset) => {
                   if (preset === "monthly") {
