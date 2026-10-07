@@ -16,6 +16,7 @@ async function mockWorkspace(
     lifecycle?: ObligationPublic["lifecycle"]
     incomplete?: boolean
     readOnly?: boolean
+    secondObligation?: boolean
   } = {},
 ) {
   const obligation: ObligationPublic = {
@@ -44,6 +45,14 @@ async function mockWorkspace(
     paid_at: null,
     created_at: "2026-10-01T12:00:00Z",
     updated_at: "2026-10-01T12:00:00Z",
+  }
+  const secondObligation: ObligationPublic = {
+    ...obligation,
+    id: "second-obligation",
+    category_id: "second-category",
+    category_code: "GAS",
+    key: "GAS-2026-10",
+    name: "Gas bill",
   }
   const ledger = {
     id: ledgerId,
@@ -92,7 +101,12 @@ async function mockWorkspace(
       json = { data: [{ user_id: "viewer", role: "viewer" }], count: 1 }
     else if (path.endsWith(`/obligations/${key}`)) json = obligation
     else if (path.endsWith("/obligations"))
-      json = { data: [obligation], count: 1 }
+      json = {
+        data: options.secondObligation
+          ? [obligation, secondObligation]
+          : [obligation],
+        count: options.secondObligation ? 2 : 1,
+      }
     else if (path.endsWith("/actions") || path.endsWith("/categories"))
       json = { data: [], count: 0 }
     else {
@@ -317,3 +331,71 @@ test("failed detail request exposes a retry without losing list context", async 
   await expect(details.getByRole("tab", { name: "Details" })).toBeVisible()
   await expectNoOverflow(page)
 })
+
+for (const fail of [false, true]) {
+  test(`only the active obligation shows a spinner after ${fail ? "failed" : "successful"} submission`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 844 })
+    const fixture = await mockWorkspace(page, { secondObligation: true })
+    await page.goto(`/ledgers/${ledgerId}?year=2026&month=10&lifecycle=unpaid`)
+    const activeTile = page
+      .locator(".rounded-xl")
+      .filter({ has: page.getByText(name, { exact: true }) })
+    const otherTile = page
+      .locator(".rounded-xl")
+      .filter({ has: page.getByText("Gas bill", { exact: true }) })
+    const activeButton = activeTile.getByRole("button", {
+      name: "Mark as ready",
+      exact: true,
+    })
+    const otherButton = otherTile.getByRole("button", {
+      name: "Mark as ready",
+      exact: true,
+    })
+    await expect(activeButton).toBeEnabled()
+    await expect(otherButton).toBeEnabled()
+    let release: () => void = () => {}
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    let requests = 0
+    await page.route("**/ready*", async (route) => {
+      requests += 1
+      await gate
+      if (fail)
+        await route.fulfill({
+          status: 500,
+          json: { detail: "Unable to mark ready" },
+        })
+      else await route.fallback()
+    })
+    await activeButton.evaluate((button) => {
+      ;(button as HTMLButtonElement).click()
+      ;(button as HTMLButtonElement).click()
+    })
+    await expect(activeButton).toBeDisabled()
+    await expect(otherButton).toBeDisabled()
+    await expect(activeButton.locator(".animate-spin")).toHaveCount(1)
+    await expect(otherButton.locator(".animate-spin")).toHaveCount(0)
+    // A blocked sibling must not start another mutation even when clicked directly.
+    await otherButton.evaluate((button) =>
+      (button as HTMLButtonElement).click(),
+    )
+    await expect.poll(() => requests).toBe(1)
+    release()
+    await expect(otherButton).toBeEnabled()
+    await expect(activeTile.locator(".animate-spin")).toHaveCount(0)
+    await expect(otherTile.locator(".animate-spin")).toHaveCount(0)
+    await expect(
+      activeTile.getByRole("button", {
+        name: fail ? "Mark as ready" : "Mark as paid",
+        exact: true,
+      }),
+    ).toBeEnabled()
+    expect(requests).toBe(1)
+    expect(
+      fixture.mutations.filter((path) => path.endsWith("/ready")),
+    ).toHaveLength(fail ? 0 : 1)
+  })
+}

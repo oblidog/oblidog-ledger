@@ -157,7 +157,8 @@ export function ObligationWorkspace({
   const [paymentConfirmation, setPaymentConfirmation] =
     useState<ObligationPublic | null>(null)
   const actionLock = useRef(false)
-  const [actionPending, setActionPending] = useState(false)
+  const [pendingActionKey, setPendingActionKey] = useState<string | null>(null)
+  const actionPending = pendingActionKey !== null
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
   const invalidateActionHistory = (obligationKey: string) =>
@@ -332,14 +333,14 @@ export function ObligationWorkspace({
   ) => {
     if (!canEdit || actionLock.current) return
     actionLock.current = true
-    setActionPending(true)
+    setPendingActionKey(obligation.key)
     try {
       await action.mutateAsync(obligation)
     } catch {
       // The mutation reports the error; keep the current view for retry.
     } finally {
       actionLock.current = false
-      setActionPending(false)
+      setPendingActionKey(null)
     }
   }
 
@@ -455,6 +456,7 @@ export function ObligationWorkspace({
                   obligation={obligation}
                   canWrite={canEdit}
                   disabled={actionPending}
+                  loading={pendingActionKey === obligation.key}
                   onEdit={() => setEditingObligation(obligation)}
                   onCancel={() => void runAction(cancel, obligation)}
                   onMarkPaid={() => setPaymentConfirmation(obligation)}
@@ -815,6 +817,7 @@ function ObligationTile({
   obligation,
   canWrite,
   disabled,
+  loading,
   onEdit,
   onCancel,
   onMarkPaid,
@@ -826,6 +829,7 @@ function ObligationTile({
   obligation: ObligationPublic
   canWrite: boolean
   disabled: boolean
+  loading: boolean
   onEdit: () => void
   onCancel: () => void
   onMarkPaid: () => void
@@ -982,7 +986,7 @@ function ObligationTile({
       {canMarkReady || canMarkPaid || canEdit ? (
         <LoadingButton
           className="mt-4 min-h-11 w-full md:hidden"
-          loading={disabled}
+          loading={loading}
           disabled={disabled}
           onClick={
             canMarkPaid ? onMarkPaid : canMarkReady ? onMarkReady : onEdit
