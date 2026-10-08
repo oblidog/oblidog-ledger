@@ -62,7 +62,7 @@ test("Report refetch preserves local edits and saves only the changed toggle", a
         response.request().method() === "GET",
     )
     await page.evaluate(() =>
-      document.dispatchEvent(new Event("visibilitychange")),
+      window.dispatchEvent(new Event("visibilitychange")),
     )
     await response
   }

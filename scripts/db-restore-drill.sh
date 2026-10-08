@@ -101,14 +101,20 @@ docker run -d --name "$database_container" --network "$network" \
   "$POSTGRES_IMAGE" >/dev/null
 
 printf '[db-restore-drill] Waiting for disposable PostgreSQL...\n'
+database_ready=false
 for _ in {1..60}; do
-  if docker exec "$database_container" pg_isready -U oblidog -d oblidog_restore_drill >/dev/null 2>&1; then
+  # The image's initialization server accepts Unix sockets before the final
+  # server starts. Wait for TCP, which is also used by the restore container.
+  if docker exec "$database_container" pg_isready -h 127.0.0.1 -U oblidog -d oblidog_restore_drill >/dev/null 2>&1; then
+    database_ready=true
     break
   fi
   sleep 1
 done
-docker exec "$database_container" pg_isready -U oblidog -d oblidog_restore_drill >/dev/null \
-  || fail "Disposable PostgreSQL did not become ready"
+if [[ "$database_ready" != true ]]; then
+  docker logs "$database_container" >&2 || true
+  fail "Disposable PostgreSQL did not become ready"
+fi
 
 printf '[db-restore-drill] Restoring backup into isolated database...\n'
 docker run --rm --network "$network" \

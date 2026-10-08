@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 
 import {
@@ -31,9 +32,12 @@ function ReportSettingsForm({
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const form = useForm<UserReportPreferences>({
-    values: preferences,
-    resetOptions: { keepDirtyValues: true, keepDirty: true },
+    defaultValues: preferences,
   })
+  const { reset } = form
+  useEffect(() => {
+    reset(preferences, { keepDirtyValues: true, keepDirty: true })
+  }, [preferences, reset])
   const { dirtyFields } = form.formState
   const mutation = useMutation({
     mutationFn: (requestBody: UserReportPreferencesUpdate) =>
