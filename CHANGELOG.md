@@ -1,3 +1,20 @@
+## v0.18.0 (2026-10-08)
+
+### Feat
+
+- **notifications**: add independent user report toggles (#482)
+- **ledgers**: configure holiday calendars and default currency (#468)
+
+### Fix
+
+- **frontend**: scope obligation spinner to the active tile (#467)
+- **categories**: share holiday-aware schedule preview with obligation generation (#466)
+
+### Refactor
+
+- **frontend**: streamline mobile obligation actions (#465)
+- **categories**: show and apply counterparties to current obligations (#464)
+
 ## v0.17.1 (2026-10-06)
 
 ### Fix
