@@ -4732,6 +4732,44 @@ export const UserPublicSchema = {
     title: 'UserPublic'
 } as const;
 
+export const UserReportPreferencesSchema = {
+    properties: {
+        daily_report_enabled: {
+            type: 'boolean',
+            title: 'Daily Report Enabled'
+        },
+        weekly_report_enabled: {
+            type: 'boolean',
+            title: 'Weekly Report Enabled'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'daily_report_enabled',
+        'weekly_report_enabled'
+    ],
+    title: 'UserReportPreferences'
+} as const;
+
+export const UserReportPreferencesUpdateSchema = {
+    properties: {
+        daily_report_enabled: {
+            type: 'boolean',
+            title: 'Daily Report Enabled',
+            default: true
+        },
+        weekly_report_enabled: {
+            type: 'boolean',
+            title: 'Weekly Report Enabled',
+            default: true
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    title: 'UserReportPreferencesUpdate'
+} as const;
+
 export const UserUpdateSchema = {
     properties: {
         email: {

@@ -2346,6 +2346,34 @@ export type UserPublic = {
 };
 
 /**
+ * UserReportPreferences
+ */
+export type UserReportPreferences = {
+    /**
+     * Daily Report Enabled
+     */
+    daily_report_enabled: boolean;
+    /**
+     * Weekly Report Enabled
+     */
+    weekly_report_enabled: boolean;
+};
+
+/**
+ * UserReportPreferencesUpdate
+ */
+export type UserReportPreferencesUpdate = {
+    /**
+     * Daily Report Enabled
+     */
+    daily_report_enabled?: boolean;
+    /**
+     * Weekly Report Enabled
+     */
+    weekly_report_enabled?: boolean;
+};
+
+/**
  * UserUpdate
  */
 export type UserUpdate = {
@@ -5788,6 +5816,47 @@ export type UsersUpdateUserMeResponses = {
 };
 
 export type UsersUpdateUserMeResponse = UsersUpdateUserMeResponses[keyof UsersUpdateUserMeResponses];
+
+export type UsersReadReportPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/report-preferences';
+};
+
+export type UsersReadReportPreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserReportPreferences;
+};
+
+export type UsersReadReportPreferencesResponse = UsersReadReportPreferencesResponses[keyof UsersReadReportPreferencesResponses];
+
+export type UsersUpdateReportPreferencesData = {
+    body: UserReportPreferencesUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/report-preferences';
+};
+
+export type UsersUpdateReportPreferencesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UsersUpdateReportPreferencesError = UsersUpdateReportPreferencesErrors[keyof UsersUpdateReportPreferencesErrors];
+
+export type UsersUpdateReportPreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserReportPreferences;
+};
+
+export type UsersUpdateReportPreferencesResponse = UsersUpdateReportPreferencesResponses[keyof UsersUpdateReportPreferencesResponses];
 
 export type UsersUpdatePasswordMeData = {
     body: UpdatePassword;

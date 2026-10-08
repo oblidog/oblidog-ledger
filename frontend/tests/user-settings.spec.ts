@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test"
+import type {
+  UserReportPreferences,
+  UserReportPreferencesUpdate,
+} from "../src/client"
 import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
 import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Password", "Danger zone"]
+const tabs = ["My profile", "Password", "Reports", "Danger zone"]
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
@@ -19,6 +23,124 @@ test("All tabs are visible", async ({ page }) => {
   for (const tab of tabs) {
     await expect(page.getByRole("tab", { name: tab })).toBeVisible()
   }
+})
+
+test("Report refetch preserves local edits and saves only the changed toggle", async ({
+  page,
+}) => {
+  let preferences: UserReportPreferences = {
+    daily_report_enabled: true,
+    weekly_report_enabled: true,
+  }
+  let patch: UserReportPreferencesUpdate | undefined
+  await page.route("**/api/v1/users/me/report-preferences", async (route) => {
+    if (route.request().method() === "PATCH") {
+      patch = route.request().postDataJSON() as UserReportPreferencesUpdate
+      preferences = { ...preferences, ...patch }
+    }
+    await route.fulfill({ json: preferences })
+  })
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Reports", exact: true }).click()
+  const daily = page.getByRole("checkbox", {
+    name: "Daily report",
+    exact: true,
+  })
+  const weekly = page.getByRole("checkbox", {
+    name: "Weekly report",
+    exact: true,
+  })
+  const save = page.getByRole("button", { name: "Save", exact: true })
+  await expect(daily).toBeChecked()
+  await expect(weekly).toBeChecked()
+
+  const refetch = async () => {
+    await page.bringToFront()
+    const response = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/users/me/report-preferences") &&
+        response.request().method() === "GET",
+    )
+    await page.evaluate(() =>
+      window.dispatchEvent(new Event("visibilitychange")),
+    )
+    await response
+  }
+
+  // A change from another session updates a clean form.
+  preferences.weekly_report_enabled = false
+  await refetch()
+  await expect(weekly).not.toBeChecked()
+  await expect(save).toBeDisabled()
+
+  // Refetching must keep the local edit while accepting the other server value.
+  await daily.uncheck()
+  preferences.weekly_report_enabled = true
+  await refetch()
+  await expect(daily).not.toBeChecked()
+  await expect(weekly).toBeChecked()
+
+  // Even a server change after the last refetch must survive a partial save.
+  preferences.weekly_report_enabled = false
+  await save.click()
+  await expect(page.getByText("Report preferences saved")).toBeVisible()
+  expect(patch).toEqual({ daily_report_enabled: false })
+  await expect(daily).not.toBeChecked()
+  await expect(weekly).not.toBeChecked()
+  await expect(save).toBeDisabled()
+})
+
+test.describe("Report preferences", () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("Report toggles save independently and survive reload", async ({
+    page,
+  }) => {
+    const email = randomEmail()
+    const password = randomPassword()
+    await createUser({ email, password })
+    await logInUser(page, email, password)
+    await page.goto("/settings")
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+
+    const daily = page.getByRole("checkbox", {
+      name: "Daily report",
+      exact: true,
+    })
+    const weekly = page.getByRole("checkbox", {
+      name: "Weekly report",
+      exact: true,
+    })
+    const save = page.getByRole("button", { name: "Save", exact: true })
+    await expect(daily).toBeChecked()
+    await expect(weekly).toBeChecked()
+    await expect(save).toBeDisabled()
+
+    await daily.uncheck()
+    await save.click()
+    await expect(page.getByText("Report preferences saved")).toBeVisible()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+    await expect(daily).not.toBeChecked()
+    await expect(weekly).toBeChecked()
+
+    await weekly.uncheck()
+    await save.click()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+    await expect(daily).not.toBeChecked()
+    await expect(weekly).not.toBeChecked()
+
+    await daily.check()
+    await save.click()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+    await expect(daily).toBeChecked()
+    await expect(weekly).not.toBeChecked()
+  })
 })
 
 test.describe("Edit user profile", () => {

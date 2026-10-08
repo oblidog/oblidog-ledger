@@ -22,6 +22,12 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    daily_report_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true", nullable=False
+    )
+    weekly_report_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true", nullable=False
+    )
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     session_version: Mapped[int] = mapped_column(

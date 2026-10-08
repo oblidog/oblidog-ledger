@@ -223,12 +223,17 @@ test("filters the category table and moves a category between groups", async ({
 
   await page.getByPlaceholder("Search name or code").fill("RENT")
   await expect(page.getByText(categoryName, { exact: true })).toBeVisible()
-  await expect(page.getByText(firstGroup, { exact: true })).toBeVisible()
+  const categoryRow = page.getByRole("row").filter({
+    has: page.getByText(categoryName, { exact: true }),
+  })
+  await expect(categoryRow.getByText(firstGroup, { exact: true })).toBeVisible()
 
   await openCategoryAction(page, categoryName, "Edit category")
   await page.getByLabel("Group").click()
   await page.getByRole("option", { name: secondGroup }).click()
   await page.getByRole("button", { name: "Save changes" }).click()
   await expect(page.getByText("Category updated")).toBeVisible()
-  await expect(page.getByText(secondGroup, { exact: true })).toBeVisible()
+  await expect(
+    categoryRow.getByText(secondGroup, { exact: true }),
+  ).toBeVisible()
 })
