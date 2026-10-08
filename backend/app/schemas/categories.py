@@ -33,7 +33,7 @@ class CategoryCreate(BaseModel):
     recurrence_interval: int | None = Field(default=None, gt=0)
     recurrence_unit: RecurrenceUnit | None = None
     first_due_date: date | None = None
-    currency: Currency = Currency.PLN
+    currency: Currency | None = None
 
 
 class CategoryUpdate(BaseModel):
@@ -46,7 +46,7 @@ class CategoryUpdate(BaseModel):
     recurrence_interval: int | None = Field(default=None, gt=0)
     recurrence_unit: RecurrenceUnit | None = None
     first_due_date: date | None = None
-    currency: Currency = Currency.PLN
+    currency: Currency | None = None
 
 
 class CategoryGroupPublic(BaseModel):

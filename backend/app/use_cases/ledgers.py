@@ -5,7 +5,9 @@ import uuid
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.domain import LedgerAccessRole
+from app.core.config import settings
+from app.domain import Currency, LedgerAccessRole
+from app.domain.business_calendar import validate_calendar_country
 from app.models import (
     Category,
     CategoryGroup,
@@ -50,6 +52,8 @@ def create_ledger(
     owner_user_id: uuid.UUID,
     name: str,
     description: str | None = None,
+    business_calendar_country: str | None = None,
+    default_currency: Currency = Currency.PLN,
 ) -> Ledger:
     _require_user(session=session, user_id=owner_user_id)
 
@@ -57,6 +61,12 @@ def create_ledger(
         owner_user_id=owner_user_id,
         name=_normalize_name(name),
         description=description,
+        business_calendar_country=validate_calendar_country(
+            business_calendar_country
+            if business_calendar_country is not None
+            else settings.BUSINESS_CALENDAR_COUNTRY
+        ),
+        default_currency=default_currency,
     )
     session.add(ledger)
     session.flush()
@@ -79,10 +89,21 @@ def update_ledger(
     ledger_id: uuid.UUID,
     name: str,
     description: str | None = None,
+    business_calendar_country: str | None = None,
+    default_currency: Currency | None = None,
 ) -> Ledger:
     ledger = _require_ledger(session=session, ledger_id=ledger_id)
+    country = (
+        validate_calendar_country(business_calendar_country)
+        if business_calendar_country is not None
+        else None
+    )
     ledger.name = _normalize_name(name)
     ledger.description = description
+    if country is not None:
+        ledger.business_calendar_country = country
+    if default_currency is not None:
+        ledger.default_currency = default_currency
     session.commit()
     session.refresh(ledger)
     return ledger

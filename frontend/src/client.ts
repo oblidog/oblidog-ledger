@@ -155,6 +155,9 @@ export const CategoriesService = {
   ),
 }
 export const LedgersService = {
+  readLedgerPreferenceOptions: request(
+    generated.LedgersService.readLedgerPreferenceOptions<true>,
+  ),
   createLedger: request(generated.LedgersService.createLedger<true>),
   deleteAllCategories: request(
     generated.LedgersService.deleteAllCategories<true>,

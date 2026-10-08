@@ -441,3 +441,45 @@ def test_daily_report_includes_only_actionable_accessible_integration_health(
     assert "started: 2026-09-19T08:30+02:00" in email.html_content
     assert "deadline: 2026-09-19T09:00+02:00" in email.html_content
     assert "last completed run: 2026-09-17T09:29+02:00" in email.html_content
+
+
+def test_report_selects_each_ledgers_calendar(db: Session) -> None:
+    from app.domain import DataSourcePolicy, RecurrenceUnit
+    from app.services.daily_obligation_report import _select_sections
+    from app.services.obligations import get_or_create_obligation
+    from app.use_cases import categories as category_use_cases
+    from app.use_cases import ledgers as ledger_use_cases
+    from tests.utils.user import create_random_user
+    from tests.utils.utils import random_lower_string
+
+    owner = create_random_user(db)
+    for country in ("PL", "DE"):
+        ledger = ledger_use_cases.create_ledger(
+            session=db,
+            owner_user_id=owner.id,
+            name=country + random_lower_string(),
+            business_calendar_country=country,
+        )
+        group = category_use_cases.create_category_group(
+            session=db, ledger_id=ledger.id, name=random_lower_string()
+        )
+        category = category_use_cases.create_category(
+            session=db,
+            ledger_id=ledger.id,
+            category_group_id=group.id,
+            name=country,
+            code="TEST",
+            data_source_policy=DataSourcePolicy.HYBRID,
+            recurrence_interval=1,
+            recurrence_unit=RecurrenceUnit.MONTH,
+            first_due_date=date(2026, 11, 12),
+        )
+        get_or_create_obligation(
+            session=db,
+            category=category,
+            period=BillingPeriod(2026, 11),
+            lifecycle=ObligationLifecycle.READY,
+        )
+    db.commit()
+    sections = _select_sections(session=db, user=owner, report_date=date(2026, 11, 9))
+    assert [item.category_name for item in sections["ready_to_pay"]] == ["PL"]

@@ -8,7 +8,8 @@ from sqlalchemy import DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.domain import LedgerAccessRole
+from app.core.config import settings
+from app.domain import Currency, LedgerAccessRole
 from app.models.base import Base, get_datetime_utc
 
 if TYPE_CHECKING:
@@ -32,6 +33,17 @@ class Ledger(Base):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    business_calendar_country: Mapped[str] = mapped_column(
+        String(2),
+        default=lambda: settings.BUSINESS_CALENDAR_COUNTRY,
+        nullable=False,
+    )
+    default_currency: Mapped[Currency] = mapped_column(
+        String(3),
+        default=Currency.PLN,
+        nullable=False,
+        server_default="PLN",
+    )
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=get_datetime_utc, nullable=False

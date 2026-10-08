@@ -15,7 +15,7 @@ from app.models import Ledger
 def preview_client() -> Generator[TestClient]:
     previous = app.dependency_overrides.copy()
     app.dependency_overrides[require_ledger_view_access] = lambda: Ledger(
-        id=uuid.uuid4()
+        id=uuid.uuid4(), business_calendar_country="PL"
     )
     try:
         with TestClient(app) as client:
@@ -41,7 +41,7 @@ def test_preview_returns_effective_due_date(
     reference: str,
     expected: str,
 ) -> None:
-    monkeypatch.setattr(settings, "BUSINESS_CALENDAR_COUNTRY", "PL")
+    monkeypatch.setattr(settings, "BUSINESS_CALENDAR_COUNTRY", "DE")
     response = preview_client.post(
         f"{settings.API_V1_STR}/ledgers/{uuid.uuid4()}/categories/schedule-preview",
         json={
@@ -64,7 +64,7 @@ def test_preview_defaults_to_backend_business_date_and_works_in_read_only_demo(
     monkeypatch.setattr(categories, "business_today", lambda: date(2026, 3, 13))
     monkeypatch.setattr(settings, "ENVIRONMENT", "demo")
     monkeypatch.setattr(settings, "DEMO_WRITES_ENABLED", False)
-    monkeypatch.setattr(settings, "BUSINESS_CALENDAR_COUNTRY", "PL")
+    monkeypatch.setattr(settings, "BUSINESS_CALENDAR_COUNTRY", "DE")
     response = preview_client.post(
         f"{settings.API_V1_STR}/ledgers/{uuid.uuid4()}/categories/schedule-preview",
         json={
@@ -103,3 +103,30 @@ def test_preview_requires_authentication() -> None:
             },
         )
     assert response.status_code == 401
+
+
+def test_preview_uses_ledger_calendar_instead_of_bootstrap_country(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    previous = app.dependency_overrides.copy()
+    app.dependency_overrides[require_ledger_view_access] = lambda: Ledger(
+        id=uuid.uuid4(), business_calendar_country="DE"
+    )
+    monkeypatch.setattr(settings, "BUSINESS_CALENDAR_COUNTRY", "PL")
+    try:
+        with TestClient(app) as client:
+            response = client.post(
+                f"{settings.API_V1_STR}/ledgers/{uuid.uuid4()}/categories/schedule-preview",
+                json={
+                    "first_due_date": "2026-11-11",
+                    "recurrence_interval": 1,
+                    "recurrence_unit": "month",
+                    "reference_date": "2026-11-01",
+                },
+            )
+        assert response.status_code == 200
+        assert response.json()["due_date"] == "2026-11-11"
+        assert response.json()["calendar_country"] == "DE"
+    finally:
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous)
