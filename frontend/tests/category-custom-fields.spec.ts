@@ -233,5 +233,7 @@ test("filters the category table and moves a category between groups", async ({
   await page.getByRole("option", { name: secondGroup }).click()
   await page.getByRole("button", { name: "Save changes" }).click()
   await expect(page.getByText("Category updated")).toBeVisible()
-  await expect(categoryRow.getByText(secondGroup, { exact: true })).toBeVisible()
+  await expect(
+    categoryRow.getByText(secondGroup, { exact: true }),
+  ).toBeVisible()
 })
