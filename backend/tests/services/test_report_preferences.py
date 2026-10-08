@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models import LedgerMembership, ReportDelivery, User
 from app.services import scheduled_reports
 from app.services.daily_obligation_report import DailyObligationReport
+from app.services.scheduled_reports import ScheduledReport
 from app.services.weekly_monthly_overview_report import WeeklyMonthlyOverviewReport
 from app.use_cases.system_runs import SystemRunContext
 from tests.utils.ledger_domain import create_test_ledger
@@ -27,10 +28,11 @@ def test_report_selection_respects_independent_toggles(
     db.commit()
     context = SystemRunContext.create(effective_at=datetime(2026, 9, 7, tzinfo=UTC))
 
-    for report, enabled in [
+    reports: list[tuple[ScheduledReport, bool]] = [
         (DailyObligationReport(), daily_enabled),
         (WeeklyMonthlyOverviewReport(), weekly_enabled),
-    ]:
+    ]
+    for report, enabled in reports:
         recipients = report.recipients(session=db, context=context)
         assert (user.id in {recipient.id for recipient in recipients}) is enabled
 
@@ -61,7 +63,11 @@ def test_opted_out_user_is_never_rendered_or_recorded(
     db.commit()
     context = SystemRunContext.create(effective_at=datetime(2026, 9, 7, tzinfo=UTC))
 
-    for report in [DailyObligationReport(), WeeklyMonthlyOverviewReport()]:
+    reports: list[ScheduledReport] = [
+        DailyObligationReport(),
+        WeeklyMonthlyOverviewReport(),
+    ]
+    for report in reports:
         # Isolate delivery to the selected user while retaining the real recipient query.
         recipients = report.recipients(session=db, context=context)
         monkeypatch.setattr(

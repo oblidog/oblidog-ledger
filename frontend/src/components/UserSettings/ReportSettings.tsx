@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 
-import { type UserReportPreferences, UsersService } from "@/client"
+import {
+  type UserReportPreferences,
+  type UserReportPreferencesUpdate,
+  UsersService,
+} from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -26,9 +30,13 @@ function ReportSettingsForm({
 }) {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  const form = useForm<UserReportPreferences>({ defaultValues: preferences })
+  const form = useForm<UserReportPreferences>({
+    values: preferences,
+    resetOptions: { keepDirtyValues: true, keepDirty: true },
+  })
+  const { dirtyFields } = form.formState
   const mutation = useMutation({
-    mutationFn: (requestBody: UserReportPreferences) =>
+    mutationFn: (requestBody: UserReportPreferencesUpdate) =>
       UsersService.updateReportPreferences({ requestBody }),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data)
@@ -41,7 +49,16 @@ function ReportSettingsForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          const updates: UserReportPreferencesUpdate = {}
+          if (dirtyFields.daily_report_enabled) {
+            updates.daily_report_enabled = data.daily_report_enabled
+          }
+          if (dirtyFields.weekly_report_enabled) {
+            updates.weekly_report_enabled = data.weekly_report_enabled
+          }
+          mutation.mutate(updates)
+        })}
         className="flex flex-col gap-6"
       >
         <FormField
