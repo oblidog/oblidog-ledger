@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from calendar import monthrange
-from datetime import date, timedelta
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import select
@@ -16,6 +15,8 @@ from app.domain import (
     ObligationLifecycle,
     ValueState,
 )
+from app.domain.business_calendar import BusinessCalendar
+from app.domain.payment_schedule import payment_for_period
 from app.models import Category, Obligation
 
 
@@ -23,14 +24,11 @@ def _due_date_for_period(*, category: Category, period: BillingPeriod) -> date |
     if category.first_due_date is None:
         return None
 
-    due_date = date(
-        period.year,
-        period.month,
-        min(category.first_due_date.day, monthrange(period.year, period.month)[1]),
-    )
-    while due_date.weekday() >= 5:
-        due_date -= timedelta(days=1)
-    return due_date
+    return payment_for_period(
+        first_due_date=category.first_due_date,
+        period=period,
+        calendar=BusinessCalendar(category.ledger.business_calendar_country),
+    ).due_date
 
 
 def get_or_create_obligation(

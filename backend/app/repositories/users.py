@@ -12,6 +12,8 @@ USER_UPDATE_FIELDS = {
     "is_active",
     "is_superuser",
     "session_version",
+    "daily_report_enabled",
+    "weekly_report_enabled",
 }
 
 

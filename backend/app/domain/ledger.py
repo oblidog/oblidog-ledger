@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
+from app.domain.currencies import Currency
+
 
 class LedgerAccessRole(StrEnum):
     OWNER = "owner"
@@ -21,6 +23,8 @@ class Ledger:
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    business_calendar_country: str = "PL"
+    default_currency: Currency = Currency.PLN
 
 
 @dataclass(slots=True)

@@ -8,6 +8,7 @@ import { Archive, ArrowLeft, BookOpen, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { LedgersService } from "@/client"
+import { LedgerPreferences } from "@/components/LedgerSettings/LedgerPreferences"
 import LedgerSharing from "@/components/LedgerSettings/LedgerSharing"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -189,6 +190,7 @@ function LedgerSettings() {
           </div>
         </CardContent>
       </Card>
+      <LedgerPreferences key={ledgerId} ledger={ledger} />
       <LedgerSharing ledgerId={ledgerId} />
 
       <Card className="border-destructive/50">

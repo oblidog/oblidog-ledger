@@ -237,6 +237,77 @@ export const CategoryAmountHistoryPublicSchema = {
     title: 'CategoryAmountHistoryPublic'
 } as const;
 
+export const CategoryCounterpartyApplySchema = {
+    properties: {
+        counterparty_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Counterparty Id'
+        },
+        period_year: {
+            type: 'integer',
+            maximum: 9999,
+            minimum: 1,
+            title: 'Period Year'
+        },
+        period_month: {
+            type: 'integer',
+            maximum: 12,
+            minimum: 1,
+            title: 'Period Month'
+        },
+        overwrite: {
+            type: 'boolean',
+            title: 'Overwrite',
+            default: false
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'counterparty_id',
+        'period_year',
+        'period_month'
+    ],
+    title: 'CategoryCounterpartyApply'
+} as const;
+
+export const CategoryCounterpartyPreviewSchema = {
+    properties: {
+        counterparty: {
+            $ref: '#/components/schemas/CounterpartySummaryPublic'
+        },
+        period_year: {
+            type: 'integer',
+            title: 'Period Year'
+        },
+        period_month: {
+            type: 'integer',
+            title: 'Period Month'
+        },
+        periods: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Periods'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'counterparty',
+        'period_year',
+        'period_month',
+        'periods',
+        'count'
+    ],
+    title: 'CategoryCounterpartyPreview'
+} as const;
+
 export const CategoryCreateSchema = {
     properties: {
         category_group_id: {
@@ -307,8 +378,14 @@ export const CategoryCreateSchema = {
             title: 'First Due Date'
         },
         currency: {
-            $ref: '#/components/schemas/Currency',
-            default: 'PLN'
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/Currency'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -821,8 +898,14 @@ export const CategoryUpdateSchema = {
             title: 'First Due Date'
         },
         currency: {
-            $ref: '#/components/schemas/Currency',
-            default: 'PLN'
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/Currency'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     additionalProperties: false,
@@ -2340,6 +2423,21 @@ export const LedgerAccessRoleSchema = {
 
 export const LedgerCreateSchema = {
     properties: {
+        business_calendar_country: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Business Calendar Country'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency',
+            default: 'PLN'
+        },
         name: {
             type: 'string',
             maxLength: 255,
@@ -2449,6 +2547,40 @@ export const LedgerMembersPublicSchema = {
     title: 'LedgerMembersPublic'
 } as const;
 
+export const LedgerPreferenceOptionsSchema = {
+    properties: {
+        countries: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Countries'
+        },
+        currencies: {
+            items: {
+                $ref: '#/components/schemas/Currency'
+            },
+            type: 'array',
+            title: 'Currencies'
+        },
+        default_business_calendar_country: {
+            type: 'string',
+            title: 'Default Business Calendar Country'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency'
+        }
+    },
+    type: 'object',
+    required: [
+        'countries',
+        'currencies',
+        'default_business_calendar_country',
+        'default_currency'
+    ],
+    title: 'LedgerPreferenceOptions'
+} as const;
+
 export const LedgerPublicSchema = {
     properties: {
         id: {
@@ -2460,6 +2592,13 @@ export const LedgerPublicSchema = {
             type: 'string',
             format: 'uuid',
             title: 'Owner User Id'
+        },
+        business_calendar_country: {
+            type: 'string',
+            title: 'Business Calendar Country'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency'
         },
         name: {
             type: 'string',
@@ -2491,6 +2630,8 @@ export const LedgerPublicSchema = {
     required: [
         'id',
         'owner_user_id',
+        'business_calendar_country',
+        'default_currency',
         'name',
         'description',
         'created_at',
@@ -2538,6 +2679,27 @@ export const LedgerShareSchema = {
 
 export const LedgerUpdateSchema = {
     properties: {
+        business_calendar_country: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Business Calendar Country'
+        },
+        default_currency: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/Currency'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
         name: {
             type: 'string',
             maxLength: 255,
@@ -3893,6 +4055,108 @@ export const RecurrenceUnitSchema = {
     title: 'RecurrenceUnit'
 } as const;
 
+export const SchedulePreviewPublicSchema = {
+    properties: {
+        period_year: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Period Year'
+        },
+        period_month: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Period Month'
+        },
+        scheduled_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Scheduled Date'
+        },
+        due_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Due Date'
+        },
+        calendar_country: {
+            type: 'string',
+            title: 'Calendar Country'
+        }
+    },
+    type: 'object',
+    required: [
+        'period_year',
+        'period_month',
+        'scheduled_date',
+        'due_date',
+        'calendar_country'
+    ],
+    title: 'SchedulePreviewPublic'
+} as const;
+
+export const SchedulePreviewRequestSchema = {
+    properties: {
+        first_due_date: {
+            type: 'string',
+            format: 'date',
+            title: 'First Due Date'
+        },
+        recurrence_interval: {
+            type: 'integer',
+            exclusiveMinimum: 0,
+            title: 'Recurrence Interval'
+        },
+        recurrence_unit: {
+            $ref: '#/components/schemas/RecurrenceUnit'
+        },
+        reference_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reference Date'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'first_due_date',
+        'recurrence_interval',
+        'recurrence_unit'
+    ],
+    title: 'SchedulePreviewRequest'
+} as const;
+
 export const SystemRunPublicSchema = {
     properties: {
         id: {
@@ -4466,6 +4730,44 @@ export const UserPublicSchema = {
         'created_at'
     ],
     title: 'UserPublic'
+} as const;
+
+export const UserReportPreferencesSchema = {
+    properties: {
+        daily_report_enabled: {
+            type: 'boolean',
+            title: 'Daily Report Enabled'
+        },
+        weekly_report_enabled: {
+            type: 'boolean',
+            title: 'Weekly Report Enabled'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'daily_report_enabled',
+        'weekly_report_enabled'
+    ],
+    title: 'UserReportPreferences'
+} as const;
+
+export const UserReportPreferencesUpdateSchema = {
+    properties: {
+        daily_report_enabled: {
+            type: 'boolean',
+            title: 'Daily Report Enabled',
+            default: true
+        },
+        weekly_report_enabled: {
+            type: 'boolean',
+            title: 'Weekly Report Enabled',
+            default: true
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    title: 'UserReportPreferencesUpdate'
 } as const;
 
 export const UserUpdateSchema = {

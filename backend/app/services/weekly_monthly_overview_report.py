@@ -67,7 +67,7 @@ class WeeklyMonthlyOverviewReport:
                 select(User)
                 .join(LedgerMembership, LedgerMembership.user_id == User.id)
                 .join(Ledger, Ledger.id == LedgerMembership.ledger_id)
-                .where(User.is_active, Ledger.is_active)
+                .where(User.is_active, Ledger.is_active, User.weekly_report_enabled)
                 .distinct()
                 .order_by(User.id)
             )

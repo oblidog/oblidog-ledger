@@ -2,17 +2,19 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from app.api.deps import (
+    CurrentActionActor,
     CurrentUser,
     SessionDep,
     get_current_active_superuser,
     require_ledger_edit_access,
     require_ledger_view_access,
 )
-from app.domain import ObligationKey
-from app.models import Category, Ledger, User
+from app.core.business_date import business_today
+from app.domain import BillingPeriod, ObligationKey
+from app.models import Category, Ledger, Obligation, User
 from app.schemas import (
     CategoryPublic,
     CounterpartiesPublic,
@@ -24,11 +26,131 @@ from app.schemas import (
     CounterpartyUpdate,
     Message,
 )
+from app.schemas.counterparties import (
+    CategoryCounterpartyApply,
+    CategoryCounterpartyPreview,
+)
 from app.services import counterparties as counterparty_service
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import ObligationNotFoundError
 
 router = APIRouter(tags=["counterparties"])
+
+
+def _category_for_counterparty_apply(
+    session: SessionDep, ledger: Ledger, category_id: uuid.UUID, *, lock: bool = False
+) -> Category:
+    statement = select(Category).where(
+        Category.id == category_id, Category.ledger_id == ledger.id
+    )
+    if lock:
+        statement = statement.with_for_update()
+    category = session.scalar(statement)
+    if category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    if category.counterparty_id is None:
+        raise HTTPException(
+            status_code=409, detail="Assign a category counterparty first"
+        )
+    return category
+
+
+def _counterparty_apply_targets(
+    session: SessionDep,
+    category: Category,
+    period: BillingPeriod,
+    *,
+    overwrite: bool,
+    lock: bool = False,
+) -> list[Obligation]:
+    following = period.next()
+    statement = (
+        select(Obligation)
+        .where(
+            Obligation.ledger_id == category.ledger_id,
+            Obligation.category_id == category.id,
+            or_(
+                (Obligation.period_year == period.year)
+                & (Obligation.period_month == period.month),
+                (Obligation.period_year == following.year)
+                & (Obligation.period_month == following.month),
+            ),
+            or_(
+                Obligation.counterparty_id.is_(None),
+                Obligation.counterparty_id != category.counterparty_id,
+            )
+            if overwrite
+            else Obligation.counterparty_id.is_(None),
+        )
+        .order_by(Obligation.id)
+    )
+    if lock:
+        statement = statement.with_for_update()
+    return list(session.scalars(statement))
+
+
+@router.get(
+    "/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations",
+    response_model=CategoryCounterpartyPreview,
+)
+def preview_category_counterparty_apply(
+    category_id: uuid.UUID,
+    session: SessionDep,
+    ledger: Ledger = Depends(require_ledger_edit_access),
+    overwrite: bool = False,
+) -> CategoryCounterpartyPreview:
+    category = _category_for_counterparty_apply(session, ledger, category_id)
+    period = BillingPeriod.from_date(business_today())
+    following = period.next()
+    return CategoryCounterpartyPreview(
+        counterparty=CounterpartySummaryPublic.model_validate(category.counterparty),
+        period_year=period.year,
+        period_month=period.month,
+        periods=[f"{item.year:04d}-{item.month:02d}" for item in (period, following)],
+        count=len(
+            _counterparty_apply_targets(session, category, period, overwrite=overwrite)
+        ),
+    )
+
+
+@router.post(
+    "/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations",
+    response_model=Message,
+)
+def apply_category_counterparty(
+    category_id: uuid.UUID,
+    assignment: CategoryCounterpartyApply,
+    session: SessionDep,
+    actor: CurrentActionActor,
+    ledger: Ledger = Depends(require_ledger_edit_access),
+) -> Message:
+    category = _category_for_counterparty_apply(session, ledger, category_id, lock=True)
+    period = BillingPeriod.from_date(business_today())
+    if category.counterparty_id != assignment.counterparty_id or (
+        period.year,
+        period.month,
+    ) != (assignment.period_year, assignment.period_month):
+        raise HTTPException(
+            status_code=409, detail="Category or period changed. Reload the preview."
+        )
+    counterparty = category.counterparty
+    if counterparty is None:
+        raise HTTPException(
+            status_code=409, detail="Assign a category counterparty first"
+        )
+    targets = _counterparty_apply_targets(
+        session, category, period, overwrite=assignment.overwrite, lock=True
+    )
+    for obligation in targets:
+        obligation_use_cases.assign_counterparty_with_audit(
+            session=session,
+            obligation=obligation,
+            counterparty_id=assignment.counterparty_id,
+            counterparty_name=counterparty.name,
+            actor=actor,
+        )
+    session.commit()
+    return Message(message=f"Counterparty applied to {len(targets)} obligations")
 
 
 def _counterparty_summary_or_none(

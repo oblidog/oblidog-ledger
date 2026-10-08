@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+import pytest
 from sqlalchemy.orm import Session
 
 from app.domain import (
@@ -186,3 +187,56 @@ def test_category_occurs_in_respects_month_and_year_recurrence(db: Session) -> N
 
     assert category.occurs_in(BillingPeriod(2027, 3))
     assert not category.occurs_in(BillingPeriod(2027, 4))
+
+
+@pytest.mark.parametrize(
+    ("anchor", "period", "expected"),
+    [
+        (date(2026, 3, 15), BillingPeriod(2026, 3), date(2026, 3, 13)),
+        (date(2026, 1, 31), BillingPeriod(2026, 2), date(2026, 2, 27)),
+        (date(2024, 1, 31), BillingPeriod(2024, 2), date(2024, 2, 29)),
+        (date(2026, 12, 27), BillingPeriod(2026, 12), date(2026, 12, 23)),
+        (date(2026, 11, 11), BillingPeriod(2026, 11), date(2026, 11, 10)),
+        (date(2026, 1, 1), BillingPeriod(2026, 1), date(2025, 12, 31)),
+    ],
+)
+def test_preview_matches_ensure_and_existing_dates_are_preserved(
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    anchor: date,
+    period: BillingPeriod,
+    expected: date,
+) -> None:
+    from app.core.config import settings
+    from app.domain.business_calendar import BusinessCalendar
+    from app.domain.payment_schedule import next_payment
+
+    monkeypatch.setattr(settings, "BUSINESS_CALENDAR_COUNTRY", "PL")
+    ledger, _, category = create_category_with_recurrence(db, first_due_date=anchor)
+    assert category.first_due_date is not None
+    preview = next_payment(
+        first_due_date=category.first_due_date,
+        interval=1,
+        unit=RecurrenceUnit.MONTH,
+        reference_date=min(date(period.year, period.month, 1), expected),
+        calendar=BusinessCalendar("PL"),
+    )
+    created = obligation_service.ensure_obligations_for_period(
+        session=db, ledger_id=ledger.id, current_period=period
+    )
+    obligation = next(
+        item
+        for item in created
+        if (item.period_year, item.period_month) == (period.year, period.month)
+    )
+    assert preview is not None
+    assert obligation.due_date == preview.due_date == expected
+    obligation.due_date = anchor
+    db.flush()
+    assert (
+        obligation_service.ensure_obligations_for_period(
+            session=db, ledger_id=ledger.id, current_period=period
+        )
+        == []
+    )
+    assert obligation.due_date == anchor

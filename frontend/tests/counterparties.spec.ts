@@ -101,6 +101,12 @@ test("manages category and obligation counterparties in contextual dialogs", asy
   }
   const category = categories.data.find((item) => item.name === categoryName)
   expect(category?.counterparty_id).toBe(firstCounterparty.id)
+  await expect(
+    page
+      .getByRole("row")
+      .filter({ hasText: categoryName })
+      .getByText(firstCounterpartyName, { exact: true }),
+  ).toBeVisible()
 
   await page
     .getByRole("button", { name: `More actions for ${categoryName}` })
@@ -144,7 +150,7 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     categories.data.find((item) => item.name === categoryName)?.counterparty_id,
   ).toBe(firstCounterparty.id)
 
-  await page.getByRole("link", { name: "Back to obligations" }).click()
+  await page.goto(`/ledgers/${ledgerId}`)
   await page.getByRole("button", { name: "New obligation" }).click()
   const createObligationDialog = page.getByRole("dialog")
   await createObligationDialog
@@ -217,5 +223,26 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     counterparty_id: string | null
   }
   expect(obligationBody.counterparty_id).toBeNull()
+  await page.goto(`/ledgers/${ledgerId}/categories`)
+  await page
+    .getByRole("button", { name: `More actions for ${categoryName}` })
+    .click()
+  await page
+    .getByRole("menuitem", { name: "Apply counterparty to obligations" })
+    .click()
+  const applyDialog = page.getByRole("dialog")
+  await expect(
+    applyDialog.getByText("1 obligations will be updated."),
+  ).toBeVisible()
+  await expect(applyDialog.getByRole("checkbox")).not.toBeChecked()
+  await applyDialog
+    .getByRole("button", { name: "Apply counterparty", exact: true })
+    .click()
+  await expect(applyDialog).toBeHidden()
+  obligationResponse = await readObligation()
+  obligationBody = (await obligationResponse.json()) as {
+    counterparty_id: string | null
+  }
+  expect(obligationBody.counterparty_id).toBe(firstCounterparty.id)
   await apiRequest.dispose()
 })

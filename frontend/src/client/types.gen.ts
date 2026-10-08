@@ -128,6 +128,51 @@ export type CategoryAmountHistoryPublic = {
 };
 
 /**
+ * CategoryCounterpartyApply
+ */
+export type CategoryCounterpartyApply = {
+    /**
+     * Counterparty Id
+     */
+    counterparty_id: string;
+    /**
+     * Period Year
+     */
+    period_year: number;
+    /**
+     * Period Month
+     */
+    period_month: number;
+    /**
+     * Overwrite
+     */
+    overwrite?: boolean;
+};
+
+/**
+ * CategoryCounterpartyPreview
+ */
+export type CategoryCounterpartyPreview = {
+    counterparty: CounterpartySummaryPublic;
+    /**
+     * Period Year
+     */
+    period_year: number;
+    /**
+     * Period Month
+     */
+    period_month: number;
+    /**
+     * Periods
+     */
+    periods: Array<string>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * CategoryCreate
  */
 export type CategoryCreate = {
@@ -157,7 +202,7 @@ export type CategoryCreate = {
      * First Due Date
      */
     first_due_date?: string | null;
-    currency?: Currency;
+    currency?: Currency | null;
 };
 
 /**
@@ -405,7 +450,7 @@ export type CategoryUpdate = {
      * First Due Date
      */
     first_due_date?: string | null;
-    currency?: Currency;
+    currency?: Currency | null;
 };
 
 /**
@@ -1164,6 +1209,11 @@ export type LedgerAccessRole = 'owner' | 'editor' | 'viewer';
  */
 export type LedgerCreate = {
     /**
+     * Business Calendar Country
+     */
+    business_calendar_country?: string | null;
+    default_currency?: Currency;
+    /**
      * Name
      */
     name: string;
@@ -1222,6 +1272,25 @@ export type LedgerMembersPublic = {
 };
 
 /**
+ * LedgerPreferenceOptions
+ */
+export type LedgerPreferenceOptions = {
+    /**
+     * Countries
+     */
+    countries: Array<string>;
+    /**
+     * Currencies
+     */
+    currencies: Array<Currency>;
+    /**
+     * Default Business Calendar Country
+     */
+    default_business_calendar_country: string;
+    default_currency: Currency;
+};
+
+/**
  * LedgerPublic
  */
 export type LedgerPublic = {
@@ -1233,6 +1302,11 @@ export type LedgerPublic = {
      * Owner User Id
      */
     owner_user_id: string;
+    /**
+     * Business Calendar Country
+     */
+    business_calendar_country: string;
+    default_currency: Currency;
     /**
      * Name
      */
@@ -1270,6 +1344,11 @@ export type LedgerShare = {
  * LedgerUpdate
  */
 export type LedgerUpdate = {
+    /**
+     * Business Calendar Country
+     */
+    business_calendar_country?: string | null;
+    default_currency?: Currency | null;
     /**
      * Name
      */
@@ -1918,6 +1997,51 @@ export type PeriodPaymentSummaryPublic = {
 export type RecurrenceUnit = 'month' | 'year';
 
 /**
+ * SchedulePreviewPublic
+ */
+export type SchedulePreviewPublic = {
+    /**
+     * Period Year
+     */
+    period_year: number | null;
+    /**
+     * Period Month
+     */
+    period_month: number | null;
+    /**
+     * Scheduled Date
+     */
+    scheduled_date: string | null;
+    /**
+     * Due Date
+     */
+    due_date: string | null;
+    /**
+     * Calendar Country
+     */
+    calendar_country: string;
+};
+
+/**
+ * SchedulePreviewRequest
+ */
+export type SchedulePreviewRequest = {
+    /**
+     * First Due Date
+     */
+    first_due_date: string;
+    /**
+     * Recurrence Interval
+     */
+    recurrence_interval: number;
+    recurrence_unit: RecurrenceUnit;
+    /**
+     * Reference Date
+     */
+    reference_date?: string | null;
+};
+
+/**
  * SystemRunPublic
  */
 export type SystemRunPublic = {
@@ -2222,6 +2346,34 @@ export type UserPublic = {
 };
 
 /**
+ * UserReportPreferences
+ */
+export type UserReportPreferences = {
+    /**
+     * Daily Report Enabled
+     */
+    daily_report_enabled: boolean;
+    /**
+     * Weekly Report Enabled
+     */
+    weekly_report_enabled: boolean;
+};
+
+/**
+ * UserReportPreferencesUpdate
+ */
+export type UserReportPreferencesUpdate = {
+    /**
+     * Daily Report Enabled
+     */
+    daily_report_enabled?: boolean;
+    /**
+     * Weekly Report Enabled
+     */
+    weekly_report_enabled?: boolean;
+};
+
+/**
  * UserUpdate
  */
 export type UserUpdate = {
@@ -2474,6 +2626,22 @@ export type LoginRecoverPasswordHtmlContentResponses = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = LoginRecoverPasswordHtmlContentResponses[keyof LoginRecoverPasswordHtmlContentResponses];
+
+export type LedgersReadLedgerPreferenceOptionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ledgers/preference-options';
+};
+
+export type LedgersReadLedgerPreferenceOptionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: LedgerPreferenceOptions;
+};
+
+export type LedgersReadLedgerPreferenceOptionsResponse = LedgersReadLedgerPreferenceOptionsResponses[keyof LedgersReadLedgerPreferenceOptionsResponses];
 
 export type LedgersReadLedgersData = {
     body?: never;
@@ -3121,6 +3289,36 @@ export type AnalyticsReadRemainingPeriodCashflowResponses = {
 
 export type AnalyticsReadRemainingPeriodCashflowResponse = AnalyticsReadRemainingPeriodCashflowResponses[keyof AnalyticsReadRemainingPeriodCashflowResponses];
 
+export type CategoriesPreviewPaymentScheduleData = {
+    body: SchedulePreviewRequest;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/schedule-preview';
+};
+
+export type CategoriesPreviewPaymentScheduleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CategoriesPreviewPaymentScheduleError = CategoriesPreviewPaymentScheduleErrors[keyof CategoriesPreviewPaymentScheduleErrors];
+
+export type CategoriesPreviewPaymentScheduleResponses = {
+    /**
+     * Successful Response
+     */
+    200: SchedulePreviewPublic;
+};
+
+export type CategoriesPreviewPaymentScheduleResponse = CategoriesPreviewPaymentScheduleResponses[keyof CategoriesPreviewPaymentScheduleResponses];
+
 export type CategoriesReadCategoryGroupsData = {
     body?: never;
     path: {
@@ -3629,6 +3827,79 @@ export type CategoriesReadCategoryDataSchemaVersionResponses = {
 };
 
 export type CategoriesReadCategoryDataSchemaVersionResponse = CategoriesReadCategoryDataSchemaVersionResponses[keyof CategoriesReadCategoryDataSchemaVersionResponses];
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: {
+        /**
+         * Overwrite
+         */
+        overwrite?: boolean;
+    };
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations';
+};
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyError = CounterpartiesPreviewCategoryCounterpartyApplyErrors[keyof CounterpartiesPreviewCategoryCounterpartyApplyErrors];
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryCounterpartyPreview;
+};
+
+export type CounterpartiesPreviewCategoryCounterpartyApplyResponse = CounterpartiesPreviewCategoryCounterpartyApplyResponses[keyof CounterpartiesPreviewCategoryCounterpartyApplyResponses];
+
+export type CounterpartiesApplyCategoryCounterpartyData = {
+    body: CategoryCounterpartyApply;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/categories/{category_id}/counterparty/obligations';
+};
+
+export type CounterpartiesApplyCategoryCounterpartyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CounterpartiesApplyCategoryCounterpartyError = CounterpartiesApplyCategoryCounterpartyErrors[keyof CounterpartiesApplyCategoryCounterpartyErrors];
+
+export type CounterpartiesApplyCategoryCounterpartyResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type CounterpartiesApplyCategoryCounterpartyResponse = CounterpartiesApplyCategoryCounterpartyResponses[keyof CounterpartiesApplyCategoryCounterpartyResponses];
 
 export type CounterpartiesReadCounterpartiesData = {
     body?: never;
@@ -5545,6 +5816,47 @@ export type UsersUpdateUserMeResponses = {
 };
 
 export type UsersUpdateUserMeResponse = UsersUpdateUserMeResponses[keyof UsersUpdateUserMeResponses];
+
+export type UsersReadReportPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/report-preferences';
+};
+
+export type UsersReadReportPreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserReportPreferences;
+};
+
+export type UsersReadReportPreferencesResponse = UsersReadReportPreferencesResponses[keyof UsersReadReportPreferencesResponses];
+
+export type UsersUpdateReportPreferencesData = {
+    body: UserReportPreferencesUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/report-preferences';
+};
+
+export type UsersUpdateReportPreferencesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UsersUpdateReportPreferencesError = UsersUpdateReportPreferencesErrors[keyof UsersUpdateReportPreferencesErrors];
+
+export type UsersUpdateReportPreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserReportPreferences;
+};
+
+export type UsersUpdateReportPreferencesResponse = UsersUpdateReportPreferencesResponses[keyof UsersUpdateReportPreferencesResponses];
 
 export type UsersUpdatePasswordMeData = {
     body: UpdatePassword;

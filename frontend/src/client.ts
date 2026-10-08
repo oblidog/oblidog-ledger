@@ -124,6 +124,9 @@ export const AnalyticsService = {
   ),
 }
 export const CategoriesService = {
+  previewPaymentSchedule: request(
+    generated.CategoriesService.previewPaymentSchedule<true>,
+  ),
   archiveCategory: request(generated.CategoriesService.archiveCategory<true>),
   archiveCategoryGroup: request(
     generated.CategoriesService.archiveCategoryGroup<true>,
@@ -152,6 +155,9 @@ export const CategoriesService = {
   ),
 }
 export const LedgersService = {
+  readLedgerPreferenceOptions: request(
+    generated.LedgersService.readLedgerPreferenceOptions<true>,
+  ),
   createLedger: request(generated.LedgersService.createLedger<true>),
   deleteAllCategories: request(
     generated.LedgersService.deleteAllCategories<true>,
@@ -261,6 +267,12 @@ export const UserInvitationsService = {
   ),
 }
 export const UsersService = {
+  readReportPreferences: request(
+    generated.UsersService.readReportPreferences<true>,
+  ),
+  updateReportPreferences: request(
+    generated.UsersService.updateReportPreferences<true>,
+  ),
   deleteUser: request(generated.UsersService.deleteUser<true>),
   deleteUserMe: request(generated.UsersService.deleteUserMe<true>),
   readUserMe: request(generated.UsersService.readUserMe<true>),

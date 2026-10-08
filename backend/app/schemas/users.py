@@ -35,6 +35,20 @@ class UpdatePassword(BaseModel):
     new_password: PasswordStr
 
 
+class UserReportPreferences(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="forbid", strict=True)
+
+    daily_report_enabled: bool
+    weekly_report_enabled: bool
+
+
+class UserReportPreferencesUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    daily_report_enabled: bool = True
+    weekly_report_enabled: bool = True
+
+
 class UserPublic(UserBase):
     model_config = ConfigDict(from_attributes=True)
 

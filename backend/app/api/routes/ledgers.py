@@ -10,6 +10,12 @@ from app.api.deps import (
     require_ledger_owner_access,
     require_ledger_view_access,
 )
+from app.core.config import settings
+from app.domain import Currency
+from app.domain.business_calendar import (
+    supported_calendar_countries,
+    validate_calendar_country,
+)
 from app.models import Ledger, LedgerMembership
 from app.schemas import (
     LedgerCreate,
@@ -22,6 +28,7 @@ from app.schemas import (
     LedgerUpdate,
     Message,
 )
+from app.schemas.ledgers import LedgerPreferenceOptions
 from app.services import demo_limits
 from app.services import users as user_service
 from app.use_cases import ledgers as ledger_use_cases
@@ -48,6 +55,20 @@ def _to_ledger_member_public(membership: LedgerMembership) -> LedgerMemberPublic
         full_name=membership.user.full_name,
         role=membership.role,
         created_at=membership.created_at,
+    )
+
+
+@router.get("/preference-options", response_model=LedgerPreferenceOptions)
+def read_ledger_preference_options(
+    _current_user: CurrentUser,
+) -> LedgerPreferenceOptions:
+    return LedgerPreferenceOptions(
+        countries=supported_calendar_countries(),
+        currencies=list(Currency),
+        default_business_calendar_country=validate_calendar_country(
+            settings.BUSINESS_CALENDAR_COUNTRY
+        ),
+        default_currency=Currency.PLN,
     )
 
 
@@ -80,6 +101,8 @@ def create_ledger(
         owner_user_id=current_user.id,
         name=ledger_in.name,
         description=ledger_in.description,
+        business_calendar_country=ledger_in.business_calendar_country,
+        default_currency=ledger_in.default_currency,
     )
     return _to_ledger_public(ledger)
 
@@ -102,6 +125,8 @@ def update_ledger(
             ledger_id=ledger.id,
             name=ledger_in.name,
             description=ledger_in.description,
+            business_calendar_country=ledger_in.business_calendar_country,
+            default_currency=ledger_in.default_currency,
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

@@ -6,6 +6,7 @@ from datetime import date, datetime
 
 from app.domain.currencies import Currency
 from app.domain.obligations import BillingPeriod, DataSourcePolicy, RecurrenceUnit
+from app.domain.payment_schedule import occurs_in_period
 
 
 @dataclass(slots=True)
@@ -54,15 +55,9 @@ class Category:
         ):
             return False
 
-        anchor_period = BillingPeriod.from_date(self.first_due_date)
-        month_difference = (period.year - anchor_period.year) * 12 + (
-            period.month - anchor_period.month
-        )
-        if month_difference < 0:
-            return False
-        if self.recurrence_unit is RecurrenceUnit.MONTH:
-            return month_difference % self.recurrence_interval == 0
-        return (
-            period.month == anchor_period.month
-            and (period.year - anchor_period.year) % self.recurrence_interval == 0
+        return occurs_in_period(
+            first_due_date=self.first_due_date,
+            interval=self.recurrence_interval,
+            unit=self.recurrence_unit,
+            period=period,
         )
