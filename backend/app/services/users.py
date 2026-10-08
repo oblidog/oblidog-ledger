@@ -8,6 +8,7 @@ from app.core.security import get_password_hash, verify_password
 from app.models import User
 from app.repositories import users as user_repository
 from app.schemas import UserCreate, UserUpdate, UserUpdateMe
+from app.schemas.users import UserReportPreferencesUpdate
 
 email_adapter = TypeAdapter(EmailStr)
 
@@ -104,6 +105,16 @@ def update_user_me(
         session=session,
         db_user=current_user,
         updates=updates,
+    )
+
+
+def update_report_preferences(
+    *, session: Session, current_user: User, preferences: UserReportPreferencesUpdate
+) -> User:
+    return user_repository.update_user(
+        session=session,
+        db_user=current_user,
+        updates=preferences.model_dump(exclude_unset=True),
     )
 
 

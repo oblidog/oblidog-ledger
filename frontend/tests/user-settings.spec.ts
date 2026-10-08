@@ -4,7 +4,7 @@ import { createUser } from "./utils/privateApi.ts"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Password", "Danger zone"]
+const tabs = ["My profile", "Password", "Reports", "Danger zone"]
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
@@ -19,6 +19,59 @@ test("All tabs are visible", async ({ page }) => {
   for (const tab of tabs) {
     await expect(page.getByRole("tab", { name: tab })).toBeVisible()
   }
+})
+
+test.describe("Report preferences", () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("Report toggles save independently and survive reload", async ({
+    page,
+  }) => {
+    const email = randomEmail()
+    const password = randomPassword()
+    await createUser({ email, password })
+    await logInUser(page, email, password)
+    await page.goto("/settings")
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+
+    const daily = page.getByRole("checkbox", {
+      name: "Daily report",
+      exact: true,
+    })
+    const weekly = page.getByRole("checkbox", {
+      name: "Weekly report",
+      exact: true,
+    })
+    const save = page.getByRole("button", { name: "Save", exact: true })
+    await expect(daily).toBeChecked()
+    await expect(weekly).toBeChecked()
+    await expect(save).toBeDisabled()
+
+    await daily.uncheck()
+    await save.click()
+    await expect(page.getByText("Report preferences saved")).toBeVisible()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+    await expect(daily).not.toBeChecked()
+    await expect(weekly).toBeChecked()
+
+    await weekly.uncheck()
+    await save.click()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+    await expect(daily).not.toBeChecked()
+    await expect(weekly).not.toBeChecked()
+
+    await daily.check()
+    await save.click()
+    await expect(save).toBeDisabled()
+    await page.reload()
+    await page.getByRole("tab", { name: "Reports", exact: true }).click()
+    await expect(daily).toBeChecked()
+    await expect(weekly).not.toBeChecked()
+  })
 })
 
 test.describe("Edit user profile", () => {

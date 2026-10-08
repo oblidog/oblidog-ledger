@@ -267,6 +267,12 @@ export const UserInvitationsService = {
   ),
 }
 export const UsersService = {
+  readReportPreferences: request(
+    generated.UsersService.readReportPreferences<true>,
+  ),
+  updateReportPreferences: request(
+    generated.UsersService.updateReportPreferences<true>,
+  ),
   deleteUser: request(generated.UsersService.deleteUser<true>),
   deleteUserMe: request(generated.UsersService.deleteUserMe<true>),
   readUserMe: request(generated.UsersService.readUserMe<true>),

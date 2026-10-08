@@ -16,6 +16,7 @@ from app.schemas import (
     UserUpdate,
     UserUpdateMe,
 )
+from app.schemas.users import UserReportPreferences, UserReportPreferencesUpdate
 from app.services import users as user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -52,6 +53,25 @@ def update_user_me(
         raise HTTPException(
             status_code=409, detail="User with this email already exists"
         ) from caught_error
+
+
+@router.get("/me/report-preferences", response_model=UserReportPreferences)
+def read_report_preferences(current_user: CurrentUser) -> Any:
+    """Read own scheduled report preferences."""
+    return current_user
+
+
+@router.patch("/me/report-preferences", response_model=UserReportPreferences)
+def update_report_preferences(
+    *,
+    session: SessionDep,
+    preferences: UserReportPreferencesUpdate,
+    current_user: CurrentUser,
+) -> Any:
+    """Update own report toggles without changing the application schedule."""
+    return user_service.update_report_preferences(
+        session=session, current_user=current_user, preferences=preferences
+    )
 
 
 @router.patch("/me/password", response_model=Message)
