@@ -136,7 +136,7 @@ def test_only_owner_can_update_preferences(
             "default_currency": "EUR",
         },
     )
-    assert response.status_code == 403
+    assert response.status_code == 404
     db.refresh(ledger)
     assert ledger.business_calendar_country == "PL"
     assert ledger.default_currency == Currency.PLN

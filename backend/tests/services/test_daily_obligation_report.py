@@ -444,7 +444,9 @@ def test_daily_report_includes_only_actionable_accessible_integration_health(
 
 
 def test_report_selects_each_ledgers_calendar(db: Session) -> None:
+    from app.domain import DataSourcePolicy, RecurrenceUnit
     from app.services.daily_obligation_report import _select_sections
+    from app.services.obligations import get_or_create_obligation
     from app.use_cases import categories as category_use_cases
     from app.use_cases import ledgers as ledger_use_cases
     from tests.utils.user import create_random_user
@@ -467,17 +469,17 @@ def test_report_selects_each_ledgers_calendar(db: Session) -> None:
             category_group_id=group.id,
             name=country,
             code="TEST",
+            data_source_policy=DataSourcePolicy.HYBRID,
+            recurrence_interval=1,
+            recurrence_unit=RecurrenceUnit.MONTH,
+            first_due_date=date(2026, 11, 12),
         )
-        obligation = Obligation(
-            ledger_id=ledger.id,
-            category_id=category.id,
+        get_or_create_obligation(
+            session=db,
+            category=category,
+            period=BillingPeriod(2026, 11),
             lifecycle=ObligationLifecycle.READY,
-            period_year=2026,
-            period_month=11,
-            due_date=date(2026, 11, 12),
-            currency="PLN",
         )
-        db.add(obligation)
     db.commit()
     sections = _select_sections(session=db, user=owner, report_date=date(2026, 11, 9))
     assert [item.category_name for item in sections["ready_to_pay"]] == ["PL"]
