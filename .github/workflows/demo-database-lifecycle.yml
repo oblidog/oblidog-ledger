@@ -16,6 +16,11 @@ on:
           - initialize
         required: true
         default: migrate
+      deploy_after_migration:
+        description: Trigger backend dev Preview deployment after successful migration (test hook)
+        type: boolean
+        required: false
+        default: false
       confirmation:
         description: For initialize only, type replace-demo-ledger
         type: string
@@ -56,7 +61,7 @@ jobs:
       # This deploy hook must point to the backend project's dev Preview branch.
       # Enable only after disabling Vercel's independent Git auto-deploys.
       - name: Trigger backend Preview deployment after successful migration
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.action == 'migrate' && inputs.deploy_after_migration)
         env:
           VERCEL_DEMO_BACKEND_DEPLOY_HOOK: ${{ secrets.VERCEL_DEMO_BACKEND_DEPLOY_HOOK }}
         run: |
@@ -64,5 +69,5 @@ jobs:
             echo "::error::Configure VERCEL_DEMO_BACKEND_DEPLOY_HOOK in demo-preview before enabling gated deployments."
             exit 1
           fi
-          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors \\
+          curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors \
             --max-time 30 --request POST "$VERCEL_DEMO_BACKEND_DEPLOY_HOOK" >/dev/null
