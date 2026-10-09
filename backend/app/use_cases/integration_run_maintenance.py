@@ -13,13 +13,17 @@ RETENTION_DAYS = 90
 def maintain_run_history(session: Session, *, now: datetime) -> dict[str, int]:
     timed_out = 0
     # Lock each integration to serialize reconciliation with start/finish requests.
-    expired = list(session.scalars(
-        select(Integration)
-        .where(Integration.current_run_id.is_not(None),
-               Integration.current_finished_at.is_(None),
-               Integration.current_deadline_at <= now)
-        .with_for_update()
-    ))
+    expired = list(
+        session.scalars(
+            select(Integration)
+            .where(
+                Integration.current_run_id.is_not(None),
+                Integration.current_finished_at.is_(None),
+                Integration.current_deadline_at <= now,
+            )
+            .with_for_update()
+        )
+    )
     for integration in expired:
         run = session.get(IntegrationRun, integration.current_run_id)
         if run is not None and run.finished_at is None:
@@ -36,14 +40,14 @@ def maintain_run_history(session: Session, *, now: datetime) -> dict[str, int]:
             IntegrationRun.finished_at.is_not(None),
         )
     )
-    deleted_integrations = int(getattr(integrations_result, 'rowcount', 0) or 0)
+    deleted_integrations = int(getattr(integrations_result, "rowcount", 0) or 0)
     system_runs_result = session.execute(
         delete(SystemRun).where(
             SystemRun.started_at < cutoff,
             SystemRun.status != SystemRunStatus.RUNNING,
         )
     )
-    deleted_system_runs = int(getattr(system_runs_result, 'rowcount', 0) or 0)
+    deleted_system_runs = int(getattr(system_runs_result, "rowcount", 0) or 0)
     return {
         "timed_out": timed_out,
         "deleted_integration_runs": deleted_integrations,
