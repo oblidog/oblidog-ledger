@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.models import Integration, IntegrationRun, SystemRun
 from app.domain.system_run import SystemRunStatus
+from app.models import Integration, IntegrationRun, SystemRun
 
 RETENTION_DAYS = 90
 
