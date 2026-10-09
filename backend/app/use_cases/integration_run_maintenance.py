@@ -30,20 +30,20 @@ def maintain_run_history(session: Session, *, now: datetime) -> dict[str, int]:
             timed_out += 1
         # Keep the existing dynamic timed_out health until a newer run starts.
     cutoff = now - timedelta(days=RETENTION_DAYS)
-    deleted_integrations = session.execute(
+    integrations_result = session.execute(
         delete(IntegrationRun).where(
             IntegrationRun.started_at < cutoff,
             IntegrationRun.finished_at.is_not(None),
         )
     )
-    deleted_integrations = getattr(deleted_integrations, 'rowcount', 0) or 0
-    deleted_system_runs = session.execute(
+    deleted_integrations = int(getattr(integrations_result, 'rowcount', 0) or 0)
+    system_runs_result = session.execute(
         delete(SystemRun).where(
             SystemRun.started_at < cutoff,
             SystemRun.status != SystemRunStatus.RUNNING,
         )
     )
-    deleted_system_runs = getattr(deleted_system_runs, 'rowcount', 0) or 0
+    deleted_system_runs = int(getattr(system_runs_result, 'rowcount', 0) or 0)
     return {
         "timed_out": timed_out,
         "deleted_integration_runs": deleted_integrations,
