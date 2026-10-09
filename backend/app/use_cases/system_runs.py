@@ -207,7 +207,6 @@ class ScheduledReportsTask:
 
 
 
-
 class MaintenanceCleanupTask:
     name = "maintenance_cleanup"
     order = 400
@@ -230,6 +229,7 @@ class MaintenanceCleanupTask:
             **maintain_run_history(session, now=datetime.now(UTC))
         }
         return TaskResult(summary)
+
 
 SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
     cast(SystemRunTask, LegacyImportTask()),
