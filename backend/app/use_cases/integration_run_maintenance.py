@@ -13,22 +13,38 @@ RETENTION_DAYS = 90
 
 def maintain_run_history(session: Session, *, now: datetime) -> dict[str, int]:
     timed_out = 0
-    # Lock each integration to serialize reconciliation with start/finish requests.
+    # Lock parent integrations in a stable order, just like start/finish requests.
+    # Inspect history rather than the snapshot: a newer run may have replaced
+    # current_run_id before maintenance gets a chance to reconcile the old run.
     expired = list(
         session.scalars(
             select(Integration)
             .where(
-                Integration.current_run_id.is_not(None),
-                Integration.current_finished_at.is_(None),
-                Integration.current_deadline_at <= now,
+                select(IntegrationRun.id)
+                .where(
+                    IntegrationRun.integration_id == Integration.id,
+                    IntegrationRun.finished_at.is_(None),
+                    IntegrationRun.deadline_at <= now,
+                )
+                .exists()
             )
+            .order_by(Integration.id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
     )
     for integration in expired:
-        run = session.get(IntegrationRun, integration.current_run_id)
-        if run is not None and run.finished_at is None:
-            run.finished_at = integration.current_deadline_at
+        runs = session.scalars(
+            select(IntegrationRun)
+            .where(
+                IntegrationRun.integration_id == integration.id,
+                IntegrationRun.finished_at.is_(None),
+                IntegrationRun.deadline_at <= now,
+            )
+            .execution_options(populate_existing=True)
+        )
+        for run in runs:
+            run.finished_at = run.deadline_at
             run.result = "timed_out"
             run.error_code = "run_timeout"
             run.error_message = "Integration run exceeded its deadline"

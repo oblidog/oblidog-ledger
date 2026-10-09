@@ -134,6 +134,47 @@ def test_timeout_reconciliation_is_repeatable_and_late_finish_is_supported(
     assert completed.result == "success"
 
 
+def test_timeout_reconciles_superseded_run_and_retention_removes_it(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    item = make_integration(db)
+    now = datetime.now(UTC)
+    old = now - timedelta(days=2)
+    first_id, second_id = uuid.uuid4(), uuid.uuid4()
+    monkeypatch.setattr(integrations, "get_datetime_utc", lambda: old)
+    start(db, item, first_id)
+    monkeypatch.setattr(integrations, "get_datetime_utc", lambda: now)
+    start(db, item, second_id)
+
+    summary = maintain_run_history(db, now=now)
+    db.commit()
+    assert summary["timed_out"] == 1
+    assert summary["deleted_integration_runs"] == 0
+    db.expire_all()
+    first = db.get(IntegrationRun, first_id)
+    second = db.get(IntegrationRun, second_id)
+    assert first is not None
+    assert first.result == "timed_out"
+    assert first.finished_at == first.deadline_at
+    assert first.error_code == "run_timeout"
+    assert second is not None
+    assert second.finished_at is None
+    assert second.result is None
+    assert item.current_run_id == second_id
+    assert item.current_finished_at is None
+
+    assert maintain_run_history(db, now=now)["timed_out"] == 0
+    db.commit()
+    finish(db, item, second_id)
+    assert second.result == "success"
+
+    summary = maintain_run_history(db, now=now + timedelta(days=89))
+    db.commit()
+    assert summary["deleted_integration_runs"] == 1
+    assert db.get(IntegrationRun, first_id) is None
+    assert db.get(IntegrationRun, second_id) is not None
+
+
 def test_retention_keeps_active_runs_and_cascades_system_steps(db: Session) -> None:
     item = make_integration(db)
     now = datetime.now(UTC)
