@@ -225,7 +225,9 @@ def revoke_integration_credential(
     response_model=IntegrationRunsPublic,
 )
 def list_integration_runs(
-    *, session: SessionDep, integration_id: uuid.UUID,
+    *,
+    session: SessionDep,
+    integration_id: uuid.UUID,
     ledger: Ledger = Depends(require_ledger_view_access),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
