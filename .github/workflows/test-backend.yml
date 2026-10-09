@@ -1,6 +1,7 @@
 name: Test Backend
 
 on:
+  workflow_dispatch:
   pull_request:
     types:
       - opened
@@ -33,6 +34,9 @@ env:
 
 jobs:
   test-backend:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -159,6 +163,19 @@ jobs:
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
         working-directory: backend
+      - name: Export XML coverage report
+        if: steps.scope.outputs.run_heavy == 'true'
+        run: uv run coverage xml -o coverage.xml
+        working-directory: backend
+      - name: Upload backend coverage to Codecov
+        if: steps.scope.outputs.run_heavy == 'true'
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
+        with:
+          use_oidc: true
+          files: backend/coverage.xml
+          flags: backend
+          disable_search: true
+          fail_ci_if_error: false
       - name: Export integration OpenAPI schema
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run python scripts/export_integration_openapi.py
