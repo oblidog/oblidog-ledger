@@ -29,7 +29,7 @@ function Layout() {
       <SidebarInset>
         <DemoBanner />
         <MobileShell />
-        <header className="sticky top-0 z-10 hidden h-16 shrink-0 items-center gap-2 border-b px-4 md:flex">
+        <header className="sticky top-0 z-10 hidden h-16 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex">
           <SidebarTrigger className="-ml-1 text-muted-foreground" />
         </header>
         <main className="flex-1 p-4 pb-20 md:p-8">

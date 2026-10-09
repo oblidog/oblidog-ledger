@@ -108,8 +108,15 @@ cd oblidog-ledger
 curl -fsSL https://raw.githubusercontent.com/oblidog/oblidog-ledger/main/scripts/install.sh | bash
 ```
 
-Edit `.env`: replace the placeholder secrets, choose a published immutable
-`TAG`, and review the public URLs and bind addresses. Then validate the
+Edit `.env`: set a **non-empty, persistent `SECRET_KEY`** (for example,
+`openssl rand -hex 32`), replace the other placeholder secrets, choose a
+published immutable `TAG`, and review the public URLs and bind addresses.
+The backend no longer generates a signing key when `SECRET_KEY` is absent:
+missing or empty values prevent startup. Keep the same secret across restarts
+and workers to preserve existing sessions. Configure it explicitly for local
+development, isolated tests, image-build/schema-export steps that import
+backend settings, and Vercel demo environment variables. Do not commit real
+secrets; use disposable dummy values for build-only contexts. Then validate the
 configuration and start the stack:
 
 ```bash
