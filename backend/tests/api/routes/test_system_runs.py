@@ -40,7 +40,12 @@ def test_administrator_can_start_manual_run_and_inspect_history(
         "scheduled_reports",
         "maintenance_cleanup",
     }
-    assert next(step for step in run["steps"] if step["task_name"] == "scheduled_reports")["skip_reason"] == "not_configured"
+    assert (
+        next(step for step in run["steps"] if step["task_name"] == "scheduled_reports")[
+            "skip_reason"
+        ]
+        == "not_configured"
+    )
     assert {step["task_name"] for step in run["steps"]} >= {
         "ensure_obligations",
         "estimate_obligation_amounts",
