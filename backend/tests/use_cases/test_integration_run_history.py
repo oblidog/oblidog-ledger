@@ -21,7 +21,13 @@ from tests.utils.ledger_domain import create_category_tree
 
 def make_integration(db: Session) -> Integration:
     ledger, _, category = create_category_tree(db)
-
+    instance = Integration(
+        ledger_id=ledger.id,
+        category_id=category.id,
+        name="test",
+        enabled=True,
+        enabled_at=datetime.now(UTC),
+    )
     db.add(instance)
     db.commit()
     db.refresh(instance)
