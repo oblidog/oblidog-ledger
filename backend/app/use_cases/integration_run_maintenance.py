@@ -35,13 +35,15 @@ def maintain_run_history(session: Session, *, now: datetime) -> dict[str, int]:
             IntegrationRun.started_at < cutoff,
             IntegrationRun.finished_at.is_not(None),
         )
-    ).rowcount or 0
+    )
+    deleted_integrations = getattr(deleted_integrations, 'rowcount', 0) or 0
     deleted_system_runs = session.execute(
         delete(SystemRun).where(
             SystemRun.started_at < cutoff,
             SystemRun.status != SystemRunStatus.RUNNING,
         )
-    ).rowcount or 0
+    )
+    deleted_system_runs = getattr(deleted_system_runs, 'rowcount', 0) or 0
     return {
         "timed_out": timed_out,
         "deleted_integration_runs": deleted_integrations,
