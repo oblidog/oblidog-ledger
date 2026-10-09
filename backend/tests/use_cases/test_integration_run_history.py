@@ -1,4 +1,5 @@
 """Database regression coverage for integration execution history and retention."""
+
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -36,19 +37,27 @@ def make_integration(db: Session) -> Integration:
 
 def start(db: Session, item: Integration, run_id: uuid.UUID) -> Integration:
     return integrations.start_run(
-        session=db, integration_id=item.id,
+        session=db,
+        integration_id=item.id,
         data=IntegrationRunStart(run_id=run_id, expected_revision=item.revision),
     )
 
 
-def finish(db: Session, item: Integration, run_id: uuid.UUID,
-           result: IntegrationResult = IntegrationResult.SUCCESS) -> Integration:
+def finish(
+    db: Session,
+    item: Integration,
+    run_id: uuid.UUID,
+    result: IntegrationResult = IntegrationResult.SUCCESS,
+) -> Integration:
     return integrations.finish_run(
         session=db, integration_id=item.id,
         data=IntegrationRunFinish(
-            run_id=run_id, result=result,
+            run_id=run_id,
+            result=result,
             changes_detected=False if result is IntegrationResult.SUCCESS else None,
-            error=None if result is IntegrationResult.SUCCESS else IntegrationRunError(
+            error=None
+            if result is IntegrationResult.SUCCESS
+            else IntegrationRunError(
                 code="provider_error", message="Provider unavailable"
             ),
         ),
