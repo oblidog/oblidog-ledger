@@ -224,7 +224,7 @@ class MaintenanceCleanupTask:
 
     def execute(self, *, session: Session, ledger: Ledger | None,
                 context: SystemRunContext) -> TaskResult:
-        summary: dict[str, object] = maintain_run_history(session, now=datetime.now(UTC))
+        summary: dict[str, object] = {**maintain_run_history(session, now=datetime.now(UTC))}
         return TaskResult(summary)
 
 SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
