@@ -1,12 +1,17 @@
 import pytest
 from pydantic import ValidationError
+from pydantic_settings import SettingsConfigDict
 
 from app.core.config import Settings
 
 
+class IsolatedSettings(Settings):
+    model_config = SettingsConfigDict(env_file=None, env_prefix="TEST_475_")
+
+
 @pytest.fixture
 def base_settings(monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
-    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("TEST_475_SECRET_KEY", raising=False)
     return {
         "PROJECT_NAME": "Test",
         "POSTGRES_SERVER": "localhost",
@@ -26,7 +31,7 @@ def make_settings(
     values["ENVIRONMENT"] = environment
     if secret is not None:
         values["SECRET_KEY"] = secret
-    return Settings.model_validate(values)
+    return IsolatedSettings.model_validate(values)
 
 
 def test_missing_secret_key_fails(base_settings: dict[str, str]) -> None:
@@ -35,9 +40,7 @@ def test_missing_secret_key_fails(base_settings: dict[str, str]) -> None:
 
 
 @pytest.mark.parametrize("secret", ["", "   "])
-def test_empty_secret_key_fails(
-    base_settings: dict[str, str], secret: str
-) -> None:
+def test_empty_secret_key_fails(base_settings: dict[str, str], secret: str) -> None:
     with pytest.raises(ValidationError, match="SECRET_KEY"):
         make_settings(base_settings, secret=secret)
 
