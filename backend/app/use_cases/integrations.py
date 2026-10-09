@@ -11,7 +11,7 @@ from app.domain.integrations import (
     IntegrationHealth,
     IntegrationResult,
 )
-from app.models import Category, Integration, IntegrationCredential
+from app.models import Category, Integration, IntegrationCredential, IntegrationRun
 from app.models.base import get_datetime_utc
 from app.schemas.integrations import (
     IntegrationCreate,
@@ -239,12 +239,19 @@ def start_run(
     now = get_datetime_utc()
     if execution_state(item, now) == IntegrationExecutionState.RUNNING:
         raise IntegrationConflictError(IntegrationConflictCode.RUN_IN_PROGRESS)
+    # A run UUID must never be reused by another instance.
+    if session.get(IntegrationRun, data.run_id) is not None:
+        raise IntegrationConflictError(IntegrationConflictCode.RUN_CONFLICT)
     item.current_run_id = data.run_id
     item.current_started_at = now
     item.current_deadline_at = now + timedelta(seconds=item.run_timeout_seconds)
     item.current_finished_at = None
     item.updated_at = now
     item.revision += 1
+    session.add(IntegrationRun(
+        id=data.run_id, integration_id=item.id,
+        started_at=item.current_started_at, deadline_at=item.current_deadline_at,
+    ))
     session.commit()
     session.refresh(item)
     return item
@@ -276,6 +283,14 @@ def finish_run(
         session.commit()
         return item
     now = get_datetime_utc()
+    history = session.get(IntegrationRun, data.run_id)
+    if history is None or history.integration_id != item.id:
+        raise IntegrationConflictError(IntegrationConflictCode.RUN_CONFLICT)
+    history.finished_at = now
+    history.result = data.result.value
+    history.changes_detected = data.changes_detected
+    history.error_code = code
+    history.error_message = message
     item.current_finished_at = now
     item.last_finished_at = now
     item.last_result = data.result.value
@@ -289,3 +304,16 @@ def finish_run(
     session.commit()
     session.refresh(item)
     return item
+
+
+def list_run_history(*, session: Session, ledger_id: uuid.UUID,
+                     integration_id: uuid.UUID, limit: int = 20,
+                     offset: int = 0) -> tuple[list[IntegrationRun], int]:
+    get_integration(session=session, ledger_id=ledger_id, integration_id=integration_id)
+    query = select(IntegrationRun).where(IntegrationRun.integration_id == integration_id)
+    count = session.scalar(select(func.count()).select_from(IntegrationRun).where(
+        IntegrationRun.integration_id == integration_id)) or 0
+    items = list(session.scalars(query.order_by(
+        IntegrationRun.started_at.desc(), IntegrationRun.id.desc()
+    ).limit(limit).offset(offset)))
+    return items, count
