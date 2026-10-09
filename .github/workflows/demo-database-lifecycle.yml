@@ -1,6 +1,11 @@
 name: Demo Database Lifecycle
 
 on:
+  push:
+    branches: [dev]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/demo-database-lifecycle.yml'
   workflow_dispatch:
     inputs:
       action:
@@ -44,6 +49,6 @@ jobs:
       - name: Apply requested demo database operation
         working-directory: backend
         env:
-          DEMO_ACTION: ${{ inputs.action }}
-          DEMO_CONFIRMATION: ${{ inputs.confirmation }}
+          DEMO_ACTION: ${{ github.event_name == 'push' && 'migrate' || inputs.action }}
+          DEMO_CONFIRMATION: ${{ inputs.confirmation || '' }}
         run: python scripts/run_vercel_demo_lifecycle.py "$DEMO_ACTION" --confirmation "$DEMO_CONFIRMATION"
