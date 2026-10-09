@@ -103,9 +103,13 @@ def test_timeout_reconciliation_is_repeatable_and_late_finish_is_supported(
     start(db, item, run_id)
     deadline = item.current_deadline_at
     assert deadline is not None
-    assert maintain_run_history(db, now=deadline + timedelta(seconds=1))["timed_out"] >= 1
+    assert (
+        maintain_run_history(db, now=deadline + timedelta(seconds=1))["timed_out"] >= 1
+    )
     db.commit()
-    assert maintain_run_history(db, now=deadline + timedelta(seconds=2))["timed_out"] == 0
+    assert (
+        maintain_run_history(db, now=deadline + timedelta(seconds=2))["timed_out"] == 0
+    )
     db.commit()
     assert (timed_out := db.get(IntegrationRun, run_id)) is not None
     assert timed_out.result == "timed_out"
@@ -119,28 +123,44 @@ def test_retention_keeps_active_runs_and_cascades_system_steps(db: Session) -> N
     now = datetime.now(UTC)
     old = now - timedelta(days=91)
     historical = IntegrationRun(
-        id=uuid.uuid4(), integration_id=item.id,
-        started_at=old, deadline_at=old + timedelta(minutes=30),
-        finished_at=old + timedelta(minutes=1), result="success",
+        id=uuid.uuid4(),
+        integration_id=item.id,
+        started_at=old,
+        deadline_at=old + timedelta(minutes=30),
+        finished_at=old + timedelta(minutes=1),
+        result="success",
     )
     active = IntegrationRun(
-        id=uuid.uuid4(), integration_id=item.id,
-        started_at=old, deadline_at=now + timedelta(hours=1),
+        id=uuid.uuid4(),
+        integration_id=item.id,
+        started_at=old,
+        deadline_at=now + timedelta(hours=1),
     )
     old_system = SystemRun(
-        status=SystemRunStatus.SUCCESS, trigger=SystemRunTrigger.SCHEDULED,
-        effective_at=old, timezone="UTC", business_date=old.date(),
-        started_at=old, finished_at=old,
+        status=SystemRunStatus.SUCCESS,
+        trigger=SystemRunTrigger.SCHEDULED,
+        effective_at=old,
+        timezone="UTC",
+        business_date=old.date(),
+        started_at=old,
+        finished_at=old,
     )
     running_system = SystemRun(
-        status=SystemRunStatus.RUNNING, trigger=SystemRunTrigger.SCHEDULED,
-        effective_at=old, timezone="UTC", business_date=old.date(), started_at=old,
+        status=SystemRunStatus.RUNNING,
+        trigger=SystemRunTrigger.SCHEDULED,
+        effective_at=old,
+        timezone="UTC",
+        business_date=old.date(),
+        started_at=old,
     )
     db.add_all([historical, active, old_system, running_system])
     db.flush()
     step = SystemRunStep(
-        system_run_id=old_system.id, task_name="test",
-        status=SystemRunStepStatus.SUCCEEDED, started_at=old, finished_at=old,
+        system_run_id=old_system.id,
+        task_name="test",
+        status=SystemRunStepStatus.SUCCEEDED,
+        started_at=old,
+        finished_at=old,
     )
     db.add(step)
     db.commit()
