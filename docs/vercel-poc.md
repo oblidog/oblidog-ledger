@@ -209,3 +209,32 @@ alone cannot prove the Neon project name. Never use the private VPS database.
   for the PoC but makes that backend alias publicly reachable. Preserve this
   constraint when designing the final public demo. No Production database
   connection or final demo domain was configured for this PoC.
+
+## Gated backend Preview deployment (#485)
+
+The Demo Database Lifecycle workflow now calls a Vercel deploy hook **only after**
+`alembic upgrade head` succeeds on a `dev` backend push. The hook is stored
+as the `VERCEL_DEMO_BACKEND_DEPLOY_HOOK` secret in the `demo-preview` GitHub
+Environment. It must be a deploy hook configured for the **backend project**
+and **dev branch**, not for Production or the frontend.
+
+**Activation checklist (do not merge and activate blindly):**
+
+1. Create the backend project's dev Preview deploy hook in Vercel and save its
+   URL as the environment secret. Treat the URL as a credential.
+2. Configure Vercel to **skip independent Git-triggered backend builds**, while
+   allowing deploy-hook-triggered builds. Test that a hook invocation still
+   creates a Preview deployment before turning off existing automatic deploys.
+   If the Vercel ignored-build configuration also suppresses deploy hooks,
+   use an authenticated Vercel CLI/API deployment instead; do not enable this
+   configuration until the behavior is verified.
+3. Verify a backend change merged to dev triggers one migration, then one
+   backend Preview deployment. Verify a failing migration triggers **none**.
+4. Verify a feature-branch push does not deploy the backend; frontend Preview
+   remains independent. Check the public `api.demo.oblidog.com` alias and login.
+
+The deploy-hook API is asynchronous: successful POST means Vercel accepted the
+request, **not** that the deployment passed. A deployment-ready check and
+smoke test are separate follow-ups. The existing workflow's path filters mean
+frontend-only merges do not redeploy the backend. The current auto-deploy
+configuration remains in place until the operator completes the cutover.
