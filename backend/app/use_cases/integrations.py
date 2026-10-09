@@ -306,14 +306,31 @@ def finish_run(
     return item
 
 
-def list_run_history(*, session: Session, ledger_id: uuid.UUID,
-                     integration_id: uuid.UUID, limit: int = 20,
-                     offset: int = 0) -> tuple[list[IntegrationRun], int]:
+def list_run_history(
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    integration_id: uuid.UUID,
+    limit: int = 20,
+    offset: int = 0,
+) -> tuple[list[IntegrationRun], int]:
     get_integration(session=session, ledger_id=ledger_id, integration_id=integration_id)
-    query = select(IntegrationRun).where(IntegrationRun.integration_id == integration_id)
-    count = session.scalar(select(func.count()).select_from(IntegrationRun).where(
-        IntegrationRun.integration_id == integration_id)) or 0
-    items = list(session.scalars(query.order_by(
-        IntegrationRun.started_at.desc(), IntegrationRun.id.desc()
-    ).limit(limit).offset(offset)))
+    query = select(IntegrationRun).where(
+        IntegrationRun.integration_id == integration_id
+    )
+    count = (
+        session.scalar(
+            select(func.count())
+            .select_from(IntegrationRun)
+            .where(IntegrationRun.integration_id == integration_id)
+        )
+        or 0
+    )
+    items = list(
+        session.scalars(
+            query.order_by(IntegrationRun.started_at.desc(), IntegrationRun.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+    )
     return items, count
