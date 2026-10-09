@@ -224,7 +224,7 @@ class MaintenanceCleanupTask:
 
     def execute(self, *, session: Session, ledger: Ledger | None,
                 context: SystemRunContext) -> TaskResult:
-        return TaskResult(maintain_run_history(session, now=datetime.now(UTC)))
+        return TaskResult(dict(maintain_run_history(session, now=datetime.now(UTC))))
 
 SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
     cast(SystemRunTask, LegacyImportTask()),
