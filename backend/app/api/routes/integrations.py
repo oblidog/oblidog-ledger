@@ -24,6 +24,8 @@ from app.schemas.integrations import (
     IntegrationCredentialCreated,
     IntegrationCredentialPublic,
     IntegrationPublic,
+    IntegrationRunPublic,
+    IntegrationRunsPublic,
     IntegrationsPublic,
     IntegrationUpdate,
 )
@@ -216,3 +218,29 @@ def revoke_integration_credential(
             session.commit()
             session.refresh(credential)
         return IntegrationCredentialPublic.model_validate(credential)
+
+
+@router.get(
+    "/ledgers/{ledger_id}/integrations/{integration_id}/runs",
+    response_model=IntegrationRunsPublic,
+)
+def list_integration_runs(
+    *,
+    session: SessionDep,
+    integration_id: uuid.UUID,
+    ledger: Ledger = Depends(require_ledger_view_access),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> IntegrationRunsPublic:
+    with integration_errors(session):
+        runs, count = use_cases.list_run_history(
+            session=session,
+            ledger_id=ledger.id,
+            integration_id=integration_id,
+            limit=limit,
+            offset=offset,
+        )
+        return IntegrationRunsPublic(
+            data=[IntegrationRunPublic.model_validate(run) for run in runs],
+            count=count,
+        )

@@ -5,6 +5,8 @@ import type {
   IntegrationPublic,
 } from "../src/client"
 
+import type { IntegrationRun } from "../src/components/Integrations/runHistoryApi"
+
 // These UI scenarios intercept every API request and never use a live database.
 test.use({ storageState: { cookies: [], origins: [] } })
 
@@ -52,10 +54,16 @@ const integration = (): IntegrationPublic => ({
   health: "never_run",
 })
 
-async function mockApi(page: Page, items: IntegrationPublic[] = []) {
+async function mockApi(
+  page: Page,
+  items: IntegrationPublic[] = [],
+  runs: IntegrationRun[] = [],
+) {
   const state = {
     items: structuredClone(items),
     create: null as IntegrationCreate | null,
+    historyError: false,
+    runOffsets: [] as number[],
   }
   const user = {
     id: "owner",
@@ -119,6 +127,16 @@ async function mockApi(page: Page, items: IntegrationPublic[] = []) {
         )
       }
       return reply({ data: state.items, count: state.items.length })
+    }
+    if (path === `/api/v1${root}/${integrationId}/runs`) {
+      if (state.historyError) return reply({ detail: "Unavailable" }, 500)
+      const offset = Number(url.searchParams.get("offset") ?? 0)
+      const limit = Number(url.searchParams.get("limit") ?? 20)
+      state.runOffsets.push(offset)
+      return reply({
+        data: runs.slice(offset, offset + limit),
+        count: runs.length,
+      })
     }
     const match = path.match(
       new RegExp(`^/api/v1${root}/([^/]+)(?:/credentials(?:/([^/]+))?)?$`),
@@ -205,4 +223,87 @@ test("actions menu links to the integration and its category data", async ({
     "href",
     `/ledgers/${ledgerId}/categories/${categoryId}/data?sort=desc`,
   )
+})
+
+const historyRun = (
+  index: number,
+  overrides: Partial<IntegrationRun> = {},
+): IntegrationRun => ({
+  id: `run-${index}`,
+  integration_id: integrationId,
+  started_at: now,
+  deadline_at: "2026-09-08T12:30:00Z",
+  finished_at: "2026-09-08T12:00:02Z",
+  result: "success",
+  changes_detected: false,
+  error_code: null,
+  error_message: null,
+  ...overrides,
+})
+
+test("run history shows outcomes on mobile and paginates older runs", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const runs = [
+    historyRun(0, {
+      result: null,
+      finished_at: null,
+      deadline_at: new Date(Date.now() + 3_600_000).toISOString(),
+    }),
+    historyRun(1, { result: null, finished_at: null }),
+    historyRun(2, {
+      result: "failure",
+      changes_detected: null,
+      error_code: "provider_error",
+      error_message: `Provider unavailable ${"x".repeat(200)}`,
+    }),
+    historyRun(3, { changes_detected: true }),
+    ...Array.from({ length: 17 }, (_, index) => historyRun(index + 4)),
+  ]
+  const state = await mockApi(page, [integration()], runs)
+  await page.goto(`${root}/${integrationId}`)
+  const history = page.getByRole("region", { name: "Run history" })
+  await expect(history.getByRole("listitem")).toHaveCount(20)
+  await expect(history.getByText("Running", { exact: true })).toBeVisible()
+  await expect(history.getByText("Timed out", { exact: true })).toBeVisible()
+  await expect(history.getByText("Failure", { exact: true })).toBeVisible()
+  await expect(
+    history.getByText("Changes detected", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    history.getByText("No changes", { exact: true }).first(),
+  ).toBeVisible()
+  await expect(
+    history.getByText("provider_error", { exact: true }),
+  ).toBeVisible()
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+  await history.getByRole("button", { name: "Older runs" }).click()
+  await expect(history.getByRole("listitem")).toHaveCount(1)
+  await expect(history.getByText("21–21 of 21 runs")).toBeVisible()
+  expect(state.runOffsets).toContain(20)
+  await history.getByRole("button", { name: "Newer runs" }).click()
+  await expect(history.getByRole("listitem")).toHaveCount(20)
+})
+
+test("run history can retry a failed load and displays its empty state", async ({
+  page,
+}) => {
+  const state = await mockApi(page, [integration()])
+  state.historyError = true
+  await page.goto(`${root}/${integrationId}`)
+  const history = page.getByRole("region", { name: "Run history" })
+  await expect(history.getByText("Could not load run history")).toBeVisible({
+    timeout: 15_000,
+  })
+  state.historyError = false
+  await history.getByRole("button", { name: "Retry history" }).click()
+  await expect(history.getByText("No runs recorded yet.")).toBeVisible()
+  await expect(
+    history.getByText("Could not load run history"),
+  ).not.toBeVisible()
 })

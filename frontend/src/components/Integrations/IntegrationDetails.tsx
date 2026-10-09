@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiUrl } from "@/config"
 import useAuth from "@/hooks/useAuth"
 import { IntegrationForm } from "./IntegrationForm"
+import { IntegrationRunHistory } from "./IntegrationRunHistory"
 import {
   changesLabel,
   dateTime,
@@ -169,7 +170,12 @@ export function IntegrationDetails({
               <Button
                 variant="outline"
                 disabled={integration.isFetching}
-                onClick={() => void integration.refetch()}
+                onClick={() => {
+                  void integration.refetch()
+                  void queryClient.invalidateQueries({
+                    queryKey: ["integration-runs", ledgerId, integrationId],
+                  })
+                }}
               >
                 <RefreshCw /> Refresh
               </Button>
@@ -309,40 +315,11 @@ export function IntegrationDetails({
             </CardContent>
           </Card>
 
-          <Card className="min-w-0">
-            <CardHeader>
-              <CardTitle>Recent activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {item.last_finished_at ? (
-                <div className="grid gap-1 text-sm sm:grid-cols-[auto_auto_1fr] sm:items-center sm:gap-x-4">
-                  <span
-                    className={
-                      item.last_result === "failure"
-                        ? "text-destructive"
-                        : "text-emerald-600"
-                    }
-                    aria-hidden="true"
-                  >
-                    {item.last_result === "failure" ? "✕" : "✓"}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {dateTime(item.last_finished_at)}
-                  </span>
-                  <span>
-                    {resultLabel(item)} ·{" "}
-                    <span className="text-muted-foreground">
-                      {changesLabel(item)}
-                    </span>
-                  </span>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No completed runs yet.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <IntegrationRunHistory
+            key={`${ledgerId}:${integrationId}`}
+            ledgerId={ledgerId}
+            integrationId={integrationId}
+          />
 
           <Card className="min-w-0">
             <CardHeader>
