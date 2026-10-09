@@ -135,6 +135,7 @@ validate_data restored
 printf '[db-restore-drill] Upgrading restored schema with %s...\n' "$BACKEND_IMAGE"
 docker run --rm --network "$network" \
   --env PROJECT_NAME=Oblidog \
+  --env SECRET_KEY=restore-drill-disposable-not-for-production-only \
   --env FIRST_SUPERUSER=restore-drill@example.com \
   --env FIRST_SUPERUSER_PASSWORD=restore-drill-password \
   --env POSTGRES_SERVER="$database_container" \
