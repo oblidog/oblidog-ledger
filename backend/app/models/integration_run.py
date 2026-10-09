@@ -1,4 +1,5 @@
 """Persisted execution history for integration instances."""
+
 import uuid
 from datetime import datetime
 
