@@ -248,10 +248,14 @@ def start_run(
     item.current_finished_at = None
     item.updated_at = now
     item.revision += 1
-    session.add(IntegrationRun(
-        id=data.run_id, integration_id=item.id,
-        started_at=item.current_started_at, deadline_at=item.current_deadline_at,
-    ))
+    session.add(
+        IntegrationRun(
+            id=data.run_id,
+            integration_id=item.id,
+            started_at=item.current_started_at,
+            deadline_at=item.current_deadline_at,
+        )
+    )
     session.commit()
     session.refresh(item)
     return item
