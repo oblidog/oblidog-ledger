@@ -36,7 +36,7 @@ def test_administrator_can_start_manual_run_and_inspect_history(
     assert run["trigger"] == "manual"
     assert run["status"] == "success"
     assert run["timezone"] == "Europe/Warsaw"
-    assert run["steps"][-1]["task_name"] == "scheduled_reports"
+    assert {step["task_name"] for step in run["steps"]} >= {"scheduled_reports", "maintenance_cleanup"}
     assert run["steps"][-1]["skip_reason"] == "not_configured"
     assert {step["task_name"] for step in run["steps"][:-1]} == {
         "ensure_obligations",
@@ -75,7 +75,7 @@ def test_manual_only_task_requires_explicit_selection(
     steps = response.json()["steps"]
     assert steps[0]["task_name"] == "legacy_import"
     assert steps[0]["skip_reason"] == "not_configured"
-    assert steps[-1]["task_name"] == "scheduled_reports"
+    assert {step["task_name"] for step in steps} >= {"scheduled_reports", "maintenance_cleanup"}
     assert {step["task_name"] for step in steps[1:-1]} == {
         "ensure_obligations",
         "estimate_obligation_amounts",
