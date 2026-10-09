@@ -54,7 +54,8 @@ def test_run_history_persists_multiple_runs_and_is_idempotent(db: Session) -> No
     assert first is not None
     assert first.finished_at is None
     start(db, item, first_id)
-    assert db.get(IntegrationRun, first_id).started_at == first.started_at
+    assert (retried := db.get(IntegrationRun, first_id)) is not None
+    assert retried.started_at == first.started_at
     finish(db, item, first_id)
     finish(db, item, first_id)
     start(db, item, second_id)
@@ -64,7 +65,8 @@ def test_run_history_persists_multiple_runs_and_is_idempotent(db: Session) -> No
     )
     assert count == 2
     assert {run.id for run in history} == {first_id, second_id}
-    assert db.get(IntegrationRun, second_id).error_code == "provider_error"
+    assert (failed := db.get(IntegrationRun, second_id)) is not None
+    assert failed.error_code == "provider_error"
 
 
 def test_history_is_ledger_isolated_and_paginated(db: Session) -> None:
@@ -97,9 +99,11 @@ def test_timeout_reconciliation_is_repeatable_and_late_finish_is_supported(db: S
     db.commit()
     assert maintain_run_history(db, now=deadline + timedelta(seconds=2))["timed_out"] == 0
     db.commit()
-    assert db.get(IntegrationRun, run_id).result == "timed_out"
+    assert (timed_out := db.get(IntegrationRun, run_id)) is not None
+    assert timed_out.result == "timed_out"
     finish(db, item, run_id)
-    assert db.get(IntegrationRun, run_id).result == "success"
+    assert (completed := db.get(IntegrationRun, run_id)) is not None
+    assert completed.result == "success"
 
 
 def test_retention_keeps_active_runs_and_cascades_system_steps(db: Session) -> None:
