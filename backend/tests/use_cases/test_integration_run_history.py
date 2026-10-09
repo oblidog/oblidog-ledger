@@ -21,8 +21,7 @@ from tests.utils.ledger_domain import create_category_tree
 
 def make_integration(db: Session) -> Integration:
     ledger, _, category = create_category_tree(db)
-    instance = Integration(ledger_id=ledger.id, category_id=category.id, name="test",
-                           enabled=True, enabled_at=datetime.now(UTC))
+
     db.add(instance)
     db.commit()
     db.refresh(instance)
@@ -82,8 +81,11 @@ def test_history_is_ledger_isolated_and_paginated(db: Session) -> None:
             session=db, ledger_id=other.ledger_id, integration_id=first.id
         )
     history, count = integrations.list_run_history(
-        session=db, ledger_id=first.ledger_id, integration_id=first.id,
-        limit=1, offset=1,
+        session=db,
+        ledger_id=first.ledger_id,
+        integration_id=first.id,
+        limit=1,
+        offset=1,
     )
     assert history == []
     assert count == 1
@@ -93,7 +95,9 @@ def test_history_is_ledger_isolated_and_paginated(db: Session) -> None:
     db.rollback()
 
 
-def test_timeout_reconciliation_is_repeatable_and_late_finish_is_supported(db: Session) -> None:
+def test_timeout_reconciliation_is_repeatable_and_late_finish_is_supported(
+    db: Session,
+) -> None:
     item = make_integration(db)
     run_id = uuid.uuid4()
     start(db, item, run_id)
@@ -147,5 +151,10 @@ def test_retention_keeps_active_runs_and_cascades_system_steps(db: Session) -> N
     assert db.get(IntegrationRun, historical.id) is None
     assert db.get(IntegrationRun, active.id) is not None
     assert db.get(SystemRun, old_system.id) is None
-    assert db.scalar(select(SystemRunStep).where(SystemRunStep.system_run_id == old_system.id)) is None
+    assert (
+        db.scalar(
+            select(SystemRunStep).where(SystemRunStep.system_run_id == old_system.id)
+        )
+        is None
+    )
     assert db.get(SystemRun, running_system.id) is not None
