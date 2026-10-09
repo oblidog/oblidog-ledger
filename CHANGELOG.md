@@ -1,3 +1,10 @@
+## v0.18.1 (2026-10-09)
+
+### Fix
+
+- **config**: require explicitly configured SECRET_KEY (#475) (#488)
+- **frontend**: align toast theme and opaque desktop header (#474) (#487)
+
 ## v0.18.0 (2026-10-08)
 
 ### Feat
