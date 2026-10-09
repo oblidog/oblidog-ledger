@@ -36,7 +36,10 @@ def test_administrator_can_start_manual_run_and_inspect_history(
     assert run["trigger"] == "manual"
     assert run["status"] == "success"
     assert run["timezone"] == "Europe/Warsaw"
-    assert {step["task_name"] for step in run["steps"]} >= {"scheduled_reports", "maintenance_cleanup"}
+    assert {step["task_name"] for step in run["steps"]} >= {
+        "scheduled_reports",
+        "maintenance_cleanup",
+    }
     assert run["steps"][-1]["skip_reason"] == "not_configured"
     assert {step["task_name"] for step in run["steps"][:-1]} == {
         "ensure_obligations",
