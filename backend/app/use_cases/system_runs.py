@@ -206,7 +206,6 @@ class ScheduledReportsTask:
         return TaskResult({"sent": sent, "skipped": skipped, "failed": failed})
 
 
-
 class MaintenanceCleanupTask:
     name = "maintenance_cleanup"
     order = 400
