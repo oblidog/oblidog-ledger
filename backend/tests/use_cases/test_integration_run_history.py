@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.domain.integrations import IntegrationConflictCode, IntegrationResult
-from app.domain.system_run import SystemRunStatus, SystemRunTrigger
+from app.domain.system_run import SystemRunStatus, SystemRunStepStatus, SystemRunTrigger
 from app.models import Integration, IntegrationRun, SystemRun, SystemRunStep
 from app.schemas.integrations import IntegrationRunError, IntegrationRunFinish, IntegrationRunStart
 from app.use_cases import integrations
@@ -128,7 +128,7 @@ def test_retention_keeps_active_runs_and_cascades_system_steps(db: Session) -> N
     db.flush()
     step = SystemRunStep(
         system_run_id=old_system.id, task_name="test",
-        status="succeeded", started_at=old, finished_at=old,
+        status=SystemRunStepStatus.SUCCEEDED, started_at=old, finished_at=old,
     )
     db.add(step)
     db.commit()
