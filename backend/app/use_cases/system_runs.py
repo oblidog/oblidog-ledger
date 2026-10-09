@@ -218,13 +218,17 @@ class MaintenanceCleanupTask:
     def should_run(self, context: SystemRunContext) -> SystemRunSkipReason | None:
         return None
 
-    def eligible_ledgers(self, *, session: Session,
-                         context: SystemRunContext) -> Sequence[Ledger]:
+    def eligible_ledgers(
+        self, *, session: Session, context: SystemRunContext
+    ) -> Sequence[Ledger]:
         return []
 
-    def execute(self, *, session: Session, ledger: Ledger | None,
-                context: SystemRunContext) -> TaskResult:
-        summary: dict[str, object] = {**maintain_run_history(session, now=datetime.now(UTC))}
+    def execute(
+        self, *, session: Session, ledger: Ledger | None, context: SystemRunContext
+    ) -> TaskResult:
+        summary: dict[str, object] = {
+            **maintain_run_history(session, now=datetime.now(UTC))
+        }
         return TaskResult(summary)
 
 SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
