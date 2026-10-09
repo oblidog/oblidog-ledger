@@ -24,10 +24,10 @@ from app.schemas.integrations import (
     IntegrationCredentialCreated,
     IntegrationCredentialPublic,
     IntegrationPublic,
-    IntegrationsPublic,
-    IntegrationUpdate,
     IntegrationRunPublic,
     IntegrationRunsPublic,
+    IntegrationsPublic,
+    IntegrationUpdate,
 )
 from app.services import api_keys as credential_service
 from app.use_cases import integrations as use_cases
