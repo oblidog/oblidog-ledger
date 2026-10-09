@@ -229,3 +229,37 @@ Adminer: <http://localhost:8080>
 Traefik UI: <http://localhost:8090>
 
 MailCatcher: <http://localhost:1080>
+
+## Codecov coverage reports
+
+The existing backend and frontend unit-test workflows upload separate `backend`
+and `frontend` reports to Codecov after successful tests. Backend XML uses the
+same coverage configuration and exclusions as the existing HTML report; the
+85% backend gate remains enforced by `coverage report --fail-under=85`.
+Frontend coverage comes from Bun unit tests and covers the files exercised by
+those tests, not the entire React UI or Playwright scenarios. Codecov statuses
+are informational and PR comments are disabled. An upload failure does not
+fail the test job.
+
+To enable the service, sign in to Codecov with GitHub and grant its GitHub App
+access to `oblidog/oblidog-ledger`. Uploads authenticate through GitHub OIDC
+with job-scoped `id-token: write`; no `CODECOV_TOKEN` secret is needed. Fork
+PR uploads use Codecov's tokenless handling instead of OIDC.
+
+Tests still run on pull requests, respecting the existing release/back-sync
+skip policy. No extra automatic test run is added on merge or release. To
+create an initial baseline on `dev` or `main`, run both **Test Backend** and
+**Frontend Unit Tests** manually from the Actions tab using that branch.
+Repeat the manual runs when a current base-branch report is needed for
+comparisons. The workflows must exist on the default branch before GitHub
+exposes their manual-run controls.
+
+Generate the same reports locally:
+
+```bash
+# Backend, after the usual test run (from backend/)
+uv run coverage xml -o coverage.xml
+
+# Frontend (from frontend/)
+bun run test:unit --coverage --coverage-reporter=lcov
+```

@@ -4,6 +4,7 @@ permissions:
   contents: read
 
 on:
+  workflow_dispatch:
   pull_request:
     types:
       - opened
@@ -15,6 +16,9 @@ concurrency:
 
 jobs:
   test-frontend-unit:
+    permissions:
+      contents: read
+      id-token: write
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
@@ -37,5 +41,14 @@ jobs:
         working-directory: frontend
       - name: Run fast frontend tests
         if: steps.scope.outputs.run_heavy == 'true'
-        run: bun run test:unit
+        run: bun run test:unit --coverage --coverage-reporter=lcov
         working-directory: frontend
+      - name: Upload frontend coverage to Codecov
+        if: steps.scope.outputs.run_heavy == 'true'
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
+        with:
+          use_oidc: true
+          files: frontend/coverage/lcov.info
+          flags: frontend
+          disable_search: true
+          fail_ci_if_error: false
