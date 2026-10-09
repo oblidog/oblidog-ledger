@@ -4,5 +4,8 @@
       "path": "/api/v1/demo/reset",
       "schedule": "0 3 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": false
+  }
 }
