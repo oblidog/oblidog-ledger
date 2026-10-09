@@ -232,8 +232,11 @@ def list_integration_runs(
 ) -> IntegrationRunsPublic:
     with integration_errors(session):
         runs, count = use_cases.list_run_history(
-            session=session, ledger_id=ledger.id, integration_id=integration_id,
-            limit=limit, offset=offset,
+            session=session,
+            ledger_id=ledger.id,
+            integration_id=integration_id,
+            limit=limit,
+            offset=offset,
         )
         return IntegrationRunsPublic(
             data=[IntegrationRunPublic.model_validate(run) for run in runs],
