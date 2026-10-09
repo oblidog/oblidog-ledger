@@ -9,7 +9,11 @@ from sqlalchemy.orm import Session
 from app.domain.integrations import IntegrationConflictCode, IntegrationResult
 from app.domain.system_run import SystemRunStatus, SystemRunStepStatus, SystemRunTrigger
 from app.models import Integration, IntegrationRun, SystemRun, SystemRunStep
-from app.schemas.integrations import IntegrationRunError, IntegrationRunFinish, IntegrationRunStart
+from app.schemas.integrations import (
+    IntegrationRunError,
+    IntegrationRunFinish,
+    IntegrationRunStart,
+)
 from app.use_cases import integrations
 from app.use_cases.integration_run_maintenance import maintain_run_history
 from tests.utils.ledger_domain import create_category_tree
