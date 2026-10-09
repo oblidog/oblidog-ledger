@@ -75,7 +75,10 @@ def test_manual_only_task_requires_explicit_selection(
     steps = response.json()["steps"]
     assert steps[0]["task_name"] == "legacy_import"
     assert steps[0]["skip_reason"] == "not_configured"
-    assert {step["task_name"] for step in steps} >= {"scheduled_reports", "maintenance_cleanup"}
+    assert {step["task_name"] for step in steps} >= {
+        "scheduled_reports",
+        "maintenance_cleanup",
+    }
     assert {step["task_name"] for step in steps[1:-1]} == {
         "ensure_obligations",
         "estimate_obligation_amounts",
