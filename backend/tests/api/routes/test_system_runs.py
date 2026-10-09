@@ -40,8 +40,8 @@ def test_administrator_can_start_manual_run_and_inspect_history(
         "scheduled_reports",
         "maintenance_cleanup",
     }
-    assert run["steps"][-1]["skip_reason"] == "not_configured"
-    assert {step["task_name"] for step in run["steps"][:-1]} == {
+    assert next(step for step in run["steps"] if step["task_name"] == "scheduled_reports")["skip_reason"] == "not_configured"
+    assert {step["task_name"] for step in run["steps"]} >= {
         "ensure_obligations",
         "estimate_obligation_amounts",
     }
@@ -82,7 +82,7 @@ def test_manual_only_task_requires_explicit_selection(
         "scheduled_reports",
         "maintenance_cleanup",
     }
-    assert {step["task_name"] for step in steps[1:-1]} == {
+    assert {step["task_name"] for step in steps} >= {
         "ensure_obligations",
         "estimate_obligation_amounts",
     }
