@@ -50,7 +50,8 @@ def finish(
     result: IntegrationResult = IntegrationResult.SUCCESS,
 ) -> Integration:
     return integrations.finish_run(
-        session=db, integration_id=item.id,
+        session=db,
+        integration_id=item.id,
         data=IntegrationRunFinish(
             run_id=run_id,
             result=result,
