@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.domain.report_delivery import ReportDeliveryStatus
 from app.models import ReportDelivery, User
@@ -39,8 +40,8 @@ class FakeReport:
     ],
 )
 def test_failed_deliveries_retry_without_duplicating_successes(
-    db, monkeypatch, error
-) -> None:  # type: ignore[no-untyped-def]
+    db: Session, monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
     first, second = create_random_user(db), create_random_user(db)
     report = FakeReport([first, second])
     context = SystemRunContext.create(
@@ -82,12 +83,11 @@ def test_failed_deliveries_retry_without_duplicating_successes(
     assert retry_result.skipped == 1
     assert retry_result.failed == 0
     assert calls == [first.email, second.email, first.email]
-    assert (
-        db.scalar(
-            select(ReportDelivery).where(ReportDelivery.user_id == first.id)
-        ).status
-        is ReportDeliveryStatus.SENT
+    retried = db.scalar(
+        select(ReportDelivery).where(ReportDelivery.user_id == first.id)
     )
+    assert retried is not None
+    assert retried.status is ReportDeliveryStatus.SENT
 
 
 def _context() -> SystemRunContext:
@@ -149,8 +149,6 @@ def test_uncertain_send_blocks_retry(db, monkeypatch, error) -> None:  # type: i
 
 @pytest.mark.parametrize("accepted", [False, True])
 def test_crash_survives_new_session_without_resend(db, monkeypatch, accepted) -> None:  # type: ignore[no-untyped-def]
-    from sqlalchemy.orm import Session
-
     user = create_random_user(db)
     report = FakeReport([user])
     user_id = user.id
@@ -187,6 +185,7 @@ def test_crash_survives_new_session_without_resend(db, monkeypatch, accepted) ->
     )
     with Session(db.get_bind()) as restarted:
         restarted_user = restarted.get(User, user_id)
+        assert restarted_user is not None
         result = scheduled_reports.deliver_scheduled_report(
             session=restarted, report=FakeReport([restarted_user]), context=_context()
         )
@@ -194,6 +193,7 @@ def test_crash_survives_new_session_without_resend(db, monkeypatch, accepted) ->
             select(ReportDelivery).where(ReportDelivery.user_id == user_id)
         )
         assert result.uncertain == 1
+        assert delivery is not None
         assert delivery.status is ReportDeliveryStatus.UNCERTAIN
         assert delivery.attempt_count == 1
         assert delivery.attempt_finished_at is None
