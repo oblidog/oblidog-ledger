@@ -1,9 +1,11 @@
+import logging
 import smtplib
+from collections.abc import Iterator
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.domain.report_delivery import ReportDeliveryStatus
@@ -12,6 +14,15 @@ from app.services import scheduled_reports
 from app.use_cases.system_runs import SystemRunContext
 from app.utils import EmailData
 from tests.utils.user import create_random_user
+
+
+@pytest.fixture(autouse=True)
+def clean_delivery_records(db: Session) -> Iterator[None]:
+    existing_ids = list(db.scalars(select(ReportDelivery.id)))
+    yield
+    db.rollback()
+    db.execute(delete(ReportDelivery).where(ReportDelivery.id.not_in(existing_ids)))
+    db.commit()
 
 
 class FakeReport:
@@ -231,3 +242,125 @@ def test_render_failure_is_safe_to_retry(db, monkeypatch) -> None:  # type: igno
         ).sent
         == 1
     )
+
+
+def test_first_commit_failure_is_recorded_and_retryable(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    user = create_random_user(db)
+    report = FakeReport([user])
+    original_commit = db.commit
+    injected = False
+
+    def fail_first_insert_commit() -> None:
+        nonlocal injected
+        if not injected and any(isinstance(obj, ReportDelivery) for obj in db.new):
+            injected = True
+            db.flush()
+            raise RuntimeError("injected DB commit failure")
+        original_commit()
+
+    monkeypatch.setattr(db, "commit", fail_first_insert_commit)
+    monkeypatch.setattr(
+        scheduled_reports,
+        "send_email",
+        lambda **kwargs: pytest.fail("SMTP invoked without committed attempt"),
+    )
+    result = scheduled_reports.deliver_scheduled_report(
+        session=db, report=report, context=_context()
+    )
+    assert result.failed == 1
+    assert result.sent == result.uncertain == 0
+    delivery = db.scalar(
+        select(ReportDelivery).where(ReportDelivery.user_id == user.id)
+    )
+    assert delivery is not None
+    assert delivery.status is ReportDeliveryStatus.FAILED
+    assert delivery.error_message == "RuntimeError"
+
+    monkeypatch.setattr(scheduled_reports, "send_email", lambda **kwargs: None)
+    assert (
+        scheduled_reports.deliver_scheduled_report(
+            session=db, report=report, context=_context()
+        ).sent
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        ReportDeliveryStatus.IN_PROGRESS,
+        ReportDeliveryStatus.UNCERTAIN,
+    ],
+)
+def test_old_attempts_are_recovered_and_diagnosed_without_resending(
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    status: ReportDeliveryStatus,
+) -> None:
+    user = create_random_user(db)
+    report = FakeReport([user])
+    old = ReportDelivery(
+        report_type=report.report_type,
+        user_id=user.id,
+        delivery_key=f"daily:{user.id}:2026-08-31",
+        status=status,
+        attempt_count=1,
+        error_message="TimeoutError",
+    )
+    db.add(old)
+    db.commit()
+    calls: list[str] = []
+    monkeypatch.setattr(
+        scheduled_reports,
+        "send_email",
+        lambda **kwargs: calls.append(kwargs["message_id"]),
+    )
+    with caplog.at_level(logging.WARNING, logger=scheduled_reports.__name__):
+        result = scheduled_reports.deliver_scheduled_report(
+            session=db, report=report, context=_context()
+        )
+    assert result.sent == 1
+    assert result.uncertain == 1
+    assert old.status is ReportDeliveryStatus.UNCERTAIN
+    assert old.attempt_finished_at is None
+    assert str(old.id) in caplog.text
+    if status is ReportDeliveryStatus.UNCERTAIN:
+        assert old.error_message == "TimeoutError"
+    assert old.message_id not in calls
+
+    # Unresolved history is visible even after opting out of this report.
+    report.users = []
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger=scheduled_reports.__name__):
+        result = scheduled_reports.deliver_scheduled_report(
+            session=db, report=report, context=_context()
+        )
+    assert result.uncertain == 1
+    assert result.sent == 0
+    assert str(old.id) in caplog.text
+    assert len(calls) == 1
+
+
+def test_failure_record_commit_error_propagates(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    user = create_random_user(db)
+    report = FakeReport([user])
+
+    def fail_commit() -> None:
+        db.flush()
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(db, "commit", fail_commit)
+    monkeypatch.setattr(
+        scheduled_reports,
+        "send_email",
+        lambda **kwargs: pytest.fail("SMTP invoked without committed attempt"),
+    )
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        scheduled_reports.deliver_scheduled_report(
+            session=db, report=report, context=_context()
+        )

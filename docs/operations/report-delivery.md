@@ -21,7 +21,12 @@ disabled for scheduled reports. SENT means SMTP accepted the message, not that
 it reached the inbox. A crash just before send can also leave uncertainty.
 
 Attempt count and start/finish timestamps describe the latest send attempt.
-Unfinished attempts retain a null finish timestamp. The scheduler step fails if
+Unfinished attempts retain a null finish timestamp. Each configured report scans
+all its unresolved delivery keys before selecting recipients, including older
+dates and users who have since disabled reports. Stale IN_PROGRESS records become
+UNCERTAIN; existing error diagnostics are preserved. New reports for other keys
+can still be sent, but unresolved history remains visible on every run.
+The scheduler step fails if
 any outcome is failed or uncertain; warning logs identify uncertain delivery
 UUIDs. Errors store only exception class names, never server text or mail data.
 

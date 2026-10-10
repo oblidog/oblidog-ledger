@@ -48,7 +48,10 @@ class DeliverySummary:
 def deliver_scheduled_report(
     *, session: Session, report: ScheduledReport, context: SystemRunContext
 ) -> DeliverySummary:
-    sent = skipped = failed = uncertain = 0
+    sent = skipped = failed = 0
+    uncertain = _recover_uncertain_deliveries(
+        session=session, report_type=report.report_type
+    )
     for user in report.recipients(session=session, context=context):
         if not user.email:
             continue
@@ -62,17 +65,8 @@ def deliver_scheduled_report(
         if delivery is not None and delivery.status is ReportDeliveryStatus.SENT:
             skipped += 1
             continue
-        # The caller holds the existing scheduler lock. An unfinished attempt
-        # encountered under that lock belongs to a previous interrupted run.
-        if delivery is not None and delivery.status in (
-            ReportDeliveryStatus.IN_PROGRESS,
-            ReportDeliveryStatus.UNCERTAIN,
-        ):
-            delivery.status = ReportDeliveryStatus.UNCERTAIN
-            delivery.error_message = "operator_recovery_required"
-            session.commit()
-            _log_uncertain(delivery)
-            uncertain += 1
+        if delivery is not None and delivery.status is ReportDeliveryStatus.UNCERTAIN:
+            # Already counted and diagnosed by the report-wide recovery pass.
             continue
         sending = False
         try:
@@ -110,6 +104,14 @@ def deliver_scheduled_report(
             )
         except Exception as exc:
             session.rollback()
+            # A failed first commit may roll back the INSERT and detach the
+            # object. Query by the permanent key, then recreate the failure.
+            delivery = session.scalar(
+                select(ReportDelivery).where(
+                    ReportDelivery.user_id == user.id,
+                    ReportDelivery.delivery_key == delivery_key,
+                )
+            )
             if delivery is None:
                 delivery = ReportDelivery(
                     report_type=report.report_type,
@@ -118,23 +120,22 @@ def deliver_scheduled_report(
                     status=ReportDeliveryStatus.FAILED,
                 )
                 session.add(delivery)
-                session.commit()
-            delivery = session.get(ReportDelivery, delivery.id)
-            if delivery is not None:
-                is_uncertain = sending and not _definitely_not_delivered(exc)
-                delivery.status = (
-                    ReportDeliveryStatus.UNCERTAIN
-                    if is_uncertain
-                    else ReportDeliveryStatus.FAILED
-                )
-                delivery.attempt_finished_at = datetime.now(UTC)
-                delivery.error_message = _safe_error(exc)
-                session.commit()
-                if is_uncertain:
-                    _log_uncertain(delivery)
-                    uncertain += 1
-                else:
-                    failed += 1
+            is_uncertain = sending and not _definitely_not_delivered(exc)
+            delivery.status = (
+                ReportDeliveryStatus.UNCERTAIN
+                if is_uncertain
+                else ReportDeliveryStatus.FAILED
+            )
+            delivery.attempt_finished_at = datetime.now(UTC)
+            delivery.error_message = _safe_error(exc)
+            # If recording the failure also fails, propagate the DB error.
+            # The scheduler must never report success for an unrecorded failure.
+            session.commit()
+            if is_uncertain:
+                _log_uncertain(delivery)
+                uncertain += 1
+            else:
+                failed += 1
         else:
             delivery = session.get(ReportDelivery, delivery.id)
             if delivery is not None:
@@ -156,6 +157,35 @@ def deliver_scheduled_report(
         summary.uncertain,
     )
     return summary
+
+
+def _recover_uncertain_deliveries(*, session: Session, report_type: str) -> int:
+    # The caller holds the scheduler lock, so every unfinished attempt is stale.
+    # Scan all keys, including prior dates and users no longer eligible for mail.
+    deliveries = list(
+        session.scalars(
+            select(ReportDelivery).where(
+                ReportDelivery.report_type == report_type,
+                ReportDelivery.status.in_(
+                    [
+                        ReportDeliveryStatus.IN_PROGRESS,
+                        ReportDeliveryStatus.UNCERTAIN,
+                    ]
+                ),
+            )
+        )
+    )
+    changed = False
+    for delivery in deliveries:
+        if delivery.status is ReportDeliveryStatus.IN_PROGRESS:
+            delivery.status = ReportDeliveryStatus.UNCERTAIN
+            delivery.error_message = "operator_recovery_required"
+            changed = True
+    if changed:
+        session.commit()
+    for delivery in deliveries:
+        _log_uncertain(delivery)
+    return len(deliveries)
 
 
 def _definitely_not_delivered(exc: Exception) -> bool:
