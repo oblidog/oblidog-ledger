@@ -36,6 +36,7 @@ from app.schemas import (
     ObligationsPublic,
 )
 from app.use_cases import categories as category_use_cases
+from app.use_cases import category_data_records as record_use_cases
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import (
     CategoryDataSchemaNotFoundError,
@@ -103,7 +104,7 @@ def read_integration_category_data_records(
     context: ApiContext = Depends(require_scope("ledger:read")),
 ) -> CategoryDataRecordsPublic:
     try:
-        records = category_use_cases.list_category_data_records(
+        records = record_use_cases.list_category_data_records(
             session=context.session,
             ledger_id=context.ledger.id,
             category_id=context.category.id,
@@ -112,7 +113,7 @@ def read_integration_category_data_records(
             limit=limit,
             offset=offset,
         )
-        count = category_use_cases.count_category_data_records(
+        count = record_use_cases.count_category_data_records(
             session=context.session,
             ledger_id=context.ledger.id,
             category_id=context.category.id,
