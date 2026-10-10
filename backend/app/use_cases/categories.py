@@ -7,7 +7,7 @@ from typing import Any
 
 from jsonschema import FormatChecker, SchemaError, ValidationError
 from jsonschema.validators import validator_for
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.domain import Currency, DataSourcePolicy, RecurrenceUnit
@@ -177,56 +177,6 @@ def get_category_data_record(
     if category_data is None:
         raise CategoryDataSchemaNotFoundError
     return category_data
-
-
-def list_category_data_records(
-    *,
-    session: Session,
-    ledger_id: uuid.UUID,
-    category_id: uuid.UUID,
-    observed_from: datetime | None = None,
-    observed_to: datetime | None = None,
-    limit: int = 100,
-    offset: int = 0,
-) -> list[CategoryDataRecord]:
-    _require_category(session=session, ledger_id=ledger_id, category_id=category_id)
-    statement = select(CategoryDataRecord).where(
-        CategoryDataRecord.category_id == category_id
-    )
-    if observed_from is not None:
-        statement = statement.where(CategoryDataRecord.observed_at >= observed_from)
-    if observed_to is not None:
-        statement = statement.where(CategoryDataRecord.observed_at <= observed_to)
-    return list(
-        session.scalars(
-            statement.order_by(
-                CategoryDataRecord.observed_at.desc(), CategoryDataRecord.id.desc()
-            )
-            .limit(limit)
-            .offset(offset)
-        ).all()
-    )
-
-
-def count_category_data_records(
-    *,
-    session: Session,
-    ledger_id: uuid.UUID,
-    category_id: uuid.UUID,
-    observed_from: datetime | None = None,
-    observed_to: datetime | None = None,
-) -> int:
-    _require_category(session=session, ledger_id=ledger_id, category_id=category_id)
-    statement = (
-        select(func.count())
-        .select_from(CategoryDataRecord)
-        .where(CategoryDataRecord.category_id == category_id)
-    )
-    if observed_from is not None:
-        statement = statement.where(CategoryDataRecord.observed_at >= observed_from)
-    if observed_to is not None:
-        statement = statement.where(CategoryDataRecord.observed_at <= observed_to)
-    return session.scalar(statement) or 0
 
 
 def create_category_data_record(
