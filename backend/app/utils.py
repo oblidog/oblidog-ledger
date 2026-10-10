@@ -1,11 +1,14 @@
 import logging
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import jwt
+from emails.backend.response import SMTPResponse
+from emails.backend.smtp.backend import SMTPBackend
 from emails.message import Message
 from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
@@ -38,23 +41,34 @@ def render_email_template(*, template_name: str, context: dict[str, Any]) -> str
     return str(html_content)
 
 
+class _SingleAttemptSMTPBackend(SMTPBackend):
+    """Disable emails' implicit resend after a possibly accepted DATA command."""
+
+    def retry_on_disconnect(
+        self, func: Callable[..., SMTPResponse | None]
+    ) -> Callable[..., SMTPResponse | None]:
+        return func
+
+
 def send_email(
     *,
     email_to: str,
     subject: str = "",
     html_content: str = "",
     text_content: str = "",
+    message_id: str | None = None,
 ) -> None:
     ensure_capability(Capability.EMAIL)
     assert settings.emails_enabled, "no provided configuration for email variables"
     assert settings.EMAILS_FROM_EMAIL is not None
     message = Message(
+        message_id=message_id,
         subject=subject,
         html=html_content,
         text=text_content,
         mail_from=(settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL),
     )
-    smtp_options = {
+    smtp_options: dict[str, Any] = {
         "host": settings.SMTP_HOST,
         "port": settings.SMTP_PORT,
         # The ``emails`` package otherwise returns connection failures as a
@@ -69,8 +83,19 @@ def send_email(
         smtp_options["user"] = settings.SMTP_USER
     if settings.SMTP_PASSWORD:
         smtp_options["password"] = settings.SMTP_PASSWORD
-    response = message.send(to=email_to, smtp=smtp_options)
-    logger.info("send email result: %s", response)
+    if message_id is not None:
+        backend = _SingleAttemptSMTPBackend(**smtp_options)
+        try:
+            response = message.send(to=email_to, smtp=backend)
+        finally:
+            # Closing must neither hide the DATA result nor trigger a resend.
+            if backend._client is not None:
+                backend._client.close()
+    else:
+        response = message.send(to=email_to, smtp=smtp_options)
+    if response is None or not response.success:
+        raise RuntimeError("SMTP acceptance not confirmed")
+    logger.info("Email accepted by SMTP")
 
 
 def generate_test_email(email_to: str) -> EmailData:

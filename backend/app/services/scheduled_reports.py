@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import smtplib
+import socket
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -40,12 +42,16 @@ class DeliverySummary:
     sent: int = 0
     skipped: int = 0
     failed: int = 0
+    uncertain: int = 0
 
 
 def deliver_scheduled_report(
     *, session: Session, report: ScheduledReport, context: SystemRunContext
 ) -> DeliverySummary:
     sent = skipped = failed = 0
+    uncertain = _recover_uncertain_deliveries(
+        session=session, report_type=report.report_type
+    )
     for user in report.recipients(session=session, context=context):
         if not user.email:
             continue
@@ -59,6 +65,10 @@ def deliver_scheduled_report(
         if delivery is not None and delivery.status is ReportDeliveryStatus.SENT:
             skipped += 1
             continue
+        if delivery is not None and delivery.status is ReportDeliveryStatus.UNCERTAIN:
+            # Already counted and diagnosed by the report-wide recovery pass.
+            continue
+        sending = False
         try:
             email = report.render(session=session, user=user, context=context)
             if email is None:
@@ -79,15 +89,29 @@ def deliver_scheduled_report(
             else:
                 delivery.report_type = report.report_type
                 delivery.error_message = None
+            delivery.status = ReportDeliveryStatus.IN_PROGRESS
+            delivery.attempt_count = (delivery.attempt_count or 0) + 1
+            delivery.attempt_started_at = datetime.now(UTC)
+            delivery.attempt_finished_at = None
             session.commit()
+            sending = True
             send_email(
                 email_to=user.email,
                 subject=email.subject,
                 html_content=email.html_content,
                 text_content=email.text_content,
+                message_id=delivery.message_id,
             )
         except Exception as exc:
             session.rollback()
+            # A failed first commit may roll back the INSERT and detach the
+            # object. Query by the permanent key, then recreate the failure.
+            delivery = session.scalar(
+                select(ReportDelivery).where(
+                    ReportDelivery.user_id == user.id,
+                    ReportDelivery.delivery_key == delivery_key,
+                )
+            )
             if delivery is None:
                 delivery = ReportDelivery(
                     report_type=report.report_type,
@@ -96,31 +120,98 @@ def deliver_scheduled_report(
                     status=ReportDeliveryStatus.FAILED,
                 )
                 session.add(delivery)
-                session.commit()
-            delivery = session.get(ReportDelivery, delivery.id)
-            if delivery is not None:
-                delivery.status = ReportDeliveryStatus.FAILED
-                delivery.error_message = _safe_error(exc)
-                session.commit()
-            failed += 1
+            is_uncertain = sending and not _definitely_not_delivered(exc)
+            delivery.status = (
+                ReportDeliveryStatus.UNCERTAIN
+                if is_uncertain
+                else ReportDeliveryStatus.FAILED
+            )
+            delivery.attempt_finished_at = datetime.now(UTC)
+            delivery.error_message = _safe_error(exc)
+            # If recording the failure also fails, propagate the DB error.
+            # The scheduler must never report success for an unrecorded failure.
+            session.commit()
+            if is_uncertain:
+                _log_uncertain(delivery)
+                uncertain += 1
+            else:
+                failed += 1
         else:
             delivery = session.get(ReportDelivery, delivery.id)
             if delivery is not None:
                 delivery.status = ReportDeliveryStatus.SENT
                 delivery.sent_at = datetime.now(UTC)
+                delivery.attempt_finished_at = delivery.sent_at
                 delivery.error_message = None
                 session.commit()
             sent += 1
-    summary = DeliverySummary(sent=sent, skipped=skipped, failed=failed)
+    summary = DeliverySummary(
+        sent=sent, skipped=skipped, failed=failed, uncertain=uncertain
+    )
     logger.info(
-        "Scheduled report %s finished: sent=%s skipped=%s failed=%s",
+        "Scheduled report %s finished: sent=%s skipped=%s failed=%s uncertain=%s",
         report.report_type,
         summary.sent,
         summary.skipped,
         summary.failed,
+        summary.uncertain,
     )
     return summary
 
 
+def _recover_uncertain_deliveries(*, session: Session, report_type: str) -> int:
+    # The caller holds the scheduler lock, so every unfinished attempt is stale.
+    # Scan all keys, including prior dates and users no longer eligible for mail.
+    deliveries = list(
+        session.scalars(
+            select(ReportDelivery).where(
+                ReportDelivery.report_type == report_type,
+                ReportDelivery.status.in_(
+                    [
+                        ReportDeliveryStatus.IN_PROGRESS,
+                        ReportDeliveryStatus.UNCERTAIN,
+                    ]
+                ),
+            )
+        )
+    )
+    changed = False
+    for delivery in deliveries:
+        if delivery.status is ReportDeliveryStatus.IN_PROGRESS:
+            delivery.status = ReportDeliveryStatus.UNCERTAIN
+            delivery.error_message = "operator_recovery_required"
+            changed = True
+    if changed:
+        session.commit()
+    for delivery in deliveries:
+        _log_uncertain(delivery)
+    return len(deliveries)
+
+
+def _definitely_not_delivered(exc: Exception) -> bool:
+    return isinstance(
+        exc,
+        (
+            ConnectionRefusedError,
+            socket.gaierror,
+            smtplib.SMTPConnectError,
+            smtplib.SMTPAuthenticationError,
+            smtplib.SMTPHeloError,
+            smtplib.SMTPSenderRefused,
+            smtplib.SMTPRecipientsRefused,
+            smtplib.SMTPDataError,
+        ),
+    )
+
+
 def _safe_error(exc: Exception) -> str:
-    return " ".join(str(exc).split())[:1000] or exc.__class__.__name__
+    # Exception strings can include SMTP credentials, addresses or message data.
+    return exc.__class__.__name__
+
+
+def _log_uncertain(delivery: ReportDelivery) -> None:
+    logger.warning(
+        "Scheduled report delivery %s uncertain: attempt=%s; operator recovery required",
+        delivery.id,
+        delivery.attempt_count,
+    )
