@@ -150,7 +150,7 @@ jobs:
         run: uv run --locked pytest -q scripts/tests
       - run: docker compose down -v --remove-orphans
         if: steps.scope.outputs.run_heavy == 'true'
-      - run: docker compose up -d --wait db mailcatcher
+      - run: docker compose up -d --wait db mailpit
         if: steps.scope.outputs.run_heavy == 'true'
       - name: Create test database
         if: steps.scope.outputs.run_heavy == 'true'
