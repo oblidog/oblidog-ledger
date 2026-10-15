@@ -43,9 +43,9 @@ To check the logs of a specific service, add the name of the service, e.g.:
 docker compose logs backend
 ```
 
-## Mailcatcher
+## Mailpit
 
-Mailcatcher is a simple SMTP server that catches all emails sent by the backend during local development. Instead of sending real emails, they are captured and displayed in a web interface.
+Mailpit is a simple SMTP server that catches all emails sent by the backend during local development. Instead of sending real emails, they are captured and displayed in a web interface.
 
 This is useful for:
 
@@ -53,7 +53,28 @@ This is useful for:
 * Verifying email content and formatting
 * Debugging email-related functionality without sending real emails
 
-The backend is automatically configured to use Mailcatcher when running with Docker Compose locally (SMTP on port 1025). All captured emails can be viewed at <http://localhost:1080>.
+The backend is automatically configured to use Mailpit when running with Docker Compose locally (SMTP on port 1025). All captured emails can be viewed at <http://localhost:8025>.
+
+For a host backend (`make dev-b`), start only `docker compose up -d --wait mailpit`
+and set `SMTP_HOST=localhost`, `SMTP_PORT=1025`, `SMTP_TLS=false`,
+`SMTP_SSL=false`, empty `SMTP_USER`/`SMTP_PASSWORD`, and
+`EMAILS_FROM_EMAIL=noreply@example.com` in your local environment. Never start
+the default Compose backend alongside `make dev-b`.
+
+To preview report emails, use a disposable local development database and enable
+Daily report or Weekly report in the test user's settings. Trigger System Run
+from the admin interface (weekly reports run on Monday), then inspect the HTML
+and text versions in Mailpit. Scheduled reports record delivery, so repeat runs
+for the same reporting period may be skipped. Mailpit has no external SMTP relay
+configured; captured messages stay local.
+
+Email E2E tests use `make e2e`, which runs the dedicated `compose.e2e.yml` stack
+with its own database, SMTP capture service, and no published backend port.
+`MAILPIT_HOST=http://mailpit:8025` selects the capture API inside that stack.
+Helpers search by recipient and subject, stop after five seconds (including hung
+HTTP requests), and extract links from message HTML without opening the viewer.
+Browser navigation uses Playwright's configured application base URL. Run helper
+regressions alone with `cd frontend && bun test ./tests/utils/mailpit.unit.ts`.
 
 ## Local Development
 
@@ -228,7 +249,7 @@ Adminer: <http://localhost:8080>
 
 Traefik UI: <http://localhost:8090>
 
-MailCatcher: <http://localhost:1080>
+Mailpit: <http://localhost:8025>
 
 ## Codecov coverage reports
 

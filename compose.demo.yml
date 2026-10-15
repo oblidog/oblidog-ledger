@@ -7,7 +7,7 @@ services:
     env_file: !override
       - .env.demo
 
-  mailcatcher:
+  mailpit:
     profiles:
       - tools
 
