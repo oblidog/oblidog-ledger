@@ -193,7 +193,7 @@ class ScheduledReportsTask:
     def execute(
         self, *, session: Session, ledger: Ledger | None, context: SystemRunContext
     ) -> TaskResult:
-        sent = skipped = failed = 0
+        sent = skipped = failed = uncertain = 0
         for report in self.reports:
             summary = deliver_scheduled_report(
                 session=session, report=report, context=context
@@ -201,8 +201,12 @@ class ScheduledReportsTask:
             sent += summary.sent
             skipped += summary.skipped
             failed += summary.failed
-        if failed:
-            raise RuntimeError(f"{failed} scheduled report deliveries failed")
+            uncertain += summary.uncertain
+        if failed or uncertain:
+            raise RuntimeError(
+                f"{failed} scheduled report deliveries failed; "
+                f"{uncertain} uncertain deliveries require operator recovery"
+            )
         return TaskResult({"sent": sent, "skipped": skipped, "failed": failed})
 
 

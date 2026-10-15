@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,8 +12,7 @@ from app.models.base import Base, get_datetime_utc
 class ReportDelivery(Base):
     """Best-effort SMTP delivery record.
 
-    A crash after SMTP accepts a message but before ``sent`` is committed can
-    cause a retry. Plain SMTP cannot provide an atomic exactly-once guarantee.
+    Unfinished SMTP attempts require operator recovery before retrying.
     """
 
     __tablename__ = "report_delivery"
@@ -35,3 +34,12 @@ class ReportDelivery(Base):
     )
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error_message: Mapped[str | None] = mapped_column(String(1000))
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    attempt_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    attempt_finished_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+
+    @property
+    def message_id(self) -> str:
+        return f"<report-{self.id}@oblidog.local>"
