@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test"
-import { findLastEmail } from "./utils/mailcatcher"
+import { applicationLink, waitForEmail } from "./utils/mailpit"
 import { randomEmail, randomPassword } from "./utils/random"
 import { logInUser } from "./utils/user"
 
 test("Admin invitation can be accepted and the recipient can sign in", async ({
   page,
-  request,
+  baseURL,
 }) => {
   const email = randomEmail()
   const password = randomPassword()
@@ -17,23 +17,18 @@ test("Admin invitation can be accepted and the recipient can sign in", async ({
   await page.getByRole("button", { name: "Send invitation" }).click()
   await expect(page.getByText("Invitation sent")).toBeVisible()
 
-  const emailData = await findLastEmail({
-    request,
-    filter: (message) => message.recipients.includes(`<${email}>`),
+  const message = await waitForEmail({
+    recipient: email,
+    subject: "You're invited",
   })
-  const emailResponse = await request.get(
-    `${process.env.MAILCATCHER_HOST}/messages/${emailData.id}.html`,
+  const invitationUrl = applicationLink(
+    message.HTML,
+    "/accept-invitation",
+    baseURL!,
   )
-  const html = await emailResponse.text()
-  const invitationUrl = html.match(
-    /href="([^"]*accept-invitation\?token=[^"]+)"/,
-  )?.[1]
-  expect(invitationUrl).toBeTruthy()
 
   await page.context().clearCookies()
-  await page.goto(
-    invitationUrl!.replace("http://localhost/", "http://localhost:5173/"),
-  )
+  await page.goto(invitationUrl)
 
   await expect(
     page.getByRole("heading", { name: "Create your account" }),
@@ -60,9 +55,7 @@ test("Admin invitation can be accepted and the recipient can sign in", async ({
   await logInUser(page, email, password)
 
   await page.context().clearCookies()
-  await page.goto(
-    invitationUrl!.replace("http://localhost/", "http://localhost:5173/"),
-  )
+  await page.goto(invitationUrl)
   await expect(
     page.getByText("This invitation has already been used"),
   ).toBeVisible()

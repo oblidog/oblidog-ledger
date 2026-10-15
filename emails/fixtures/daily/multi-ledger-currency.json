@@ -1,0 +1,78 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "4 obligations need attention",
+    "summary_detail": "Ready to pay: 4",
+    "sections": [
+      {
+        "title": "Ready to pay",
+        "count": 4,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Home internet",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/home-internet"
+              }
+            ]
+          },
+          {
+            "name": "Workshop",
+            "obligations": [
+              {
+                "category_name": "Extra PLN",
+                "amount_label": "11.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/extra-pln"
+              },
+              {
+                "category_name": "Hosting",
+                "amount_label": "10.00 USD",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/hosting"
+              },
+              {
+                "category_name": "Workshop internet",
+                "amount_label": "20.00 EUR",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/workshop-internet"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "EUR",
+        "confirmed_label": "20.00 EUR confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      },
+      {
+        "currency": "PLN",
+        "confirmed_label": "100.00 PLN confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      },
+      {
+        "currency": "USD",
+        "confirmed_label": "10.00 USD confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      }
+    ]
+  },
+  "activity": {},
+  "integration_health": {},
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

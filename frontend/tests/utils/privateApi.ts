@@ -1,44 +1,21 @@
 import axios from "axios"
-
 import { client, LoginService, type UserPublic } from "../../src/client"
 import { firstSuperuser, firstSuperuserPassword } from "../config"
+import { applicationLink, waitForEmail } from "./mailpit"
 
 client.setConfig({ baseURL: `${process.env.VITE_API_URL}` })
 
-type MailcatcherEmail = {
-  id: number
-  recipients: string[]
-}
-
 const waitForInvitationToken = async (email: string): Promise<string> => {
-  const mailcatcherHost = process.env.MAILCATCHER_HOST
-  if (!mailcatcherHost) {
-    throw new Error("MAILCATCHER_HOST is required to accept test invitations")
-  }
-
-  const deadline = Date.now() + 5000
-  while (Date.now() < deadline) {
-    const response = await axios.get<MailcatcherEmail[]>(
-      `${mailcatcherHost}/messages`,
-    )
-    const message = response.data.findLast((item) =>
-      item.recipients.includes(`<${email}>`),
-    )
-
-    if (message) {
-      const html = await axios.get<string>(
-        `${mailcatcherHost}/messages/${message.id}.html`,
-      )
-      const match = html.data.match(/accept-invitation\?token=([^&"'<\s]+)/)
-      if (match?.[1]) {
-        return decodeURIComponent(match[1])
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 100))
-  }
-
-  throw new Error(`Invitation email for ${email} was not received`)
+  const message = await waitForEmail({
+    recipient: email,
+    subject: "You're invited",
+  })
+  const link = applicationLink(
+    message.HTML,
+    "/accept-invitation",
+    process.env.VITE_API_URL!,
+  )
+  return new URL(link).searchParams.get("token")!
 }
 
 export const createUser = async ({

@@ -15,8 +15,13 @@ services:
     networks:
       - e2e
 
-  mailcatcher:
-    image: schickling/mailcatcher
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - e2e
 
@@ -43,9 +48,12 @@ services:
       POSTGRES_USER: e2e
       PROJECT_NAME: Oblidog
       SECRET_KEY: e2e-secret-key-not-for-production
-      SMTP_HOST: mailcatcher
+      SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_TLS: "false"
+      SMTP_SSL: "false"
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
     networks:
       - e2e
 
@@ -73,13 +81,13 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      mailcatcher:
-        condition: service_started
+      mailpit:
+        condition: service_healthy
     environment:
       CI: "true"
       FIRST_SUPERUSER: admin@example.com
       FIRST_SUPERUSER_PASSWORD: e2e-admin-password
-      MAILCATCHER_HOST: http://mailcatcher:1080
+      MAILPIT_HOST: http://mailpit:8025
       PLAYWRIGHT_HTML_HOST: 0.0.0.0
       VITE_API_URL: http://localhost:5173
       VITE_API_PROXY_TARGET: http://backend:8000
@@ -87,6 +95,7 @@ services:
       - e2e
     shm_size: 1gb
     volumes:
+      - ./frontend/playwright-report:/app/frontend/playwright-report
       - ./frontend/blob-report:/app/frontend/blob-report
       - ./frontend/test-results:/app/frontend/test-results
 

@@ -19,6 +19,7 @@ from app.models import (
     CategoryGroup,
     Integration,
     IntegrationCredential,
+    IntegrationRun,
     Ledger,
     LedgerMembership,
     LegacyImportJob,
@@ -71,6 +72,7 @@ def run_test_migrations() -> None:
 def db() -> Generator[Session]:
     run_test_migrations()
     with TestingSessionLocal() as session:
+        session.execute(delete(IntegrationRun))
         session.execute(delete(IntegrationCredential))
         session.execute(delete(Integration))
         session.execute(delete(SystemRunStep))
@@ -89,6 +91,7 @@ def db() -> Generator[Session]:
         session.commit()
         init_db(session)
         yield session
+        session.execute(delete(IntegrationRun))
         session.execute(delete(IntegrationCredential))
         session.execute(delete(Integration))
         session.execute(delete(SystemRunStep))

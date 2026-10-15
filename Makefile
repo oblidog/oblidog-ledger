@@ -40,7 +40,7 @@ demo-down:
 	$(DEMO_COMPOSE) down
 
 e2e:
-	docker compose -p findog-e2e -f compose.e2e.yml up --build --detach --wait backend mailcatcher
+	docker compose -p findog-e2e -f compose.e2e.yml up --build --detach --wait backend mailpit
 	docker compose -p findog-e2e -f compose.e2e.yml run --rm playwright
 
 e2e-down:

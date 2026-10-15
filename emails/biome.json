@@ -1,0 +1,6 @@
+{
+  "extends": ["../frontend/biome.json"],
+  "files": {
+    "includes": ["**", "!**/previews/**", "!**/.react-email/**", "!**/node_modules/**"]
+  }
+}

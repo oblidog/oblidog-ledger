@@ -4,6 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -325,3 +326,104 @@ def test_integration_obligation_actions_are_attributed_to_the_current_run(
     assert action["actor_display_name"] == "Meter"
     assert action["integration_id"] == integration_id
     assert action["run_id"] == str(run_id)
+
+
+@pytest.mark.parametrize("caller", ["regular", "integration"])
+def test_category_data_history_preserves_filters_order_and_access_boundaries(
+    client: TestClient, db: Session, caller: str
+) -> None:
+    created, headers, ledger, category = _create_integration(client, db)
+    schema = {
+        "type": "object",
+        "properties": {"reading": {"type": "number"}},
+        "required": ["reading"],
+    }
+    category_use_cases.set_category_data_schema(
+        session=db, ledger_id=ledger.id, category_id=category.id, schema=schema
+    )
+    records = []
+    for reading, day in enumerate((1, 2, 2, 3)):
+        if reading == 2:
+            category_use_cases.set_category_data_schema(
+                session=db, ledger_id=ledger.id, category_id=category.id, schema=schema
+            )
+        records.append(
+            category_use_cases.create_category_data_record(
+                session=db,
+                ledger_id=ledger.id,
+                category_id=category.id,
+                observed_at=datetime(2026, 1, day, tzinfo=UTC),
+                data={"reading": reading},
+            )
+        )
+    other_category = category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=category.category_group_id,
+        name="Other history",
+        code="OTHR",
+    )
+    foreign_ledger, _, foreign_category = create_category_tree(db)
+    for other_ledger, other in (
+        (ledger, other_category),
+        (foreign_ledger, foreign_category),
+    ):
+        category_use_cases.set_category_data_schema(
+            session=db, ledger_id=other_ledger.id, category_id=other.id, schema=schema
+        )
+        category_use_cases.create_category_data_record(
+            session=db,
+            ledger_id=other_ledger.id,
+            category_id=other.id,
+            observed_at=datetime(2026, 1, 2, tzinfo=UTC),
+            data={"reading": 999},
+        )
+    if caller == "integration":
+        url = f"{settings.API_V1_STR}/integration/category/data-records"
+        from_param, to_param = "from", "to"
+        headers = {"Authorization": f"Bearer {created['connection_key']}"}
+    else:
+        url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}/data-records"
+        from_param, to_param = "observed_from", "observed_to"
+
+    expected = sorted(
+        records, key=lambda record: (record.observed_at, record.id), reverse=True
+    )
+    response = client.get(url, headers=headers)
+    assert response.status_code == 200, response.text
+    assert set(response.json()) == {"data", "count"}
+    assert response.json()["count"] == 4
+    assert [record["id"] for record in response.json()["data"]] == [
+        str(record.id) for record in expected
+    ]
+    assert {record["schema_version"] for record in response.json()["data"]} == {1, 2}
+
+    boundary = datetime(2026, 1, 2, tzinfo=UTC).isoformat()
+    params: dict[str, str | int] = {
+        from_param: boundary,
+        to_param: boundary,
+        "limit": 1,
+        "offset": 1,
+    }
+    page = client.get(url, headers=headers, params=params)
+    assert page.status_code == 200, page.text
+    assert page.json()["count"] == 2
+    assert [record["id"] for record in page.json()["data"]] == [str(expected[2].id)]
+
+    params["offset"] = 2
+    empty_page = client.get(url, headers=headers, params=params)
+    assert empty_page.status_code == 200
+    assert empty_page.json() == {"data": [], "count": 2}
+
+    for query, expected_count in (
+        ({from_param: boundary}, 3),
+        ({to_param: boundary}, 3),
+        ({from_param: datetime(2027, 1, 1, tzinfo=UTC).isoformat()}, 0),
+    ):
+        filtered = client.get(url, headers=headers, params=query)
+        assert filtered.status_code == 200, filtered.text
+        assert filtered.json()["count"] == expected_count
+        assert len(filtered.json()["data"]) == expected_count
+
+    for invalid_query in ({"limit": 0}, {"limit": 101}, {"offset": -1}):
+        assert client.get(url, headers=headers, params=invalid_query).status_code == 422

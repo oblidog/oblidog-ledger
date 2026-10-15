@@ -22,8 +22,10 @@ from app.models import (
     ObligationActionLog,
     User,
 )
+from app.services.daily_digest_presentation import build_daily_digest
+from app.services.daily_digest_rendering import render_daily_digest
 from app.use_cases.integrations import integration_status
-from app.utils import EmailData, render_email_template
+from app.utils import EmailData
 
 if TYPE_CHECKING:
     from app.use_cases.system_runs import SystemRunContext
@@ -106,28 +108,25 @@ class DailyObligationReport:
         )
         if not any(sections.values()) and not activity and not integration_health:
             return None
-        rendered = {
-            name: _group_by_ledger(items) for name, items in sections.items() if items
-        }
-        template_context = {
-            "project_name": settings.PROJECT_NAME,
-            "report_date": context.business_date.isoformat(),
-            "sections": rendered,
-            "activity": _group_activity_by_ledger(activity),
-            "activity_truncated": activity_truncated,
-            "integration_health": _group_integration_health_by_ledger(
-                integration_health
+        html, text = render_daily_digest(
+            project_name=settings.PROJECT_NAME,
+            report_date=context.business_date.isoformat(),
+            digest=build_daily_digest(
+                sections=sections,
+                activity_count=len(activity),
+                integration_count=len(integration_health),
+                integration_health_truncated=integration_health_truncated,
             ),
-            "integration_health_truncated": integration_health_truncated,
-        }
+            activity=_group_activity_by_ledger(activity),
+            activity_truncated=activity_truncated,
+            integration_health=_group_integration_health_by_ledger(integration_health),
+            integration_health_truncated=integration_health_truncated,
+            app_url=f"{settings.FRONTEND_HOST.rstrip('/')}/ledgers",
+        )
         return EmailData(
             subject=f"{settings.PROJECT_NAME} - Daily obligation report",
-            html_content=render_email_template(
-                template_name="daily_obligation_report.html", context=template_context
-            ),
-            text_content=render_email_template(
-                template_name="daily_obligation_report.txt", context=template_context
-            ),
+            html_content=html,
+            text_content=text,
         )
 
 
@@ -203,13 +202,6 @@ def _item(obligation: Obligation) -> DailyReportItem:
         due_date_state=obligation.due_date_state,
         link=f"{settings.FRONTEND_HOST}/ledgers/{obligation.ledger_id}/obligations/{obligation.id}",
     )
-
-
-def _group_by_ledger(items: list[DailyReportItem]) -> dict[str, list[DailyReportItem]]:
-    grouped: dict[str, list[DailyReportItem]] = defaultdict(list)
-    for item in items:
-        grouped[item.ledger_name].append(item)
-    return dict(grouped)
 
 
 def _activity_window(context: SystemRunContext) -> tuple[datetime, datetime]:

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.63.0-noble
+FROM mcr.microsoft.com/playwright:v1.64.0-noble
 
 WORKDIR /app
 
@@ -11,10 +11,11 @@ ENV PATH="/root/.bun/bin:$PATH"
 COPY package.json bun.lock /app/
 
 COPY frontend/package.json /app/frontend/
+COPY emails/package.json /app/emails/
 
 WORKDIR /app/frontend
 
-RUN bun install
+RUN bun install --frozen-lockfile
 
 COPY ./frontend /app/frontend
 

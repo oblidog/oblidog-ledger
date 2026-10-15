@@ -26,6 +26,7 @@ from app.services.scheduled_reports import ScheduledReport, deliver_scheduled_re
 from app.services.weekly_monthly_overview_report import WeeklyMonthlyOverviewReport
 from app.use_cases import legacy_import as legacy_import_use_cases
 from app.use_cases import obligations as obligation_use_cases
+from app.use_cases.integration_run_maintenance import maintain_run_history
 
 _UTC_TIMEZONE = ZoneInfo("UTC")
 
@@ -192,7 +193,7 @@ class ScheduledReportsTask:
     def execute(
         self, *, session: Session, ledger: Ledger | None, context: SystemRunContext
     ) -> TaskResult:
-        sent = skipped = failed = 0
+        sent = skipped = failed = uncertain = 0
         for report in self.reports:
             summary = deliver_scheduled_report(
                 session=session, report=report, context=context
@@ -200,15 +201,44 @@ class ScheduledReportsTask:
             sent += summary.sent
             skipped += summary.skipped
             failed += summary.failed
-        if failed:
-            raise RuntimeError(f"{failed} scheduled report deliveries failed")
+            uncertain += summary.uncertain
+        if failed or uncertain:
+            raise RuntimeError(
+                f"{failed} scheduled report deliveries failed; "
+                f"{uncertain} uncertain deliveries require operator recovery"
+            )
         return TaskResult({"sent": sent, "skipped": skipped, "failed": failed})
+
+
+class MaintenanceCleanupTask:
+    name = "maintenance_cleanup"
+    order = 400
+    mode = TaskRunMode.SCHEDULED
+    dependencies: tuple[str, ...] = ()
+    is_global = True
+
+    def should_run(self, context: SystemRunContext) -> SystemRunSkipReason | None:
+        return None
+
+    def eligible_ledgers(
+        self, *, session: Session, context: SystemRunContext
+    ) -> Sequence[Ledger]:
+        return []
+
+    def execute(
+        self, *, session: Session, ledger: Ledger | None, context: SystemRunContext
+    ) -> TaskResult:
+        summary: dict[str, object] = {
+            **maintain_run_history(session, now=datetime.now(UTC))
+        }
+        return TaskResult(summary)
 
 
 SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
     cast(SystemRunTask, LegacyImportTask()),
     cast(SystemRunTask, EnsureObligationsTask()),
     cast(SystemRunTask, EstimateObligationAmountsTask()),
+    cast(SystemRunTask, MaintenanceCleanupTask()),
     cast(
         SystemRunTask,
         ScheduledReportsTask((DailyObligationReport(), WeeklyMonthlyOverviewReport())),

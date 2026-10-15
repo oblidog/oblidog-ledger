@@ -154,3 +154,21 @@ class IntegrationConflictDetail(BaseModel):
 
 class IntegrationConflictResponse(BaseModel):
     detail: IntegrationConflictDetail
+
+
+class IntegrationRunPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    integration_id: uuid.UUID
+    started_at: datetime
+    deadline_at: datetime
+    finished_at: datetime | None
+    result: str | None
+    changes_detected: bool | None
+    error_code: str | None
+    error_message: str | None
+
+
+class IntegrationRunsPublic(BaseModel):
+    data: list[IntegrationRunPublic]
+    count: int

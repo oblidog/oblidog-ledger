@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import cast
 from zoneinfo import ZoneInfo
 
+import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -73,6 +74,35 @@ class FakeTask:
         return TaskResult({"ledger": str(ledger.id)})
 
 
+class FakeGlobalTask(FakeTask):
+    is_global = True
+
+    def __init__(
+        self,
+        name: str,
+        order: int,
+        *,
+        dependencies: tuple[str, ...] = (),
+        fail: bool = False,
+    ) -> None:
+        super().__init__(name, order, [], dependencies=dependencies)
+        self.fail = fail
+
+    def eligible_ledgers(
+        self, *, session: Session, context: SystemRunContext
+    ) -> list[Ledger]:
+        raise AssertionError("Global tasks must bypass ledger eligibility")
+
+    def execute(
+        self, *, session: Session, ledger: Ledger | None, context: SystemRunContext
+    ) -> TaskResult:
+        self.calls.append(ledger)
+        assert ledger is None
+        if self.fail:
+            raise RuntimeError("global task failed")
+        return TaskResult({"processed": 1})
+
+
 def _ledger(db: Session, name: str) -> Ledger:
     user = create_random_user(db)
     return ledger_use_cases.create_ledger(session=db, owner_user_id=user.id, name=name)
@@ -90,6 +120,138 @@ def _steps(db: Session, run_id: object) -> list[SystemRunStep]:
     return list(
         db.scalars(select(SystemRunStep).where(SystemRunStep.system_run_id == run_id))
     )
+
+
+@pytest.mark.parametrize("ledger_count", [0, 2])
+def test_global_task_runs_once_without_a_ledger(db: Session, ledger_count: int) -> None:
+    for index in range(ledger_count):
+        _ledger(db, f"Global target {index}")
+    task = FakeGlobalTask("global", 100)
+
+    run = SystemRunOrchestrator((task,)).run(session=db, context=_context())
+
+    with TestingSessionLocal() as persisted:
+        steps = _steps(persisted, run.id)
+        assert len(steps) == 1
+        step = steps[0]
+        assert step.task_name == task.name
+        assert step.ledger_id is None
+        assert step.status is SystemRunStepStatus.SUCCEEDED
+        assert step.summary == {"processed": 1}
+        assert step.skip_reason is None
+        assert step.error is None
+        assert step.finished_at is not None
+    assert task.calls == [None]
+    assert run.status is SystemRunStatus.SUCCESS
+
+
+@pytest.mark.parametrize("failing_index", [0, 1])
+def test_global_task_is_blocked_by_dependency_failure_on_any_ledger(
+    db: Session, failing_index: int
+) -> None:
+    ledgers = [_ledger(db, "First prerequisite"), _ledger(db, "Second prerequisite")]
+    prerequisite = FakeTask(
+        "prerequisite", 100, ledgers, failing_ledger_ids={ledgers[failing_index].id}
+    )
+    task = FakeGlobalTask("global", 200, dependencies=("prerequisite",))
+
+    run = SystemRunOrchestrator((task, prerequisite)).run(
+        session=db, context=_context()
+    )
+
+    with TestingSessionLocal() as persisted:
+        steps = [
+            step for step in _steps(persisted, run.id) if step.task_name == task.name
+        ]
+        assert len(steps) == 1
+        assert steps[0].ledger_id is None
+        assert steps[0].status is SystemRunStepStatus.SKIPPED
+        assert steps[0].skip_reason is SystemRunSkipReason.PREREQUISITE_FAILED
+    assert prerequisite.calls == [ledger.id for ledger in ledgers]
+    assert task.calls == []
+    assert run.status is SystemRunStatus.PARTIAL_FAILURE
+    assert run.summary == {"succeeded_steps": 1, "failed_steps": 1, "skipped_steps": 1}
+
+
+@pytest.mark.parametrize("unrelated_failure", [False, True])
+def test_global_task_runs_when_all_dependency_ledgers_succeed(
+    db: Session, unrelated_failure: bool
+) -> None:
+    ledgers = [_ledger(db, "First success"), _ledger(db, "Second success")]
+    prerequisite = FakeTask("prerequisite", 100, ledgers)
+    independent = FakeTask(
+        "independent",
+        200,
+        ledgers,
+        failing_ledger_ids={ledgers[0].id} if unrelated_failure else set(),
+    )
+    task = FakeGlobalTask("global", 300, dependencies=("prerequisite",))
+
+    run = SystemRunOrchestrator((task, independent, prerequisite)).run(
+        session=db, context=_context()
+    )
+
+    with TestingSessionLocal() as persisted:
+        steps = _steps(persisted, run.id)
+        prerequisite_steps = [
+            step for step in steps if step.task_name == prerequisite.name
+        ]
+        assert len(prerequisite_steps) == 2
+        assert all(
+            step.status is SystemRunStepStatus.SUCCEEDED for step in prerequisite_steps
+        )
+        global_steps = [step for step in steps if step.task_name == task.name]
+        assert len(global_steps) == 1
+        assert global_steps[0].ledger_id is None
+        assert global_steps[0].status is SystemRunStepStatus.SUCCEEDED
+        assert global_steps[0].skip_reason is None
+    assert prerequisite.calls == [ledger.id for ledger in ledgers]
+    assert task.calls == [None]
+
+
+@pytest.mark.parametrize(
+    ("include_success", "expected_status"),
+    [(False, SystemRunStatus.FAILURE), (True, SystemRunStatus.PARTIAL_FAILURE)],
+)
+def test_failed_global_task_is_persisted_and_fails_the_scheduled_run(
+    db: Session, include_success: bool, expected_status: SystemRunStatus
+) -> None:
+    task = FakeGlobalTask("global", 200, fail=True)
+    tasks: list[SystemRunTask] = [task]
+    if include_success:
+        tasks.append(FakeTask("success", 100, [_ledger(db, "Successful target")]))
+
+    run = run_scheduled_system_run(
+        session=db,
+        effective_at=_context().effective_at,
+        orchestrator=SystemRunOrchestrator(tasks),
+    )
+
+    assert run is not None
+    with TestingSessionLocal() as persisted:
+        saved_run = persisted.get(SystemRun, run.id)
+        assert saved_run is not None
+        assert saved_run.status is expected_status
+        assert saved_run.finished_at is not None
+        assert saved_run.summary == {
+            "succeeded_steps": int(include_success),
+            "failed_steps": 1,
+            "skipped_steps": 0,
+        }
+        steps = [
+            step for step in _steps(persisted, run.id) if step.task_name == task.name
+        ]
+        assert len(steps) == 1
+        step = steps[0]
+        assert step.ledger_id is None
+        assert step.status is SystemRunStepStatus.FAILED
+        assert step.error == "global task failed"
+        assert step.summary is None
+        assert step.skip_reason is None
+        assert step.finished_at is not None
+    assert task.calls == [None]
+    assert run.status is expected_status
+    assert exit_code(run) == 1
 
 
 def test_failure_blocks_dependents_transitively_but_not_independent_ledgers(

@@ -1,0 +1,15 @@
+{
+  "project_name": "Oblidog",
+  "preheader": "A clear view of your upcoming payments.",
+  "title": "A little clarity for your week.",
+  "intro": "Your upcoming payments, gathered in one place. Open your ledger whenever you need the details.",
+  "report_date": "15 October 2026",
+  "summary": {
+    "label": "Coming up in the next 7 days",
+    "value": "No upcoming payments"
+  },
+  "notice": "Nothing needs your attention right now.",
+  "ledgers": [],
+  "app_url": "https://example.com/ledger",
+  "footer_note": "You receive this example because email reports are enabled. Manage preferences in Oblidog."
+}

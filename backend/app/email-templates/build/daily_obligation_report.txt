@@ -1,36 +1,58 @@
 {{ project_name }}: daily obligation report
 Report date: {{ report_date }}
-{% if integration_health %}
+
+{% if size_notice %}{{ size_notice }}
+Open full data in Oblidog: {{ app_url }}
+{% endif %}
+{{ digest.summary_title }}
+{{ digest.summary_detail }}
+{% for section in digest.sections %}
+
+{{ section.title }} · {{ section.count }}
+{% if section.omitted_count %}Showing {{ section.count - section.omitted_count }} of {{ section.count }} obligations in this section. Remaining items are available in Oblidog.
+{% endif %}
+{% for ledger in section.ledgers %}
+{{ ledger.name }}
+{% for row in ledger.obligations %}
+- {{ row.category_name }} | {{ row.due_label }} | {{ row.amount_label }} ({{ row.amount_detail }})
+  View obligation: {{ row.link }}
+{% endfor %}
+{% endfor %}
+{% endfor %}
+{% if integration_health or integration_health_truncated %}
 
 Integration health
-{% for ledger_name, items in integration_health.items() %}
+{% for ledger_name, entries in integration_health.items() %}
 {{ ledger_name }}
-{% for item in items %}
-- {{ item.integration_name }} | {{ item.health|replace('_', ' ')|title }} | {{ item.detail }}{% if item.last_success_at %} | last success: {{ item.last_success_at }}{% endif %} | {{ item.link }}
+{% for entry in entries %}
+- {{ entry.integration_name }} | {{ entry.health|replace('_', ' ')|title }} | {{ entry.detail }}{% if entry.last_success_at %} | last success: {{ entry.last_success_at }}{% endif %} | {{ entry.link }}
 {% endfor %}
 {% endfor %}
 {% if integration_health_truncated %}Additional unhealthy integrations were omitted to keep this report concise.
 {% endif %}{% endif %}
-{% if activity %}
+{% if digest.currencies %}
+
+Amounts in this digest
+Subtotals are separate by currency and cover all selected obligations, including any rows omitted from this email.
+{% for currency in digest.currencies %}
+{{ currency.currency }}
+{% if currency.confirmed_label %}{{ currency.confirmed_label }}
+{% endif %}{% if currency.unconfirmed_label %}{{ currency.unconfirmed_label }}
+{% endif %}{{ currency.detail }}
+{% endfor %}
+{% endif %}
+{% if activity or activity_truncated %}
 
 Recent activity
-{% for ledger_name, items in activity.items() %}
+{% for ledger_name, entries in activity.items() %}
 {{ ledger_name }}
-{% for item in items %}
-- {{ item.category_name }} | {{ item.actor_name }} | {{ item.link }}
-{% for message in item.messages %}  - {{ message }}
-{% endfor %}{% if item.omitted_changes %}  - And {{ item.omitted_changes }} more changes
+{% for entry in entries %}
+- {{ entry.category_name }} | {{ entry.actor_name }} | {{ entry.link }}
+{% for message in entry.messages %}  - {{ message }}
+{% endfor %}{% if entry.omitted_changes %}  - And {{ entry.omitted_changes }} more changes
 {% endif %}{% endfor %}
 {% endfor %}
 {% if activity_truncated %}Additional activity was omitted to keep this report concise.
 {% endif %}{% endif %}
-{% for section, ledgers in sections.items() %}
 
-{{ section|replace('_', ' ')|title }}
-{% for ledger_name, items in ledgers.items() %}
-{{ ledger_name }}
-{% for item in items %}
-- {{ item.category_name }} | due: {{ item.due_date or 'unknown' }}{% if item.due_date_state != 'confirmed' %} ({{ item.due_date_state }}){% endif %} | amount: {% if item.amount is none %}unknown{% else %}{{ item.amount }} {{ item.currency or '' }}{% endif %}{% if item.amount_state != 'confirmed' %} ({{ item.amount_state }}){% endif %} | {{ item.link }}
-{% endfor %}
-{% endfor %}
-{% endfor %}
+Manage email preferences in your Oblidog settings.

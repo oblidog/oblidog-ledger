@@ -1,0 +1,40 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "1 obligation needs attention",
+    "summary_detail": "Needs preparation: 1",
+    "sections": [
+      {
+        "title": "Needs preparation",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Workshop",
+            "obligations": [
+              {
+                "category_name": "Workshop hosting",
+                "amount_label": "24.90 EUR",
+                "amount_detail": "Estimated",
+                "due_label": "Due 2026-10-19 · Estimated",
+                "link": "https://example.com/ledgers/home/obligations/workshop-hosting"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "EUR",
+        "confirmed_label": null,
+        "unconfirmed_label": "24.90 EUR estimated/unconfirmed subtotal",
+        "detail": "Partial amounts · 1 estimated/unconfirmed amount"
+      }
+    ]
+  },
+  "activity": {},
+  "integration_health": {},
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

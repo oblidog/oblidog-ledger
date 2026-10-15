@@ -1,0 +1,64 @@
+name: Email Templates
+
+on:
+  pull_request:
+    paths:
+      - emails/**
+      - backend/app/email_rendering.py
+      - backend/app/email-templates/**
+      - backend/app/utils.py
+      - backend/app/services/daily_digest_presentation.py
+      - backend/app/services/daily_digest_rendering.py
+      - backend/app/services/daily_obligation_report.py
+      - tests/test_email_templates.py
+      - tests/test_daily_digest_rendering.py
+      - package.json
+      - bun.lock
+      - .github/workflows/email-templates.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: email-templates-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  email-templates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v7
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter @oblidog/emails typecheck
+      - run: bun run --filter @oblidog/emails lint
+      - name: Verify committed HTML and text are fresh
+        run: bun run email:check
+      - name: Verify runtime data, conditions, escaping and text delivery
+        run: uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py
+      - name: Render all synthetic fixture previews through Python
+        run: uv run --locked python emails/scripts/render_previews.py
+      - name: Build Python wheel and verify packaged templates
+        run: |
+          uv build --package app --wheel --out-dir /tmp/email-wheel
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          with ZipFile(next(Path('/tmp/email-wheel').glob('*.whl'))) as wheel:
+              for name in ('foundation.html', 'foundation.txt', 'daily_obligation_report.html', 'daily_obligation_report.txt'):
+                  assert f'app/email-templates/build/{name}' in wheel.namelist()
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: email-fixture-previews
+          path: emails/previews
+          retention-days: 14

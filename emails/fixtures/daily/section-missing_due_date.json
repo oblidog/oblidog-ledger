@@ -1,0 +1,40 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "1 obligation needs attention",
+    "summary_detail": "Missing due date: 1",
+    "sections": [
+      {
+        "title": "Missing due date",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Home insurance",
+                "amount_label": "240.00 PLN",
+                "amount_detail": "Overridden",
+                "due_label": "Due date unknown",
+                "link": "https://example.com/ledgers/home/obligations/home-insurance"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "PLN",
+        "confirmed_label": "240.00 PLN confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      }
+    ]
+  },
+  "activity": {},
+  "integration_health": {},
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

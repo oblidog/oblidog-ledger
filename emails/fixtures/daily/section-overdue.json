@@ -1,0 +1,40 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "1 obligation needs attention",
+    "summary_detail": "Overdue: 1",
+    "sections": [
+      {
+        "title": "Overdue",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Water and wastewater",
+                "amount_label": "129.50 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-12 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/water-and-wastewater"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "PLN",
+        "confirmed_label": "129.50 PLN confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      }
+    ]
+  },
+  "activity": {},
+  "integration_health": {},
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

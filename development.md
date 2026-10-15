@@ -43,9 +43,9 @@ To check the logs of a specific service, add the name of the service, e.g.:
 docker compose logs backend
 ```
 
-## Mailcatcher
+## Mailpit
 
-Mailcatcher is a simple SMTP server that catches all emails sent by the backend during local development. Instead of sending real emails, they are captured and displayed in a web interface.
+Mailpit is a simple SMTP server that catches all emails sent by the backend during local development. Instead of sending real emails, they are captured and displayed in a web interface.
 
 This is useful for:
 
@@ -53,7 +53,36 @@ This is useful for:
 * Verifying email content and formatting
 * Debugging email-related functionality without sending real emails
 
-The backend is automatically configured to use Mailcatcher when running with Docker Compose locally (SMTP on port 1025). All captured emails can be viewed at <http://localhost:1080>.
+The backend is automatically configured to use Mailpit when running with Docker Compose locally (SMTP on port 1025). All captured emails can be viewed at <http://localhost:8025>.
+
+For a host backend (`make dev-b`), start only `docker compose up -d --wait mailpit`
+and set `SMTP_HOST=localhost`, `SMTP_PORT=1025`, `SMTP_TLS=false`,
+`SMTP_SSL=false`, empty `SMTP_USER`/`SMTP_PASSWORD`, and
+`EMAILS_FROM_EMAIL=noreply@example.com` in your local environment. Never start
+the default Compose backend alongside `make dev-b`.
+
+To preview report emails, use a disposable local development database and enable
+Daily report or Weekly report in the test user's settings. Trigger System Run
+from the admin interface (weekly reports run on Monday), then inspect the HTML
+and text versions in Mailpit. Scheduled reports record delivery, so repeat runs
+for the same reporting period may be skipped. Mailpit has no external SMTP relay
+configured; captured messages stay local.
+
+Email E2E tests use `make e2e`, which runs the dedicated `compose.e2e.yml` stack
+with its own database, SMTP capture service, and no published backend port.
+`MAILPIT_HOST=http://mailpit:8025` selects the capture API inside that stack.
+Helpers search by recipient and subject, stop after five seconds (including hung
+HTTP requests), and extract links from message HTML without opening the viewer.
+Browser navigation uses Playwright's configured application base URL. Run helper
+regressions alone with `cd frontend && bun test ./tests/utils/mailpit.unit.ts`.
+
+## Email design system
+
+React Email preview/export commands, runtime Jinja integration and synthetic
+fixture previews are documented in [emails/README.md](emails/README.md).
+Run `bun run email:dev` for the component preview or render the Python fixture
+matrix with `uv run --locked python emails/scripts/render_previews.py`.
+Generated HTML/text are committed and checked for freshness in CI.
 
 ## Local Development
 
@@ -228,4 +257,38 @@ Adminer: <http://localhost:8080>
 
 Traefik UI: <http://localhost:8090>
 
-MailCatcher: <http://localhost:1080>
+Mailpit: <http://localhost:8025>
+
+## Codecov coverage reports
+
+The existing backend and frontend unit-test workflows upload separate `backend`
+and `frontend` reports to Codecov after successful tests. Backend XML uses the
+same coverage configuration and exclusions as the existing HTML report; the
+85% backend gate remains enforced by `coverage report --fail-under=85`.
+Frontend coverage comes from Bun unit tests and covers the files exercised by
+those tests, not the entire React UI or Playwright scenarios. Codecov statuses
+are informational and PR comments are disabled. An upload failure does not
+fail the test job.
+
+To enable the service, sign in to Codecov with GitHub and grant its GitHub App
+access to `oblidog/oblidog-ledger`. Uploads authenticate through GitHub OIDC
+with job-scoped `id-token: write`; no `CODECOV_TOKEN` secret is needed. Fork
+PR uploads use Codecov's tokenless handling instead of OIDC.
+
+Tests still run on pull requests, respecting the existing release/back-sync
+skip policy. No extra automatic test run is added on merge or release. To
+create an initial baseline on `dev` or `main`, run both **Test Backend** and
+**Frontend Unit Tests** manually from the Actions tab using that branch.
+Repeat the manual runs when a current base-branch report is needed for
+comparisons. The workflows must exist on the default branch before GitHub
+exposes their manual-run controls.
+
+Generate the same reports locally:
+
+```bash
+# Backend, after the usual test run (from backend/)
+uv run coverage xml -o coverage.xml
+
+# Frontend (from frontend/)
+bun run test:unit --coverage --coverage-reporter=lcov
+```
