@@ -1,0 +1,27 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "1 activity update",
+    "summary_detail": "1 activity update shown",
+    "sections": [],
+    "currencies": []
+  },
+  "activity": {
+    "Household": [
+      {
+        "category_name": "Home internet",
+        "actor_name": "Example integration",
+        "messages": [
+          "Amount changed: 79.00 → 89.00",
+          "New invoice: October invoice (89.00)"
+        ],
+        "omitted_changes": 2,
+        "link": "https://example.com/ledgers/home/obligations/internet"
+      }
+    ]
+  },
+  "integration_health": {},
+  "activity_truncated": true,
+  "integration_health_truncated": false
+}

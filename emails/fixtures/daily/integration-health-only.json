@@ -1,0 +1,38 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "At least 3 integrations need review",
+    "summary_detail": "3 integrations shown to review",
+    "sections": [],
+    "currencies": []
+  },
+  "activity": {},
+  "integration_health": {
+    "Household": [
+      {
+        "integration_name": "Electricity provider",
+        "health": "error",
+        "detail": "provider_unavailable: Provider returned maintenance response",
+        "last_success_at": "2026-10-13T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/power"
+      },
+      {
+        "integration_name": "Account sync",
+        "health": "timed_out",
+        "detail": "The current run exceeded its configured timeout; started: 2026-10-15T09:00+02:00; deadline: 2026-10-15T09:30+02:00",
+        "last_success_at": null,
+        "link": "https://example.com/ledgers/home/integrations/account"
+      },
+      {
+        "integration_name": "Workshop sync",
+        "health": "stale",
+        "detail": "No completed run within the configured freshness interval; last completed run: 2026-10-12T09:30+02:00",
+        "last_success_at": "2026-10-12T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/workshop"
+      }
+    ]
+  },
+  "activity_truncated": false,
+  "integration_health_truncated": true
+}

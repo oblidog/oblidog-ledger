@@ -1,0 +1,40 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "1 obligation needs attention",
+    "summary_detail": "Obligation errors: 1",
+    "sections": [
+      {
+        "title": "Obligation errors",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Electricity",
+                "amount_label": "Amount unknown",
+                "amount_detail": "Unknown",
+                "due_label": "Due 2026-10-20 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/electricity"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "PLN",
+        "confirmed_label": null,
+        "unconfirmed_label": null,
+        "detail": "Partial amounts · 1 unknown amount"
+      }
+    ]
+  },
+  "activity": {},
+  "integration_health": {},
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

@@ -7,7 +7,10 @@ on:
       - backend/app/email_rendering.py
       - backend/app/email-templates/**
       - backend/app/utils.py
+      - backend/app/services/daily_digest_presentation.py
+      - backend/app/services/daily_obligation_report.py
       - tests/test_email_templates.py
+      - tests/test_daily_digest_rendering.py
       - package.json
       - bun.lock
       - .github/workflows/email-templates.yml
@@ -39,7 +42,7 @@ jobs:
       - name: Verify committed HTML and text are fresh
         run: bun run email:check
       - name: Verify runtime data, conditions, escaping and text delivery
-        run: uv run --locked pytest -q tests/test_email_templates.py
+        run: uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py
       - name: Render all synthetic fixture previews through Python
         run: uv run --locked python emails/scripts/render_previews.py
       - name: Build Python wheel and verify packaged templates
@@ -50,7 +53,7 @@ jobs:
           from zipfile import ZipFile
 
           with ZipFile(next(Path('/tmp/email-wheel').glob('*.whl'))) as wheel:
-              for name in ('foundation.html', 'foundation.txt'):
+              for name in ('foundation.html', 'foundation.txt', 'daily_obligation_report.html', 'daily_obligation_report.txt'):
                   assert f'app/email-templates/build/{name}' in wheel.namelist()
           PY
       - uses: actions/upload-artifact@v7
