@@ -42,6 +42,7 @@ class DigestSection:
     title: str
     count: int
     ledgers: tuple[DigestLedger, ...]
+    omitted_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,11 +196,11 @@ def build_daily_digest(
     ]
     if integration_count:
         counts.append(
-            f"{_count(integration_count, 'integration', 'integrations')} shown to review"
+            f"{_count(integration_count, 'integration', 'integrations')} selected for review"
         )
     if activity_count:
         counts.append(
-            f"{_count(activity_count, 'activity update', 'activity updates')} shown"
+            f"{_count(activity_count, 'activity update', 'activity updates')} selected"
         )
     if all_items:
         title = f"{_count(len(all_items), 'obligation needs', 'obligations need')} attention"

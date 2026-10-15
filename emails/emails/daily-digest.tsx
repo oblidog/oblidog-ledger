@@ -93,6 +93,20 @@ export default function DailyDigestEmail({
       >
         Your daily digest
       </EmailHeading>
+      <TemplateIf
+        tokens={tokens}
+        expression="size_notice"
+        show={Boolean(context.size_notice)}
+      >
+        <Text style={textStyle}>
+          {v("size_notice", context.size_notice ?? "")}
+        </Text>
+        <Text style={textStyle}>
+          <Link href={v("app_url", context.app_url ?? "")} style={linkStyle}>
+            Open full data in Oblidog →
+          </Link>
+        </Text>
+      </TemplateIf>
       <EmailSummary
         label="Needs attention · selected items in this digest"
         value={v("digest.summary_title", digest.summary_title)}
@@ -111,6 +125,21 @@ export default function DailyDigestEmail({
           <EmailSection
             title={`${v("section.title", section.title)} · ${v("section.count", section.count)}`}
           >
+            <TemplateIf
+              tokens={tokens}
+              expression="section.omitted_count"
+              show={Boolean(section.omitted_count)}
+            >
+              <Text style={textStyle}>
+                Showing{" "}
+                {v(
+                  "section.count - section.omitted_count",
+                  section.count - (section.omitted_count ?? 0),
+                )}{" "}
+                of {v("section.count", section.count)} obligations in this
+                section. Remaining items are available in Oblidog.
+              </Text>
+            </TemplateIf>
             <TemplateLoop
               tokens={tokens}
               expression="ledger in section.ledgers"
@@ -234,8 +263,8 @@ export default function DailyDigestEmail({
       >
         <EmailSection title="Amounts in this digest">
           <Text style={textStyle}>
-            Subtotals are separate by currency and cover only the obligations
-            shown above.
+            Subtotals are separate by currency and cover all selected
+            obligations, including any rows omitted from this email.
           </Text>
           <TemplateLoop
             tokens={tokens}

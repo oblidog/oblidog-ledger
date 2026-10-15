@@ -8,6 +8,7 @@ on:
       - backend/app/email-templates/**
       - backend/app/utils.py
       - backend/app/services/daily_digest_presentation.py
+      - backend/app/services/daily_digest_rendering.py
       - backend/app/services/daily_obligation_report.py
       - tests/test_email_templates.py
       - tests/test_daily_digest_rendering.py

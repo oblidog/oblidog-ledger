@@ -9,6 +9,7 @@ export type DigestLedger = { name: string; obligations: DigestRow[] }
 export type DigestSection = {
   title: string
   count: number
+  omitted_count?: number
   ledgers: DigestLedger[]
 }
 export type DigestCurrency = {
@@ -33,6 +34,8 @@ export type Integration = {
 }
 export type DailyContext = {
   project_name: string
+  size_notice?: string
+  app_url?: string
   report_date: string
   digest: {
     summary_title: string

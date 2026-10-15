@@ -1,11 +1,16 @@
 {{ project_name }}: daily obligation report
 Report date: {{ report_date }}
 
+{% if size_notice %}{{ size_notice }}
+Open full data in Oblidog: {{ app_url }}
+{% endif %}
 {{ digest.summary_title }}
 {{ digest.summary_detail }}
 {% for section in digest.sections %}
 
 {{ section.title }} · {{ section.count }}
+{% if section.omitted_count %}Showing {{ section.count - section.omitted_count }} of {{ section.count }} obligations in this section. Remaining items are available in Oblidog.
+{% endif %}
 {% for ledger in section.ledgers %}
 {{ ledger.name }}
 {% for row in ledger.obligations %}
@@ -28,7 +33,7 @@ Integration health
 {% if digest.currencies %}
 
 Amounts in this digest
-Subtotals are separate by currency and cover only the obligations shown above.
+Subtotals are separate by currency and cover all selected obligations, including any rows omitted from this email.
 {% for currency in digest.currencies %}
 {{ currency.currency }}
 {% if currency.confirmed_label %}{{ currency.confirmed_label }}

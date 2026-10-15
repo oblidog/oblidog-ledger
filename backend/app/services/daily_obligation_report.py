@@ -23,8 +23,9 @@ from app.models import (
     User,
 )
 from app.services.daily_digest_presentation import build_daily_digest
+from app.services.daily_digest_rendering import render_daily_digest
 from app.use_cases.integrations import integration_status
-from app.utils import EmailData, render_email_template
+from app.utils import EmailData
 
 if TYPE_CHECKING:
     from app.use_cases.system_runs import SystemRunContext
@@ -107,30 +108,25 @@ class DailyObligationReport:
         )
         if not any(sections.values()) and not activity and not integration_health:
             return None
-        template_context = {
-            "project_name": settings.PROJECT_NAME,
-            "report_date": context.business_date.isoformat(),
-            "digest": build_daily_digest(
+        html, text = render_daily_digest(
+            project_name=settings.PROJECT_NAME,
+            report_date=context.business_date.isoformat(),
+            digest=build_daily_digest(
                 sections=sections,
                 activity_count=len(activity),
                 integration_count=len(integration_health),
                 integration_health_truncated=integration_health_truncated,
             ),
-            "activity": _group_activity_by_ledger(activity),
-            "activity_truncated": activity_truncated,
-            "integration_health": _group_integration_health_by_ledger(
-                integration_health
-            ),
-            "integration_health_truncated": integration_health_truncated,
-        }
+            activity=_group_activity_by_ledger(activity),
+            activity_truncated=activity_truncated,
+            integration_health=_group_integration_health_by_ledger(integration_health),
+            integration_health_truncated=integration_health_truncated,
+            app_url=f"{settings.FRONTEND_HOST.rstrip('/')}/ledgers",
+        )
         return EmailData(
             subject=f"{settings.PROJECT_NAME} - Daily obligation report",
-            html_content=render_email_template(
-                template_name="daily_obligation_report.html", context=template_context
-            ),
-            text_content=render_email_template(
-                template_name="daily_obligation_report.txt", context=template_context
-            ),
+            html_content=html,
+            text_content=text,
         )
 
 
