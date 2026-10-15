@@ -1,3 +1,19 @@
+## v0.19.0 (2026-10-15)
+
+### Feat
+
+- **reports**: redesign the daily digest with React Email (#507)
+- **email**: add React Email design system and safe Jinja export (#506)
+
+### Fix
+
+- **notifications**: handle uncertain scheduled report delivery outcomes (#499)
+
+### Refactor
+
+- **categories**: consolidate category data record queries (#498)
+- persist and display integration run history with retention (#495)
+
 ## v0.18.1 (2026-10-09)
 
 ### Fix
