@@ -3,19 +3,18 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import Any
 
 import jwt
 from emails.backend.response import SMTPResponse
 from emails.backend.smtp.backend import SMTPBackend
 from emails.message import Message
-from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
 
 from app.core import security
 from app.core.capabilities import Capability, ensure_capability
 from app.core.config import settings
+from app.email_rendering import render_email_template as render_email_template
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +30,6 @@ class EmailData:
 class PasswordResetTokenClaims:
     user_id: uuid.UUID
     token_id: uuid.UUID
-
-
-def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
-    template_str = (
-        Path(__file__).parent / "email-templates" / "build" / template_name
-    ).read_text()
-    html_content = Template(template_str).render(context)
-    return str(html_content)
 
 
 class _SingleAttemptSMTPBackend(SMTPBackend):

@@ -1,0 +1,69 @@
+{
+  "project_name": "Oblidog",
+  "preheader": "A clear view of your upcoming payments.",
+  "title": "A little clarity for your week.",
+  "intro": "Your upcoming payments, gathered in one place. Open your ledger whenever you need the details.",
+  "report_date": "15 October 2026",
+  "summary": {
+    "label": "Coming up in the next 7 days",
+    "value": "5 payments · 3 currencies"
+  },
+  "notice": "Currencies are shown separately. Unconfirmed amounts are never treated as zero.",
+  "ledgers": [
+    {
+      "name": "Everyday household",
+      "groups": [
+        {
+          "currency": "PLN",
+          "total_label": "Known upcoming amount · 489.00 PLN",
+          "obligations": [
+            {
+              "name": "Home internet",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/internet"
+            },
+            {
+              "name": "Swimming club",
+              "due_label": "Due 20 October · Ready to pay",
+              "amount_label": "280.00 PLN",
+              "url": "https://example.com/obligations/swimming"
+            },
+            {
+              "name": "Electricity",
+              "due_label": "Due 22 October · Estimate",
+              "amount_label": "120.00 PLN · unconfirmed",
+              "url": "https://example.com/obligations/power"
+            }
+          ]
+        },
+        {
+          "currency": "EUR",
+          "total_label": "Known upcoming amount · 24.90 EUR",
+          "obligations": [
+            {
+              "name": "Project hosting",
+              "due_label": "Due 19 October · Ready to pay",
+              "amount_label": "24.90 EUR",
+              "url": "https://example.com/obligations/hosting"
+            }
+          ]
+        },
+        {
+          "currency": "USD",
+          "total_label": "Known upcoming amount · incomplete",
+          "obligations": [
+            {
+              "name": "Cloud storage",
+              "due_label": "Date not confirmed",
+              "amount_label": "Amount not confirmed",
+              "url": "https://example.com/obligations/cloud"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "app_url": "https://example.com/ledger",
+  "footer_note": "You receive this example because email reports are enabled. Manage preferences in Oblidog."
+}

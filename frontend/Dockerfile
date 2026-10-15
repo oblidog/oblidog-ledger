@@ -6,10 +6,11 @@ WORKDIR /app
 COPY package.json bun.lock /app/
 
 COPY frontend/package.json /app/frontend/
+COPY emails/package.json /app/emails/
 
 WORKDIR /app/frontend
 
-RUN bun install
+RUN bun install --frozen-lockfile
 
 COPY ./frontend /app/frontend
 ARG VITE_API_URL
