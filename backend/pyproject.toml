@@ -37,7 +37,7 @@ dev = [
     "coverage>=7.15.4,<8.0.0",
     "openapi-python-client==0.29.1",
     "types-pyyaml>=6.0.12.20260906,<7.0.0",
-    "types-jsonschema>=4.26.0.20260518",
+    "types-jsonschema>=4.26.0.20261006",
 ]
 
 [build-system]
