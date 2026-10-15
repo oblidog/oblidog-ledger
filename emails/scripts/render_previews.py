@@ -23,6 +23,13 @@ def main() -> None:
                 template_name=f"foundation.{extension}", context=context
             )
             (args.out / f"{fixture.stem}.{extension}").write_text(rendered)
+    for fixture in sorted((ROOT / "emails" / "fixtures" / "daily").glob("*.json")):
+        context = json.loads(fixture.read_text())
+        for extension in ("html", "txt"):
+            rendered = render_email_template(
+                template_name=f"daily_obligation_report.{extension}", context=context
+            )
+            (args.out / f"daily-{fixture.stem}.{extension}").write_text(rendered)
     print(f"Rendered fixture previews in {args.out}")  # noqa: T201
 
 

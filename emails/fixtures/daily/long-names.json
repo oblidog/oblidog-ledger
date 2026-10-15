@@ -1,0 +1,77 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "1 obligation needs attention",
+    "summary_detail": "Overdue: 1 · 3 integrations selected for review · 1 activity update selected",
+    "sections": [
+      {
+        "title": "Overdue",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household, shared expenses and workshop — a deliberately long ledger name",
+            "obligations": [
+              {
+                "category_name": "Municipal Water & Wastewater Service / District Administration — Annual Reconciliation and Supplementary Maintenance Contribution XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                "amount_label": "129.50 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/long-category-reference"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "PLN",
+        "confirmed_label": "129.50 PLN confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      }
+    ]
+  },
+  "activity": {
+    "Household": [
+      {
+        "category_name": "Home internet",
+        "actor_name": "Example integration",
+        "messages": [
+          "Amount changed: 79.00 → 89.00",
+          "New invoice: October invoice (89.00)"
+        ],
+        "omitted_changes": 2,
+        "link": "https://example.com/ledgers/home/obligations/internet"
+      }
+    ]
+  },
+  "integration_health": {
+    "Household": [
+      {
+        "integration_name": "Electricity provider",
+        "health": "error",
+        "detail": "provider_unavailable: Provider returned maintenance response",
+        "last_success_at": "2026-10-13T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/power"
+      },
+      {
+        "integration_name": "Account sync",
+        "health": "timed_out",
+        "detail": "The current run exceeded its configured timeout; started: 2026-10-15T09:00+02:00; deadline: 2026-10-15T09:30+02:00",
+        "last_success_at": null,
+        "link": "https://example.com/ledgers/home/integrations/account"
+      },
+      {
+        "integration_name": "Workshop sync",
+        "health": "stale",
+        "detail": "No completed run within the configured freshness interval; last completed run: 2026-10-12T09:30+02:00",
+        "last_success_at": "2026-10-12T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/workshop"
+      }
+    ]
+  },
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

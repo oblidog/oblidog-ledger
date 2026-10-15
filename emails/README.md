@@ -4,9 +4,9 @@ React Email owns presentation. Python owns data selection, calculations,
 preferences, scheduling, SMTP and runtime Jinja rendering. No JavaScript service
 or external rendering API is involved in delivery.
 
-This workspace introduces a **foundation example**, not a replacement for the
-existing daily, weekly or transactional templates. Those migrations belong to
-#479, #480 and #481. Existing MJML sources stay in place until migrated.
+This workspace contains a foundation example and the live **daily digest**.
+Weekly and transactional migrations remain in #480 and #481. Existing MJML
+sources stay in place until migrated.
 
 ## Commands (repository root)
 
@@ -91,3 +91,43 @@ step or Node dependency in the backend image or Vercel Python runtime.
 To inspect a real multipart message during later migrations, follow the Mailpit
 instructions in `development.md`. Use disposable local test data for report
 previews; these commands do not run the scheduler or touch a database.
+
+## Daily digest
+
+`emails/daily-digest.tsx` and `daily-digest.txt.jinja` generate the live
+`daily_obligation_report.html` / `.txt` artifacts. The Python presentation
+adapter `app/services/daily_digest_presentation.py` only formats the already
+selected rows and their subtotals. Selection, recipient access, the previous-day
+activity window, business calendars, the no-email condition and delivery keys
+remain owned by the existing report service.
+
+The stable section order is overdue, obligation errors, ready to pay, needs
+preparation and missing due date. Currency subtotals cover the complete selected digest, including rows omitted
+from a size-limited email; confirmed/overridden values are separate from estimated/unconfirmed
+values. Missing amounts stay unknown, and unspecified currencies are never
+added together. Activity and integration health retain their details, links,
+last-success timestamps and all truncation notices.
+
+The 12 `fixtures/daily/*.json` cases cover each section, activity-only and
+integration-health-only messages, long names/lists, multiple ledgers/currencies,
+unknown amounts/dates and actual zero values. The Python preview command writes
+`previews/daily-*.html` and `.txt`. These snapshots and the React preview share
+the production presentation shape; regression tests also exercise the adapter
+and the actual report entry point without touching a database.
+
+### HTML size budget
+
+`daily_digest_rendering.py` checks the UTF-8 size after Jinja rendering against
+a 90 KiB budget. A priority prefix is retained with logarithmically bounded
+rendering probes: obligation sections first, then integration health, then
+activity. Neither the source selection nor monetary subtotals are changed.
+
+Shortened HTML and text both include a notice near the top, visible/selected
+counts, a link to the user's ledgers, per-section omitted counts and the existing
+health/activity truncation notices. Summary and currency labels explicitly cover
+the entire selection. A base layout that cannot fit even without detail rows
+fails rendering instead of sending oversized HTML.
+
+Regression cases include the review's mixed 35/40/20 digest, 70 obligations,
+large escaped Unicode fields, priority preservation and the real report entry
+point. Small digests retain all their data without size-truncation notices.

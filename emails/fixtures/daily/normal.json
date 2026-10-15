@@ -1,0 +1,155 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "5 obligations need attention",
+    "summary_detail": "Overdue: 1 · Obligation errors: 1 · Ready to pay: 1 · Needs preparation: 1 · Missing due date: 1 · 3 integrations selected for review · 1 activity update selected",
+    "sections": [
+      {
+        "title": "Overdue",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Water and wastewater",
+                "amount_label": "129.50 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-12 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/water-and-wastewater"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Obligation errors",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Electricity",
+                "amount_label": "Amount unknown",
+                "amount_detail": "Unknown",
+                "due_label": "Due 2026-10-20 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/electricity"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Ready to pay",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Home internet",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/home-internet"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Needs preparation",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Workshop",
+            "obligations": [
+              {
+                "category_name": "Workshop hosting",
+                "amount_label": "24.90 EUR",
+                "amount_detail": "Estimated",
+                "due_label": "Due 2026-10-19 · Estimated",
+                "link": "https://example.com/ledgers/home/obligations/workshop-hosting"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Missing due date",
+        "count": 1,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Home insurance",
+                "amount_label": "240.00 PLN",
+                "amount_detail": "Overridden",
+                "due_label": "Due date unknown",
+                "link": "https://example.com/ledgers/home/obligations/home-insurance"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "EUR",
+        "confirmed_label": null,
+        "unconfirmed_label": "24.90 EUR estimated/unconfirmed subtotal",
+        "detail": "Partial amounts · 1 estimated/unconfirmed amount"
+      },
+      {
+        "currency": "PLN",
+        "confirmed_label": "458.50 PLN confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "Partial amounts · 1 unknown amount"
+      }
+    ]
+  },
+  "activity": {
+    "Household": [
+      {
+        "category_name": "Home internet",
+        "actor_name": "Example integration",
+        "messages": [
+          "Amount changed: 79.00 → 89.00",
+          "New invoice: October invoice (89.00)"
+        ],
+        "omitted_changes": 2,
+        "link": "https://example.com/ledgers/home/obligations/internet"
+      }
+    ]
+  },
+  "integration_health": {
+    "Household": [
+      {
+        "integration_name": "Electricity provider",
+        "health": "error",
+        "detail": "provider_unavailable: Provider returned maintenance response",
+        "last_success_at": "2026-10-13T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/power"
+      },
+      {
+        "integration_name": "Account sync",
+        "health": "timed_out",
+        "detail": "The current run exceeded its configured timeout; started: 2026-10-15T09:00+02:00; deadline: 2026-10-15T09:30+02:00",
+        "last_success_at": null,
+        "link": "https://example.com/ledgers/home/integrations/account"
+      },
+      {
+        "integration_name": "Workshop sync",
+        "health": "stale",
+        "detail": "No completed run within the configured freshness interval; last completed run: 2026-10-12T09:30+02:00",
+        "last_success_at": "2026-10-12T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/workshop"
+      }
+    ]
+  },
+  "activity_truncated": true,
+  "integration_health_truncated": true
+}

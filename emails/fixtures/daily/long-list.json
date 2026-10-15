@@ -1,0 +1,315 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "35 obligations need attention",
+    "summary_detail": "Ready to pay: 35 · 3 integrations selected for review · 1 activity update selected",
+    "sections": [
+      {
+        "title": "Ready to pay",
+        "count": 35,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Synthetic obligation 01",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-01"
+              },
+              {
+                "category_name": "Synthetic obligation 02",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-02"
+              },
+              {
+                "category_name": "Synthetic obligation 03",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-03"
+              },
+              {
+                "category_name": "Synthetic obligation 04",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-04"
+              },
+              {
+                "category_name": "Synthetic obligation 05",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-05"
+              },
+              {
+                "category_name": "Synthetic obligation 06",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-06"
+              },
+              {
+                "category_name": "Synthetic obligation 07",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-07"
+              },
+              {
+                "category_name": "Synthetic obligation 08",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-08"
+              },
+              {
+                "category_name": "Synthetic obligation 09",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-09"
+              },
+              {
+                "category_name": "Synthetic obligation 10",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-10"
+              },
+              {
+                "category_name": "Synthetic obligation 11",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-11"
+              },
+              {
+                "category_name": "Synthetic obligation 12",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-12"
+              },
+              {
+                "category_name": "Synthetic obligation 13",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-13"
+              },
+              {
+                "category_name": "Synthetic obligation 14",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-14"
+              },
+              {
+                "category_name": "Synthetic obligation 15",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-15"
+              },
+              {
+                "category_name": "Synthetic obligation 16",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-16"
+              },
+              {
+                "category_name": "Synthetic obligation 17",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-17"
+              },
+              {
+                "category_name": "Synthetic obligation 18",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-18"
+              },
+              {
+                "category_name": "Synthetic obligation 19",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-19"
+              },
+              {
+                "category_name": "Synthetic obligation 20",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-20"
+              },
+              {
+                "category_name": "Synthetic obligation 21",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-21"
+              },
+              {
+                "category_name": "Synthetic obligation 22",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-22"
+              },
+              {
+                "category_name": "Synthetic obligation 23",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-23"
+              },
+              {
+                "category_name": "Synthetic obligation 24",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-24"
+              },
+              {
+                "category_name": "Synthetic obligation 25",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-25"
+              },
+              {
+                "category_name": "Synthetic obligation 26",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-26"
+              },
+              {
+                "category_name": "Synthetic obligation 27",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-27"
+              },
+              {
+                "category_name": "Synthetic obligation 28",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-28"
+              },
+              {
+                "category_name": "Synthetic obligation 29",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-29"
+              },
+              {
+                "category_name": "Synthetic obligation 30",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-30"
+              },
+              {
+                "category_name": "Synthetic obligation 31",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-31"
+              },
+              {
+                "category_name": "Synthetic obligation 32",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-32"
+              },
+              {
+                "category_name": "Synthetic obligation 33",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-33"
+              },
+              {
+                "category_name": "Synthetic obligation 34",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-34"
+              },
+              {
+                "category_name": "Synthetic obligation 35",
+                "amount_label": "89.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/synthetic-obligation-35"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "PLN",
+        "confirmed_label": "3115.00 PLN confirmed subtotal",
+        "unconfirmed_label": null,
+        "detail": "All amounts confirmed or overridden"
+      }
+    ]
+  },
+  "activity": {
+    "Household": [
+      {
+        "category_name": "Home internet",
+        "actor_name": "Example integration",
+        "messages": [
+          "Amount changed: 79.00 → 89.00",
+          "New invoice: October invoice (89.00)"
+        ],
+        "omitted_changes": 2,
+        "link": "https://example.com/ledgers/home/obligations/internet"
+      }
+    ]
+  },
+  "integration_health": {
+    "Household": [
+      {
+        "integration_name": "Electricity provider",
+        "health": "error",
+        "detail": "provider_unavailable: Provider returned maintenance response",
+        "last_success_at": "2026-10-13T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/power"
+      },
+      {
+        "integration_name": "Account sync",
+        "health": "timed_out",
+        "detail": "The current run exceeded its configured timeout; started: 2026-10-15T09:00+02:00; deadline: 2026-10-15T09:30+02:00",
+        "last_success_at": null,
+        "link": "https://example.com/ledgers/home/integrations/account"
+      },
+      {
+        "integration_name": "Workshop sync",
+        "health": "stale",
+        "detail": "No completed run within the configured freshness interval; last completed run: 2026-10-12T09:30+02:00",
+        "last_success_at": "2026-10-12T09:30+02:00",
+        "link": "https://example.com/ledgers/home/integrations/workshop"
+      }
+    ]
+  },
+  "activity_truncated": true,
+  "integration_health_truncated": true
+}

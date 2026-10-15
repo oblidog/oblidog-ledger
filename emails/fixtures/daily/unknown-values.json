@@ -1,0 +1,81 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-15",
+  "digest": {
+    "summary_title": "6 obligations need attention",
+    "summary_detail": "Needs preparation: 6",
+    "sections": [
+      {
+        "title": "Needs preparation",
+        "count": 6,
+        "ledgers": [
+          {
+            "name": "Household",
+            "obligations": [
+              {
+                "category_name": "Estimated amount",
+                "amount_label": "70.00 PLN",
+                "amount_detail": "Estimated",
+                "due_label": "Due 2026-10-16 · Estimated",
+                "link": "https://example.com/ledgers/home/obligations/estimated-amount"
+              },
+              {
+                "category_name": "Manual override",
+                "amount_label": "45.00 PLN",
+                "amount_detail": "Overridden",
+                "due_label": "Due 2026-10-16 · Overridden",
+                "link": "https://example.com/ledgers/home/obligations/manual-override"
+              },
+              {
+                "category_name": "Unconfirmed amount",
+                "amount_label": "15.00 PLN",
+                "amount_detail": "Unconfirmed",
+                "due_label": "Due 2026-10-16 · Unconfirmed",
+                "link": "https://example.com/ledgers/home/obligations/unconfirmed-amount"
+              },
+              {
+                "category_name": "Unspecified currency",
+                "amount_label": "999.00 currency unknown",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/unspecified-currency"
+              },
+              {
+                "category_name": "Zero confirmed",
+                "amount_label": "0.00 PLN",
+                "amount_detail": "Confirmed",
+                "due_label": "Due 2026-10-16 · Confirmed",
+                "link": "https://example.com/ledgers/home/obligations/zero-confirmed"
+              },
+              {
+                "category_name": "Awaiting invoice",
+                "amount_label": "Amount unknown",
+                "amount_detail": "Unknown",
+                "due_label": "Due date unknown",
+                "link": "https://example.com/ledgers/home/obligations/awaiting-invoice"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "currencies": [
+      {
+        "currency": "PLN",
+        "confirmed_label": "45.00 PLN confirmed subtotal",
+        "unconfirmed_label": "85.00 PLN estimated/unconfirmed subtotal",
+        "detail": "Partial amounts · 1 unknown amount · 2 estimated/unconfirmed amounts"
+      },
+      {
+        "currency": "Currency not specified",
+        "confirmed_label": null,
+        "unconfirmed_label": null,
+        "detail": "Not totalled: currency not specified"
+      }
+    ]
+  },
+  "activity": {},
+  "integration_health": {},
+  "activity_truncated": false,
+  "integration_health_truncated": false
+}

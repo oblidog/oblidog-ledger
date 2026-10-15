@@ -7,7 +7,7 @@
     "export": "bun run scripts/export.tsx",
     "check": "bun run scripts/export.tsx --check",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check --config-path=. components emails/foundation.tsx scripts/export.tsx fixtures/types.ts"
+    "lint": "biome check --config-path=. components emails/*.tsx scripts/export.tsx fixtures/*.ts"
   },
   "dependencies": {
     "@react-email/components": "1.0.12",

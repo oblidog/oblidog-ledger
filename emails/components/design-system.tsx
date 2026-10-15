@@ -201,11 +201,15 @@ export function ObligationRow({
   due,
   amount,
   href,
+  amountDetail,
+  actionLabel,
 }: {
   name: string
   due: string
   amount: string
   href: string
+  amountDetail?: string
+  actionLabel?: string
 }) {
   return (
     <Section style={{ borderBottom: "1px solid #e1e8e3", padding: "14px 0" }}>
@@ -249,6 +253,30 @@ export function ObligationRow({
       >
         {amount}
       </Text>
+      {amountDetail ? (
+        <Text
+          style={{
+            margin: "2px 0 0",
+            color: muted,
+            fontSize: "12px",
+            lineHeight: "19px",
+          }}
+        >
+          {amountDetail}
+        </Text>
+      ) : null}
+      {actionLabel ? (
+        <Text
+          style={{ margin: "8px 0 0", fontSize: "13px", lineHeight: "20px" }}
+        >
+          <Link
+            href={href}
+            style={{ color: "#1c614d", textDecoration: "underline" }}
+          >
+            {actionLabel}
+          </Link>
+        </Text>
+      ) : null}
     </Section>
   )
 }
