@@ -76,6 +76,14 @@ HTTP requests), and extract links from message HTML without opening the viewer.
 Browser navigation uses Playwright's configured application base URL. Run helper
 regressions alone with `cd frontend && bun test ./tests/utils/mailpit.unit.ts`.
 
+## Email design system
+
+React Email preview/export commands, runtime Jinja integration and synthetic
+fixture previews are documented in [emails/README.md](emails/README.md).
+Run `bun run email:dev` for the component preview or render the Python fixture
+matrix with `uv run --locked python emails/scripts/render_previews.py`.
+Generated HTML/text are committed and checked for freshness in CI.
+
 ## Local Development
 
 The Docker Compose files are configured so that each of the services is available in a different port in `localhost`.

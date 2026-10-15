@@ -1,0 +1,26 @@
+{
+  "name": "@oblidog/emails",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "email dev --dir ./emails --port 3001",
+    "export": "bun run scripts/export.tsx",
+    "check": "bun run scripts/export.tsx --check",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check --config-path=. components emails/foundation.tsx scripts/export.tsx fixtures/types.ts"
+  },
+  "dependencies": {
+    "@react-email/components": "1.0.12",
+    "@react-email/render": "2.1.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "react-email": "6.11.2",
+    "typescript": "5.9.3",
+    "@react-email/ui": "6.11.2",
+    "@biomejs/biome": "2.5.12"
+  }
+}

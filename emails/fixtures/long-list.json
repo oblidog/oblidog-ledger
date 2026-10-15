@@ -1,0 +1,237 @@
+{
+  "project_name": "Oblidog",
+  "preheader": "A clear view of your upcoming payments.",
+  "title": "A little clarity for your week.",
+  "intro": "Your upcoming payments, gathered in one place. Open your ledger whenever you need the details.",
+  "report_date": "15 October 2026",
+  "summary": {
+    "label": "Coming up in the next 7 days",
+    "value": "35 payments to keep in view"
+  },
+  "notice": "Long-list fixture: no hidden rows or truncated data.",
+  "ledgers": [
+    {
+      "name": "Everyday household",
+      "groups": [
+        {
+          "currency": "PLN",
+          "total_label": "Known upcoming amount · 3,115.00 PLN",
+          "obligations": [
+            {
+              "name": "Synthetic obligation 01",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/1"
+            },
+            {
+              "name": "Synthetic obligation 02",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/2"
+            },
+            {
+              "name": "Synthetic obligation 03",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/3"
+            },
+            {
+              "name": "Synthetic obligation 04",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/4"
+            },
+            {
+              "name": "Synthetic obligation 05",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/5"
+            },
+            {
+              "name": "Synthetic obligation 06",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/6"
+            },
+            {
+              "name": "Synthetic obligation 07",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/7"
+            },
+            {
+              "name": "Synthetic obligation 08",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/8"
+            },
+            {
+              "name": "Synthetic obligation 09",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/9"
+            },
+            {
+              "name": "Synthetic obligation 10",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/10"
+            },
+            {
+              "name": "Synthetic obligation 11",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/11"
+            },
+            {
+              "name": "Synthetic obligation 12",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/12"
+            },
+            {
+              "name": "Synthetic obligation 13",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/13"
+            },
+            {
+              "name": "Synthetic obligation 14",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/14"
+            },
+            {
+              "name": "Synthetic obligation 15",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/15"
+            },
+            {
+              "name": "Synthetic obligation 16",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/16"
+            },
+            {
+              "name": "Synthetic obligation 17",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/17"
+            },
+            {
+              "name": "Synthetic obligation 18",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/18"
+            },
+            {
+              "name": "Synthetic obligation 19",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/19"
+            },
+            {
+              "name": "Synthetic obligation 20",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/20"
+            },
+            {
+              "name": "Synthetic obligation 21",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/21"
+            },
+            {
+              "name": "Synthetic obligation 22",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/22"
+            },
+            {
+              "name": "Synthetic obligation 23",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/23"
+            },
+            {
+              "name": "Synthetic obligation 24",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/24"
+            },
+            {
+              "name": "Synthetic obligation 25",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/25"
+            },
+            {
+              "name": "Synthetic obligation 26",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/26"
+            },
+            {
+              "name": "Synthetic obligation 27",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/27"
+            },
+            {
+              "name": "Synthetic obligation 28",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/28"
+            },
+            {
+              "name": "Synthetic obligation 29",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/29"
+            },
+            {
+              "name": "Synthetic obligation 30",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/30"
+            },
+            {
+              "name": "Synthetic obligation 31",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/31"
+            },
+            {
+              "name": "Synthetic obligation 32",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/32"
+            },
+            {
+              "name": "Synthetic obligation 33",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/33"
+            },
+            {
+              "name": "Synthetic obligation 34",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/34"
+            },
+            {
+              "name": "Synthetic obligation 35",
+              "due_label": "Due 18 October · Ready to pay",
+              "amount_label": "89.00 PLN",
+              "url": "https://example.com/obligations/35"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "app_url": "https://example.com/ledger",
+  "footer_note": "You receive this example because email reports are enabled. Manage preferences in Oblidog."
+}

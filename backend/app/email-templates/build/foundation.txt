@@ -1,0 +1,28 @@
+{{ report.project_name }}
+{{ report.title }}
+{{ report.report_date }}
+
+{{ report.intro }}
+
+{{ report.summary.label }}: {{ report.summary.value }}
+{% if report.notice %}
+{{ report.notice }}
+{% endif %}
+{% for ledger in report.ledgers %}
+{{ ledger.name }}
+{% for group in ledger.groups %}
+{{ group.currency }} — {{ group.total_label }}
+{% for obligation in group.obligations %}
+- {{ obligation.name }}
+  {{ obligation.due_label }}
+  {{ obligation.amount_label }}
+  {{ obligation.url }}
+{% endfor %}
+{% endfor %}
+{% else %}
+No obligations in this snapshot.
+{% endfor %}
+Open Oblidog: {{ report.app_url }}
+
+{{ report.project_name }} · Keep your payments on a leash.
+{{ report.footer_note }}
