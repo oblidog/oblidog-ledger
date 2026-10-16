@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { ArrowLeft, Copy, RefreshCw, Settings } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   ApiError,
   CategoriesService,
@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiUrl } from "@/config"
 import useAuth from "@/hooks/useAuth"
+import { i18n } from "@/i18n"
+import { getLocale } from "@/i18n/format"
 import { IntegrationForm } from "./IntegrationForm"
 import { IntegrationRunHistory } from "./IntegrationRunHistory"
 import {
@@ -27,10 +29,18 @@ import {
 } from "./shared"
 
 const executionLabels: Record<IntegrationExecutionState, string> = {
-  never_run: "Never run",
-  running: "Running",
-  timed_out: "Timed out",
-  finished: "Finished",
+  get never_run() {
+    return i18n.t("app:integrations.never_run")
+  },
+  get running() {
+    return i18n.t("app:integrations.running")
+  },
+  get timed_out() {
+    return i18n.t("app:integrations.timed_out")
+  },
+  get finished() {
+    return i18n.t("app:integrations.finished")
+  },
 }
 
 function runDuration(startedAt: string | null, finishedAt: string | null) {
@@ -39,24 +49,17 @@ function runDuration(startedAt: string | null, finishedAt: string | null) {
     0,
     (new Date(finishedAt).getTime() - new Date(startedAt).getTime()) / 1000,
   )
-  return `${seconds.toFixed(1)} s`
+  return `${seconds.toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s`
 }
 
 function humanDuration(seconds: number) {
-  if (seconds < 60) return `${seconds} seconds`
-  if (seconds % 86_400 === 0) {
-    const days = seconds / 86_400
-    return `${days} ${days === 1 ? "day" : "days"}`
-  }
-  if (seconds % 3_600 === 0) {
-    const hours = seconds / 3_600
-    return `${hours} ${hours === 1 ? "hour" : "hours"}`
-  }
-  if (seconds % 60 === 0) {
-    const minutes = seconds / 60
-    return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`
-  }
-  return `${seconds.toLocaleString()} seconds`
+  if (seconds >= 86400 && seconds % 86400 === 0)
+    return i18n.t("app:messages.days", { count: seconds / 86400 })
+  if (seconds >= 3600 && seconds % 3600 === 0)
+    return i18n.t("app:messages.hours", { count: seconds / 3600 })
+  if (seconds >= 60 && seconds % 60 === 0)
+    return i18n.t("app:messages.minutes", { count: seconds / 60 })
+  return i18n.t("app:messages.seconds", { count: seconds })
 }
 
 export function IntegrationDetails({
@@ -66,6 +69,8 @@ export function IntegrationDetails({
   ledgerId: string
   integrationId: string
 }) {
+  useTranslation()
+
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<IntegrationPublic | null>(null)
@@ -126,14 +131,18 @@ export function IntegrationDetails({
     <div className="min-w-0 space-y-6">
       <Button variant="ghost" size="sm" asChild>
         <Link to="/ledgers/$ledgerId/integrations" params={{ ledgerId }}>
-          <ArrowLeft /> Back to integrations
+          <ArrowLeft /> {i18n.t("app:integrations.back_to_integrations")}
         </Link>
       </Button>
       {notFound ? (
         <Alert>
-          <AlertTitle>Integration not found</AlertTitle>
+          <AlertTitle>
+            {i18n.t("app:integrations.integration_not_found")}
+          </AlertTitle>
           <AlertDescription>
-            This instance is not available in this ledger.
+            {i18n.t(
+              "app:integrations.this_instance_is_not_available_in_this_ledger",
+            )}
           </AlertDescription>
         </Alert>
       ) : (
@@ -144,7 +153,9 @@ export function IntegrationDetails({
           />
         )
       )}
-      {integration.isPending && <p role="status">Loading integration…</p>}
+      {integration.isPending && (
+        <p role="status">{i18n.t("app:integrations.loading_integration")}</p>
+      )}
       {item && !notFound && (
         <>
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -158,12 +169,12 @@ export function IntegrationDetails({
               <p className="break-all text-sm text-muted-foreground">
                 {category
                   ? `${category.name} · ${category.code}`
-                  : "Category unavailable"}
+                  : i18n.t("app:integrations.category_unavailable")}
                 {" · "}
-                Last success:{" "}
+                {i18n.t("app:integrations.last_success")}{" "}
                 {item.last_success_at
                   ? dateTime(item.last_success_at)
-                  : "Never"}
+                  : i18n.t("app:integrations.never")}
               </p>
             </div>
             <div className="flex gap-2">
@@ -177,14 +188,14 @@ export function IntegrationDetails({
                   })
                 }}
               >
-                <RefreshCw /> Refresh
+                <RefreshCw /> {i18n.t("app:integrations.refresh")}
               </Button>
               {isOwner && (
                 <Button
                   disabled={integration.isError || integration.isFetching}
                   onClick={() => setEditing(item)}
                 >
-                  <Settings /> Configure
+                  <Settings /> {i18n.t("app:integrations.configure")}
                 </Button>
               )}
             </div>
@@ -192,36 +203,44 @@ export function IntegrationDetails({
 
           {!item.enabled && (
             <Alert>
-              <AlertTitle>Reporting disabled</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:integrations.reporting_disabled")}
+              </AlertTitle>
               <AlertDescription>
-                New runs cannot report a start. An already accepted run may
-                still finish. The external container and its API key remain
-                active.
+                {i18n.t(
+                  "app:integrations.new_runs_cannot_report_a_start_an_already_accepted_run_may_still_finish_the_external_",
+                )}
               </AlertDescription>
             </Alert>
           )}
           {item.is_stale && (
             <Alert variant="destructive">
-              <AlertTitle>Report overdue</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:integrations.report_overdue")}
+              </AlertTitle>
               <AlertDescription>
-                No completed report has arrived within the configured time. A
-                new running attempt does not clear this warning.
+                {i18n.t(
+                  "app:integrations.no_completed_report_has_arrived_within_the_configured_time_a_new_running_attempt_does",
+                )}
               </AlertDescription>
             </Alert>
           )}
           {item.execution_state === "timed_out" && (
             <Alert variant={item.enabled ? "destructive" : "default"}>
-              <AlertTitle>Run timed out</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:integrations.run_timed_out")}
+              </AlertTitle>
               <AlertDescription>
-                The last started run did not report completion before its
-                deadline. Ledger does not stop the external process.
+                {i18n.t(
+                  "app:integrations.the_last_started_run_did_not_report_completion_before_its_deadline_ledger_does_not_st",
+                )}
               </AlertDescription>
             </Alert>
           )}
 
           <Card className="min-w-0">
             <CardHeader>
-              <CardTitle>Latest run</CardTitle>
+              <CardTitle>{i18n.t("app:integrations.latest_run")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {item.last_finished_at ? (
@@ -247,20 +266,25 @@ export function IntegrationDetails({
                         item.current_started_at,
                         item.current_finished_at,
                       ) &&
-                        ` · Duration: ${runDuration(item.current_started_at, item.current_finished_at)}`}
+                        i18n.t("app:integrations.duration_0ef728", {
+                          value1: runDuration(
+                            item.current_started_at,
+                            item.current_finished_at,
+                          ),
+                        })}
                     </p>
                   </div>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No completed runs yet.
+                  {i18n.t("app:integrations.no_completed_runs_yet")}
                 </p>
               )}
 
               {item.last_error_message && (
                 <Alert variant="destructive" className="min-w-0">
                   <AlertTitle className="break-all">
-                    Last error
+                    {i18n.t("app:integrations.last_error")}
                     {item.last_error_code ? ` · ${item.last_error_code}` : ""}
                   </AlertTitle>
                   <AlertDescription>
@@ -273,40 +297,53 @@ export function IntegrationDetails({
 
               <details className="min-w-0">
                 <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
-                  Show technical details
+                  {i18n.t("app:integrations.show_technical_details")}
                 </summary>
                 <div className="mt-4 rounded-lg border p-4">
                   <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                      <dt className="text-muted-foreground">Execution</dt>
+                      <dt className="text-muted-foreground">
+                        {i18n.t("app:integrations.execution")}
+                      </dt>
                       <dd>{executionLabels[item.execution_state]}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Started at</dt>
+                      <dt className="text-muted-foreground">
+                        {i18n.t("app:integrations.started_at")}
+                      </dt>
                       <dd>{dateTime(item.current_started_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Finished at</dt>
+                      <dt className="text-muted-foreground">
+                        {i18n.t("app:integrations.finished_at")}
+                      </dt>
                       <dd>{dateTime(item.current_finished_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Deadline</dt>
+                      <dt className="text-muted-foreground">
+                        {i18n.t("app:integrations.deadline")}
+                      </dt>
                       <dd>{dateTime(item.current_deadline_at)}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Run timeout</dt>
+                      <dt className="text-muted-foreground">
+                        {i18n.t("app:integrations.run_timeout")}
+                      </dt>
                       <dd>{humanDuration(item.run_timeout_seconds)}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">
-                        Report overdue after
+                        {i18n.t("app:integrations.report_overdue_after")}
                       </dt>
                       <dd>{humanDuration(item.stale_after_seconds)}</dd>
                     </div>
                     <div className="min-w-0 sm:col-span-2 lg:col-span-3">
-                      <dt className="text-muted-foreground">Run ID</dt>
+                      <dt className="text-muted-foreground">
+                        {i18n.t("app:integrations.run_id")}
+                      </dt>
                       <dd className="break-all font-mono">
-                        {item.current_run_id ?? "No run yet"}
+                        {item.current_run_id ??
+                          i18n.t("app:integrations.no_run_yet")}
                       </dd>
                     </div>
                   </dl>
@@ -323,26 +360,30 @@ export function IntegrationDetails({
 
           <Card className="min-w-0">
             <CardHeader>
-              <CardTitle>Connection</CardTitle>
+              <CardTitle>{i18n.t("app:integrations.connection")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {newKey && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 sm:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <h3 className="font-semibold">Connection key created</h3>
+                      <h3 className="font-semibold">
+                        {i18n.t("app:integrations.connection_key_created")}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
-                        Save this key now. It will not be shown again.
+                        {i18n.t(
+                          "app:integrations.save_this_key_now_it_will_not_be_shown_again",
+                        )}
                       </p>
                     </div>
                     <span className="rounded-full border bg-background px-2.5 py-1 text-xs font-medium">
-                      Shown once
+                      {i18n.t("app:integrations.shown_once")}
                     </span>
                   </div>
 
                   <div className="mt-4 rounded-md border bg-background p-3">
                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      API key
+                      {i18n.t("app:integrations.api_key")}
                     </p>
                     <code className="block break-all text-sm">{newKey}</code>
                   </div>
@@ -351,7 +392,7 @@ export function IntegrationDetails({
                     <Button
                       onClick={() => void navigator.clipboard.writeText(newKey)}
                     >
-                      <Copy /> Copy key
+                      <Copy /> {i18n.t("app:integrations.copy_key")}
                     </Button>
                     <Button
                       variant="outline"
@@ -361,7 +402,8 @@ export function IntegrationDetails({
                         )
                       }
                     >
-                      <Copy /> Copy .env configuration
+                      <Copy />{" "}
+                      {i18n.t("app:integrations.copy_env_configuration")}
                     </Button>
                   </div>
                 </div>
@@ -373,12 +415,13 @@ export function IntegrationDetails({
                     {item.credentials.some(
                       (credential) => !credential.revoked_at,
                     )
-                      ? "Connection key active"
-                      : "No active connection key"}
+                      ? i18n.t("app:integrations.connection_key_active")
+                      : i18n.t("app:integrations.no_active_connection_key")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Used by the external integration runner to access this
-                    category.
+                    {i18n.t(
+                      "app:integrations.used_by_the_external_integration_runner_to_access_this_category",
+                    )}
                   </p>
                 </div>
                 {isOwner && (
@@ -387,7 +430,7 @@ export function IntegrationDetails({
                     onClick={() => rotate.mutate()}
                     disabled={rotate.isPending}
                   >
-                    Generate new key
+                    {i18n.t("app:integrations.generate_new_key")}
                   </Button>
                 )}
               </div>
@@ -398,9 +441,12 @@ export function IntegrationDetails({
                   className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
                 >
                   <span>
-                    {credential.key_prefix}… · created{" "}
+                    {credential.key_prefix}
+                    {i18n.t("app:integrations.created")}{" "}
                     {dateTime(credential.created_at)}
-                    {credential.revoked_at ? " · revoked" : ""}
+                    {credential.revoked_at
+                      ? i18n.t("app:integrations.revoked")
+                      : ""}
                   </span>
                   {isOwner && !credential.revoked_at && (
                     <Button
@@ -408,7 +454,7 @@ export function IntegrationDetails({
                       size="sm"
                       onClick={() => revoke.mutate(credential.id)}
                     >
-                      Revoke key
+                      {i18n.t("app:integrations.revoke_key")}
                     </Button>
                   )}
                 </div>
@@ -417,8 +463,9 @@ export function IntegrationDetails({
           </Card>
 
           <p className="text-sm text-muted-foreground">
-            Status refreshes every 15 seconds. Execution and scheduling are
-            managed by the external runner.
+            {i18n.t(
+              "app:integrations.status_refreshes_every_15_seconds_execution_and_scheduling_are_managed_by_the_externa",
+            )}
           </p>
         </>
       )}

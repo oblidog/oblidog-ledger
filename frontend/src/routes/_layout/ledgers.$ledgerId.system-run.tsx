@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { AlertCircle, ArrowLeft, Play, XCircle } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   type SystemRunPublic,
   type SystemRunStepPublic,
@@ -32,15 +32,18 @@ import {
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { getLocale } from "@/i18n/format"
 import { handleError } from "@/utils"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId/system-run")({
   component: SystemRun,
-  head: () => ({ meta: [{ title: "System Run - Oblidog" }] }),
+  head: () => ({ meta: [{ title: i18n.t("app:system.system_run_oblidog") }] }),
 })
 
 function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(getLocale(), {
     dateStyle: "medium",
     timeStyle: "medium",
   }).format(new Date(value))
@@ -70,37 +73,54 @@ function formatDuration(startedAt: string, finishedAt: string | null) {
 }
 
 function formatSummaryKey(key: string) {
-  return key
-    .replace(/_/g, " ")
-    .replace(/^./, (character) => character.toUpperCase())
+  return domainLabel("summaryField", key)
 }
 
 function formatSummaryValue(value: unknown) {
   if (typeof value === "string" || typeof value === "number")
     return String(value)
-  if (typeof value === "boolean") return value ? "Yes" : "No"
-  if (value === null) return "None"
+  if (typeof value === "boolean")
+    return value ? i18n.t("app:system.yes") : i18n.t("app:system.no")
+  if (value === null) return i18n.t("app:system.none")
   return JSON.stringify(value)
 }
 
 const summaryLabels: Record<string, Record<string, string>> = {
   ensure_obligations: {
-    created_obligations: "Created obligations",
+    get created_obligations() {
+      return i18n.t("app:system.created_obligations")
+    },
   },
   scheduled_reports: {
-    sent: "Reports sent",
-    skipped: "Reports skipped",
-    failed: "Reports failed",
+    get sent() {
+      return i18n.t("app:system.reports_sent")
+    },
+    get skipped() {
+      return i18n.t("app:system.reports_skipped")
+    },
+    get failed() {
+      return i18n.t("app:system.reports_failed")
+    },
   },
   legacy_import: {
-    created_category_groups: "Created category groups",
-    created_categories: "Created categories",
-    replaced_categories: "Replaced categories",
-    imported_obligations: "Imported obligations",
+    get created_category_groups() {
+      return i18n.t("app:system.created_category_groups")
+    },
+    get created_categories() {
+      return i18n.t("app:system.created_categories")
+    },
+    get replaced_categories() {
+      return i18n.t("app:system.replaced_categories")
+    },
+    get imported_obligations() {
+      return i18n.t("app:system.imported_obligations")
+    },
   },
 }
 
 function StepSummary({ step }: { step: SystemRunStepPublic }) {
+  useTranslation()
+
   if (!step.summary || Object.keys(step.summary).length === 0) return null
 
   const labels = summaryLabels[step.task_name] ?? {}
@@ -126,7 +146,9 @@ function StepSummary({ step }: { step: SystemRunStepPublic }) {
       {additionalEntries.length > 0 && (
         <details className="rounded-md border px-3 py-2">
           <summary className="cursor-pointer font-medium">
-            {knownEntries.length > 0 ? "Additional details" : "Step details"}
+            {knownEntries.length > 0
+              ? i18n.t("app:system.additional_details")
+              : i18n.t("app:system.step_details")}
           </summary>
           <dl className="mt-2 space-y-1">
             {additionalEntries.map(([key, value]) => (
@@ -147,6 +169,8 @@ function StepSummary({ step }: { step: SystemRunStepPublic }) {
 }
 
 function SystemRun() {
+  useTranslation()
+
   const { ledgerId } = Route.useParams()
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
@@ -183,7 +207,9 @@ function SystemRun() {
       )
       setConfirmationOpen(false)
       showSuccessToast(
-        `System Run finished with ${run.status.replace(/_/g, " ")}`,
+        i18n.t("app:system.system_run_finished_with", {
+          value1: domainLabel("runStatus", run.status),
+        }),
       )
     },
   })
@@ -200,43 +226,56 @@ function SystemRun() {
         <Button variant="ghost" size="sm" className="w-fit" asChild>
           <Link to="/ledgers/$ledgerId" params={{ ledgerId }}>
             <ArrowLeft />
-            Back to workspace
+            {i18n.t("app:system.back_to_workspace")}
           </Link>
         </Button>
         <div>
           <div className="mb-2 flex items-center gap-2">
             <Play className="size-5 text-primary" />
-            <Badge variant="outline">Administrator</Badge>
+            <Badge variant="outline">
+              {i18n.t("app:system.administrator")}
+            </Badge>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">System Run</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {i18n.t("app:system.system_run")}
+          </h1>
           <p className="mt-1 text-muted-foreground">
-            Run scheduled maintenance tasks and inspect their history.
+            {i18n.t(
+              "app:system.run_scheduled_maintenance_tasks_and_inspect_their_history",
+            )}
           </p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Start manual run</CardTitle>
+          <CardTitle>{i18n.t("app:system.start_manual_run")}</CardTitle>
           <CardDescription>
-            Run all scheduled tasks, optionally selecting manual-only tasks.
-            Disabled tasks cannot be started.
+            {i18n.t(
+              "app:system.run_all_scheduled_tasks_optionally_selecting_manual_only_tasks_disabled_tasks_cannot_",
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {tasks.isError ? (
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>Could not load System Run tasks</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:system.could_not_load_system_run_tasks")}
+              </AlertTitle>
               <AlertDescription>
-                Only administrators can start a System Run.
+                {i18n.t(
+                  "app:system.only_administrators_can_start_a_system_run",
+                )}
               </AlertDescription>
             </Alert>
           ) : (
             <>
               {tasks.data && (
                 <div className="space-y-3">
-                  <p className="text-sm font-medium">Configured tasks</p>
+                  <p className="text-sm font-medium">
+                    {i18n.t("app:system.configured_tasks")}
+                  </p>
                   {tasks.data.map((task) => (
                     <div className="flex items-center gap-2" key={task.name}>
                       {task.mode === "manual_only" ? (
@@ -249,20 +288,20 @@ function SystemRun() {
                             }
                           />
                           <Label htmlFor={`system-run-task-${task.name}`}>
-                            {task.name.replace(/_/g, " ")}
+                            {domainLabel("task", task.name)}
                           </Label>
                         </>
                       ) : (
                         <span className="text-sm">
-                          {task.name.replace(/_/g, " ")}
+                          {domainLabel("task", task.name)}
                         </span>
                       )}
                       <Badge variant="outline" className="ml-auto">
                         {task.mode === "scheduled"
-                          ? "included in run all"
+                          ? i18n.t("app:system.included_in_run_all")
                           : task.mode === "manual_only"
-                            ? "select to include"
-                            : "disabled"}
+                            ? i18n.t("app:system.select_to_include")
+                            : domainLabel("runMode", "disabled")}
                       </Badge>
                     </div>
                   ))}
@@ -274,28 +313,31 @@ function SystemRun() {
               >
                 <DialogTrigger asChild>
                   <Button disabled={tasks.isLoading || startRun.isPending}>
-                    <Play /> Start System Run
+                    <Play /> {i18n.t("app:system.start_system_run")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Start System Run?</DialogTitle>
+                    <DialogTitle>
+                      {i18n.t("app:system.start_system_run_302b29")}
+                    </DialogTitle>
                     <DialogDescription>
-                      Scheduled tasks will run now. Manual-only tasks run only
-                      when selected above.
+                      {i18n.t(
+                        "app:system.scheduled_tasks_will_run_now_manual_only_tasks_run_only_when_selected_above",
+                      )}
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
                     <DialogClose asChild>
                       <Button variant="outline" disabled={startRun.isPending}>
-                        Cancel
+                        {i18n.t("app:system.cancel")}
                       </Button>
                     </DialogClose>
                     <LoadingButton
                       loading={startRun.isPending}
                       onClick={() => startRun.mutate()}
                     >
-                      Start run
+                      {i18n.t("app:system.start_run")}
                     </LoadingButton>
                   </DialogFooter>
                 </DialogContent>
@@ -307,24 +349,32 @@ function SystemRun() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Run history</CardTitle>
+          <CardTitle>{i18n.t("app:system.run_history")}</CardTitle>
           <CardDescription>
-            Includes every task and ledger outcome, including skipped work.
+            {i18n.t(
+              "app:system.includes_every_task_and_ledger_outcome_including_skipped_work",
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {history.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading history…</p>
+            <p className="text-sm text-muted-foreground">
+              {i18n.t("app:system.loading_history")}
+            </p>
           ) : history.isError ? (
             <Alert variant="destructive">
               <XCircle />
-              <AlertTitle>Could not load System Run history</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:system.could_not_load_system_run_history")}
+              </AlertTitle>
               <AlertDescription>
-                Refresh the page and try again.
+                {i18n.t("app:system.refresh_the_page_and_try_again")}
               </AlertDescription>
             </Alert>
           ) : history.data?.data.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No System Runs yet.</p>
+            <p className="text-sm text-muted-foreground">
+              {i18n.t("app:system.no_system_runs_yet")}
+            </p>
           ) : (
             history.data?.data.map((run) => (
               <section className="rounded-lg border p-4" key={run.id}>
@@ -334,11 +384,12 @@ function SystemRun() {
                       {formatDateTime(run.effective_at)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {run.trigger} · {run.timezone} · {run.business_date}
+                      {domainLabel("runMode", run.trigger)} · {run.timezone} ·{" "}
+                      {run.business_date}
                     </p>
                   </div>
                   <Badge variant={statusVariant(run.status)}>
-                    {run.status.replace(/_/g, " ")}
+                    {domainLabel("runStatus", run.status)}
                   </Badge>
                 </div>
                 {run.error && (
@@ -346,9 +397,12 @@ function SystemRun() {
                 )}
                 {run.summary && (
                   <p className="mt-3 text-sm text-muted-foreground">
-                    {String(run.summary.succeeded_steps ?? 0)} succeeded ·{" "}
-                    {String(run.summary.failed_steps ?? 0)} failed ·{" "}
-                    {String(run.summary.skipped_steps ?? 0)} skipped
+                    {String(run.summary.succeeded_steps ?? 0)}{" "}
+                    {i18n.t("app:system.succeeded")}{" "}
+                    {String(run.summary.failed_steps ?? 0)}{" "}
+                    {i18n.t("app:system.failed")}{" "}
+                    {String(run.summary.skipped_steps ?? 0)}{" "}
+                    {i18n.t("app:system.skipped")}
                   </p>
                 )}
                 <div className="mt-4 space-y-2">
@@ -364,17 +418,18 @@ function SystemRun() {
                       >
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <span className="font-medium">
-                            {step.task_name.replace(/_/g, " ")}
+                            {domainLabel("task", step.task_name)}
                             {step.ledger_id ? ` · ${step.ledger_id}` : ""}
                           </span>
                           <span className="text-muted-foreground">
-                            {step.status}
+                            {domainLabel("runStatus", step.status)}
                             {duration ? ` · ${duration}` : ""}
                           </span>
                         </div>
                         {step.skip_reason && (
                           <p className="mt-2 text-muted-foreground">
-                            Skip reason: {step.skip_reason}
+                            {i18n.t("app:system.skip_reason")}{" "}
+                            {domainLabel("skipReason", step.skip_reason)}
                           </p>
                         )}
                         {step.error && (

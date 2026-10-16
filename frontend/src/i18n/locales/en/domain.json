@@ -1,0 +1,88 @@
+{
+  "lifecycle": {
+    "draft": "Draft",
+    "collecting_data": "Collecting data",
+    "ready": "Ready",
+    "paid": "Paid",
+    "canceled": "Canceled",
+    "error": "Error",
+    "unpaid": "Unpaid"
+  },
+  "valueState": {
+    "unknown": "Unknown",
+    "estimated": "Estimated",
+    "confirmed": "Confirmed",
+    "overridden": "Overridden"
+  },
+  "source": {
+    "unknown": "Unknown",
+    "automatic": "Automatic",
+    "manual": "Manual",
+    "mixed": "Mixed"
+  },
+  "categoryMode": {
+    "manual": "Manual",
+    "automatic": "Automatic",
+    "hybrid": "Hybrid"
+  },
+  "actor": {
+    "user": "User",
+    "system": "System",
+    "integration": "Integration"
+  },
+  "componentType": {
+    "invoice": "Invoice",
+    "invoice_item": "Invoice item",
+    "adjustment": "Adjustment",
+    "consumption": "Consumption",
+    "other": "Other"
+  },
+  "runStatus": {
+    "running": "Running",
+    "success": "Success",
+    "partial_failure": "Partial failure",
+    "failure": "Failure",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "skipped": "Skipped"
+  },
+  "runMode": {
+    "scheduled": "Scheduled",
+    "manual_only": "Manual only",
+    "disabled": "Disabled",
+    "manual": "Manual"
+  },
+  "skipReason": {
+    "disabled": "Disabled",
+    "manual_only": "Manual only",
+    "not_due": "Not due",
+    "not_configured": "Not configured",
+    "no_eligible_targets": "No eligible targets",
+    "prerequisite_failed": "Prerequisite failed"
+  },
+  "difference": {
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed",
+    "unchanged": "Unchanged"
+  },
+  "invitation": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "expired": "Expired",
+    "revoked": "Revoked"
+  },
+  "task": {
+    "ensure_obligations": "Ensure obligations",
+    "estimate_obligation_amounts": "Estimate obligation amounts",
+    "legacy_import": "Legacy import",
+    "scheduled_reports": "Scheduled reports",
+    "maintenance_cleanup": "Maintenance cleanup"
+  },
+  "summaryField": {
+    "estimated_obligations": "Estimated obligations",
+    "timed_out": "Timed out",
+    "deleted_integration_runs": "Deleted integration runs",
+    "deleted_system_runs": "Deleted system runs"
+  }
+}

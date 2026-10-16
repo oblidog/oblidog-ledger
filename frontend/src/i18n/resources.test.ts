@@ -81,3 +81,13 @@ describe("translation resources", () => {
     await i18n.changeLanguage("en")
   })
 })
+
+test("every resource resolves in its own namespace and language without fallback", () => {
+  for (const [language, namespaces] of Object.entries(resources)) {
+    for (const [namespace, dictionary] of Object.entries(namespaces)) {
+      for (const [key, text] of Object.entries(flatten(dictionary))) {
+        expect(i18n.getResource(language, namespace, key)).toBe(text)
+      }
+    }
+  }
+})

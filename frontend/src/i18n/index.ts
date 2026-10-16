@@ -1,12 +1,16 @@
 import { createInstance } from "i18next"
 import { initReactI18next } from "react-i18next"
+import { z } from "zod"
+import { appResources } from "./appResources"
 import { browserLanguage, readLocalLanguage } from "./language"
 import enCommon from "./locales/en/common.json"
+import enDomain from "./locales/en/domain.json"
 import plCommon from "./locales/pl/common.json"
+import plDomain from "./locales/pl/domain.json"
 
 export const resources = {
-  en: { common: enCommon },
-  pl: { common: plCommon },
+  en: { common: enCommon, app: appResources.en, domain: enDomain },
+  pl: { common: plCommon, app: appResources.pl, domain: plDomain },
 } as const
 
 export const i18n = createInstance()
@@ -28,6 +32,7 @@ void i18n.use(initReactI18next).init({
 })
 
 function updateDocumentLanguage(language: string) {
+  z.config(language === "pl" ? z.locales.pl() : z.locales.en())
   if (typeof document !== "undefined")
     document.documentElement.lang = language === "pl" ? "pl" : "en"
 }

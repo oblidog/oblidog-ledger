@@ -1,10 +1,12 @@
 import type { ReactNode } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   type JsonSchemaProperty,
   unwrapNullablePropertySchema,
 } from "@/components/Categories/categoryDataSchema"
 import { Badge } from "@/components/ui/badge"
+import { i18n } from "@/i18n"
+import { getLocale } from "@/i18n/format"
 
 export type CategoryDataPropertySchema = JsonSchemaProperty & {
   type?: string
@@ -13,18 +15,20 @@ export type CategoryDataPropertySchema = JsonSchemaProperty & {
   enum?: unknown[]
 }
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  month: "short",
-  year: "numeric",
-})
+const dateTimeFormatter = () =>
+  new Intl.DateTimeFormat(getLocale(), {
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
 
-const calendarDateFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeZone: "UTC",
-})
+const calendarDateFormatter = () =>
+  new Intl.DateTimeFormat(getLocale(), {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  })
 
 const isoDateTimePattern =
   /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:[Zz]|[+-](\d{2}):(\d{2}))$/
@@ -62,7 +66,7 @@ export function formatCategoryDateTime(value: string): string | null {
 
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
-  return dateTimeFormatter.format(date)
+  return dateTimeFormatter().format(date)
 }
 
 /** Format a date-only value without applying the browser's timezone. */
@@ -73,14 +77,18 @@ export function formatCategoryCalendarDate(value: string): string | null {
   const [, year, month, day] = match
   const date = parseCalendarDate(Number(year), Number(month), Number(day))
   if (!date) return null
-  return calendarDateFormatter.format(date)
+  return calendarDateFormatter().format(date)
 }
 
 function DateTimeValue({ value }: { value: string }) {
+  useTranslation()
+
   const formatted = formatCategoryDateTime(value)
   if (!formatted) return value
 
-  const exactValueLabel = `Exact value: ${value}`
+  const exactValueLabel = i18n.t("app:categories.exact_value", {
+    value1: value,
+  })
   return (
     <time dateTime={value} title={exactValueLabel}>
       {formatted}
@@ -90,6 +98,8 @@ function DateTimeValue({ value }: { value: string }) {
 }
 
 function CalendarDateValue({ value }: { value: string }) {
+  useTranslation()
+
   const formatted = formatCategoryCalendarDate(value)
   if (!formatted) return value
   return <time dateTime={value}>{formatted}</time>
@@ -113,7 +123,7 @@ export function formatCategoryDataValue(
   if (effectiveSchema.type === "boolean" && typeof value === "boolean") {
     return (
       <Badge variant={value ? "secondary" : "outline"}>
-        {value ? "Yes" : "No"}
+        {value ? i18n.t("app:categories.yes") : i18n.t("app:categories.no")}
       </Badge>
     )
   }
@@ -122,7 +132,7 @@ export function formatCategoryDataValue(
     (effectiveSchema.type === "number" || effectiveSchema.type === "integer") &&
     typeof value === "number"
   ) {
-    return new Intl.NumberFormat().format(value)
+    return new Intl.NumberFormat(getLocale()).format(value)
   }
 
   if (effectiveSchema.type === "string" && effectiveSchema.format === "date") {
@@ -141,7 +151,7 @@ export function formatCategoryDataValue(
     return (
       <details className="max-w-72 whitespace-normal">
         <summary className="cursor-pointer text-sm font-medium">
-          View details
+          {i18n.t("app:categories.view_details")}
         </summary>
         <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">
           {json}

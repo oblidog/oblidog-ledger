@@ -1,7 +1,8 @@
 import { X } from "lucide-react"
-
+import { useTranslation } from "react-i18next"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { i18n } from "@/i18n"
 
 export type ActiveFilter = {
   key: string
@@ -16,13 +17,17 @@ export function ActiveFilterBadges({
   filters: ActiveFilter[]
   onClearAll: () => void
 }) {
+  useTranslation()
+
   if (filters.length === 0) {
     return null
   }
 
   return (
     <fieldset className="flex min-w-0 flex-wrap items-center gap-2">
-      <legend className="sr-only">Active filters</legend>
+      <legend className="sr-only">
+        {i18n.t("app:filters.active_filters")}
+      </legend>
       {filters.map((filter) => (
         <Badge
           key={filter.key}
@@ -33,7 +38,9 @@ export function ActiveFilterBadges({
           <button
             type="button"
             className="inline-flex size-5 shrink-0 items-center justify-center rounded-full hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={`Remove filter: ${filter.label}`}
+            aria-label={i18n.t("app:filters.remove_filter", {
+              value1: filter.label,
+            })}
             onClick={filter.onRemove}
           >
             <X className="size-3" />
@@ -48,7 +55,7 @@ export function ActiveFilterBadges({
           className="h-7 px-2 text-xs text-muted-foreground"
           onClick={onClearAll}
         >
-          Clear all
+          {i18n.t("app:filters.clear_all")}
         </Button>
       ) : null}
     </fieldset>

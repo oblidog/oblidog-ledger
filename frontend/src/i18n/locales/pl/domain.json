@@ -1,0 +1,88 @@
+{
+  "lifecycle": {
+    "draft": "Szkic",
+    "collecting_data": "Zbieranie danych",
+    "ready": "Gotowe do opłacenia",
+    "paid": "Opłacone",
+    "canceled": "Anulowane",
+    "error": "Błąd",
+    "unpaid": "Nieopłacone"
+  },
+  "valueState": {
+    "unknown": "Nieznane",
+    "estimated": "Szacowane",
+    "confirmed": "Potwierdzone",
+    "overridden": "Nadpisane ręcznie"
+  },
+  "source": {
+    "unknown": "Nieznane",
+    "automatic": "Automatyczne",
+    "manual": "Ręczne",
+    "mixed": "Mieszane"
+  },
+  "categoryMode": {
+    "manual": "Ręczny",
+    "automatic": "Automatyczny",
+    "hybrid": "Hybrydowy"
+  },
+  "actor": {
+    "user": "Użytkownik",
+    "system": "System",
+    "integration": "Integracja"
+  },
+  "componentType": {
+    "invoice": "Faktura",
+    "invoice_item": "Pozycja faktury",
+    "adjustment": "Korekta",
+    "consumption": "Zużycie",
+    "other": "Inne"
+  },
+  "runStatus": {
+    "running": "W toku",
+    "success": "Sukces",
+    "partial_failure": "Częściowe niepowodzenie",
+    "failure": "Niepowodzenie",
+    "succeeded": "Zakończone",
+    "failed": "Nieudane",
+    "skipped": "Pominięte"
+  },
+  "runMode": {
+    "scheduled": "Zaplanowane",
+    "manual_only": "Tylko ręcznie",
+    "disabled": "Wyłączone",
+    "manual": "Ręczne"
+  },
+  "skipReason": {
+    "disabled": "Wyłączone",
+    "manual_only": "Tylko ręcznie",
+    "not_due": "Jeszcze nie zaplanowano",
+    "not_configured": "Nieskonfigurowane",
+    "no_eligible_targets": "Brak pasujących obiektów",
+    "prerequisite_failed": "Błąd wymaganego zadania"
+  },
+  "difference": {
+    "added": "Dodano",
+    "removed": "Usunięto",
+    "changed": "Zmieniono",
+    "unchanged": "Bez zmian"
+  },
+  "invitation": {
+    "pending": "Oczekujące",
+    "accepted": "Przyjęte",
+    "expired": "Wygasłe",
+    "revoked": "Unieważnione"
+  },
+  "task": {
+    "ensure_obligations": "Tworzenie zobowiązań",
+    "estimate_obligation_amounts": "Szacowanie kwot zobowiązań",
+    "legacy_import": "Import danych historycznych",
+    "scheduled_reports": "Zaplanowane raporty",
+    "maintenance_cleanup": "Czyszczenie danych"
+  },
+  "summaryField": {
+    "estimated_obligations": "Zobowiązania z oszacowaną kwotą",
+    "timed_out": "Przekroczony czas",
+    "deleted_integration_runs": "Usunięte uruchomienia integracji",
+    "deleted_system_runs": "Usunięte uruchomienia systemowe"
+  }
+}

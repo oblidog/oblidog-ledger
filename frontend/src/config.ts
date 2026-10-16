@@ -1,3 +1,4 @@
+import { i18n } from "@/i18n"
 export const apiUrl =
   window.__OBLIDOG_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL
 
@@ -20,7 +21,11 @@ export interface PublicAppConfig {
 export async function fetchPublicAppConfig(): Promise<PublicAppConfig> {
   const response = await fetch(`${apiUrl}/api/v1/utils/public-config`)
   if (!response.ok) {
-    throw new Error(`Unable to load public app config (${response.status})`)
+    throw new Error(
+      i18n.t("app:common.unable_to_load_public_app_config", {
+        value1: response.status,
+      }),
+    )
   }
   return response.json() as Promise<PublicAppConfig>
 }

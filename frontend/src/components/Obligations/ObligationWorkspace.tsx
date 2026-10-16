@@ -10,7 +10,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   CategoriesService,
   type ObligationLifecycle,
@@ -47,6 +47,9 @@ import type { ObligationWithCounterparty } from "@/features/counterparties/api"
 import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { formatAmount, formatDate } from "@/i18n/format"
 import { handleError } from "@/utils"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
@@ -136,6 +139,8 @@ export function ObligationWorkspace({
   canEdit: boolean
   defaultLifecycle?: LifecycleFilter
 }) {
+  useTranslation()
+
   const period = periodFromSearch()
   const initialFilters = parseObligationFilters(
     typeof window === "undefined" ? "" : window.location.search,
@@ -229,21 +234,25 @@ export function ObligationWorkspace({
   if (filterByPeriod && hasValidPeriodFilter) {
     activeFilters.push({
       key: "period",
-      label: `Period: ${monthInputValue(year, month)}`,
+      label: i18n.t("app:messages.filter_period", {
+        value: monthInputValue(year, month),
+      }),
       onRemove: () => setFilterByPeriod(false),
     })
   }
   if (categoryCode) {
     activeFilters.push({
       key: "category",
-      label: `Category: ${categoryCode}`,
+      label: i18n.t("app:messages.filter_category", { value: categoryCode }),
       onRemove: () => setCategoryCode(""),
     })
   }
   if (lifecycle) {
     activeFilters.push({
       key: "lifecycle",
-      label: `Status: ${lifecycleFilterLabel(lifecycle)}`,
+      label: i18n.t("app:messages.filter_status", {
+        value: lifecycleFilterLabel(lifecycle),
+      }),
       onRemove: () => setLifecycle(""),
     })
   }
@@ -261,7 +270,7 @@ export function ObligationWorkspace({
       }),
     onError: handleError.bind(showErrorToast),
     onSuccess: async (_, obligation) => {
-      showSuccessToast("Obligation marked as ready")
+      showSuccessToast(i18n.t("app:obligations.obligation_marked_as_ready"))
       invalidateActionHistory(obligation.key)
       await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
@@ -279,7 +288,7 @@ export function ObligationWorkspace({
       }),
     onError: handleError.bind(showErrorToast),
     onSuccess: async (_, obligation) => {
-      showSuccessToast("Obligation reopened")
+      showSuccessToast(i18n.t("app:obligations.obligation_reopened"))
       invalidateActionHistory(obligation.key)
       await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
@@ -297,7 +306,7 @@ export function ObligationWorkspace({
       }),
     onError: handleError.bind(showErrorToast),
     onSuccess: async (_, obligation) => {
-      showSuccessToast("Obligation canceled")
+      showSuccessToast(i18n.t("app:obligations.obligation_canceled"))
       invalidateActionHistory(obligation.key)
       await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
@@ -316,7 +325,7 @@ export function ObligationWorkspace({
     onError: handleError.bind(showErrorToast),
     onSuccess: async (_, obligation) => {
       setPaymentConfirmation(null)
-      showSuccessToast("Obligation marked as paid")
+      showSuccessToast(i18n.t("app:obligations.obligation_marked_as_paid"))
       invalidateActionHistory(obligation.key)
       await queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
@@ -348,9 +357,13 @@ export function ObligationWorkspace({
     <section className="min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold md:text-2xl">Obligations</h1>
+          <h1 className="text-xl font-semibold md:text-2xl">
+            {i18n.t("app:obligations.obligations")}
+          </h1>
           <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-            Review and add manual obligations for this ledger.
+            {i18n.t(
+              "app:obligations.review_and_add_manual_obligations_for_this_ledger",
+            )}
           </p>
         </div>
         {canEdit ? (
@@ -369,7 +382,7 @@ export function ObligationWorkspace({
       <div className="mt-4 space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <Input
-            aria-label="Billing period"
+            aria-label={i18n.t("app:obligations.billing_period")}
             type="month"
             disabled={!filterByPeriod}
             value={monthInputValue(year, month)}
@@ -380,8 +393,8 @@ export function ObligationWorkspace({
             }}
           />
           <Input
-            aria-label="Category code"
-            placeholder="Category code"
+            aria-label={i18n.t("app:obligations.category_code")}
+            placeholder={i18n.t("app:obligations.category_code")}
             value={categoryCode}
             maxLength={4}
             onChange={(event) =>
@@ -389,7 +402,7 @@ export function ObligationWorkspace({
             }
           />
           <select
-            aria-label="Lifecycle"
+            aria-label={i18n.t("app:obligations.lifecycle")}
             className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm"
             value={lifecycle}
             onChange={(event) =>
@@ -403,9 +416,9 @@ export function ObligationWorkspace({
                 className="bg-background text-foreground"
               >
                 {option === ""
-                  ? "All lifecycles"
+                  ? i18n.t("app:obligations.all_lifecycles")
                   : option === "unpaid"
-                    ? "Unpaid"
+                    ? i18n.t("app:obligations.unpaid")
                     : option}
               </option>
             ))}
@@ -417,26 +430,32 @@ export function ObligationWorkspace({
             checked={filterByPeriod}
             onCheckedChange={(checked) => setFilterByPeriod(checked === true)}
           />
-          <Label htmlFor="obligation-filter-by-period">Filter by period</Label>
+          <Label htmlFor="obligation-filter-by-period">
+            {i18n.t("app:obligations.filter_by_period")}
+          </Label>
         </div>
         <ActiveFilterBadges filters={activeFilters} onClearAll={clearFilters} />
         {filterByPeriod && !hasValidPeriodFilter ? (
           <p className="text-sm text-muted-foreground">
-            Enter a valid year and month to load obligations.
+            {i18n.t(
+              "app:obligations.enter_a_valid_year_and_month_to_load_obligations",
+            )}
           </p>
         ) : null}
         {hasValidPeriodFilter && obligations.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading obligations…</p>
+          <p className="text-sm text-muted-foreground">
+            {i18n.t("app:obligations.loading_obligations")}
+          </p>
         ) : null}
         {hasValidPeriodFilter && obligations.isError ? (
           <div className="flex items-center gap-3 text-sm text-destructive">
-            <span>Unable to load obligations.</span>
+            <span>{i18n.t("app:obligations.unable_to_load_obligations")}</span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => void obligations.refetch()}
             >
-              Try again
+              {i18n.t("app:obligations.try_again")}
             </Button>
           </div>
         ) : null}
@@ -444,7 +463,7 @@ export function ObligationWorkspace({
         !obligations.isError &&
         visibleObligations?.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No obligations match these filters.
+            {i18n.t("app:obligations.no_obligations_match_these_filters")}
           </p>
         ) : null}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -476,9 +495,11 @@ export function ObligationWorkspace({
           >
             <DialogHeader className="shrink-0 border-b px-4 py-4 pr-12 text-left sm:px-6">
               <DialogTitle className="break-all">
-                {selected.data?.key ?? "Obligation"}
+                {selected.data?.key ?? i18n.t("app:obligations.obligation")}
               </DialogTitle>
-              <DialogDescription>Obligation details.</DialogDescription>
+              <DialogDescription>
+                {i18n.t("app:obligations.obligation_details")}
+              </DialogDescription>
             </DialogHeader>
             {selected.data ? (
               <Tabs
@@ -487,9 +508,15 @@ export function ObligationWorkspace({
                 className="min-h-0 min-w-0 flex-1 gap-0"
               >
                 <TabsList className="mx-4 my-3 h-14 w-fit max-w-[calc(100%-2rem)] shrink-0 sm:mx-6">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="components">Components</TabsTrigger>
-                  <TabsTrigger value="activity">Activity</TabsTrigger>
+                  <TabsTrigger value="details">
+                    {i18n.t("app:obligations.details")}
+                  </TabsTrigger>
+                  <TabsTrigger value="components">
+                    {i18n.t("app:obligations.components")}
+                  </TabsTrigger>
+                  <TabsTrigger value="activity">
+                    {i18n.t("app:obligations.activity")}
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent
                   value="details"
@@ -498,14 +525,16 @@ export function ObligationWorkspace({
                   <div className="min-w-0 space-y-4">
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Lifecycle</span>
+                        <span className="text-muted-foreground">
+                          {i18n.t("app:obligations.lifecycle")}
+                        </span>
                         <Badge variant="secondary">
-                          {selected.data.lifecycle}
+                          {domainLabel("lifecycle", selected.data.lifecycle)}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">
-                          Effective value source
+                          {i18n.t("app:obligations.effective_value_source")}
                         </span>
                         <Badge
                           variant="outline"
@@ -515,7 +544,10 @@ export function ObligationWorkspace({
                             ] ?? sourceBadgeClasses.unknown
                           }
                         >
-                          {selected.data.effective_value_source}
+                          {domainLabel(
+                            "source",
+                            selected.data.effective_value_source,
+                          )}
                         </Badge>
                       </div>
                     </div>
@@ -525,19 +557,19 @@ export function ObligationWorkspace({
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-medium uppercase text-muted-foreground">
-                          Counterparty
+                          {i18n.t("app:obligations.counterparty")}
                         </p>
                         <p className="truncate font-medium">
                           {counterpartyFor(selected.data)?.short_name ||
                             counterpartyFor(selected.data)?.name ||
-                            "Not assigned"}
+                            i18n.t("app:obligations.not_assigned")}
                         </p>
                       </div>
                     </div>
                     {selected.data.notes ? (
                       <div className="space-y-1">
                         <p className="text-muted-foreground font-medium">
-                          Notes
+                          {i18n.t("app:obligations.notes")}
                         </p>
                         <p className="whitespace-pre-wrap break-words">
                           {selected.data.notes}
@@ -548,30 +580,51 @@ export function ObligationWorkspace({
                       <table className="block w-full text-left text-sm md:table">
                         <thead className="hidden text-muted-foreground border-b text-xs uppercase md:table-header-group">
                           <tr>
-                            <th className="pb-2 pr-4 font-medium">Field</th>
-                            <th className="pb-2 pr-4 font-medium">Value</th>
-                            <th className="pb-2 pr-4 font-medium">Status</th>
-                            <th className="pb-2 font-medium">Source</th>
+                            <th className="pb-2 pr-4 font-medium">
+                              {i18n.t("app:obligations.field")}
+                            </th>
+                            <th className="pb-2 pr-4 font-medium">
+                              {i18n.t("app:obligations.value")}
+                            </th>
+                            <th className="pb-2 pr-4 font-medium">
+                              {i18n.t("app:obligations.status")}
+                            </th>
+                            <th className="pb-2 font-medium">
+                              {i18n.t("app:obligations.source_6da13a")}
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="block space-y-3 md:table-row-group md:space-y-0">
                           <ObligationFieldDetails
-                            label="Current amount"
-                            value={`${selected.data.current_amount ?? "Unknown"} ${
-                              selected.data.currency ?? ""
-                            }`.trim()}
+                            label={i18n.t("app:obligations.current_amount")}
+                            value={
+                              selected.data.current_amount === null
+                                ? i18n.t("app:obligations.unknown")
+                                : formatAmount(
+                                    String(selected.data.current_amount),
+                                    selected.data.currency,
+                                  )
+                            }
                             state={selected.data.amount_state}
                             source={selected.data.amount_source}
                           />
                           <ObligationFieldDetails
-                            label="Issue date"
-                            value={selected.data.issue_date ?? "Unknown"}
+                            label={i18n.t("app:obligations.issue_date")}
+                            value={
+                              selected.data.issue_date
+                                ? formatDate(selected.data.issue_date)
+                                : i18n.t("app:obligations.unknown")
+                            }
                             state={selected.data.issue_date_state}
                             source={selected.data.issue_date_source}
                           />
                           <ObligationFieldDetails
-                            label="Due date"
-                            value={selected.data.due_date ?? "Unknown"}
+                            label={i18n.t("app:obligations.due_date")}
+                            value={
+                              selected.data.due_date
+                                ? formatDate(selected.data.due_date)
+                                : i18n.t("app:obligations.unknown")
+                            }
                             state={selected.data.due_date_state}
                             source={selected.data.due_date_source}
                           />
@@ -607,17 +660,21 @@ export function ObligationWorkspace({
               <div className="px-4 py-4 text-sm sm:px-6">
                 {selected.isError ? (
                   <>
-                    <p role="alert">Unable to load obligation details.</p>
+                    <p role="alert">
+                      {i18n.t(
+                        "app:obligations.unable_to_load_obligation_details",
+                      )}
+                    </p>
                     <Button
                       className="mt-2 min-h-11"
                       variant="outline"
                       onClick={() => void selected.refetch()}
                     >
-                      Try again
+                      {i18n.t("app:obligations.try_again")}
                     </Button>
                   </>
                 ) : (
-                  <p>Loading details…</p>
+                  <p>{i18n.t("app:obligations.loading_details")}</p>
                 )}
               </div>
             )}
@@ -632,7 +689,7 @@ export function ObligationWorkspace({
                       onClick={() => void runAction(markReady, selected.data)}
                     >
                       <CircleCheck />
-                      Mark as ready
+                      {i18n.t("app:obligations.mark_as_ready")}
                     </Button>
                   ) : null}
                   {canCancelObligation(selected.data) ? (
@@ -644,7 +701,7 @@ export function ObligationWorkspace({
                       onClick={() => void runAction(cancel, selected.data)}
                     >
                       <Ban />
-                      Cancel
+                      {i18n.t("app:obligations.cancel")}
                     </Button>
                   ) : null}
                   {canMarkObligationPaid(selected.data) ? (
@@ -655,7 +712,7 @@ export function ObligationWorkspace({
                       onClick={() => setPaymentConfirmation(selected.data)}
                     >
                       <CreditCard />
-                      Mark as paid
+                      {i18n.t("app:obligations.mark_as_paid")}
                     </Button>
                   ) : null}
                   {canReopenObligation(selected.data) ? (
@@ -667,7 +724,7 @@ export function ObligationWorkspace({
                       onClick={() => void runAction(reopen, selected.data)}
                     >
                       <RotateCcw />
-                      Reopen
+                      {i18n.t("app:obligations.reopen")}
                     </Button>
                   ) : null}
                   {canEditObligation(selected.data) ? (
@@ -679,7 +736,7 @@ export function ObligationWorkspace({
                       onClick={() => setEditingObligation(selected.data)}
                     >
                       <Pencil />
-                      Edit
+                      {i18n.t("app:obligations.edit_530164")}
                     </Button>
                   ) : null}
                 </div>
@@ -701,9 +758,13 @@ export function ObligationWorkspace({
             onInteractOutside={(event) => event.preventDefault()}
           >
             <DialogHeader className="pr-10">
-              <DialogTitle>Mark obligation as paid?</DialogTitle>
+              <DialogTitle>
+                {i18n.t("app:obligations.mark_obligation_as_paid")}
+              </DialogTitle>
               <DialogDescription>
-                Confirm that you have paid this obligation.
+                {i18n.t(
+                  "app:obligations.confirm_that_you_have_paid_this_obligation",
+                )}
               </DialogDescription>
             </DialogHeader>
             {paymentConfirmation ? (
@@ -727,7 +788,7 @@ export function ObligationWorkspace({
                 disabled={actionPending}
                 onClick={() => setPaymentConfirmation(null)}
               >
-                Cancel
+                {i18n.t("app:obligations.cancel")}
               </Button>
               <LoadingButton
                 className="min-h-11"
@@ -746,7 +807,7 @@ export function ObligationWorkspace({
                   }
                 }}
               >
-                Mark as paid
+                {i18n.t("app:obligations.mark_as_paid")}
               </LoadingButton>
             </DialogFooter>
           </DialogContent>
@@ -769,7 +830,7 @@ export function ObligationWorkspace({
 function businessDaysUntil(dueDate: string | null) {
   if (dueDate === null) {
     return {
-      label: "Due date unknown",
+      label: i18n.t("app:obligations.due_date_unknown"),
       className: dueDateStatusClasses.unknown,
       isUrgent: false,
     }
@@ -782,7 +843,7 @@ function businessDaysUntil(dueDate: string | null) {
   )
   if (dueAt < today) {
     return {
-      label: "Overdue",
+      label: i18n.t("app:obligations.overdue"),
       className: dueDateStatusClasses.urgent,
       isUrgent: true,
     }
@@ -797,7 +858,7 @@ function businessDaysUntil(dueDate: string | null) {
     }
   }
   return {
-    label: `${businessDays} business ${businessDays === 1 ? "day" : "days"} left`,
+    label: i18n.t("app:messages.business_days", { count: businessDays }),
     className:
       businessDays <= 2
         ? dueDateStatusClasses.urgent
@@ -809,7 +870,9 @@ function businessDaysUntil(dueDate: string | null) {
 }
 
 function paidDateLabel(paidAt: string | null) {
-  return paidAt ? paidAt.slice(0, 10) : "Date unavailable"
+  return paidAt
+    ? formatDate(paidAt.slice(0, 10))
+    : i18n.t("app:obligations.date_unavailable")
 }
 
 function ObligationTile({
@@ -837,10 +900,12 @@ function ObligationTile({
   onReopen: () => void
   onSelect: () => void
 }) {
+  useTranslation()
+
   const amount =
     obligation.current_amount !== null
-      ? `${obligation.current_amount} ${obligation.currency ?? ""}`.trim()
-      : "Amount unknown"
+      ? formatAmount(String(obligation.current_amount), obligation.currency)
+      : i18n.t("app:obligations.amount_unknown")
   const dueDateStatus = businessDaysUntil(obligation.due_date)
   const isPaid = obligation.lifecycle === "paid"
   const canCancel = canWrite && canCancelObligation(obligation)
@@ -882,7 +947,9 @@ function ObligationTile({
                 size="icon-sm"
                 className="size-11"
                 disabled={disabled}
-                aria-label={`Actions for ${obligation.name}`}
+                aria-label={i18n.t("app:obligations.actions_for", {
+                  value1: obligation.name,
+                })}
                 onClick={(event) => event.stopPropagation()}
               >
                 <EllipsisVertical />
@@ -901,7 +968,7 @@ function ObligationTile({
                       onSelect={(event) => event.preventDefault()}
                     >
                       <Building2 />
-                      Counterparty
+                      {i18n.t("app:obligations.counterparty")}
                     </DropdownMenuItem>
                   }
                 />
@@ -909,7 +976,7 @@ function ObligationTile({
               {canMarkReady ? (
                 <DropdownMenuItem disabled={disabled} onSelect={onMarkReady}>
                   <CircleCheck />
-                  Mark as ready
+                  {i18n.t("app:obligations.mark_as_ready")}
                 </DropdownMenuItem>
               ) : null}
               {canCancel ? (
@@ -919,25 +986,25 @@ function ObligationTile({
                   onSelect={onCancel}
                 >
                   <Ban />
-                  Cancel
+                  {i18n.t("app:obligations.cancel")}
                 </DropdownMenuItem>
               ) : null}
               {canMarkPaid ? (
                 <DropdownMenuItem disabled={disabled} onSelect={onMarkPaid}>
                   <CreditCard />
-                  Mark as paid
+                  {i18n.t("app:obligations.mark_as_paid")}
                 </DropdownMenuItem>
               ) : null}
               {canReopen ? (
                 <DropdownMenuItem disabled={disabled} onSelect={onReopen}>
                   <RotateCcw />
-                  Reopen
+                  {i18n.t("app:obligations.reopen")}
                 </DropdownMenuItem>
               ) : null}
               {canEdit ? (
                 <DropdownMenuItem disabled={disabled} onSelect={onEdit}>
                   <Pencil />
-                  Edit
+                  {i18n.t("app:obligations.edit_530164")}
                 </DropdownMenuItem>
               ) : null}
             </DropdownMenuContent>
@@ -953,13 +1020,13 @@ function ObligationTile({
             variant="outline"
             className={lifecycleBadgeClasses[obligation.lifecycle]}
           >
-            {obligation.lifecycle}
+            {domainLabel("lifecycle", obligation.lifecycle)}
           </Badge>
         </div>
         {isPaid ? (
           <div className="mt-4 border-t pt-3">
             <p className="text-muted-foreground text-xs font-medium uppercase">
-              Paid on
+              {i18n.t("app:obligations.paid_on")}
             </p>
             <p className="mt-1 font-medium tabular-nums">
               {paidDateLabel(obligation.paid_at)}
@@ -968,11 +1035,13 @@ function ObligationTile({
         ) : (
           <div className="mt-4 border-t pt-3">
             <p className="text-muted-foreground text-xs font-medium uppercase">
-              Due date
+              {i18n.t("app:obligations.due_date")}
             </p>
             <div className="mt-1 flex flex-wrap items-baseline justify-between gap-3">
               <p className="font-medium tabular-nums">
-                {obligation.due_date ?? "Unknown"}
+                {obligation.due_date
+                  ? formatDate(obligation.due_date)
+                  : i18n.t("app:obligations.unknown")}
               </p>
               <p
                 className={`text-xs whitespace-nowrap ${dueDateStatus.className}`}
@@ -1000,10 +1069,10 @@ function ObligationTile({
             <Pencil />
           )}
           {canMarkPaid
-            ? "Mark as paid"
+            ? i18n.t("app:obligations.mark_as_paid")
             : canMarkReady
-              ? "Mark as ready"
-              : "Complete data"}
+              ? i18n.t("app:obligations.mark_as_ready")
+              : i18n.t("app:obligations.complete_data")}
         </LoadingButton>
       ) : null}
     </div>
@@ -1025,6 +1094,8 @@ function EditObligationDialog({
   onError: (message: string) => void
   onOpenChange: (open: boolean) => void
 }) {
+  useTranslation()
+
   const [currentAmount, setCurrentAmount] = useState("")
   const [issueDate, setIssueDate] = useState("")
   const [dueDate, setDueDate] = useState("")
@@ -1094,7 +1165,7 @@ function EditObligationDialog({
     },
     onError: handleError.bind(onError),
     onSuccess: () => {
-      onSuccess("Obligation updated")
+      onSuccess(i18n.t("app:obligations.obligation_updated"))
       onOpenChange(false)
       void queryClient.invalidateQueries({
         queryKey: ["obligation-actions", ledgerId, obligation.key],
@@ -1114,16 +1185,16 @@ function EditObligationDialog({
         className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${touchDialogClasses}`}
       >
         <DialogHeader className="pr-10">
-          <DialogTitle>Edit obligation</DialogTitle>
+          <DialogTitle>{i18n.t("app:obligations.edit_obligation")}</DialogTitle>
           <DialogDescription>
-            Update manually entered values and notes.
+            {i18n.t("app:obligations.update_manually_entered_values_and_notes")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="edit-obligation-current-amount">
-                Current amount
+                {i18n.t("app:obligations.current_amount")}
               </Label>
               <div className="relative">
                 <Input
@@ -1142,7 +1213,9 @@ function EditObligationDialog({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-obligation-issue-date">Issue date</Label>
+              <Label htmlFor="edit-obligation-issue-date">
+                {i18n.t("app:obligations.issue_date")}
+              </Label>
               <Input
                 id="edit-obligation-issue-date"
                 type="date"
@@ -1152,7 +1225,9 @@ function EditObligationDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-obligation-due-date">Due date</Label>
+              <Label htmlFor="edit-obligation-due-date">
+                {i18n.t("app:obligations.due_date")}
+              </Label>
               <Input
                 id="edit-obligation-due-date"
                 type="date"
@@ -1166,12 +1241,15 @@ function EditObligationDialog({
                 onChange={(event) => setDueDate(event.target.value)}
               />
               <p className="text-muted-foreground text-xs">
-                Between {dueDateLimits.min} and {dueDateLimits.max}
+                {i18n.t("app:obligations.between")} {dueDateLimits.min}{" "}
+                {i18n.t("app:obligations.and")} {dueDateLimits.max}
               </p>
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-obligation-notes">Notes</Label>
+            <Label htmlFor="edit-obligation-notes">
+              {i18n.t("app:obligations.notes")}
+            </Label>
             <textarea
               id="edit-obligation-notes"
               className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:bg-input/30 flex min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
@@ -1194,7 +1272,7 @@ function EditObligationDialog({
                 })
             }}
           >
-            Save changes
+            {i18n.t("app:obligations.save_changes")}
           </LoadingButton>
         </div>
       </DialogContent>
@@ -1213,6 +1291,8 @@ function ObligationFieldDetails({
   state: string
   source: string
 }) {
+  useTranslation()
+
   return (
     <tr className="grid grid-cols-2 gap-2 rounded-lg border p-3 md:table-row md:rounded-none md:border-x-0 md:border-t-0 md:p-0 md:last:border-0">
       <td className="col-span-2 text-muted-foreground font-medium md:whitespace-nowrap md:py-3 md:pr-4">
@@ -1223,24 +1303,24 @@ function ObligationFieldDetails({
       </td>
       <td className="min-w-0 md:whitespace-nowrap md:py-3 md:pr-4">
         <span className="mb-1 block text-xs text-muted-foreground md:hidden">
-          Status
+          {i18n.t("app:obligations.status")}
         </span>
         <Badge
           variant="outline"
           className={stateBadgeClasses[state] ?? stateBadgeClasses.unknown}
         >
-          {state}
+          {domainLabel("valueState", state)}
         </Badge>
       </td>
       <td className="min-w-0 md:whitespace-nowrap md:py-3">
         <span className="mb-1 block text-xs text-muted-foreground md:hidden">
-          Source
+          {i18n.t("app:obligations.source_6da13a")}
         </span>
         <Badge
           variant="outline"
           className={sourceBadgeClasses[source] ?? sourceBadgeClasses.unknown}
         >
-          {source}
+          {domainLabel("source", source)}
         </Badge>
       </td>
     </tr>
@@ -1258,6 +1338,8 @@ function CreateObligationDialog({
   onSuccess: (message: string) => void
   onError: (message: string) => void
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const [categoryCode, setCategoryCode] = useState("")
   const [year, setYear] = useState(String(defaultPeriod.year))
@@ -1317,7 +1399,7 @@ function CreateObligationDialog({
       }),
     onError: handleError.bind(onError),
     onSuccess: () => {
-      onSuccess("Obligation created")
+      onSuccess(i18n.t("app:obligations.obligation_created"))
       setOpen(false)
       void queryClient.invalidateQueries({
         queryKey: ["obligations", ledgerId],
@@ -1329,21 +1411,25 @@ function CreateObligationDialog({
       <DialogTrigger asChild>
         <Button>
           <Plus />
-          New obligation
+          {i18n.t("app:obligations.new_obligation")}
         </Button>
       </DialogTrigger>
       <DialogContent
         className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${touchDialogClasses}`}
       >
         <DialogHeader className="pr-10">
-          <DialogTitle>Create manual obligation</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:obligations.create_manual_obligation")}
+          </DialogTitle>
           <DialogDescription>
-            Choose a category and billing period.
+            {i18n.t("app:obligations.choose_a_category_and_billing_period")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="obligation-category">Category</Label>
+            <Label htmlFor="obligation-category">
+              {i18n.t("app:obligations.category")}
+            </Label>
             <select
               id="obligation-category"
               className="border-input bg-background text-foreground h-9 w-full rounded-md border px-3 text-sm"
@@ -1351,7 +1437,7 @@ function CreateObligationDialog({
               onChange={(event) => setCategoryCode(event.target.value)}
             >
               <option value="" className="bg-background text-foreground">
-                Choose a category
+                {i18n.t("app:obligations.choose_a_category")}
               </option>
               {manualCategories?.map((category) => (
                 <option
@@ -1365,7 +1451,9 @@ function CreateObligationDialog({
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="obligation-period">Billing period</Label>
+            <Label htmlFor="obligation-period">
+              {i18n.t("app:obligations.billing_period")}
+            </Label>
             <Input
               id="obligation-period"
               type="month"
@@ -1383,12 +1471,15 @@ function CreateObligationDialog({
               checked={dataReady}
               onCheckedChange={(checked) => setDataReady(checked === true)}
             />
-            <Label htmlFor="obligation-data-ready">Is the data ready?</Label>
+            <Label htmlFor="obligation-data-ready">
+              {i18n.t("app:obligations.is_the_data_ready")}
+            </Label>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="obligation-current-amount">
-                Current amount{dataReady ? " *" : ""}
+                {i18n.t("app:obligations.current_amount")}
+                {dataReady ? " *" : ""}
               </Label>
               <div className="relative">
                 <Input
@@ -1407,7 +1498,9 @@ function CreateObligationDialog({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="obligation-issue-date">Issue date</Label>
+              <Label htmlFor="obligation-issue-date">
+                {i18n.t("app:obligations.issue_date")}
+              </Label>
               <Input
                 id="obligation-issue-date"
                 type="date"
@@ -1418,7 +1511,8 @@ function CreateObligationDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="obligation-due-date">
-                Due date{dataReady ? " *" : ""}
+                {i18n.t("app:obligations.due_date")}
+                {dataReady ? " *" : ""}
               </Label>
               <Input
                 id="obligation-due-date"
@@ -1433,12 +1527,15 @@ function CreateObligationDialog({
                 onChange={(event) => setDueDate(event.target.value)}
               />
               <p className="text-muted-foreground text-xs">
-                Between {dueDateLimits.min} and {dueDateLimits.max}
+                {i18n.t("app:obligations.between")} {dueDateLimits.min}{" "}
+                {i18n.t("app:obligations.and")} {dueDateLimits.max}
               </p>
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="obligation-notes">Notes</Label>
+            <Label htmlFor="obligation-notes">
+              {i18n.t("app:obligations.notes")}
+            </Label>
             <textarea
               id="obligation-notes"
               className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:bg-input/30 flex min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
@@ -1468,7 +1565,7 @@ function CreateObligationDialog({
                 })
             }}
           >
-            Create obligation
+            {i18n.t("app:obligations.create_obligation")}
           </LoadingButton>
         </div>
       </DialogContent>

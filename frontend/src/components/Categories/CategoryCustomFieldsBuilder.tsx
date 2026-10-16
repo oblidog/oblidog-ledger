@@ -3,9 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useBlocker } from "@tanstack/react-router"
 import { Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
+import { useFieldArray } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
 import {
   ApiError,
   CategoriesService,
@@ -38,6 +38,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 const fieldTypes = [
@@ -53,7 +55,9 @@ const customFieldSchema = z.object({
   key: z
     .string()
     .trim()
-    .regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "Use letters, numbers, and underscores"),
+    .regex(/^[A-Za-z_][A-Za-z0-9_]*$/, {
+      error: () => i18n.t("app:messages.field_name_pattern"),
+    }),
   title: z.string().trim().optional(),
   description: z.string().trim().optional(),
   type: z.enum(fieldTypes),
@@ -75,7 +79,7 @@ const customFieldsSchema = z
         context.addIssue({
           code: "custom",
           path: ["fields", index, "key"],
-          message: "Field names must be unique",
+          message: i18n.t("app:categories.field_names_must_be_unique"),
         })
       }
       keys.add(field.key)
@@ -87,7 +91,9 @@ const customFieldsSchema = z
         context.addIssue({
           code: "custom",
           path: ["fields", index, "maxLength"],
-          message: "Maximum length must be at least the minimum",
+          message: i18n.t(
+            "app:categories.maximum_length_must_be_at_least_the_minimum",
+          ),
         })
       }
       if (
@@ -98,7 +104,9 @@ const customFieldsSchema = z
         context.addIssue({
           code: "custom",
           path: ["fields", index, "maximum"],
-          message: "Maximum must be at least the minimum",
+          message: i18n.t(
+            "app:categories.maximum_must_be_at_least_the_minimum",
+          ),
         })
       }
     })
@@ -159,7 +167,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function unsupportedSchemaReason(schema: CategoryDataSchemaPublic | null) {
   if (!schema) return null
-  if (!isRecord(schema.schema)) return "The schema root is not an object."
+  if (!isRecord(schema.schema))
+    return i18n.t("app:categories.the_schema_root_is_not_an_object")
 
   const definition = schema.schema
   const supportedRootKeywords = new Set([
@@ -172,32 +181,43 @@ function unsupportedSchemaReason(schema: CategoryDataSchemaPublic | null) {
     (key) => !supportedRootKeywords.has(key),
   )
   if (unsupportedRootKeyword) {
-    return `It uses the unsupported root keyword “${unsupportedRootKeyword}”.`
+    return i18n.t("app:categories.it_uses_the_unsupported_root_keyword", {
+      value1: unsupportedRootKeyword,
+    })
   }
   if (definition.type !== "object") {
-    return "Its root type is not an object."
+    return i18n.t("app:categories.its_root_type_is_not_an_object")
   }
   if (definition.additionalProperties !== false) {
-    return "Its additional-properties setting is not supported by this builder."
+    return i18n.t(
+      "app:categories.its_additional_properties_setting_is_not_supported_by_this_builder",
+    )
   }
   const properties = definition.properties
   if (!isRecord(properties)) {
-    return "Its properties definition is not an object."
+    return i18n.t("app:categories.its_properties_definition_is_not_an_object")
   }
   if (
     !Array.isArray(definition.required) ||
     !definition.required.every((value) => typeof value === "string")
   ) {
-    return "Its required-fields definition is not supported by this builder."
+    return i18n.t(
+      "app:categories.its_required_fields_definition_is_not_supported_by_this_builder",
+    )
   }
   if (
     definition.required.some((key) => !Object.keys(properties).includes(key))
   ) {
-    return "It requires a field that is not defined in its properties."
+    return i18n.t(
+      "app:categories.it_requires_a_field_that_is_not_defined_in_its_properties",
+    )
   }
 
   for (const [key, value] of Object.entries(properties)) {
-    if (!isRecord(value)) return `Field “${key}” is not an object definition.`
+    if (!isRecord(value))
+      return i18n.t("app:categories.field_is_not_an_object_definition", {
+        value1: key,
+      })
     const { value: typedValue, nullable } = unwrapNullablePropertySchema(value)
     if (nullable) {
       const unsupportedOuterKeyword = Object.keys(value).find(
@@ -205,7 +225,10 @@ function unsupportedSchemaReason(schema: CategoryDataSchemaPublic | null) {
           !new Set(["anyOf", "title", "description"]).has(propertyKey),
       )
       if (unsupportedOuterKeyword) {
-        return `Field “${key}” uses the unsupported keyword “${unsupportedOuterKeyword}”.`
+        return i18n.t("app:categories.field_uses_the_unsupported_keyword", {
+          value1: key,
+          value2: unsupportedOuterKeyword,
+        })
       }
     }
     const type =
@@ -215,7 +238,9 @@ function unsupportedSchemaReason(schema: CategoryDataSchemaPublic | null) {
           ? "date-time"
           : typedValue.type
     if (!fieldTypes.includes(type as (typeof fieldTypes)[number])) {
-      return `Field “${key}” uses an unsupported type or format.`
+      return i18n.t("app:categories.field_uses_an_unsupported_type_or_format", {
+        value1: key,
+      })
     }
     const supportedPropertyKeywords = new Set(["type", "title", "description"])
     if (type === "string") {
@@ -234,14 +259,19 @@ function unsupportedSchemaReason(schema: CategoryDataSchemaPublic | null) {
       (propertyKey) => !supportedPropertyKeywords.has(propertyKey),
     )
     if (unsupportedPropertyKeyword) {
-      return `Field “${key}” uses the unsupported keyword “${unsupportedPropertyKeyword}”.`
+      return i18n.t("app:categories.field_uses_the_unsupported_keyword", {
+        value1: key,
+        value2: unsupportedPropertyKeyword,
+      })
     }
     if (
       typedValue.enum !== undefined &&
       (!Array.isArray(typedValue.enum) ||
         !typedValue.enum.every((item: unknown) => typeof item === "string"))
     ) {
-      return `Field “${key}” has unsupported allowed values.`
+      return i18n.t("app:categories.field_has_unsupported_allowed_values", {
+        value1: key,
+      })
     }
   }
   return null
@@ -379,6 +409,8 @@ function NumberInput({
   integer?: boolean
   placeholder: string
 }) {
+  useTranslation()
+
   return (
     <Input
       type="number"
@@ -401,6 +433,8 @@ export function CategoryCustomFieldsBuilder({
   ledgerId: string
   category: CategoryPublic
 }) {
+  useTranslation()
+
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const storageKey = draftKey(ledgerId, category.id)
@@ -475,7 +509,9 @@ export function CategoryCustomFieldsBuilder({
       }
       if (jsonDraft !== null && restoredSchema === null) {
         setJsonDirty(true)
-        setJsonError("Apply valid JSON before saving a new version.")
+        setJsonError(
+          i18n.t("app:categories.apply_valid_json_before_saving_a_new_version"),
+        )
       }
       const initialSchema = restoredSchema ?? definition
       const formatted = JSON.stringify(initialSchema, null, 2)
@@ -565,7 +601,9 @@ export function CategoryCustomFieldsBuilder({
       setHasJsonDraft(false)
       setJsonError(null)
       showSuccessToast(
-        `Custom fields saved as schema version ${schema.version}`,
+        i18n.t("app:categories.custom_fields_saved_as_schema_version", {
+          value1: schema.version,
+        }),
       )
     },
     onError: handleError.bind(showErrorToast),
@@ -581,7 +619,7 @@ export function CategoryCustomFieldsBuilder({
   if (schemaQuery.isLoading) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        Loading fields…
+        {i18n.t("app:categories.loading_fields")}
       </p>
     )
   }
@@ -589,7 +627,9 @@ export function CategoryCustomFieldsBuilder({
   if (schemaQuery.isError) {
     return (
       <p className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">
-        Could not load the current custom-field schema.
+        {i18n.t(
+          "app:categories.could_not_load_the_current_custom_field_schema",
+        )}
       </p>
     )
   }
@@ -598,7 +638,7 @@ export function CategoryCustomFieldsBuilder({
     try {
       const schema: unknown = JSON.parse(jsonText)
       if (!isRecord(schema)) {
-        setJsonError("The schema must be a JSON object.")
+        setJsonError(i18n.t("app:categories.the_schema_must_be_a_json_object"))
         return
       }
       const formatted = JSON.stringify(schema, null, 2)
@@ -613,7 +653,7 @@ export function CategoryCustomFieldsBuilder({
         form.reset({ fields: fieldsFromSchema(appliedSchema) })
       }
     } catch {
-      setJsonError("Enter valid JSON before saving.")
+      setJsonError(i18n.t("app:categories.enter_valid_json_before_saving"))
     }
   }
 
@@ -623,7 +663,9 @@ export function CategoryCustomFieldsBuilder({
       if (!isRecord(schema)) throw new Error()
       updateJsonText(JSON.stringify(schema, null, 2))
     } catch {
-      setJsonError("Enter a JSON object before formatting.")
+      setJsonError(
+        i18n.t("app:categories.enter_a_json_object_before_formatting"),
+      )
     }
   }
 
@@ -631,7 +673,9 @@ export function CategoryCustomFieldsBuilder({
     try {
       await navigator.clipboard.writeText(jsonText)
     } catch {
-      setJsonError("Could not copy JSON to the clipboard.")
+      setJsonError(
+        i18n.t("app:categories.could_not_copy_json_to_the_clipboard"),
+      )
     }
   }
 
@@ -640,7 +684,7 @@ export function CategoryCustomFieldsBuilder({
       if (!appliedSchema) throw new Error()
       saveSchema.mutate({ schema: appliedSchema })
     } catch {
-      setJsonError("Apply valid JSON before saving.")
+      setJsonError(i18n.t("app:categories.apply_valid_json_before_saving"))
     }
   }
 
@@ -656,8 +700,10 @@ export function CategoryCustomFieldsBuilder({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
         <span className="text-muted-foreground">
           {schemaQuery.data
-            ? `Active schema version: ${schemaQuery.data.version}`
-            : "No schema has been saved yet."}
+            ? i18n.t("app:categories.active_schema_version", {
+                value1: schemaQuery.data.version,
+              })
+            : i18n.t("app:categories.no_schema_has_been_saved_yet")}
         </span>
         {hasUnsavedChanges && (
           <Button
@@ -665,7 +711,7 @@ export function CategoryCustomFieldsBuilder({
             variant="outline"
             onClick={() => setDiscardDialogOpen(true)}
           >
-            Discard changes
+            {i18n.t("app:categories.discard_changes")}
           </Button>
         )}
       </div>
@@ -676,20 +722,22 @@ export function CategoryCustomFieldsBuilder({
           onClick={() => setEditor("fields")}
           disabled={Boolean(unsupportedReason)}
         >
-          Edit fields
+          {i18n.t("app:categories.edit_fields")}
         </Button>
         <Button
           type="button"
           variant={editor === "json" ? "secondary" : "outline"}
           onClick={openJsonEditor}
         >
-          Edit JSON
+          {i18n.t("app:categories.edit_json")}
         </Button>
       </div>
       {editor === "json" ? (
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="category-data-schema-json">JSON schema</Label>
+            <Label htmlFor="category-data-schema-json">
+              {i18n.t("app:categories.json_schema")}
+            </Label>
             <textarea
               id="category-data-schema-json"
               className="border-input bg-background min-h-96 w-full rounded-md border p-3 font-mono text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
@@ -701,18 +749,18 @@ export function CategoryCustomFieldsBuilder({
           {jsonError && <p className="text-sm text-destructive">{jsonError}</p>}
           {jsonDirty && (
             <p className="text-sm text-muted-foreground">
-              Apply JSON before saving a new version.
+              {i18n.t("app:categories.apply_json_before_saving_a_new_version")}
             </p>
           )}
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="outline" onClick={formatJson}>
-              Format JSON
+              {i18n.t("app:categories.format_json")}
             </Button>
             <Button type="button" variant="outline" onClick={copyJson}>
-              Copy JSON
+              {i18n.t("app:categories.copy_json")}
             </Button>
             <Button type="button" variant="outline" onClick={applyJsonSchema}>
-              Apply JSON
+              {i18n.t("app:categories.apply_json")}
             </Button>
             <LoadingButton
               type="button"
@@ -720,7 +768,7 @@ export function CategoryCustomFieldsBuilder({
               onClick={saveAppliedJsonSchema}
               disabled={jsonDirty}
             >
-              Save as new version
+              {i18n.t("app:categories.save_as_new_version")}
             </LoadingButton>
           </div>
         </div>
@@ -735,16 +783,19 @@ export function CategoryCustomFieldsBuilder({
         >
           {unsupportedReason && (
             <p className="rounded-md border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
-              This schema is read-only in the custom-field builder.{" "}
+              {i18n.t(
+                "app:categories.this_schema_is_read_only_in_the_custom_field_builder",
+              )}{" "}
               {unsupportedReason}
-              Editing it here could remove configuration that the builder cannot
-              represent.
+              {i18n.t(
+                "app:categories.editing_it_here_could_remove_configuration_that_the_builder_cannot_represent",
+              )}
             </p>
           )}
           <fieldset disabled={Boolean(unsupportedReason)} className="space-y-4">
             {fields.fields.length === 0 ? (
               <p className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-                No custom fields configured yet.
+                {i18n.t("app:categories.no_custom_fields_configured_yet")}
               </p>
             ) : (
               <div className="space-y-4">
@@ -759,20 +810,22 @@ export function CategoryCustomFieldsBuilder({
                       className="space-y-3 rounded-lg border p-4"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <Badge variant="secondary">Field {index + 1}</Badge>
+                        <Badge variant="secondary">
+                          {i18n.t("app:categories.field")} {index + 1}
+                        </Badge>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => fields.remove(index)}
                         >
-                          <Trash2 /> Remove
+                          <Trash2 /> {i18n.t("app:categories.remove")}
                         </Button>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div className="space-y-1.5 text-sm font-medium">
                           <Label htmlFor={`custom-field-key-${item.id}`}>
-                            Field name
+                            {i18n.t("app:categories.field_name")}
                           </Label>
                           <Input
                             id={`custom-field-key-${item.id}`}
@@ -790,7 +843,7 @@ export function CategoryCustomFieldsBuilder({
                         </div>
                         <div className="space-y-1.5 text-sm font-medium">
                           <Label htmlFor={`custom-field-type-${item.id}`}>
-                            Type
+                            {i18n.t("app:categories.type")}
                           </Label>
                           <Select
                             value={field.type}
@@ -809,13 +862,23 @@ export function CategoryCustomFieldsBuilder({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="string">Text</SelectItem>
-                              <SelectItem value="number">Number</SelectItem>
-                              <SelectItem value="integer">Integer</SelectItem>
-                              <SelectItem value="boolean">Yes / no</SelectItem>
-                              <SelectItem value="date">Date</SelectItem>
+                              <SelectItem value="string">
+                                {i18n.t("app:categories.text")}
+                              </SelectItem>
+                              <SelectItem value="number">
+                                {i18n.t("app:categories.number")}
+                              </SelectItem>
+                              <SelectItem value="integer">
+                                {i18n.t("app:categories.integer")}
+                              </SelectItem>
+                              <SelectItem value="boolean">
+                                {i18n.t("app:categories.yes_no")}
+                              </SelectItem>
+                              <SelectItem value="date">
+                                {i18n.t("app:categories.date")}
+                              </SelectItem>
                               <SelectItem value="date-time">
-                                Date and time
+                                {i18n.t("app:categories.date_and_time")}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -824,12 +887,12 @@ export function CategoryCustomFieldsBuilder({
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5 text-sm font-medium">
                           <Label htmlFor={`custom-field-title-${item.id}`}>
-                            Label
+                            {i18n.t("app:categories.label")}
                           </Label>
                           <Input
                             id={`custom-field-title-${item.id}`}
                             {...form.register(`fields.${index}.title`)}
-                            placeholder="Meter reading"
+                            placeholder={i18n.t("app:categories.meter_reading")}
                           />
                         </div>
                         <label className="flex items-center gap-2 pt-7 text-sm font-medium">
@@ -837,30 +900,32 @@ export function CategoryCustomFieldsBuilder({
                             type="checkbox"
                             {...form.register(`fields.${index}.required`)}
                           />{" "}
-                          Required
+                          {i18n.t("app:categories.required")}
                         </label>
                         <label className="flex items-center gap-2 pt-7 text-sm font-medium">
                           <input
                             type="checkbox"
                             {...form.register(`fields.${index}.nullable`)}
                           />{" "}
-                          Allow null
+                          {i18n.t("app:categories.allow_null")}
                         </label>
                       </div>
                       <div className="space-y-1.5 text-sm font-medium">
                         <Label htmlFor={`custom-field-description-${item.id}`}>
-                          Help text
+                          {i18n.t("app:categories.help_text")}
                         </Label>
                         <Input
                           id={`custom-field-description-${item.id}`}
                           {...form.register(`fields.${index}.description`)}
-                          placeholder="Shown below the field"
+                          placeholder={i18n.t(
+                            "app:categories.shown_below_the_field",
+                          )}
                         />
                       </div>
                       {isText && (
                         <div className="grid gap-3 sm:grid-cols-3">
                           <Label className="space-y-1.5">
-                            Minimum length
+                            {i18n.t("app:categories.minimum_length")}
                             <NumberInput
                               integer
                               value={field.minLength}
@@ -873,11 +938,11 @@ export function CategoryCustomFieldsBuilder({
                                   },
                                 )
                               }
-                              placeholder="None"
+                              placeholder={i18n.t("app:categories.none")}
                             />
                           </Label>
                           <Label className="space-y-1.5">
-                            Maximum length
+                            {i18n.t("app:categories.maximum_length")}
                             <NumberInput
                               integer
                               value={field.maxLength}
@@ -890,14 +955,16 @@ export function CategoryCustomFieldsBuilder({
                                   },
                                 )
                               }
-                              placeholder="None"
+                              placeholder={i18n.t("app:categories.none")}
                             />
                           </Label>
                           <Label className="space-y-1.5">
-                            Allowed values
+                            {i18n.t("app:categories.allowed_values")}
                             <Input
                               {...form.register(`fields.${index}.enumValues`)}
-                              placeholder="e.g. low, high"
+                              placeholder={i18n.t(
+                                "app:categories.e_g_low_high",
+                              )}
                             />
                           </Label>
                         </div>
@@ -905,7 +972,7 @@ export function CategoryCustomFieldsBuilder({
                       {isNumeric && (
                         <div className="grid gap-3 sm:grid-cols-2">
                           <Label className="space-y-1.5">
-                            Minimum
+                            {i18n.t("app:categories.minimum")}
                             <NumberInput
                               value={field.minimum}
                               onChange={(value) =>
@@ -917,11 +984,11 @@ export function CategoryCustomFieldsBuilder({
                                   },
                                 )
                               }
-                              placeholder="None"
+                              placeholder={i18n.t("app:categories.none")}
                             />
                           </Label>
                           <Label className="space-y-1.5">
-                            Maximum
+                            {i18n.t("app:categories.maximum")}
                             <NumberInput
                               value={field.maximum}
                               onChange={(value) =>
@@ -933,7 +1000,7 @@ export function CategoryCustomFieldsBuilder({
                                   },
                                 )
                               }
-                              placeholder="None"
+                              placeholder={i18n.t("app:categories.none")}
                             />
                           </Label>
                         </div>
@@ -948,11 +1015,11 @@ export function CategoryCustomFieldsBuilder({
               variant="outline"
               onClick={() => fields.append(emptyField())}
             >
-              <Plus /> Add field
+              <Plus /> {i18n.t("app:categories.add_field")}
             </Button>
             <div className="flex justify-end">
               <LoadingButton type="submit" loading={saveSchema.isPending}>
-                Save custom fields
+                {i18n.t("app:categories.save_custom_fields")}
               </LoadingButton>
             </div>
           </fieldset>
@@ -961,26 +1028,35 @@ export function CategoryCustomFieldsBuilder({
       <Dialog open={blocker.status === "blocked"}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Leave without saving?</DialogTitle>
+            <DialogTitle>
+              {i18n.t("app:categories.leave_without_saving")}
+            </DialogTitle>
             <DialogDescription>
-              Your changes are saved as a local draft and can be restored when
-              you return to this category.
+              {i18n.t(
+                "app:categories.your_changes_are_saved_as_a_local_draft_and_can_be_restored_when_you_return_to_this_c",
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => blocker.reset?.()}>
-              Stay on this page
+              {i18n.t("app:categories.stay_on_this_page")}
             </Button>
-            <Button onClick={() => blocker.proceed?.()}>Leave page</Button>
+            <Button onClick={() => blocker.proceed?.()}>
+              {i18n.t("app:categories.leave_page")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Discard unsaved changes?</DialogTitle>
+            <DialogTitle>
+              {i18n.t("app:categories.discard_unsaved_changes")}
+            </DialogTitle>
             <DialogDescription>
-              This removes the local draft and restores the last saved schema.
+              {i18n.t(
+                "app:categories.this_removes_the_local_draft_and_restores_the_last_saved_schema",
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -988,7 +1064,7 @@ export function CategoryCustomFieldsBuilder({
               variant="outline"
               onClick={() => setDiscardDialogOpen(false)}
             >
-              Keep editing
+              {i18n.t("app:categories.keep_editing")}
             </Button>
             <Button
               variant="destructive"
@@ -997,7 +1073,7 @@ export function CategoryCustomFieldsBuilder({
                 setDiscardDialogOpen(false)
               }}
             >
-              Discard changes
+              {i18n.t("app:categories.discard_changes")}
             </Button>
           </DialogFooter>
         </DialogContent>

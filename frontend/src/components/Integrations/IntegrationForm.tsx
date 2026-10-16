@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   CategoriesService,
   type IntegrationPublic,
@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { i18n } from "@/i18n"
 
 export function IntegrationForm({
   ledgerId,
@@ -30,6 +31,8 @@ export function IntegrationForm({
   onClose: () => void
   onSaved: (item: IntegrationPublic, connectionKey?: string) => void
 }) {
+  useTranslation()
+
   const queryClient = useQueryClient()
   const [name, setName] = useState(initial?.name ?? "")
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? "")
@@ -68,19 +71,27 @@ export function IntegrationForm({
       )
     },
     onError: () =>
-      setError("Could not save the integration. Please try again."),
+      setError(
+        i18n.t(
+          "app:integrations.could_not_save_the_integration_please_try_again",
+        ),
+      ),
   })
   return (
     <Dialog open onOpenChange={(open) => !open && !save.isPending && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {initial ? "Configure integration" : "Add integration"}
+            {initial
+              ? i18n.t("app:integrations.configure_integration")
+              : i18n.t("app:integrations.add_integration")}
           </DialogTitle>
           <DialogDescription>
             {initial
-              ? "Change the integration name."
-              : "Choose a name and exactly one category. A connection key is created automatically."}
+              ? i18n.t("app:integrations.change_the_integration_name")
+              : i18n.t(
+                  "app:integrations.choose_a_name_and_exactly_one_category_a_connection_key_is_created_automatically",
+                )}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -88,7 +99,9 @@ export function IntegrationForm({
           onSubmit={(event) => {
             event.preventDefault()
             if (!name.trim() || (!initial && !categoryId)) {
-              setError("Enter a name and select a category.")
+              setError(
+                i18n.t("app:integrations.enter_a_name_and_select_a_category"),
+              )
               return
             }
             setError(null)
@@ -97,7 +110,9 @@ export function IntegrationForm({
         >
           <fieldset className="space-y-4" disabled={save.isPending}>
             <div className="space-y-2">
-              <Label htmlFor="integration-name">Name</Label>
+              <Label htmlFor="integration-name">
+                {i18n.t("app:integrations.name")}
+              </Label>
               <Input
                 id="integration-name"
                 value={name}
@@ -108,7 +123,9 @@ export function IntegrationForm({
             </div>
             {!initial && (
               <div className="space-y-2">
-                <Label htmlFor="integration-category">Category</Label>
+                <Label htmlFor="integration-category">
+                  {i18n.t("app:integrations.category")}
+                </Label>
                 <select
                   id="integration-category"
                   className="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm"
@@ -116,7 +133,9 @@ export function IntegrationForm({
                   onChange={(e) => setCategoryId(e.target.value)}
                   required
                 >
-                  <option value="">Select a category</option>
+                  <option value="">
+                    {i18n.t("app:integrations.select_a_category")}
+                  </option>
                   {categories.data?.data.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name} ({category.code})
@@ -128,20 +147,24 @@ export function IntegrationForm({
           </fieldset>
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Could not save</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:integrations.could_not_save")}
+              </AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {i18n.t("app:integrations.cancel")}
             </Button>
             <LoadingButton
               type="submit"
               loading={save.isPending}
               disabled={!categories.isSuccess}
             >
-              {initial ? "Save changes" : "Create integration"}
+              {initial
+                ? i18n.t("app:integrations.save_changes")
+                : i18n.t("app:integrations.create_integration")}
             </LoadingButton>
           </div>
         </form>

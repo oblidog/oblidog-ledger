@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import { CategoriesService } from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -32,6 +32,9 @@ import {
   type ComponentHistoryMatchBy,
   readComponentHistory,
 } from "@/features/analytics/componentHistoryApi"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { formatAmount as exactAmount, getLocale } from "@/i18n/format"
 
 type Period = { year: number; month: number }
 
@@ -50,17 +53,14 @@ function periodKey(period: Period) {
 }
 
 function periodLabel(period: Period) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(getLocale(), {
     month: "short",
     year: "numeric",
   }).format(new Date(period.year, period.month - 1, 1))
 }
 
 function formatAmount(amount: string, currency: string | null) {
-  return `${Number(amount).toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}${currency ? ` ${currency}` : ""}`
+  return exactAmount(amount, currency)
 }
 
 function errorMessage(error: unknown) {
@@ -76,10 +76,12 @@ function errorMessage(error: unknown) {
     const nested = (error as { error: { detail?: unknown } }).error
     if (nested.detail) return String(nested.detail)
   }
-  return "The selected comparison could not be loaded."
+  return i18n.t("app:analytics.the_selected_comparison_could_not_be_loaded")
 }
 
 export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
+  useTranslation()
+
   const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>()
   const [matchBy, setMatchBy] = useState<ComponentHistoryMatchBy>("label")
@@ -116,22 +118,29 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
       <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
         <div>
           <h2 id="component-history-heading" className="text-xl font-semibold">
-            Component comparison
+            {i18n.t("app:analytics.component_comparison")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Track how recurring bill components change across recent periods.
+            {i18n.t(
+              "app:analytics.track_how_recurring_bill_components_change_across_recent_periods",
+            )}
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           <div className="grid gap-1 text-sm font-medium">
-            <span>Category</span>
+            <span>{i18n.t("app:analytics.category")}</span>
             <Select
               value={selectedCategoryId}
               onValueChange={setSelectedCategoryId}
               disabled={categories.isLoading || categories.isError}
             >
-              <SelectTrigger className="w-full sm:w-48" aria-label="Category">
-                <SelectValue placeholder="Select category" />
+              <SelectTrigger
+                className="w-full sm:w-48"
+                aria-label={i18n.t("app:analytics.category")}
+              >
+                <SelectValue
+                  placeholder={i18n.t("app:analytics.select_category")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {categories.data?.data.map((category) => (
@@ -143,24 +152,31 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
             </Select>
           </div>
           <div className="grid gap-1 text-sm font-medium">
-            <span>Compare by</span>
+            <span>{i18n.t("app:analytics.compare_by")}</span>
             <Select
               value={matchBy}
               onValueChange={(value) =>
                 setMatchBy(value as ComponentHistoryMatchBy)
               }
             >
-              <SelectTrigger className="w-full sm:w-44" aria-label="Compare by">
+              <SelectTrigger
+                className="w-full sm:w-44"
+                aria-label={i18n.t("app:analytics.compare_by")}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="label">Component label</SelectItem>
-                <SelectItem value="external_id">External ID</SelectItem>
+                <SelectItem value="label">
+                  {i18n.t("app:analytics.component_label")}
+                </SelectItem>
+                <SelectItem value="external_id">
+                  {i18n.t("app:analytics.external_id")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-1 text-sm font-medium">
-            <span>Range ending</span>
+            <span>{i18n.t("app:analytics.range_ending")}</span>
             <Select
               value={periodKey(selectedPeriod)}
               onValueChange={(value) => {
@@ -172,7 +188,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
             >
               <SelectTrigger
                 className="w-full sm:w-40"
-                aria-label="Range ending"
+                aria-label={i18n.t("app:analytics.range_ending")}
               >
                 <SelectValue />
               </SelectTrigger>
@@ -191,10 +207,13 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
       {categories.isError ? (
         <Alert variant="destructive">
           <AlertCircle />
-          <AlertTitle>Categories are unavailable</AlertTitle>
+          <AlertTitle>
+            {i18n.t("app:analytics.categories_are_unavailable")}
+          </AlertTitle>
           <AlertDescription>
-            Component comparison cannot be loaded until categories are
-            available.
+            {i18n.t(
+              "app:analytics.component_comparison_cannot_be_loaded_until_categories_are_available",
+            )}
           </AlertDescription>
         </Alert>
       ) : (
@@ -223,6 +242,8 @@ export function ComponentHistoryTable({
   selectedPeriod: Period
   matchBy: ComponentHistoryMatchBy
 }) {
+  useTranslation()
+
   const history = useQuery({
     queryFn: () =>
       readComponentHistory({
@@ -248,33 +269,42 @@ export function ComponentHistoryTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Component history</CardTitle>
+        <CardTitle>{i18n.t("app:analytics.component_history")}</CardTitle>
         <CardDescription>
-          Compare the selected category across the six periods ending in{" "}
+          {i18n.t(
+            "app:analytics.compare_the_selected_category_across_the_six_periods_ending_in",
+          )}{" "}
           {periodLabel(selectedPeriod)}.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!categoryId ? (
           <p className="text-sm text-muted-foreground">
-            Select a category to compare its components.
+            {i18n.t(
+              "app:analytics.select_a_category_to_compare_its_components",
+            )}
           </p>
         ) : history.isLoading ? (
           <Skeleton className="h-48 w-full" />
         ) : history.isError ? (
           <Alert variant="destructive">
             <AlertCircle />
-            <AlertTitle>Component history is unavailable</AlertTitle>
+            <AlertTitle>
+              {i18n.t("app:analytics.component_history_is_unavailable")}
+            </AlertTitle>
             <AlertDescription>
-              {errorMessage(history.error)} Try another comparison criterion if
-              component identities are ambiguous.
+              {errorMessage(history.error)}{" "}
+              {i18n.t(
+                "app:analytics.try_another_comparison_criterion_if_component_identities_are_ambiguous",
+              )}
             </AlertDescription>
           </Alert>
         ) : !history.data?.components.length ? (
           <div className="rounded-lg border border-dashed p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              No components were recorded for this category in the selected
-              range.
+              {i18n.t(
+                "app:analytics.no_components_were_recorded_for_this_category_in_the_selected_range",
+              )}
             </p>
           </div>
         ) : (
@@ -286,7 +316,7 @@ export function ComponentHistoryTable({
               <TableHeader>
                 <TableRow>
                   <TableHead className="sticky left-0 z-10 min-w-32 bg-background">
-                    Period
+                    {i18n.t("app:analytics.period")}
                   </TableHead>
                   {history.data.components.map((component) => (
                     <TableHead
@@ -297,7 +327,9 @@ export function ComponentHistoryTable({
                         <p className="break-words font-medium text-foreground">
                           {component.label}
                         </p>
-                        <Badge variant="secondary">{component.type}</Badge>
+                        <Badge variant="secondary">
+                          {domainLabel("componentType", component.type)}
+                        </Badge>
                         {(() => {
                           const previousLabels = [
                             ...new Set(
@@ -311,7 +343,8 @@ export function ComponentHistoryTable({
                           ]
                           return previousLabels.length ? (
                             <p className="text-xs font-normal text-muted-foreground">
-                              Previously: {previousLabels.join(", ")}
+                              {i18n.t("app:analytics.previously")}{" "}
+                              {previousLabels.join(", ")}
                             </p>
                           ) : null
                         })()}
@@ -326,7 +359,7 @@ export function ComponentHistoryTable({
                     </TableHead>
                   ))}
                   <TableHead className="min-w-36 text-right">
-                    Shown total
+                    {i18n.t("app:analytics.shown_total")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -361,13 +394,17 @@ export function ComponentHistoryTable({
                             ) : value?.state === "removed" ? (
                               <div className="space-y-1">
                                 <span className="text-muted-foreground">—</span>
-                                <Badge variant="outline">Removed</Badge>
+                                <Badge variant="outline">
+                                  {i18n.t("app:analytics.removed")}
+                                </Badge>
                               </div>
                             ) : value?.state === "added" ||
                               value?.state === "changed" ||
                               value?.state === "present" ? (
                               <div className="space-y-1">
-                                <span className="font-medium">Present</span>
+                                <span className="font-medium">
+                                  {i18n.t("app:analytics.present")}
+                                </span>
                                 {value.state !== "present" ? (
                                   <Badge variant="outline">
                                     {value.state[0].toUpperCase() +
@@ -392,8 +429,9 @@ export function ComponentHistoryTable({
               </TableBody>
             </Table>
             <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-              “Shown total” sums only component amounts displayed in the row;
-              informational components are excluded.
+              {i18n.t(
+                "app:analytics.shown_total_sums_only_component_amounts_displayed_in_the_row_informational_components",
+              )}
             </p>
           </div>
         )}

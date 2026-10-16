@@ -1,6 +1,6 @@
 import { Minus, Pencil, Plus } from "lucide-react"
 import type { ReactNode } from "react"
-
+import { useTranslation } from "react-i18next"
 import type { CategoryDataRecordPublic } from "@/client"
 import {
   type CategoryDataPropertySchema,
@@ -12,6 +12,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { getLocale } from "@/i18n/format"
 import { cn } from "@/lib/utils"
 
 export type CategoryDataDifference =
@@ -79,7 +82,7 @@ export function buildPreviousRecordMap(
 }
 
 function plainValueLabel(value: unknown, present: boolean) {
-  if (!present) return "not set"
+  if (!present) return i18n.t("app:categories.not_set")
   if (value === null) return "null"
   if (typeof value === "object") return JSON.stringify(value)
   return String(value)
@@ -97,13 +100,15 @@ function DifferenceBadge({
 }: {
   difference: CategoryDataDifference
 }) {
+  useTranslation()
+
   if (difference.kind === "added") {
     return (
       <Badge
         variant="outline"
         className="border-emerald-500/50 bg-emerald-500/10"
       >
-        <Plus aria-hidden="true" /> Added
+        <Plus aria-hidden="true" /> {i18n.t("app:categories.added")}
       </Badge>
     )
   }
@@ -111,7 +116,7 @@ function DifferenceBadge({
   if (difference.kind === "removed") {
     return (
       <Badge variant="outline" className="border-rose-500/50 bg-rose-500/10">
-        <Minus aria-hidden="true" /> Removed
+        <Minus aria-hidden="true" /> {i18n.t("app:categories.removed")}
       </Badge>
     )
   }
@@ -131,7 +136,7 @@ function DifferenceBadge({
     return (
       <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10">
         <Pencil aria-hidden="true" />
-        {new Intl.NumberFormat(undefined, {
+        {new Intl.NumberFormat(getLocale(), {
           maximumFractionDigits,
           signDisplay: "always",
         }).format(delta)}
@@ -141,7 +146,7 @@ function DifferenceBadge({
 
   return (
     <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10">
-      <Pencil aria-hidden="true" /> Changed
+      <Pencil aria-hidden="true" /> {i18n.t("app:categories.changed")}
     </Badge>
   )
 }
@@ -153,11 +158,13 @@ function DifferenceDetail({
   difference: CategoryDataDifference
   schema: CategoryDataPropertySchema
 }) {
+  useTranslation()
+
   if (difference.kind === "added") {
     return (
       <>
-        <p className="font-medium">Added value</p>
-        <p>Previous: not set</p>
+        <p className="font-medium">{i18n.t("app:categories.added_value")}</p>
+        <p>{i18n.t("app:categories.previous_not_set")}</p>
       </>
     )
   }
@@ -166,10 +173,12 @@ function DifferenceDetail({
   return (
     <>
       <p className="font-medium">
-        {difference.kind === "removed" ? "Removed value" : "Changed value"}
+        {difference.kind === "removed"
+          ? i18n.t("app:categories.removed_value")
+          : i18n.t("app:categories.changed_value")}
       </p>
       <div className="flex max-w-72 items-start gap-1">
-        <span>Previous:</span>
+        <span>{i18n.t("app:categories.previous")}</span>
         <span>{formatCategoryDataValue(previousValue, schema)}</span>
       </div>
     </>
@@ -189,6 +198,8 @@ export function CategoryDataDifferenceValue({
   schema: CategoryDataPropertySchema
   showDifferences: boolean
 }) {
+  useTranslation()
+
   const currentPresent = hasOwnValue(currentData, propertyName)
   const currentValue = currentData[propertyName]
   const formattedValue: ReactNode = formatCategoryDataValue(
@@ -204,7 +215,11 @@ export function CategoryDataDifferenceValue({
 
   const previousPresent = difference.kind !== "added"
   const previousValue = previousPresent ? difference.previousValue : undefined
-  const accessibleLabel = `${difference.kind}. Current: ${plainValueLabel(currentValue, currentPresent)}. Previous: ${plainValueLabel(previousValue, previousPresent)}`
+  const accessibleLabel = i18n.t("app:categories.current_previous", {
+    value1: domainLabel("difference", difference.kind),
+    value2: plainValueLabel(currentValue, currentPresent),
+    value3: plainValueLabel(previousValue, previousPresent),
+  })
 
   return (
     <div

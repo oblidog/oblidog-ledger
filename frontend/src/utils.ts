@@ -1,11 +1,12 @@
 import type { AxiosError } from "axios"
+import { i18n } from "@/i18n"
 
 function extractErrorMessage(err: AxiosError): string {
   const errDetail = (err.response?.data as any)?.detail
   if (Array.isArray(errDetail) && errDetail.length > 0) {
     return errDetail[0].msg
   }
-  return errDetail || "Something went wrong."
+  return errDetail || i18n.t("app:messages.generic_error")
 }
 
 export const handleError = function (

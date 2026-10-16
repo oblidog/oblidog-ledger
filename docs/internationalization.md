@@ -1,8 +1,10 @@
 # Internationalization
 
-The foundation supports English (`en`) and Polish (`pl`). Full screen extraction,
-API error localization, and email localization are tracked in #512, #513, and
-#514. Some screens intentionally remain English until those changes land.
+The interface supports English (`en`) and Polish (`pl`), including authentication,
+ledger workspaces, administration, analytics, accessible controls, and form
+validation. API-originated errors and server-rendered emails remain tracked in
+#513 and #514. User-defined names, notes, schema labels and external diagnostics
+are preserved.
 
 ## Language resolution
 
@@ -32,8 +34,9 @@ a browser language. The current mail output is unchanged by this foundation.
 ## Resources and components
 
 Resources live in `frontend/src/i18n/locales/<language>/<feature>.json` and are
-registered by namespace in `i18n/index.ts`. The current namespace is `common`;
-add feature namespaces as screens are migrated. Use semantic keys and complete
+registered by namespace in `i18n/index.ts`. Common shell strings use `common`; screen resources use `app` and are split
+into feature files under `locales/<language>/app/`. Known system identifiers use
+`domain`. `appResources.ts` assembles the feature dictionaries with typed keys. Use semantic keys and complete
 sentences with interpolation/pluralization, not assembled English fragments.
 `react-i18next` provides reactive labels and typed keys. The provider updates
 `document.documentElement.lang` whenever the effective language changes.
@@ -89,3 +92,30 @@ original form. Translate known system fields by meaning, not arbitrary strings.
   do not depend on the test runner's browser language.
 - Backend language API tests exercise real authentication, persistence, partial
   updates, invalid inputs, and demo restrictions with an isolated user store.
+
+
+## Reactive screen translations
+
+Components subscribe with `useTranslation`; utility functions and module-level
+label getters resolve through the shared i18next instance at render time. Table
+column factories depend on the reactive translation function so cached columns
+also update. The page-title bridge updates translated route metadata without
+reloading routes or remounting forms.
+
+Use `useLocalizedForm` in place of React Hook Form's `useForm` for validated
+forms. Zod's default locale follows the interface language. Custom schema errors
+must be callbacks (`error: () => i18n.t(...)`) rather than strings evaluated at
+module load. The hook revalidates only existing errors after a language change,
+preserving field values, focus and dirty/touched state.
+
+Known system statuses are translated by `domainLabel` at display time. Leave
+wire enum values, URL filters, query cache keys, custom component types and user
+content unchanged. History interprets values by their system field; arbitrary
+notes are never humanized or translated.
+
+Run `bun run --filter frontend test:i18n` for isolated Playwright UI contracts
+on desktop and mobile. They intercept API responses, require no database, and
+cover language switching, existing validation, titles, category dialogs, user
+content, shared-demo isolation and horizontal overflow. The same spec is also
+included by the regular Playwright CI project. An optional
+`I18N_CHROMIUM_EXECUTABLE` can select an already installed Chromium binary.

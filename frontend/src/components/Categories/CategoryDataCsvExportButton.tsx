@@ -1,9 +1,10 @@
 import { Download } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { apiUrl } from "@/config"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 
 type CategoryDataCsvExportButtonProps = {
   ledgerId: string
@@ -38,6 +39,8 @@ function responseFilename(response: Response) {
 export function CategoryDataCsvExportButton(
   props: CategoryDataCsvExportButtonProps,
 ) {
+  useTranslation()
+
   const [isExporting, setIsExporting] = useState(false)
   const { showErrorToast } = useCustomToast()
 
@@ -49,10 +52,15 @@ export function CategoryDataCsvExportButton(
       })
       if (!response.ok) {
         const payload = await response.json().catch(() => null)
-        throw new Error(payload?.detail ?? "Could not export category data.")
+        throw new Error(
+          payload?.detail ??
+            i18n.t("app:categories.could_not_export_category_data"),
+        )
       }
       if (!response.headers.get("content-type")?.startsWith("text/csv")) {
-        throw new Error("The export response was not a CSV file.")
+        throw new Error(
+          i18n.t("app:categories.the_export_response_was_not_a_csv_file"),
+        )
       }
 
       const blobUrl = URL.createObjectURL(await response.blob())
@@ -67,7 +75,7 @@ export function CategoryDataCsvExportButton(
       showErrorToast(
         error instanceof Error
           ? error.message
-          : "Could not export category data.",
+          : i18n.t("app:categories.could_not_export_category_data"),
       )
     } finally {
       setIsExporting(false)
@@ -83,7 +91,9 @@ export function CategoryDataCsvExportButton(
       disabled={isExporting}
     >
       <Download />
-      {isExporting ? "Exporting…" : "Export CSV"}
+      {isExporting
+        ? i18n.t("app:categories.exporting")
+        : i18n.t("app:categories.export_csv")}
     </Button>
   )
 }

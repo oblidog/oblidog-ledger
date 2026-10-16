@@ -1,4 +1,5 @@
 import type { ObligationLifecycle, ObligationPublic } from "@/client"
+import { domainLabel } from "@/i18n/domainLabels"
 
 export type LifecycleFilter = ObligationLifecycle | "" | "unpaid"
 
@@ -76,9 +77,7 @@ export function parseObligationFilters(
   const params = new URLSearchParams(search)
   const year = Number(params.get("year"))
   const month = Number(params.get("month"))
-  const period = isValidPeriod(year, month)
-    ? { year, month }
-    : fallbackPeriod
+  const period = isValidPeriod(year, month) ? { year, month } : fallbackPeriod
   const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
 
   return {
@@ -119,11 +118,7 @@ export function serializeObligationFilters(
 }
 
 export function lifecycleFilterLabel(lifecycle: LifecycleFilter) {
-  if (lifecycle === "unpaid") return "Unpaid"
-  return lifecycle
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
+  return domainLabel("lifecycle", lifecycle)
 }
 
 export function canMarkObligationReady(obligation: ObligationPublic) {

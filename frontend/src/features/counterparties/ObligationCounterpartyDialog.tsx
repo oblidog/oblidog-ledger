@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import type { ObligationPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
 
 import {
@@ -32,6 +33,8 @@ export function ObligationCounterpartyDialog({
   obligation: ObligationPublic
   trigger: ReactNode
 }) {
+  useTranslation()
+
   const counterpartyObligation = obligation as ObligationPublic &
     ObligationWithCounterparty
   const current = counterpartyObligation.counterparty ?? null
@@ -49,7 +52,9 @@ export function ObligationCounterpartyDialog({
       assignObligationCounterparty(ledgerId, obligation.key, draft?.id ?? null),
     onError: handleError.bind(showErrorToast),
     onSuccess: () => {
-      showSuccessToast("Obligation counterparty updated")
+      showSuccessToast(
+        i18n.t("app:counterparties.obligation_counterparty_updated"),
+      )
       setOpen(false)
       void queryClient.invalidateQueries({
         queryKey: ["obligation", ledgerId, obligation.key],
@@ -67,10 +72,15 @@ export function ObligationCounterpartyDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Counterparty</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:counterparties.counterparty_97b2be")}
+          </DialogTitle>
           <DialogDescription>
-            Override the counterparty for {obligation.name}. This changes only
-            this obligation, not the category default or other periods.
+            {i18n.t("app:counterparties.override_the_counterparty_for")}{" "}
+            {obligation.name}
+            {i18n.t(
+              "app:counterparties.this_changes_only_this_obligation_not_the_category_default_or_other_periods",
+            )}
           </DialogDescription>
         </DialogHeader>
         <CounterpartyPicker
@@ -80,13 +90,13 @@ export function ObligationCounterpartyDialog({
         />
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {i18n.t("app:counterparties.cancel")}
           </Button>
           <Button
             disabled={!changed || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            Save
+            {i18n.t("app:counterparties.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

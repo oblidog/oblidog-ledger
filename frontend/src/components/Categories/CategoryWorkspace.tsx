@@ -22,9 +22,9 @@ import {
   type Control,
   type FieldValues,
   type Path,
-  useForm,
   useWatch,
 } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import {
   AnalyticsService,
@@ -94,15 +94,27 @@ import {
 import { CategoryCounterpartyField } from "@/features/counterparties/CategoryCounterpartyField"
 import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { formatAmount, getLocale } from "@/i18n/format"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 const groupSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(255),
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: () => i18n.t("app:messages.name_required") })
+    .max(255),
   description: z.string().optional(),
 })
 
 const categoryConfigurationSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(255),
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: () => i18n.t("app:messages.name_required") })
+    .max(255),
   description: z.string().optional(),
   data_source_policy: z.enum(["manual", "automatic", "hybrid"]),
   recurrence_interval: z.number().int().positive().optional(),
@@ -112,11 +124,16 @@ const categoryConfigurationSchema = z.object({
 })
 
 const categorySchema = categoryConfigurationSchema.extend({
-  category_group_id: z.string().min(1, "Choose a group"),
+  category_group_id: z
+    .string()
+    .min(1, { error: () => i18n.t("app:categories.choose_a_group") }),
   code: z
     .string()
     .trim()
-    .regex(/^[A-Z]{4}$/, "Code must contain exactly 4 uppercase letters"),
+    .regex(/^[A-Z]{4}$/, {
+      error: () =>
+        i18n.t("app:categories.code_must_contain_exactly_4_uppercase_letters"),
+    }),
 })
 
 type GroupFormData = z.infer<typeof groupSchema>
@@ -138,13 +155,15 @@ function CurrencyField<T extends FieldValues>({
 }: {
   control: Control<T>
 }) {
+  useTranslation()
+
   return (
     <FormField
       control={control}
       name={"currency" as Path<T>}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Currency</FormLabel>
+          <FormLabel>{i18n.t("app:categories.currency")}</FormLabel>
           <Select onValueChange={field.onChange} value={field.value as string}>
             <FormControl>
               <SelectTrigger className="w-full">
@@ -168,12 +187,18 @@ function CurrencyField<T extends FieldValues>({
 
 function obligationModeDescription(mode: "manual" | "automatic" | "hybrid") {
   if (mode === "manual") {
-    return "Obligations for this category are created manually."
+    return i18n.t(
+      "app:categories.obligations_for_this_category_are_created_manually",
+    )
   }
   if (mode === "automatic") {
-    return "Obligations are created automatically from the payment schedule."
+    return i18n.t(
+      "app:categories.obligations_are_created_automatically_from_the_payment_schedule",
+    )
   }
-  return "Obligations follow the schedule and can also be created manually."
+  return i18n.t(
+    "app:categories.obligations_follow_the_schedule_and_can_also_be_created_manually",
+  )
 }
 
 function recurrencePreset(
@@ -195,6 +220,8 @@ function PaymentScheduleFields<T extends FieldValues>({
   control: Control<T>
   onPresetChange: (preset: string) => void
 }) {
+  useTranslation()
+
   const interval = useWatch({
     control,
     name: "recurrence_interval" as Path<T>,
@@ -242,7 +269,7 @@ function PaymentScheduleFields<T extends FieldValues>({
   })
   const nextDueDate = valid && settled ? preview.data?.due_date : undefined
   const formatDate = (value: string) =>
-    new Intl.DateTimeFormat("en-GB", {
+    new Intl.DateTimeFormat(getLocale(), {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -251,9 +278,13 @@ function PaymentScheduleFields<T extends FieldValues>({
   return (
     <section className="space-y-4 border-t pt-4">
       <div>
-        <h3 className="text-sm font-semibold">Payment schedule</h3>
+        <h3 className="text-sm font-semibold">
+          {i18n.t("app:categories.payment_schedule")}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Set when the first payment is due and how often it repeats.
+          {i18n.t(
+            "app:categories.set_when_the_first_payment_is_due_and_how_often_it_repeats",
+          )}
         </p>
       </div>
       <FormField
@@ -261,7 +292,7 @@ function PaymentScheduleFields<T extends FieldValues>({
         name={"first_due_date" as Path<T>}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>First payment due</FormLabel>
+            <FormLabel>{i18n.t("app:categories.first_payment_due")}</FormLabel>
             <FormControl>
               <Input
                 type="date"
@@ -274,7 +305,7 @@ function PaymentScheduleFields<T extends FieldValues>({
         )}
       />
       <FormItem>
-        <FormLabel>Repeat</FormLabel>
+        <FormLabel>{i18n.t("app:categories.repeat")}</FormLabel>
         <Select onValueChange={onPresetChange} value={preset}>
           <FormControl>
             <SelectTrigger className="w-full">
@@ -282,10 +313,18 @@ function PaymentScheduleFields<T extends FieldValues>({
             </SelectTrigger>
           </FormControl>
           <SelectContent>
-            <SelectItem value="monthly">Every month</SelectItem>
-            <SelectItem value="every-two-months">Every 2 months</SelectItem>
-            <SelectItem value="yearly">Every year</SelectItem>
-            <SelectItem value="custom">Custom</SelectItem>
+            <SelectItem value="monthly">
+              {i18n.t("app:categories.every_month")}
+            </SelectItem>
+            <SelectItem value="every-two-months">
+              {i18n.t("app:categories.every_2_months")}
+            </SelectItem>
+            <SelectItem value="yearly">
+              {i18n.t("app:categories.every_year")}
+            </SelectItem>
+            <SelectItem value="custom">
+              {i18n.t("app:categories.custom")}
+            </SelectItem>
           </SelectContent>
         </Select>
       </FormItem>
@@ -296,7 +335,7 @@ function PaymentScheduleFields<T extends FieldValues>({
             name={"recurrence_interval" as Path<T>}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Every</FormLabel>
+                <FormLabel>{i18n.t("app:categories.every")}</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -320,19 +359,25 @@ function PaymentScheduleFields<T extends FieldValues>({
             name={"recurrence_unit" as Path<T>}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Period</FormLabel>
+                <FormLabel>{i18n.t("app:categories.period")}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value as string}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Choose a period" />
+                      <SelectValue
+                        placeholder={i18n.t("app:categories.choose_a_period")}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="month">Months</SelectItem>
-                    <SelectItem value="year">Years</SelectItem>
+                    <SelectItem value="month">
+                      {i18n.t("app:categories.months")}
+                    </SelectItem>
+                    <SelectItem value="year">
+                      {i18n.t("app:categories.years")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -342,19 +387,22 @@ function PaymentScheduleFields<T extends FieldValues>({
         </div>
       )}
       <div className="rounded-md bg-muted p-3">
-        <p className="text-sm font-medium">Next payment</p>
+        <p className="text-sm font-medium">
+          {i18n.t("app:categories.next_payment")}
+        </p>
         {!valid ? (
           <p className="mt-1 text-sm text-muted-foreground">
-            Choose a valid first payment date and recurrence to see the next
-            payment.
+            {i18n.t(
+              "app:categories.choose_a_valid_first_payment_date_and_recurrence_to_see_the_next_payment",
+            )}
           </p>
         ) : !settled || preview.isFetching ? (
           <p className="mt-1 text-sm text-muted-foreground" role="status">
-            Calculating schedule…
+            {i18n.t("app:categories.calculating_schedule")}
           </p>
         ) : preview.isError ? (
           <p className="mt-1 text-sm text-destructive" role="alert">
-            Could not load the payment schedule.
+            {i18n.t("app:categories.could_not_load_the_payment_schedule")}
           </p>
         ) : nextDueDate ? (
           <div className="mt-1 text-sm text-muted-foreground">
@@ -362,14 +410,18 @@ function PaymentScheduleFields<T extends FieldValues>({
             {preview.data?.scheduled_date &&
               preview.data.scheduled_date !== nextDueDate && (
                 <p>
-                  Moved from {formatDate(preview.data.scheduled_date)} to the
-                  previous working day ({preview.data.calendar_country}).
+                  {i18n.t("app:messages.moved_payment", {
+                    date: formatDate(preview.data.scheduled_date),
+                    country: preview.data.calendar_country,
+                  })}
                 </p>
               )}
           </div>
         ) : (
           <p className="mt-1 text-sm text-muted-foreground">
-            No upcoming payment in the supported date range.
+            {i18n.t(
+              "app:categories.no_upcoming_payment_in_the_supported_date_range",
+            )}
           </p>
         )}
       </div>
@@ -393,6 +445,8 @@ function useCategoryQueries(ledgerId: string, includeArchived: boolean) {
 }
 
 function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -404,7 +458,7 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
     mutationFn: (data: CategoryGroupCreate) =>
       CategoriesService.createCategoryGroup({ ledgerId, requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Category group created")
+      showSuccessToast(i18n.t("app:categories.category_group_created"))
       form.reset()
       setOpen(false)
     },
@@ -420,14 +474,16 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <FolderPlus />
-          New group
+          {i18n.t("app:categories.new_group")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create category group</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:categories.create_category_group")}
+          </DialogTitle>
           <DialogDescription>
-            Groups keep related categories together.
+            {i18n.t("app:categories.groups_keep_related_categories_together")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -445,9 +501,12 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.name")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Utilities" {...field} />
+                    <Input
+                      placeholder={i18n.t("app:categories.utilities")}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -458,9 +517,14 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.description")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional description" {...field} />
+                    <Input
+                      placeholder={i18n.t(
+                        "app:categories.optional_description",
+                      )}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -468,7 +532,7 @@ function CreateGroupDialog({ ledgerId }: { ledgerId: string }) {
             />
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Create group
+                {i18n.t("app:categories.create_group")}
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -485,6 +549,8 @@ function EditGroupDialog({
   ledgerId: string
   group: { id: string; name: string; description: string | null }
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -506,7 +572,7 @@ function EditGroupDialog({
         requestBody: data,
       }),
     onSuccess: () => {
-      showSuccessToast("Category group updated")
+      showSuccessToast(i18n.t("app:categories.category_group_updated"))
       setOpen(false)
     },
     onError: handleError.bind(showErrorToast),
@@ -521,14 +587,20 @@ function EditGroupDialog({
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
           <Pencil />
-          <span className="sr-only">Edit {group.name}</span>
+          <span className="sr-only">
+            {i18n.t("app:categories.edit")} {group.name}
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit category group</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:categories.edit_category_group")}
+          </DialogTitle>
           <DialogDescription>
-            Update the name or description of this group.
+            {i18n.t(
+              "app:categories.update_the_name_or_description_of_this_group",
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -546,7 +618,7 @@ function EditGroupDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.name")}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -559,9 +631,14 @@ function EditGroupDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.description")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional description" {...field} />
+                    <Input
+                      placeholder={i18n.t(
+                        "app:categories.optional_description",
+                      )}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -569,7 +646,7 @@ function EditGroupDialog({
             />
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save group changes
+                {i18n.t("app:categories.save_group_changes")}
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -586,6 +663,8 @@ function CreateCategoryDialog({
   ledgerId: string
   groups: { id: string; name: string; is_active: boolean }[]
 }) {
+  useTranslation()
+
   const { data: ledger } = useSuspenseQuery({
     queryKey: ["ledger", ledgerId],
     queryFn: () => LedgersService.readLedger({ ledgerId }),
@@ -627,7 +706,7 @@ function CreateCategoryDialog({
       return created
     },
     onSuccess: () => {
-      showSuccessToast("Category created")
+      showSuccessToast(i18n.t("app:categories.category_created"))
       form.reset()
       setCounterparty(null)
       setOpen(false)
@@ -642,14 +721,14 @@ function CreateCategoryDialog({
       <DialogTrigger asChild>
         <Button disabled={activeGroups.length === 0}>
           <Plus />
-          New category
+          {i18n.t("app:categories.new_category")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create category</DialogTitle>
+          <DialogTitle>{i18n.t("app:categories.create_category")}</DialogTitle>
           <DialogDescription>
-            Add a category to an active group.
+            {i18n.t("app:categories.add_a_category_to_an_active_group")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -663,17 +742,21 @@ function CreateCategoryDialog({
             )}
             className="space-y-4"
           >
-            <h3 className="text-sm font-semibold">Basic information</h3>
+            <h3 className="text-sm font-semibold">
+              {i18n.t("app:categories.basic_information")}
+            </h3>
             <FormField
               control={form.control}
               name="category_group_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Group</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.group")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a group" />
+                        <SelectValue
+                          placeholder={i18n.t("app:categories.choose_a_group")}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -693,9 +776,12 @@ function CreateCategoryDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.name")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Electricity" {...field} />
+                    <Input
+                      placeholder={i18n.t("app:categories.electricity")}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -706,9 +792,14 @@ function CreateCategoryDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.description")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional description" {...field} />
+                    <Input
+                      placeholder={i18n.t(
+                        "app:categories.optional_description",
+                      )}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -719,7 +810,7 @@ function CreateCategoryDialog({
               name="code"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Code</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.code")}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="ELEC"
@@ -741,9 +832,13 @@ function CreateCategoryDialog({
             />
             <section className="space-y-4 border-t pt-4">
               <div>
-                <h3 className="text-sm font-semibold">Behavior</h3>
+                <h3 className="text-sm font-semibold">
+                  {i18n.t("app:categories.behavior")}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Choose how obligations are created and managed.
+                  {i18n.t(
+                    "app:categories.choose_how_obligations_are_created_and_managed",
+                  )}
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -752,7 +847,9 @@ function CreateCategoryDialog({
                   name="data_source_policy"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category mode</FormLabel>
+                      <FormLabel>
+                        {i18n.t("app:categories.category_mode")}
+                      </FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value)
@@ -773,9 +870,15 @@ function CreateCategoryDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="manual">Manual</SelectItem>
-                          <SelectItem value="automatic">Automatic</SelectItem>
-                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                          <SelectItem value="manual">
+                            {i18n.t("app:categories.manual")}
+                          </SelectItem>
+                          <SelectItem value="automatic">
+                            {i18n.t("app:categories.automatic")}
+                          </SelectItem>
+                          <SelectItem value="hybrid">
+                            {i18n.t("app:categories.hybrid")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -811,7 +914,7 @@ function CreateCategoryDialog({
             )}
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Create category
+                {i18n.t("app:categories.create_category")}
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -832,6 +935,8 @@ function EditCategoryDialog({
   groups: { id: string; name: string; is_active: boolean }[]
   trigger?: ReactNode
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const currentCounterparty = categoryCounterparty(category)
   const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(
@@ -842,7 +947,9 @@ function EditCategoryDialog({
   const form = useForm<CategoryUpdateFormData & { category_group_id: string }>({
     resolver: zodResolver(
       categoryConfigurationSchema.extend({
-        category_group_id: z.string().min(1, "Choose a group"),
+        category_group_id: z
+          .string()
+          .min(1, { error: () => i18n.t("app:categories.choose_a_group") }),
       }),
     ),
     defaultValues: {
@@ -890,7 +997,7 @@ function EditCategoryDialog({
       return updated
     },
     onSuccess: () => {
-      showSuccessToast("Category updated")
+      showSuccessToast(i18n.t("app:categories.category_updated"))
       setOpen(false)
     },
     onError: handleError.bind(showErrorToast),
@@ -905,18 +1012,24 @@ function EditCategoryDialog({
           <Button
             variant="ghost"
             size="sm"
-            aria-label={`More actions for ${category.name}`}
+            aria-label={i18n.t("app:categories.more_actions_for", {
+              value1: category.name,
+            })}
           >
             <Pencil />
-            <span className="sr-only">Edit {category.name}</span>
+            <span className="sr-only">
+              {i18n.t("app:categories.edit")} {category.name}
+            </span>
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit category</DialogTitle>
+          <DialogTitle>{i18n.t("app:categories.edit_category")}</DialogTitle>
           <DialogDescription>
-            Update the category and its obligation configuration.
+            {i18n.t(
+              "app:categories.update_the_category_and_its_obligation_configuration",
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -940,11 +1053,13 @@ function EditCategoryDialog({
               name="category_group_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Group</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.group")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a group" />
+                        <SelectValue
+                          placeholder={i18n.t("app:categories.choose_a_group")}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -974,7 +1089,7 @@ function EditCategoryDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.name")}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -987,16 +1102,23 @@ function EditCategoryDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{i18n.t("app:categories.description")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional description" {...field} />
+                    <Input
+                      placeholder={i18n.t(
+                        "app:categories.optional_description",
+                      )}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className="space-y-2">
-              <p className="text-sm font-medium">Code</p>
+              <p className="text-sm font-medium">
+                {i18n.t("app:categories.code")}
+              </p>
               <Badge variant="secondary">{category.code}</Badge>
             </div>
             <CategoryCounterpartyField
@@ -1010,7 +1132,9 @@ function EditCategoryDialog({
                 name="data_source_policy"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category mode</FormLabel>
+                    <FormLabel>
+                      {i18n.t("app:categories.category_mode")}
+                    </FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value)
@@ -1031,9 +1155,15 @@ function EditCategoryDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="manual">Manual</SelectItem>
-                        <SelectItem value="automatic">Automatic</SelectItem>
-                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                        <SelectItem value="manual">
+                          {i18n.t("app:categories.manual")}
+                        </SelectItem>
+                        <SelectItem value="automatic">
+                          {i18n.t("app:categories.automatic")}
+                        </SelectItem>
+                        <SelectItem value="hybrid">
+                          {i18n.t("app:categories.hybrid")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1068,7 +1198,7 @@ function EditCategoryDialog({
             )}
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save changes
+                {i18n.t("app:categories.save_changes")}
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -1085,10 +1215,14 @@ function ArchiveButton({
   label: string
   onArchive: () => void
 }) {
+  useTranslation()
+
   return (
     <Button variant="ghost" size="sm" onClick={onArchive}>
       <Archive />
-      <span className="sr-only">Archive {label}</span>
+      <span className="sr-only">
+        {i18n.t("app:categories.archive")} {label}
+      </span>
     </Button>
   )
 }
@@ -1109,6 +1243,8 @@ function ManageGroupsDialog({
   categories: CategoryPublic[]
   onArchive: (groupId: string) => void
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const activeCategoryCount = (groupId: string) =>
     categories.filter(
@@ -1121,15 +1257,18 @@ function ManageGroupsDialog({
       <DialogTrigger asChild>
         <Button variant="outline">
           <Settings2 />
-          Manage groups
+          {i18n.t("app:categories.manage_groups")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Manage category groups</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:categories.manage_category_groups")}
+          </DialogTitle>
           <DialogDescription>
-            Categories always belong to a group. Archive active categories or
-            move them before archiving their group.
+            {i18n.t(
+              "app:categories.categories_always_belong_to_a_group_archive_active_categories_or_move_them_before_arc",
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end">
@@ -1137,7 +1276,7 @@ function ManageGroupsDialog({
         </div>
         {groups.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No groups yet.
+            {i18n.t("app:categories.no_groups_yet")}
           </p>
         ) : (
           <div className="divide-y rounded-lg border">
@@ -1159,14 +1298,16 @@ function ManageGroupsDialog({
                       {group.name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {count} active {count === 1 ? "category" : "categories"}
+                      {i18n.t("app:messages.active_categories", { count })}
                       {group.description ? ` · ${group.description}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
                     <EditGroupDialog ledgerId={ledgerId} group={group} />
                     {!group.is_active ? (
-                      <Badge variant="secondary">Archived</Badge>
+                      <Badge variant="secondary">
+                        {i18n.t("app:categories.archived")}
+                      </Badge>
                     ) : (
                       <ArchiveButton
                         label={group.name}
@@ -1197,6 +1338,8 @@ function CategoryActions({
   onArchive: (categoryId: string) => void
   onRestore: (categoryId: string) => void
 }) {
+  useTranslation()
+
   return (
     <div className="flex justify-end gap-1">
       {category.has_data_schema && (
@@ -1207,10 +1350,14 @@ function CategoryActions({
           <Button
             variant="ghost"
             size="sm"
-            aria-label={`More actions for ${category.name}`}
+            aria-label={i18n.t("app:categories.more_actions_for", {
+              value1: category.name,
+            })}
           >
             <Ellipsis />
-            <span className="sr-only">More actions for {category.name}</span>
+            <span className="sr-only">
+              {i18n.t("app:categories.more_actions_for_5ac859")} {category.name}
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -1219,7 +1366,7 @@ function CategoryActions({
             category={category}
             trigger={
               <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-                View amount history
+                {i18n.t("app:categories.view_amount_history")}
               </DropdownMenuItem>
             }
           />
@@ -1228,7 +1375,7 @@ function CategoryActions({
               to="/ledgers/$ledgerId/categories/$categoryId/custom-fields"
               params={{ ledgerId, categoryId: category.id }}
             >
-              Manage custom fields
+              {i18n.t("app:categories.manage_custom_fields")}
             </Link>
           </DropdownMenuItem>
           <EditCategoryDialog
@@ -1237,7 +1384,7 @@ function CategoryActions({
             groups={groups}
             trigger={
               <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-                Edit category
+                {i18n.t("app:categories.edit_category")}
               </DropdownMenuItem>
             }
           />
@@ -1251,7 +1398,7 @@ function CategoryActions({
                 disabled={!categoryCounterparty(category)}
                 onSelect={(event) => event.preventDefault()}
               >
-                Apply counterparty to obligations
+                {i18n.t("app:categories.apply_counterparty_to_obligations")}
               </DropdownMenuItem>
             }
           />
@@ -1261,11 +1408,11 @@ function CategoryActions({
               variant="destructive"
               onSelect={() => onArchive(category.id)}
             >
-              Archive category
+              {i18n.t("app:categories.archive_category")}
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem onSelect={() => onRestore(category.id)}>
-              Restore category
+              {i18n.t("app:categories.restore_category")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -1291,6 +1438,8 @@ function CategoryHistoryDialog({
   category: CategoryPublic
   trigger: ReactNode
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const range = historyRange()
   const history = useQuery({
@@ -1310,9 +1459,13 @@ function CategoryHistoryDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{category.name} amount history</DialogTitle>
+          <DialogTitle>
+            {category.name} {i18n.t("app:categories.amount_history")}
+          </DialogTitle>
           <DialogDescription>
-            Last six periods. Missing and unknown amounts are kept distinct.
+            {i18n.t(
+              "app:categories.last_six_periods_missing_and_unknown_amounts_are_kept_distinct",
+            )}
           </DialogDescription>
         </DialogHeader>
         {history.isLoading ? (
@@ -1322,9 +1475,13 @@ function CategoryHistoryDialog({
           </div>
         ) : history.isError || !history.data ? (
           <Alert variant="destructive">
-            <AlertTitle>History is unavailable</AlertTitle>
+            <AlertTitle>
+              {i18n.t("app:categories.history_is_unavailable")}
+            </AlertTitle>
             <AlertDescription>
-              The category history could not be loaded right now.
+              {i18n.t(
+                "app:categories.the_category_history_could_not_be_loaded_right_now",
+              )}
             </AlertDescription>
           </Alert>
         ) : (
@@ -1335,7 +1492,7 @@ function CategoryHistoryDialog({
                 key={`${point.period.year}-${point.period.month}`}
               >
                 <span className="text-sm font-medium">
-                  {new Intl.DateTimeFormat(undefined, {
+                  {new Intl.DateTimeFormat(getLocale(), {
                     month: "long",
                     year: "numeric",
                   }).format(
@@ -1344,11 +1501,7 @@ function CategoryHistoryDialog({
                 </span>
                 {point.state === "known" ? (
                   <span>
-                    {Number(point.current_amount).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    {point.currency}
+                    {formatAmount(String(point.current_amount), point.currency)}
                   </span>
                 ) : (
                   <Badge
@@ -1357,8 +1510,8 @@ function CategoryHistoryDialog({
                     }
                   >
                     {point.state === "unknown"
-                      ? "Amount unknown"
-                      : "No obligation"}
+                      ? i18n.t("app:categories.amount_unknown")
+                      : i18n.t("app:categories.no_obligation")}
                   </Badge>
                 )}
               </div>
@@ -1371,9 +1524,16 @@ function CategoryHistoryDialog({
 }
 
 export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
+  const { t } = useTranslation(["common", "app"])
+
   const initialFilters = () => {
     if (typeof window === "undefined") {
-      return { group: FILTER_ALL, query: "", status: "active", sort: "name" }
+      return {
+        group: FILTER_ALL,
+        query: "",
+        status: "active",
+        sort: "name",
+      }
     }
     const params = new URLSearchParams(window.location.search)
     return {
@@ -1428,7 +1588,8 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         ledgerId,
         categoryGroupId: groupId,
       }),
-    onSuccess: () => showSuccessToast("Category group archived"),
+    onSuccess: () =>
+      showSuccessToast(t("app:categories.category_group_archived")),
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["category-groups", ledgerId] })
@@ -1438,7 +1599,7 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
   const archiveCategory = useMutation({
     mutationFn: (categoryId: string) =>
       CategoriesService.archiveCategory({ ledgerId, categoryId }),
-    onSuccess: () => showSuccessToast("Category archived"),
+    onSuccess: () => showSuccessToast(t("app:categories.category_archived")),
     onError: handleError.bind(showErrorToast),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["categories", ledgerId] }),
@@ -1446,7 +1607,7 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
   const restoreCategory = useMutation({
     mutationFn: (categoryId: string) =>
       CategoriesService.restoreCategory({ ledgerId, categoryId }),
-    onSuccess: () => showSuccessToast("Category restored"),
+    onSuccess: () => showSuccessToast(t("app:categories.category_restored")),
     onError: handleError.bind(showErrorToast),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["categories", ledgerId] }),
@@ -1478,7 +1639,8 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
       .map((category) => ({
         ...category,
         groupName:
-          groupNames.get(category.category_group_id) || "Unknown group",
+          groupNames.get(category.category_group_id) ||
+          t("app:categories.unknown_group"),
       }))
       .sort((left, right) => {
         const result = (
@@ -1486,7 +1648,7 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         ).localeCompare(sortBy === "group" ? right.groupName : right.name)
         return result || left.name.localeCompare(right.name)
       })
-  }, [categories, groupFilter, groups, query, sortBy, statusFilter])
+  }, [categories, groupFilter, groups, query, sortBy, statusFilter, t])
 
   const columns = useMemo<ColumnDef<DataTableFeatures, CategoryRow>[]>(
     () => [
@@ -1494,7 +1656,7 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         accessorKey: "name",
         header: () => (
           <Button variant="ghost" size="sm" onClick={() => setSortBy("name")}>
-            Name <ArrowDownUp />
+            {t("app:categories.name")} <ArrowDownUp />
           </Button>
         ),
         cell: ({ row }) => (
@@ -1517,7 +1679,8 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
                 className="truncate"
                 title={categoryCounterparty(row.original)?.name}
               >
-                {categoryCounterparty(row.original)?.name || "Not assigned"}
+                {categoryCounterparty(row.original)?.name ||
+                  t("app:categories.not_assigned")}
               </span>
             </div>
             {row.original.description && (
@@ -1532,7 +1695,7 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         accessorKey: "groupName",
         header: () => (
           <Button variant="ghost" size="sm" onClick={() => setSortBy("group")}>
-            Group <ArrowDownUp />
+            {t("app:categories.group")} <ArrowDownUp />
           </Button>
         ),
         cell: ({ row }) => (
@@ -1541,33 +1704,45 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
       },
       {
         accessorKey: "code",
-        header: "Code",
+        header: t("app:categories.code"),
         cell: ({ row }) => (
           <Badge variant="secondary">{row.original.code}</Badge>
         ),
       },
-      { accessorKey: "data_source_policy", header: "Mode" },
+      {
+        accessorKey: "data_source_policy",
+        header: t("app:categories.mode"),
+        cell: ({ row }) =>
+          domainLabel("categoryMode", row.original.data_source_policy),
+      },
       {
         id: "recurrence",
-        header: "Recurrence",
+        header: t("app:categories.recurrence"),
         cell: ({ row }) =>
           row.original.recurrence_interval && row.original.recurrence_unit
-            ? `Every ${row.original.recurrence_interval} ${row.original.recurrence_unit}${row.original.recurrence_interval === 1 ? "" : "s"}`
-            : "None",
+            ? t(
+                row.original.recurrence_unit === "year"
+                  ? "app:messages.years"
+                  : "app:messages.months",
+                { count: row.original.recurrence_interval },
+              )
+            : t("app:categories.none"),
       },
-      { accessorKey: "currency", header: "Currency" },
+      { accessorKey: "currency", header: t("app:categories.currency") },
       {
         id: "status",
-        header: "Status",
+        header: t("app:categories.status"),
         cell: ({ row }) => (
           <Badge variant={row.original.is_active ? "outline" : "secondary"}>
-            {row.original.is_active ? "Active" : "Archived"}
+            {row.original.is_active
+              ? t("app:categories.active_a733b8")
+              : t("app:categories.archived")}
           </Badge>
         ),
       },
       {
         id: "actions",
-        header: "Actions",
+        header: t("app:categories.actions"),
         cell: ({ row }) => (
           <CategoryActions
             ledgerId={ledgerId}
@@ -1579,7 +1754,7 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         ),
       },
     ],
-    [archiveCategory, groups, ledgerId, restoreCategory],
+    [archiveCategory, groups, ledgerId, restoreCategory, t],
   )
 
   return (
@@ -1587,9 +1762,11 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-4">
           <div>
-            <CardTitle>Categories</CardTitle>
+            <CardTitle>{t("app:categories.categories")}</CardTitle>
             <CardDescription>
-              Search, filter, and manage categories without leaving this page.
+              {t(
+                "app:categories.search_filter_and_manage_categories_without_leaving_this_page",
+              )}
             </CardDescription>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
@@ -1611,15 +1788,17 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className="pl-9"
-                placeholder="Search name or code"
+                placeholder={t("app:categories.search_name_or_code")}
               />
             </div>
             <Select value={groupFilter} onValueChange={setGroupFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="All groups" />
+                <SelectValue placeholder={t("app:categories.all_groups")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={FILTER_ALL}>All groups</SelectItem>
+                <SelectItem value={FILTER_ALL}>
+                  {t("app:categories.all_groups")}
+                </SelectItem>
                 {groups.map((group) => (
                   <SelectItem key={group.id} value={group.id}>
                     {group.name}
@@ -1632,9 +1811,15 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-                <SelectItem value={FILTER_ALL}>All statuses</SelectItem>
+                <SelectItem value="active">
+                  {t("app:categories.active_a733b8")}
+                </SelectItem>
+                <SelectItem value="archived">
+                  {t("app:categories.archived")}
+                </SelectItem>
+                <SelectItem value={FILTER_ALL}>
+                  {t("app:categories.all_statuses")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

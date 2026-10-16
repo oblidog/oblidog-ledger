@@ -2,9 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
 import { type LedgerCreate, LedgersService } from "@/client"
 import {
   LedgerPreferenceFields,
@@ -31,16 +30,24 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(255),
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: () => i18n.t("app:messages.name_required") })
+    .max(255),
   description: z.string().optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
 
 export function AddLedger() {
+  useTranslation()
+
   const options = useLedgerPreferenceOptions()
   const [country, setCountry] = useState(
     options.default_business_calendar_country,
@@ -58,7 +65,7 @@ export function AddLedger() {
     mutationFn: (data: LedgerCreate) =>
       LedgersService.createLedger({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Ledger created successfully")
+      showSuccessToast(i18n.t("app:ledgers.ledger_created_successfully"))
       form.reset()
       setCountry(options.default_business_calendar_country)
       setCurrency(options.default_currency)
@@ -84,14 +91,16 @@ export function AddLedger() {
       <DialogTrigger asChild>
         <Button>
           <Plus />
-          New ledger
+          {i18n.t("app:ledgers.new_ledger")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create a ledger</DialogTitle>
+          <DialogTitle>{i18n.t("app:ledgers.create_a_ledger")}</DialogTitle>
           <DialogDescription>
-            Create a private workspace for your payment obligations.
+            {i18n.t(
+              "app:ledgers.create_a_private_workspace_for_your_payment_obligations",
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -101,9 +110,12 @@ export function AddLedger() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{i18n.t("app:ledgers.name")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Household finances" {...field} />
+                    <Input
+                      placeholder={i18n.t("app:ledgers.household_finances")}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,9 +126,12 @@ export function AddLedger() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{i18n.t("app:ledgers.description")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional description" {...field} />
+                    <Input
+                      placeholder={i18n.t("app:ledgers.optional_description")}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -131,7 +146,7 @@ export function AddLedger() {
             />
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Create ledger
+                {i18n.t("app:ledgers.create_ledger")}
               </LoadingButton>
             </DialogFooter>
           </form>

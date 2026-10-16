@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { BarChart3, ChartNoAxesCombined, CircleDollarSign } from "lucide-react"
-
+import { useTranslation } from "react-i18next"
 import { ComponentHistoryExplorer } from "@/components/Analytics/ComponentHistoryTable"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -10,13 +10,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId/analytics")({
   component: LedgerAnalytics,
-  head: () => ({ meta: [{ title: "Analytics - Oblidog" }] }),
+  head: () => ({ meta: [{ title: i18n.t("app:ledgers.analytics_oblidog") }] }),
 })
 
 function LedgerAnalytics() {
+  useTranslation()
+
   const { ledgerId } = Route.useParams()
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-8">
@@ -28,32 +31,51 @@ function LedgerAnalytics() {
 
 const plannedCharts = [
   {
-    description: "See how recurring component costs evolve over time.",
+    get description() {
+      return i18n.t(
+        "app:ledgers.see_how_recurring_component_costs_evolve_over_time",
+      )
+    },
     icon: ChartNoAxesCombined,
-    title: "Component cost trend",
+    get title() {
+      return i18n.t("app:ledgers.component_cost_trend")
+    },
   },
   {
-    description: "Spot which bill components change most often.",
+    get description() {
+      return i18n.t("app:ledgers.spot_which_bill_components_change_most_often")
+    },
     icon: BarChart3,
-    title: "Change frequency",
+    get title() {
+      return i18n.t("app:ledgers.change_frequency")
+    },
   },
   {
-    description: "Identify the components driving the largest cost changes.",
+    get description() {
+      return i18n.t(
+        "app:ledgers.identify_the_components_driving_the_largest_cost_changes",
+      )
+    },
     icon: CircleDollarSign,
-    title: "Largest cost drivers",
+    get title() {
+      return i18n.t("app:ledgers.largest_cost_drivers")
+    },
   },
 ]
 
 function AnalyticsPlaceholders() {
+  useTranslation()
+
   return (
     <section className="space-y-4" aria-labelledby="planned-analytics-heading">
       <div>
         <h2 id="planned-analytics-heading" className="text-xl font-semibold">
-          More insights are on the way
+          {i18n.t("app:ledgers.more_insights_are_on_the_way")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          This workspace will grow with focused views based on component
-          history.
+          {i18n.t(
+            "app:ledgers.this_workspace_will_grow_with_focused_views_based_on_component_history",
+          )}
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
@@ -67,7 +89,9 @@ function AnalyticsPlaceholders() {
                 <div className="flex size-10 items-center justify-center rounded-lg border bg-background text-muted-foreground">
                   <chart.icon className="size-5" aria-hidden="true" />
                 </div>
-                <Badge variant="secondary">Planned</Badge>
+                <Badge variant="secondary">
+                  {i18n.t("app:ledgers.planned")}
+                </Badge>
               </div>
               <div className="space-y-1">
                 <CardTitle className="text-base">{chart.title}</CardTitle>
