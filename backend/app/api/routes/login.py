@@ -176,7 +176,7 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
     return HTMLResponse(
         content=email_data.html_content,
         headers={
-            "subject:": Header(email_data.subject, "utf-8").encode()
+            "subject": Header(email_data.subject, "utf-8", maxlinelen=0).encode()
             if not email_data.subject.isascii()
             else email_data.subject
         },

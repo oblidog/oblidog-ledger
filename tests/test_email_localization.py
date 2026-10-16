@@ -275,18 +275,23 @@ def test_weekly_multipart_uses_localized_amounts_and_preserves_currencies(langua
 
 @pytest.mark.usefixtures("mail_modules")
 @pytest.mark.parametrize("language", [None, "en", "pl"])
+@pytest.mark.parametrize(
+    "recipient_email", ["recipient@example.com", "r" * 64 + "@example.com"]
+)
 def test_transactional_routes_use_recipient_preference_and_send_text(
-    monkeypatch, language
+    monkeypatch, language, recipient_email
 ):
     from email.header import decode_header
     from unittest.mock import Mock
+
+    import h11
 
     login = importlib.import_module("app.api.routes.login")
     invitations = importlib.import_module("app.api.routes.user_invitations")
     utils_route = importlib.import_module("app.api.routes.utils")
     users = importlib.import_module("app.services.users")
     recipient = SimpleNamespace(
-        email="recipient@example.com", language=language, is_active=True
+        email=recipient_email, language=language, is_active=True
     )
     monkeypatch.setattr(users, "get_user_by_email", lambda **kwargs: recipient)
     monkeypatch.setattr(
@@ -312,7 +317,11 @@ def test_transactional_routes_use_recipient_preference_and_send_text(
         assert f'lang="{locale.language}"' in mail["html_content"]
         assert mail["email_to"] == recipient.email
     preview = login.recover_password_html_content(email=recipient.email, session=Mock())
-    encoded = preview.headers["subject:"]
+    encoded = preview.headers["subject"]
+    assert "\n" not in encoded and "\r" not in encoded
+    # Validate every header through the same HTTP/1.1 serializer used by Uvicorn.
+    connection = h11.Connection(h11.SERVER)
+    connection.send(h11.Response(status_code=200, headers=preview.raw_headers))
     decoded = "".join(
         part.decode(charset or "ascii") if isinstance(part, bytes) else part
         for part, charset in decode_header(encoded)
