@@ -5,11 +5,15 @@ on:
     paths:
       - emails/**
       - backend/app/email_rendering.py
+      - backend/app/email_i18n.py
+      - backend/app/email-locales/**
+      - backend/app/services/weekly_monthly_overview_report.py
       - backend/app/email-templates/**
       - backend/app/utils.py
       - backend/app/services/daily_digest_presentation.py
       - backend/app/services/daily_digest_rendering.py
       - backend/app/services/daily_obligation_report.py
+      - tests/test_email_localization.py
       - tests/test_email_templates.py
       - tests/test_daily_digest_rendering.py
       - package.json
@@ -43,7 +47,7 @@ jobs:
       - name: Verify committed HTML and text are fresh
         run: bun run email:check
       - name: Verify runtime data, conditions, escaping and text delivery
-        run: uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py
+        run: uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py
       - name: Render all synthetic fixture previews through Python
         run: uv run --locked python emails/scripts/render_previews.py
       - name: Build Python wheel and verify packaged templates
@@ -54,8 +58,10 @@ jobs:
           from zipfile import ZipFile
 
           with ZipFile(next(Path('/tmp/email-wheel').glob('*.whl'))) as wheel:
-              for name in ('foundation.html', 'foundation.txt', 'daily_obligation_report.html', 'daily_obligation_report.txt'):
+              for name in ('foundation.html', 'foundation.txt', 'daily_obligation_report.html', 'daily_obligation_report.txt', 'weekly_monthly_overview_report.html', 'weekly_monthly_overview_report.txt', 'test_email.html', 'test_email.txt', 'reset_password.html', 'reset_password.txt', 'new_account.html', 'new_account.txt', 'user_invitation.html', 'user_invitation.txt'):
                   assert f'app/email-templates/build/{name}' in wheel.namelist()
+              for language in ('en', 'pl'):
+                  assert f'app/email-locales/{language}.json' in wheel.namelist()
           PY
       - uses: actions/upload-artifact@v7
         with:

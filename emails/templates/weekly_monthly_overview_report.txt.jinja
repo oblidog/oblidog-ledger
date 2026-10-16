@@ -1,0 +1,22 @@
+{{ project_name }} - {{ tr('weekly_subject') }}
+{{ tr('period') }}: {{ period }}
+{{ tr('snapshot') }}: {{ report_date }}
+
+{% for ledger in ledgers %}{{ ledger.ledger_name }}
+{% if not ledger.currencies %}  {{ tr('no_obligations') }}
+{% endif %}{% for item in ledger.currencies %}  {{ tr('currency') }}: {{ item.currency or tr('currency_unspecified') }}
+  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }}{% if not item.total_is_complete %} {{ tr('incomplete') }}{% endif %}
+  {{ tr('paid_known') }}: {{ fmt_amount(item.paid_known_amount) }}
+  {{ tr('remaining_known') }}: {{ fmt_amount(item.remaining_known_amount) }}
+  {{ tr('obligations') }}: {{ tr('ready') }}={{ item.ready_count }}, {{ tr('paid') }}={{ item.paid_count }}, {{ tr('not_ready') }}={{ item.not_ready_count }}
+  {{ tr('paid_percentage') }}: {{ fmt_amount(item.paid_percentage) ~ '%' if item.paid_percentage is not none else tr('na') }}
+  {{ tr('section_overdue') }}: {{ item.overdue_count }} / {{ fmt_amount(item.overdue_known_amount) }}
+  {{ tr('unknown_values') }}: {{ item.incomplete_count }}
+  {{ tr('previous_total') }}: {{ fmt_amount(item.previous_total_known_amount) }}{% if not item.previous_total_is_complete %} {{ tr('incomplete') }}{% endif %}
+  {{ tr('change_previous') }}: {{ fmt_amount(item.total_change) if item.total_change is not none else tr('na_incomplete') }}
+{% if item.upcoming %}  {{ tr('upcoming') }}:
+{% for obligation in item.upcoming %}    - {{ fmt_date(obligation.due_date) }}: {{ obligation.category_name }} — {{ fmt_amount(obligation.amount) }} {{ item.currency or '' }}
+{% endfor %}{% else %}  {{ tr('upcoming') }}: {{ tr('none') }}
+{% endif %}
+{% endfor %}
+{% endfor %}
