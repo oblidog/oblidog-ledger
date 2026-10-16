@@ -386,8 +386,7 @@ export function ComponentHistoryTable({
                                 </span>
                                 {value.state !== "present" ? (
                                   <Badge variant="outline">
-                                    {value.state[0].toUpperCase() +
-                                      value.state.slice(1)}
+                                    {domainLabel("difference", value.state)}
                                   </Badge>
                                 ) : null}
                               </div>
@@ -407,8 +406,7 @@ export function ComponentHistoryTable({
                                 </span>
                                 {value.state !== "present" ? (
                                   <Badge variant="outline">
-                                    {value.state[0].toUpperCase() +
-                                      value.state.slice(1)}
+                                    {domainLabel("difference", value.state)}
                                   </Badge>
                                 ) : null}
                               </div>

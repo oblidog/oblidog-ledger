@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
-import { i18n } from "@/i18n"
+import { i18n, type resources } from "@/i18n"
 
 export function IntegrationForm({
   ledgerId,
@@ -36,7 +36,9 @@ export function IntegrationForm({
   const queryClient = useQueryClient()
   const [name, setName] = useState(initial?.name ?? "")
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? "")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<
+    keyof typeof resources.en.app.integrations | null
+  >(null)
   const categories = useQuery({
     queryKey: ["integration-categories", ledgerId],
     queryFn: () =>
@@ -70,12 +72,7 @@ export function IntegrationForm({
         "connection_key" in result ? result.connection_key : undefined,
       )
     },
-    onError: () =>
-      setError(
-        i18n.t(
-          "app:integrations.could_not_save_the_integration_please_try_again",
-        ),
-      ),
+    onError: () => setError("could_not_save_the_integration_please_try_again"),
   })
   return (
     <Dialog open onOpenChange={(open) => !open && !save.isPending && onClose()}>
@@ -99,9 +96,7 @@ export function IntegrationForm({
           onSubmit={(event) => {
             event.preventDefault()
             if (!name.trim() || (!initial && !categoryId)) {
-              setError(
-                i18n.t("app:integrations.enter_a_name_and_select_a_category"),
-              )
+              setError("enter_a_name_and_select_a_category")
               return
             }
             setError(null)
@@ -150,7 +145,9 @@ export function IntegrationForm({
               <AlertTitle>
                 {i18n.t("app:integrations.could_not_save")}
               </AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {i18n.t(`app:integrations.${error}`)}
+              </AlertDescription>
             </Alert>
           )}
           <div className="flex justify-end gap-2">

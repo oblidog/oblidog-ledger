@@ -27,7 +27,16 @@ Object.defineProperty(globalThis, "localStorage", {
   value: browser.localStorage,
   configurable: true,
 })
-Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
+Object.assign(globalThis, {
+  IS_REACT_ACT_ENVIRONMENT: true,
+  getComputedStyle: browser.getComputedStyle.bind(browser),
+  MutationObserver: browser.MutationObserver,
+  HTMLElement: browser.HTMLElement,
+  HTMLInputElement: browser.HTMLInputElement,
+  Node: browser.Node,
+  NodeFilter: browser.NodeFilter,
+  CustomEvent: browser.CustomEvent,
+})
 Object.assign(browser, {
   __OBLIDOG_CONFIG__: { VITE_API_URL: "http://localhost:8000" },
 })
@@ -255,5 +264,45 @@ test("history translates known states but preserves user notes and names", async
     expect(content).not.toContain("keep manual notes")
   } finally {
     historySpy.mockRestore()
+  }
+})
+
+test("integration form errors translate on language changes", async () => {
+  const { IntegrationForm } = await import(
+    "@/components/Integrations/IntegrationForm"
+  )
+  const categoriesSpy = spyOn(
+    api.CategoriesService,
+    "readCategories",
+  ).mockResolvedValue({ data: [], count: 0 })
+  try {
+    await mount(
+      null,
+      false,
+      <IntegrationForm
+        ledgerId="ledger"
+        onClose={() => {}}
+        onSaved={() => {}}
+      />,
+    )
+    await act(async () => {
+      browser.document
+        .querySelector("form")!
+        .dispatchEvent(
+          new browser.Event("submit", { bubbles: true, cancelable: true }),
+        )
+    })
+    expect(browser.document.body.textContent).toContain(
+      "Enter a name and select a category.",
+    )
+    await select("pl")
+    expect(browser.document.body.textContent).toContain(
+      "Podaj nazwę i wybierz kategorię.",
+    )
+    expect(browser.document.body.textContent).not.toContain(
+      "Enter a name and select a category.",
+    )
+  } finally {
+    categoriesSpy.mockRestore()
   }
 })

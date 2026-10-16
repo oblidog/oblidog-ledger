@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
-import { i18n } from "@/i18n"
+import { i18n, type resources } from "@/i18n"
 import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
@@ -458,7 +458,9 @@ export function CategoryCustomFieldsBuilder({
     null,
   )
   const [jsonDirty, setJsonDirty] = useState(false)
-  const [jsonError, setJsonError] = useState<string | null>(null)
+  const [jsonError, setJsonError] = useState<
+    keyof typeof resources.en.app.categories | null
+  >(null)
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
   const schemaQuery = useQuery({
     queryKey: ["category-data-schema", ledgerId, category.id],
@@ -509,9 +511,7 @@ export function CategoryCustomFieldsBuilder({
       }
       if (jsonDraft !== null && restoredSchema === null) {
         setJsonDirty(true)
-        setJsonError(
-          i18n.t("app:categories.apply_valid_json_before_saving_a_new_version"),
-        )
+        setJsonError("apply_valid_json_before_saving_a_new_version")
       }
       const initialSchema = restoredSchema ?? definition
       const formatted = JSON.stringify(initialSchema, null, 2)
@@ -638,7 +638,7 @@ export function CategoryCustomFieldsBuilder({
     try {
       const schema: unknown = JSON.parse(jsonText)
       if (!isRecord(schema)) {
-        setJsonError(i18n.t("app:categories.the_schema_must_be_a_json_object"))
+        setJsonError("the_schema_must_be_a_json_object")
         return
       }
       const formatted = JSON.stringify(schema, null, 2)
@@ -653,7 +653,7 @@ export function CategoryCustomFieldsBuilder({
         form.reset({ fields: fieldsFromSchema(appliedSchema) })
       }
     } catch {
-      setJsonError(i18n.t("app:categories.enter_valid_json_before_saving"))
+      setJsonError("enter_valid_json_before_saving")
     }
   }
 
@@ -663,9 +663,7 @@ export function CategoryCustomFieldsBuilder({
       if (!isRecord(schema)) throw new Error()
       updateJsonText(JSON.stringify(schema, null, 2))
     } catch {
-      setJsonError(
-        i18n.t("app:categories.enter_a_json_object_before_formatting"),
-      )
+      setJsonError("enter_a_json_object_before_formatting")
     }
   }
 
@@ -673,9 +671,7 @@ export function CategoryCustomFieldsBuilder({
     try {
       await navigator.clipboard.writeText(jsonText)
     } catch {
-      setJsonError(
-        i18n.t("app:categories.could_not_copy_json_to_the_clipboard"),
-      )
+      setJsonError("could_not_copy_json_to_the_clipboard")
     }
   }
 
@@ -684,7 +680,7 @@ export function CategoryCustomFieldsBuilder({
       if (!appliedSchema) throw new Error()
       saveSchema.mutate({ schema: appliedSchema })
     } catch {
-      setJsonError(i18n.t("app:categories.apply_valid_json_before_saving"))
+      setJsonError("apply_valid_json_before_saving")
     }
   }
 
@@ -746,7 +742,11 @@ export function CategoryCustomFieldsBuilder({
               spellCheck={false}
             />
           </div>
-          {jsonError && <p className="text-sm text-destructive">{jsonError}</p>}
+          {jsonError && (
+            <p className="text-sm text-destructive">
+              {i18n.t(`app:categories.${jsonError}`)}
+            </p>
+          )}
           {jsonDirty && (
             <p className="text-sm text-muted-foreground">
               {i18n.t("app:categories.apply_json_before_saving_a_new_version")}

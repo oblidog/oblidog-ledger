@@ -200,3 +200,32 @@ test("shared demo keeps Polish locally without updating the account", async ({
   await expect(page.locator("html")).toHaveAttribute("lang", "pl")
   expect(writes).toEqual([])
 })
+
+test("visible JSON errors follow the language without losing the draft", async ({
+  page,
+}) => {
+  await api(page, true)
+  await page.route("**/data-schema", (route) =>
+    route.fulfill({ status: 404, json: { detail: "Not found" } }),
+  )
+  await page.goto(`/ledgers/${ledgerId}/categories/category/custom-fields`)
+  await page.getByRole("button", { name: "Edit JSON", exact: true }).click()
+  const editor = page.locator("#category-data-schema-json")
+  await editor.fill("{invalid")
+  await page.getByRole("button", { name: "Apply JSON", exact: true }).click()
+  await expect(
+    page.getByText("Enter valid JSON before saving.", { exact: true }),
+  ).toBeVisible()
+  await (await selector(page)).selectOption("pl")
+  await expect(
+    page.getByText("Wprowadź poprawny JSON przed zapisaniem.", { exact: true }),
+  ).toBeAttached()
+  await expect(editor).toHaveValue("{invalid")
+  await page
+    .getByTestId("language-selector")
+    .filter({ visible: true })
+    .selectOption("en")
+  await expect(
+    page.getByText("Enter valid JSON before saving.", { exact: true }),
+  ).toBeAttached()
+})
