@@ -218,3 +218,14 @@ test("permission, demo and CSRF failures do not sign the user out", () => {
   ).toBe(false)
   expect(isAuthenticationFailure(new Error("offline"))).toBe(false)
 })
+
+test("malformed JSON code objects are never coerced to strings", async () => {
+  await i18n.changeLanguage("pl")
+  for (const error of [
+    { code: { toString: null } },
+    { code: { toString: {}, valueOf: null } },
+    { code: ["ERR_NETWORK"] },
+  ]) {
+    expect(getApiErrorMessage(error)).toBe(i18n.t("errors:generic_error"))
+  }
+})

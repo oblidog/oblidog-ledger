@@ -107,7 +107,8 @@ export function getApiErrorMessage(error: unknown): string {
     raw &&
     !raw.response &&
     (raw.isAxiosError === true ||
-      ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(String(raw.code)))
+      (typeof raw.code === "string" &&
+        ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(raw.code)))
   )
     return i18n.t("errors:network_error")
   const payload = apiErrorPayload(error)

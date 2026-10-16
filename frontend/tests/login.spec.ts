@@ -99,7 +99,12 @@ test("Failed log out keeps the active browser session", async ({ page }) => {
 
   await expect(page).not.toHaveURL(/\/login/)
   await expect(page.getByTestId("user-menu")).toBeVisible()
-  await expect(page.getByText("Logout failed")).toBeVisible()
+  await expect(
+    page.getByText("Could not complete this action. Try again.", {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(page.getByText("Logout failed", { exact: true })).toHaveCount(0)
 })
 
 test("Logged-out user cannot access protected routes", async ({ page }) => {
