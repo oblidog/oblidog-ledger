@@ -5,8 +5,10 @@ preferences, scheduling, SMTP and runtime Jinja rendering. No JavaScript service
 or external rendering API is involved in delivery.
 
 This workspace contains a foundation example and the live **daily digest**.
-Weekly and transactional migrations remain in #480 and #481. Existing MJML
-sources stay in place until migrated.
+Weekly and transactional layouts retain their existing design; their React
+Email migrations remain in #480 and #481. Canonical localized Jinja sources
+live in `templates/` and are copied by the exporter. Historical MJML sources
+remain available with matching translation calls.
 
 ## Commands (repository root)
 
@@ -19,7 +21,7 @@ bun run email:export              # generate HTML/Jinja + text in backend/app/em
 bun run email:check               # byte-for-byte freshness check, does not rewrite files
 bun run --filter @oblidog/emails typecheck
 uv run --locked python emails/scripts/render_previews.py
-uv run --locked pytest -q tests/test_email_templates.py
+uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py
 ```
 
 `email:dev` previews `foundation.tsx` with its synthetic normal data.
@@ -131,3 +133,33 @@ fails rendering instead of sending oversized HTML.
 Regression cases include the review's mixed 35/40/20 digest, 70 obligations,
 large escaped Unicode fields, priority preservation and the real report entry
 point. Small digests retain all their data without size-truncation notices.
+
+## Localization
+
+Daily digests, weekly monthly overviews, password recovery, invitations, new
+account and test emails render EN/PL subjects and HTML/text bodies. Each render
+receives an explicit recipient language; null, unsupported values and recipients
+without an account fall back to English. Inviter and browser preferences do not
+select the recipient language. The cached Jinja environment has no mutable locale.
+
+`backend/app/email-locales/{en,pl}.json` is shared by Python runtime rendering
+and React Email previews. Use semantic keys, complete sentences and named
+placeholders. Tests enforce matching keys and placeholders. English plurals use
+one/other; Polish uses one/few/many/other, including 12 versus 22. Runtime
+`EmailLocale` is immutable and passed into presentation and template rendering.
+
+Amounts use Decimal throughout, retain sub-cent precision and at least two
+fraction digits, and use a decimal point in English or comma in Polish. Dates
+are ISO in English and DD.MM.YYYY in Polish; timestamps retain the report
+timezone. Currency codes and grouping, selection, scheduling, delivery keys,
+user content and external diagnostics keep their original meaning.
+
+`email:export` and `email:check` cover all committed HTML/text artifacts. They
+contain locale-neutral Jinja translation calls; the backend supplies the locale
+without Node at runtime. The preview command additionally renders
+`daily-{normal,empty,unknown,multi-currency,long-content}-{en,pl}`, weekly empty
+and multi-currency cases, and every transactional email in both languages.
+The localized fixtures use the production presentation and size-budget renderer.
+Tests cover interleaved recipients, multipart output, escaping, pluralization,
+precision, omitted counts and the 90 KiB limit. Scheduled delivery regression
+tests verify both languages in one run and retry deduplication.

@@ -364,3 +364,86 @@ def test_failure_record_commit_error_propagates(
         scheduled_reports.deliver_scheduled_report(
             session=db, report=report, context=_context()
         )
+
+
+@pytest.mark.parametrize("report_kind", ["daily", "weekly"])
+def test_one_run_delivers_each_recipient_language_without_changing_keys(
+    db: Session, monkeypatch: pytest.MonkeyPatch, report_kind: str
+) -> None:
+    from datetime import UTC, date
+    from decimal import Decimal
+
+    from app.domain import ValueState
+    from app.services import daily_obligation_report as daily
+    from app.services import weekly_monthly_overview_report as weekly
+    from app.services.scheduled_reports import ScheduledReport
+
+    first, second = create_random_user(db), create_random_user(db)
+    first.language, second.language = "pl", "en"
+    db.commit()
+    row = daily.DailyReportItem(
+        ledger_name="Custom_Ledger",
+        category_name="Custom_Category",
+        due_date=date(2026, 10, 19),
+        amount=Decimal("12.3456"),
+        currency="PLN",
+        amount_state=ValueState.CONFIRMED,
+        due_date_state=ValueState.CONFIRMED,
+        link="https://example.com/unchanged",
+    )
+    monkeypatch.setattr(daily, "_select_sections", lambda **kwargs: {"overdue": [row]})
+    monkeypatch.setattr(daily, "_select_activity", lambda **kwargs: ([], False))
+    monkeypatch.setattr(
+        daily, "_select_integration_health", lambda **kwargs: ([], False)
+    )
+    monkeypatch.setattr(weekly, "_build_user_overviews", lambda **kwargs: [])
+    report: ScheduledReport = (
+        daily.DailyObligationReport()
+        if report_kind == "daily"
+        else weekly.WeeklyMonthlyOverviewReport()
+    )
+    monkeypatch.setattr(report, "recipients", lambda **kwargs: [first, second])
+    delivered: list[dict[str, object]] = []
+
+    def capture(*, email_to: str, **kwargs: object) -> None:
+        delivered.append({"email_to": email_to, **kwargs})
+
+    monkeypatch.setattr(scheduled_reports, "send_email", capture)
+    context = SystemRunContext.create(
+        effective_at=datetime(2026, 10, 19, 12, tzinfo=UTC)
+    )
+    result = scheduled_reports.deliver_scheduled_report(
+        session=db, report=report, context=context
+    )
+    assert result.sent == 2 and result.failed == 0
+    for user, message in zip((first, second), delivered, strict=True):
+        assert message["email_to"] == user.email
+        subject = str(message["subject"])
+        expected = (
+            (
+                "Dzienny raport zobowiązań"
+                if report_kind == "daily"
+                else "Tygodniowe podsumowanie miesiąca"
+            )
+            if user.language == "pl"
+            else (
+                "Daily obligation report"
+                if report_kind == "daily"
+                else "Weekly monthly overview"
+            )
+        )
+        assert expected in subject
+        assert f'lang="{user.language}"' in str(message["html_content"])
+        assert ("2026-10-19" if user.language == "en" else "19.10.2026") in str(
+            message["text_content"]
+        )
+        record = db.scalar(
+            select(ReportDelivery).where(ReportDelivery.user_id == user.id)
+        )
+        assert record is not None and record.status is ReportDeliveryStatus.SENT
+        assert record.delivery_key == report.delivery_key(user=user, context=context)
+    retry = scheduled_reports.deliver_scheduled_report(
+        session=db, report=report, context=context
+    )
+    assert retry.skipped == 2 and retry.sent == 0
+    assert len(delivered) == 2

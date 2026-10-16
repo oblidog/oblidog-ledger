@@ -1,0 +1,1811 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-19",
+  "sections": {
+    "overdue": [
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0Very_long_custom_name_<>&_0",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/0"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1Very_long_custom_name_<>&_1",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/1"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2Very_long_custom_name_<>&_2",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/2"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3Very_long_custom_name_<>&_3",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/3"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4Very_long_custom_name_<>&_4",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/4"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5Very_long_custom_name_<>&_5",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/5"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6Very_long_custom_name_<>&_6",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/6"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7Very_long_custom_name_<>&_7",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/7"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8Very_long_custom_name_<>&_8",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/8"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9Very_long_custom_name_<>&_9",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/9"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10Very_long_custom_name_<>&_10",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/10"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11Very_long_custom_name_<>&_11",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/11"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12Very_long_custom_name_<>&_12",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/12"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13Very_long_custom_name_<>&_13",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/13"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14Very_long_custom_name_<>&_14",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/14"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15Very_long_custom_name_<>&_15",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/15"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16Very_long_custom_name_<>&_16",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/16"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17Very_long_custom_name_<>&_17",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/17"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18Very_long_custom_name_<>&_18",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/18"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19Very_long_custom_name_<>&_19",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/19"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20Very_long_custom_name_<>&_20",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/20"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21Very_long_custom_name_<>&_21",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/21"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22Very_long_custom_name_<>&_22",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/22"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23Very_long_custom_name_<>&_23",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/23"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24Very_long_custom_name_<>&_24",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/24"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25Very_long_custom_name_<>&_25",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/25"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26Very_long_custom_name_<>&_26",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/26"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27Very_long_custom_name_<>&_27",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/27"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28Very_long_custom_name_<>&_28",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/28"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29Very_long_custom_name_<>&_29",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/29"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30Very_long_custom_name_<>&_30",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/30"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31Very_long_custom_name_<>&_31",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/31"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32Very_long_custom_name_<>&_32",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/32"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33Very_long_custom_name_<>&_33",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/33"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34Very_long_custom_name_<>&_34",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/34"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35Very_long_custom_name_<>&_35",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/35"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36Very_long_custom_name_<>&_36",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/36"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37Very_long_custom_name_<>&_37",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/37"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38Very_long_custom_name_<>&_38",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/38"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39Very_long_custom_name_<>&_39",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/39"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40Very_long_custom_name_<>&_40",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/40"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41Very_long_custom_name_<>&_41",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/41"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42Very_long_custom_name_<>&_42",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/42"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43Very_long_custom_name_<>&_43",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/43"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44Very_long_custom_name_<>&_44",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/44"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45Very_long_custom_name_<>&_45",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/45"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46Very_long_custom_name_<>&_46",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/46"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47Very_long_custom_name_<>&_47",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/47"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48Very_long_custom_name_<>&_48",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/48"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49Very_long_custom_name_<>&_49",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/49"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50Very_long_custom_name_<>&_50",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/50"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51Very_long_custom_name_<>&_51",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/51"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52Very_long_custom_name_<>&_52",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/52"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53Very_long_custom_name_<>&_53",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/53"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54Very_long_custom_name_<>&_54",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/54"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55Very_long_custom_name_<>&_55",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/55"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56Very_long_custom_name_<>&_56",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/56"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57Very_long_custom_name_<>&_57",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/57"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58Very_long_custom_name_<>&_58",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/58"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59Very_long_custom_name_<>&_59",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/59"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60Very_long_custom_name_<>&_60",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/60"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61Very_long_custom_name_<>&_61",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/61"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62Very_long_custom_name_<>&_62",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/62"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63Very_long_custom_name_<>&_63",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/63"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64Very_long_custom_name_<>&_64",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/64"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65Very_long_custom_name_<>&_65",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/65"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66Very_long_custom_name_<>&_66",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/66"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67Very_long_custom_name_<>&_67",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/67"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68Very_long_custom_name_<>&_68",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/68"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69Very_long_custom_name_<>&_69",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/69"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70Very_long_custom_name_<>&_70",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/70"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71Very_long_custom_name_<>&_71",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/71"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72Very_long_custom_name_<>&_72",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/72"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73Very_long_custom_name_<>&_73",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/73"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74Very_long_custom_name_<>&_74",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/74"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75Very_long_custom_name_<>&_75",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/75"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76Very_long_custom_name_<>&_76",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/76"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77Very_long_custom_name_<>&_77",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/77"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78Very_long_custom_name_<>&_78",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/78"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79Very_long_custom_name_<>&_79",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/79"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80Very_long_custom_name_<>&_80",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/80"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81Very_long_custom_name_<>&_81",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/81"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82Very_long_custom_name_<>&_82",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/82"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83Very_long_custom_name_<>&_83",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/83"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84Very_long_custom_name_<>&_84",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/84"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85Very_long_custom_name_<>&_85",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/85"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86Very_long_custom_name_<>&_86",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/86"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87Very_long_custom_name_<>&_87",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/87"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88Very_long_custom_name_<>&_88",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/88"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89Very_long_custom_name_<>&_89",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/89"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90Very_long_custom_name_<>&_90",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/90"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91Very_long_custom_name_<>&_91",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/91"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92Very_long_custom_name_<>&_92",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/92"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93Very_long_custom_name_<>&_93",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/93"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94Very_long_custom_name_<>&_94",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/94"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95Very_long_custom_name_<>&_95",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/95"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96Very_long_custom_name_<>&_96",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/96"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97Very_long_custom_name_<>&_97",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/97"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98Very_long_custom_name_<>&_98",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/98"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99Very_long_custom_name_<>&_99",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/99"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100Very_long_custom_name_<>&_100",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/100"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101Very_long_custom_name_<>&_101",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/101"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102Very_long_custom_name_<>&_102",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/102"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103Very_long_custom_name_<>&_103",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/103"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104Very_long_custom_name_<>&_104",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/104"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105Very_long_custom_name_<>&_105",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/105"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106Very_long_custom_name_<>&_106",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/106"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107Very_long_custom_name_<>&_107",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/107"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108Very_long_custom_name_<>&_108",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/108"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109Very_long_custom_name_<>&_109",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/109"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110Very_long_custom_name_<>&_110",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/110"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111Very_long_custom_name_<>&_111",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/111"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112Very_long_custom_name_<>&_112",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/112"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113Very_long_custom_name_<>&_113",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/113"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114Very_long_custom_name_<>&_114",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/114"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115Very_long_custom_name_<>&_115",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/115"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116Very_long_custom_name_<>&_116",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/116"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117Very_long_custom_name_<>&_117",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/117"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118Very_long_custom_name_<>&_118",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/118"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119Very_long_custom_name_<>&_119",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/119"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120Very_long_custom_name_<>&_120",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/120"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121Very_long_custom_name_<>&_121",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/121"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122Very_long_custom_name_<>&_122",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/122"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123Very_long_custom_name_<>&_123",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/123"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124Very_long_custom_name_<>&_124",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/124"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125Very_long_custom_name_<>&_125",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/125"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126Very_long_custom_name_<>&_126",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/126"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127Very_long_custom_name_<>&_127",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/127"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128Very_long_custom_name_<>&_128",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/128"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129Very_long_custom_name_<>&_129",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/129"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130Very_long_custom_name_<>&_130",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/130"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131Very_long_custom_name_<>&_131",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/131"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132Very_long_custom_name_<>&_132",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/132"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133Very_long_custom_name_<>&_133",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/133"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134Very_long_custom_name_<>&_134",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/134"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135Very_long_custom_name_<>&_135",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/135"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136Very_long_custom_name_<>&_136",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/136"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137Very_long_custom_name_<>&_137",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/137"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138Very_long_custom_name_<>&_138",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/138"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139Very_long_custom_name_<>&_139",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/139"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140Very_long_custom_name_<>&_140",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/140"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141Very_long_custom_name_<>&_141",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/141"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142Very_long_custom_name_<>&_142",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/142"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143Very_long_custom_name_<>&_143",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/143"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144Very_long_custom_name_<>&_144",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/144"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145Very_long_custom_name_<>&_145",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/145"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146Very_long_custom_name_<>&_146",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/146"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147Very_long_custom_name_<>&_147",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/147"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148Very_long_custom_name_<>&_148",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/148"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149Very_long_custom_name_<>&_149",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/149"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150Very_long_custom_name_<>&_150",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/150"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151Very_long_custom_name_<>&_151",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/151"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152Very_long_custom_name_<>&_152",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/152"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153Very_long_custom_name_<>&_153",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/153"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154Very_long_custom_name_<>&_154",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/154"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155Very_long_custom_name_<>&_155",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/155"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156Very_long_custom_name_<>&_156",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/156"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157Very_long_custom_name_<>&_157",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/157"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158Very_long_custom_name_<>&_158",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/158"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159Very_long_custom_name_<>&_159",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/159"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160Very_long_custom_name_<>&_160",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/160"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161Very_long_custom_name_<>&_161",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/161"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162Very_long_custom_name_<>&_162",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/162"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163Very_long_custom_name_<>&_163",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/163"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164Very_long_custom_name_<>&_164",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/164"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165Very_long_custom_name_<>&_165",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/165"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166Very_long_custom_name_<>&_166",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/166"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167Very_long_custom_name_<>&_167",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/167"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168Very_long_custom_name_<>&_168",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/168"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169Very_long_custom_name_<>&_169",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/169"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170Very_long_custom_name_<>&_170",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/170"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171Very_long_custom_name_<>&_171",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/171"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172Very_long_custom_name_<>&_172",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/172"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173Very_long_custom_name_<>&_173",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/173"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174Very_long_custom_name_<>&_174",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/174"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175Very_long_custom_name_<>&_175",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/175"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176Very_long_custom_name_<>&_176",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/176"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177Very_long_custom_name_<>&_177",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/177"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178Very_long_custom_name_<>&_178",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/178"
+      },
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179Very_long_custom_name_<>&_179",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/179"
+      }
+    ]
+  },
+  "activity_count": 0,
+  "integration_count": 0,
+  "app_url": "https://example.com/ledgers"
+}

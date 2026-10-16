@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, joinedload, noload
 from app.core.config import settings
 from app.domain import BillingPeriod, BusinessCalendar, ObligationLifecycle, ValueState
 from app.domain.integrations import IntegrationExecutionState, IntegrationHealth
+from app.email_i18n import EmailLocale, Language, recipient_language
 from app.models import (
     Integration,
     Ledger,
@@ -97,6 +98,7 @@ class DailyObligationReport:
     def render(
         self, *, session: Session, user: User, context: SystemRunContext
     ) -> EmailData | None:
+        language = recipient_language(user.language)
         sections = _select_sections(
             session=session, user=user, report_date=context.business_date
         )
@@ -116,15 +118,17 @@ class DailyObligationReport:
                 activity_count=len(activity),
                 integration_count=len(integration_health),
                 integration_health_truncated=integration_health_truncated,
+                language=language,
             ),
             activity=_group_activity_by_ledger(activity),
             activity_truncated=activity_truncated,
             integration_health=_group_integration_health_by_ledger(integration_health),
             integration_health_truncated=integration_health_truncated,
             app_url=f"{settings.FRONTEND_HOST.rstrip('/')}/ledgers",
+            language=language,
         )
         return EmailData(
-            subject=f"{settings.PROJECT_NAME} - Daily obligation report",
+            subject=f"{settings.PROJECT_NAME} - {EmailLocale(language).tr('daily_subject')}",
             html_content=html,
             text_content=text,
         )
@@ -257,7 +261,11 @@ def _select_activity(
     for group_logs in grouped.values():
         messages = list(
             dict.fromkeys(
-                message for log in group_logs for message in _activity_messages(log)
+                message
+                for log in group_logs
+                for message in _activity_messages(
+                    log, language=recipient_language(user.language)
+                )
             )
         )
         if not messages:
@@ -283,44 +291,58 @@ def _select_activity(
     return items[:MAX_ACTIVITY_GROUPS], truncated_logs or truncated_groups
 
 
-def _activity_messages(log: ObligationActionLog) -> list[str]:
+def _activity_messages(
+    log: ObligationActionLog, *, language: Language = "en"
+) -> list[str]:
+    locale = EmailLocale(language)
     changes = log.changes
     if log.action == "created":
-        return ["Obligation created"]
+        return [locale.tr("activity_created")]
     if log.action == "marked_paid":
-        return ["Payment recognized"]
+        return [locale.tr("activity_paid")]
     if log.action == "marked_ready":
-        return ["Marked ready to pay"]
+        return [locale.tr("activity_ready")]
     if log.action == "marked_error":
-        return ["Integration marked the obligation as requiring attention"]
+        return [locale.tr("activity_error")]
     if log.action == "canceled":
-        return ["Obligation canceled"]
+        return [locale.tr("activity_canceled")]
     if log.action == "reopened":
-        return ["Obligation reopened"]
+        return [locale.tr("activity_reopened")]
     if log.action == "values_updated":
-        return _value_change_messages(changes)
+        return _value_change_messages(changes, language=language)
     if log.action == "components_changed":
-        return _component_change_messages(changes)
+        return _component_change_messages(changes, language=language)
     return []
 
 
-def _value_change_messages(changes: dict[str, object]) -> list[str]:
+def _value_change_messages(
+    changes: dict[str, object], *, language: Language = "en"
+) -> list[str]:
+    locale = EmailLocale(language)
     labels = {
-        "current_amount": "Amount",
-        "issue_date": "Issue date",
-        "due_date": "Due date",
+        "current_amount": "field_amount",
+        "issue_date": "field_issue_date",
+        "due_date": "field_due_date",
     }
     messages: list[str] = []
     for field, label in labels.items():
         diff = changes.get(field)
         if isinstance(diff, dict) and "to" in diff:
             messages.append(
-                f"{label} changed: {_display(diff.get('from'))} → {_display(diff['to'])}"
+                locale.tr(
+                    "value_changed",
+                    field=locale.tr(label),
+                    before=_display(diff.get("from"), language, field),
+                    after=_display(diff["to"], language, field),
+                )
             )
     return messages
 
 
-def _component_change_messages(changes: dict[str, object]) -> list[str]:
+def _component_change_messages(
+    changes: dict[str, object], *, language: Language = "en"
+) -> list[str]:
+    locale = EmailLocale(language)
     components = changes.get("components")
     if not isinstance(components, dict):
         return []
@@ -328,40 +350,61 @@ def _component_change_messages(changes: dict[str, object]) -> list[str]:
     for component in components.get("added", []):
         if not isinstance(component, dict):
             continue
-        label = str(component.get("label") or "Unnamed component")
-        prefix = (
-            "New invoice" if component.get("type") == "invoice" else "Component added"
+        label = str(component.get("label") or locale.tr("component_unnamed"))
+        prefix = locale.tr(
+            "component_invoice"
+            if component.get("type") == "invoice"
+            else "component_added"
         )
-        messages.append(f"{prefix}: {label}{_amount_suffix(component.get('amount'))}")
+        messages.append(
+            f"{prefix}: {label}{_amount_suffix(component.get('amount'), language)}"
+        )
     for component in components.get("updated", []):
         if not isinstance(component, dict):
             continue
-        label = str(component.get("label") or "Unnamed component")
+        label = str(component.get("label") or locale.tr("component_unnamed"))
         component_changes = component.get("changes")
         if not isinstance(component_changes, dict):
             continue
         amount = component_changes.get("amount")
         if isinstance(amount, dict) and "to" in amount:
             messages.append(
-                f"{label}: amount changed {_display(amount.get('from'))} → "
-                f"{_display(amount['to'])}"
+                locale.tr(
+                    "component_amount_changed",
+                    label=label,
+                    before=_display(amount.get("from"), language),
+                    after=_display(amount["to"], language),
+                )
             )
         elif component_changes:
-            messages.append(f"Component updated: {label}")
+            messages.append(locale.tr("component_updated", label=label))
     for component in components.get("removed", []):
         if isinstance(component, dict):
             messages.append(
-                f"Component removed: {component.get('label') or 'Unnamed component'}"
+                locale.tr(
+                    "component_removed",
+                    label=component.get("label") or locale.tr("component_unnamed"),
+                )
             )
     return messages
 
 
-def _amount_suffix(value: object) -> str:
-    return "" if value is None else f" ({value})"
+def _amount_suffix(value: object, language: Language = "en") -> str:
+    return "" if value is None else f" ({EmailLocale(language).amount(value)})"
 
 
-def _display(value: object) -> str:
-    return "unknown" if value is None else str(value)
+def _display(
+    value: object, language: Language = "en", field: str = "current_amount"
+) -> str:
+    locale = EmailLocale(language)
+    if value is None:
+        return locale.tr("unknown")
+    if field in {"issue_date", "due_date"} and isinstance(value, str):
+        try:
+            return locale.date(value)
+        except ValueError:
+            return value
+    return locale.amount(value)
 
 
 def _group_activity_by_ledger(
@@ -400,10 +443,15 @@ def _select_integration_health(
                 integration_name=integration.name,
                 health=health,
                 detail=_integration_health_detail(
-                    integration, health, context.timezone
+                    integration,
+                    health,
+                    context.timezone,
+                    language=recipient_language(user.language),
                 ),
                 last_success_at=_local_datetime(
-                    integration.last_success_at, context.timezone
+                    integration.last_success_at,
+                    context.timezone,
+                    language=recipient_language(user.language),
                 ),
                 link=(
                     f"{settings.FRONTEND_HOST}/ledgers/{integration.ledger_id}"
@@ -416,35 +464,53 @@ def _select_integration_health(
 
 
 def _integration_health_detail(
-    integration: Integration, health: IntegrationHealth, timezone: tzinfo
+    integration: Integration,
+    health: IntegrationHealth,
+    timezone: tzinfo,
+    *,
+    language: Language = "en",
 ) -> str:
+    locale = EmailLocale(language)
     if health is IntegrationHealth.ERROR:
-        error = integration.last_error_message or "Last run failed"
-        if integration.last_error_code:
-            return f"{integration.last_error_code}: {error}"
-        return error
-    if health is IntegrationHealth.TIMED_OUT:
-        started_at = _local_datetime(integration.current_started_at, timezone)
-        deadline_at = _local_datetime(integration.current_deadline_at, timezone)
+        error = integration.last_error_message or locale.tr("health_failed")
         return (
-            "The current run exceeded its configured timeout"
-            f"; started: {started_at or 'unknown'}"
-            f"; deadline: {deadline_at or 'unknown'}"
+            f"{integration.last_error_code}: {error}"
+            if integration.last_error_code
+            else error
+        )
+    if health is IntegrationHealth.TIMED_OUT:
+        return locale.tr(
+            "health_timeout",
+            started=_local_datetime(
+                integration.current_started_at, timezone, language=language
+            )
+            or locale.tr("unknown"),
+            deadline=_local_datetime(
+                integration.current_deadline_at, timezone, language=language
+            )
+            or locale.tr("unknown"),
         )
     reference = integration.last_finished_at or integration.enabled_at
-    reference_label = (
-        "last completed run" if integration.last_finished_at else "enabled"
+    return locale.tr(
+        "health_not_fresh",
+        reference=locale.tr(
+            "health_reference_finished"
+            if integration.last_finished_at
+            else "health_reference_enabled"
+        ),
+        date=_local_datetime(reference, timezone, language=language)
+        or locale.tr("unknown"),
     )
+
+
+def _local_datetime(
+    value: datetime | None, timezone: tzinfo, *, language: Language = "en"
+) -> str | None:
     return (
-        "No completed run within the configured freshness interval"
-        f"; {reference_label}: {_local_datetime(reference, timezone) or 'unknown'}"
+        EmailLocale(language).datetime(value.astimezone(timezone))
+        if value is not None
+        else None
     )
-
-
-def _local_datetime(value: datetime | None, timezone: tzinfo) -> str | None:
-    if value is None:
-        return None
-    return value.astimezone(timezone).isoformat(timespec="minutes")
 
 
 def _group_integration_health_by_ledger(

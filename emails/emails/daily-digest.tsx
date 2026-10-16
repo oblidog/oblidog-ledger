@@ -7,6 +7,7 @@ import {
   EmailSummary,
   ObligationRow,
 } from "../components/design-system"
+import { type EmailLanguage, emailCopy } from "../components/i18n"
 import type { JinjaTokens } from "../components/jinja"
 import { TemplateIf, TemplateLoop } from "../components/template-control"
 import normal from "../fixtures/daily/normal.json"
@@ -68,30 +69,36 @@ const linkStyle = { color: "#1c614d", textDecoration: "underline" }
 export default function DailyDigestEmail({
   context = normal,
   tokens,
+  language = "en",
 }: {
   context?: DailyContext
   tokens?: JinjaTokens
+  language?: EmailLanguage
 }) {
   const v = (expression: string, fallback: string | number | null) =>
     tokens ? tokens.expression(expression) : String(fallback ?? "")
+  const t = (key: string, params: Record<string, string | number> = {}) =>
+    v(`tr('${key}')`, emailCopy(key, language, params))
   const { digest } = context
   const projectName = v("project_name", context.project_name)
   return (
     <EmailLayout
       projectName={projectName}
+      language={v("language", language)}
       preview={v("digest.summary_title", digest.summary_title)}
       footer={
         <EmailFooter
           projectName={projectName}
-          note="Your daily obligation report. Manage email preferences in your Oblidog settings."
+          tagline={t("tagline")}
+          note={t("daily_footer")}
         />
       }
     >
       <EmailHeading
         eyebrow={v("report_date", context.report_date)}
-        intro="What needs your attention, and what changed in your ledgers."
+        intro={t("daily_intro")}
       >
-        Your daily digest
+        {t("daily_title")}
       </EmailHeading>
       <TemplateIf
         tokens={tokens}
@@ -103,12 +110,12 @@ export default function DailyDigestEmail({
         </Text>
         <Text style={textStyle}>
           <Link href={v("app_url", context.app_url ?? "")} style={linkStyle}>
-            Open full data in Oblidog →
+            {t("open_data")} →
           </Link>
         </Text>
       </TemplateIf>
       <EmailSummary
-        label="Needs attention · selected items in this digest"
+        label={t("attention_label")}
         value={v("digest.summary_title", digest.summary_title)}
       />
       <Text style={{ ...textStyle, margin: "12px 0 0" }}>
@@ -131,13 +138,13 @@ export default function DailyDigestEmail({
               show={Boolean(section.omitted_count)}
             >
               <Text style={textStyle}>
-                Showing{" "}
                 {v(
-                  "section.count - section.omitted_count",
-                  section.count - (section.omitted_count ?? 0),
-                )}{" "}
-                of {v("section.count", section.count)} obligations in this
-                section. Remaining items are available in Oblidog.
+                  "tr('section_omitted', shown=section.count-section.omitted_count, total=section.count)",
+                  emailCopy("section_omitted", language, {
+                    shown: section.count - (section.omitted_count ?? 0),
+                    total: section.count,
+                  }),
+                )}
               </Text>
             </TemplateIf>
             <TemplateLoop
@@ -164,7 +171,7 @@ export default function DailyDigestEmail({
                         amount={v("row.amount_label", row.amount_label)}
                         amountDetail={v("row.amount_detail", row.amount_detail)}
                         href={v("row.link", row.link)}
-                        actionLabel="View obligation →"
+                        actionLabel={`${t("view_obligation")} →`}
                       />
                     )}
                   </TemplateLoop>
@@ -183,7 +190,7 @@ export default function DailyDigestEmail({
             context.integration_health_truncated,
         )}
       >
-        <EmailSection title="Integration health">
+        <EmailSection title={t("health_title")}>
           <TemplateLoop<[string, Integration[]]>
             tokens={tokens}
             expression="ledger_name, entries in integration_health.items()"
@@ -218,10 +225,11 @@ export default function DailyDigestEmail({
                         </Link>
                         {" · "}
                         {v(
-                          "entry.health|replace('_', ' ')|title",
-                          entry.health
-                            .replaceAll("_", " ")
-                            .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+                          "tr('health_' + entry.health)",
+                          emailCopy(
+                            `health_${entry.health || "error"}`,
+                            language,
+                          ),
                         )}
                       </Text>
                       <Text style={textStyle}>
@@ -233,7 +241,7 @@ export default function DailyDigestEmail({
                         show={Boolean(entry.last_success_at)}
                       >
                         <Text style={textStyle}>
-                          last success:{" "}
+                          {t("last_success")}:{" "}
                           {v("entry.last_success_at", entry.last_success_at)}
                         </Text>
                       </TemplateIf>
@@ -248,10 +256,7 @@ export default function DailyDigestEmail({
             expression="integration_health_truncated"
             show={context.integration_health_truncated}
           >
-            <Text style={textStyle}>
-              Additional unhealthy integrations were omitted to keep this report
-              concise.
-            </Text>
+            <Text style={textStyle}>{t("health_omitted")}</Text>
           </TemplateIf>
         </EmailSection>
       </TemplateIf>
@@ -261,11 +266,8 @@ export default function DailyDigestEmail({
         expression="digest.currencies"
         show={Boolean(digest.currencies.length)}
       >
-        <EmailSection title="Amounts in this digest">
-          <Text style={textStyle}>
-            Subtotals are separate by currency and cover all selected
-            obligations, including any rows omitted from this email.
-          </Text>
+        <EmailSection title={t("amounts_title")}>
+          <Text style={textStyle}>{t("amounts_intro")}</Text>
           <TemplateLoop
             tokens={tokens}
             expression="currency in digest.currencies"
@@ -314,7 +316,7 @@ export default function DailyDigestEmail({
           Object.keys(context.activity).length || context.activity_truncated,
         )}
       >
-        <EmailSection title="Recent activity">
+        <EmailSection title={t("activity_title")}>
           <TemplateLoop<[string, Activity[]]>
             tokens={tokens}
             expression="ledger_name, entries in activity.items()"
@@ -349,7 +351,12 @@ export default function DailyDigestEmail({
                         </Link>
                       </Text>
                       <Text style={textStyle}>
-                        Updated by {v("entry.actor_name", entry.actor_name)}
+                        {v(
+                          "tr('updated_by', actor=entry.actor_name)",
+                          emailCopy("updated_by", language, {
+                            actor: entry.actor_name,
+                          }),
+                        )}
                       </Text>
                       <ul style={{ ...textStyle, paddingLeft: "20px" }}>
                         <TemplateLoop
@@ -371,9 +378,12 @@ export default function DailyDigestEmail({
                         show={Boolean(entry.omitted_changes)}
                       >
                         <Text style={textStyle}>
-                          And{" "}
-                          {v("entry.omitted_changes", entry.omitted_changes)}{" "}
-                          more changes
+                          {v(
+                            "tr('more_changes', count=entry.omitted_changes)",
+                            emailCopy("more_changes", language, {
+                              count: entry.omitted_changes,
+                            }),
+                          )}
                         </Text>
                       </TemplateIf>
                     </>
@@ -387,9 +397,7 @@ export default function DailyDigestEmail({
             expression="activity_truncated"
             show={context.activity_truncated}
           >
-            <Text style={textStyle}>
-              Additional activity was omitted to keep this report concise.
-            </Text>
+            <Text style={textStyle}>{t("activity_omitted")}</Text>
           </TemplateIf>
         </EmailSection>
       </TemplateIf>

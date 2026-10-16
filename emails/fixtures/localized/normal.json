@@ -1,0 +1,21 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-19",
+  "sections": {
+    "overdue": [
+      {
+        "ledger_name": "Household_Custom",
+        "category_name": "Electricity_Custom",
+        "amount": "129.5000",
+        "currency": "PLN",
+        "amount_state": "confirmed",
+        "due_date": "2026-10-15",
+        "due_date_state": "confirmed",
+        "link": "https://example.com/obligations/1"
+      }
+    ]
+  },
+  "activity_count": 1,
+  "integration_count": 1,
+  "app_url": "https://example.com/ledgers"
+}

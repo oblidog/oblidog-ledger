@@ -2,8 +2,8 @@
 
 The interface supports English (`en`) and Polish (`pl`), including authentication,
 ledger workspaces, administration, analytics, accessible controls, and form
-validation. Server-rendered emails remain tracked in
-#514. User-defined names, notes, schema labels and external diagnostics
+validation. Scheduled reports and transactional emails also support both languages.
+User-defined names, notes, schema labels and external diagnostics
 are preserved.
 
 ## Language resolution
@@ -27,9 +27,11 @@ language fields in partial profile updates preserve the preference. Existing
 rows remain null; there is no backfill based on ledger country or currency.
 The database also restricts non-null values to supported language codes.
 
-For future scheduled emails, pass the recipient's explicit supported language
-into each render and use English when none is set. A background job cannot infer
-a browser language. The current mail output is unchanged by this foundation.
+Scheduled and transactional emails use the recipient's explicit supported
+`User.language` for each render. Null, unsupported preferences and recipients
+without an account use English; browser language and the inviter's preference
+are never inferred. HTML, text and subjects use the same immutable render locale.
+See [email localization](../emails/README.md#localization) for catalogs and previews.
 
 ## Resources and components
 

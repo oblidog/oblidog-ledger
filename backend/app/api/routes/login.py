@@ -1,5 +1,6 @@
 import secrets
 from datetime import timedelta
+from email.header import Header
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Response
@@ -112,12 +113,16 @@ def recover_password(email: str, session: SessionDep) -> Message:
             session=session, user=user
         )
         email_data = generate_reset_password_email(
-            email_to=user.email, email=email, token=delivery.token
+            email_to=user.email,
+            email=email,
+            token=delivery.token,
+            language=user.language,
         )
         send_email(
             email_to=user.email,
             subject=email_data.subject,
             html_content=email_data.html_content,
+            text_content=email_data.text_content,
         )
     return Message(
         message="If that email is registered, we sent a password recovery link"
@@ -165,9 +170,14 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
         )
     delivery = password_reset_service.issue_password_reset(session=session, user=user)
     email_data = generate_reset_password_email(
-        email_to=user.email, email=email, token=delivery.token
+        email_to=user.email, email=email, token=delivery.token, language=user.language
     )
 
     return HTMLResponse(
-        content=email_data.html_content, headers={"subject:": email_data.subject}
+        content=email_data.html_content,
+        headers={
+            "subject": Header(email_data.subject, "utf-8", maxlinelen=0).encode()
+            if not email_data.subject.isascii()
+            else email_data.subject
+        },
     )

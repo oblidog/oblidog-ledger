@@ -1,0 +1,6 @@
+{{ project_name }} - {{ tr('new_title') }}
+{{ tr('new_welcome') }}
+{{ tr('new_details') }}
+{{ tr('username') }}: {{ username }}
+{{ tr('password') }}: {{ password }}
+{{ tr('dashboard_action') }}: {{ link }}

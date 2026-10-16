@@ -14,6 +14,7 @@ from jwt.exceptions import InvalidTokenError
 from app.core import security
 from app.core.capabilities import Capability, ensure_capability
 from app.core.config import settings
+from app.email_i18n import EmailLocale, recipient_language
 from app.email_rendering import render_email_template as render_email_template
 
 logger = logging.getLogger(__name__)
@@ -89,40 +90,61 @@ def send_email(
     logger.info("Email accepted by SMTP")
 
 
-def generate_test_email(email_to: str) -> EmailData:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Test email"
-    html_content = render_email_template(
-        template_name="test_email.html",
+def _localized_email(
+    *,
+    template: str,
+    subject_key: str,
+    language: object,
+    context: dict[str, Any],
+    subject_params: dict[str, str] | None = None,
+) -> EmailData:
+    locale = EmailLocale(recipient_language(language))
+    return EmailData(
+        subject=f"{settings.PROJECT_NAME} - {locale.tr(subject_key, **(subject_params or {}))}",
+        html_content=render_email_template(
+            template_name=f"{template}.html", context=context, language=locale.language
+        ),
+        text_content=render_email_template(
+            template_name=f"{template}.txt", context=context, language=locale.language
+        ),
+    )
+
+
+def generate_test_email(email_to: str, *, language: object = None) -> EmailData:
+    return _localized_email(
+        template="test_email",
+        subject_key="test_subject",
+        language=language,
         context={"project_name": settings.PROJECT_NAME, "email": email_to},
     )
-    return EmailData(html_content=html_content, subject=subject)
 
 
-def generate_reset_password_email(email_to: str, email: str, token: str) -> EmailData:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Password recovery for user {email}"
-    link = f"{settings.FRONTEND_HOST}/reset-password?token={token}"
-    html_content = render_email_template(
-        template_name="reset_password.html",
+def generate_reset_password_email(
+    email_to: str, email: str, token: str, *, language: object = None
+) -> EmailData:
+    return _localized_email(
+        template="reset_password",
+        subject_key="reset_subject",
+        language=language,
+        subject_params={"email": email},
         context={
             "project_name": settings.PROJECT_NAME,
             "username": email,
             "email": email_to,
             "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
-            "link": link,
+            "link": f"{settings.FRONTEND_HOST}/reset-password?token={token}",
         },
     )
-    return EmailData(html_content=html_content, subject=subject)
 
 
 def generate_new_account_email(
-    email_to: str, username: str, password: str
+    email_to: str, username: str, password: str, *, language: object = None
 ) -> EmailData:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - New account for user {username}"
-    html_content = render_email_template(
-        template_name="new_account.html",
+    return _localized_email(
+        template="new_account",
+        subject_key="new_subject",
+        language=language,
+        subject_params={"username": username},
         context={
             "project_name": settings.PROJECT_NAME,
             "username": username,
@@ -131,25 +153,22 @@ def generate_new_account_email(
             "link": settings.FRONTEND_HOST,
         },
     )
-    return EmailData(html_content=html_content, subject=subject)
 
 
 def generate_user_invitation_email(
-    email_to: str, token: str, valid_hours: int
+    email_to: str, token: str, valid_hours: int, *, language: object = None
 ) -> EmailData:
-    project_name = settings.PROJECT_NAME
-    link = f"{settings.FRONTEND_HOST}/accept-invitation?token={token}"
-    subject = f"{project_name} - You're invited"
-    html_content = render_email_template(
-        template_name="user_invitation.html",
+    return _localized_email(
+        template="user_invitation",
+        subject_key="invitation_subject",
+        language=language,
         context={
-            "project_name": project_name,
+            "project_name": settings.PROJECT_NAME,
             "email": email_to,
-            "link": link,
+            "link": f"{settings.FRONTEND_HOST}/accept-invitation?token={token}",
             "valid_hours": valid_hours,
         },
     )
-    return EmailData(html_content=html_content, subject=subject)
 
 
 def generate_password_reset_token(

@@ -9,6 +9,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from app.email_i18n import EmailLocale, Language
+
 if TYPE_CHECKING:
     from app.services.daily_obligation_report import DailyReportItem
 
@@ -61,47 +63,45 @@ class DailyDigest:
     currencies: tuple[DigestCurrency, ...]
 
 
-def _count(count: int, singular: str, plural: str) -> str:
-    return f"{count} {singular if count == 1 else plural}"
-
-
-def _state_label(state: str) -> str:
-    return {
-        "confirmed": "Confirmed",
-        "overridden": "Overridden",
-        "estimated": "Estimated",
-        "unknown": "Unconfirmed",
-    }.get(state, "Unconfirmed")
+def _state_label(state: str, locale: EmailLocale) -> str:
+    return locale.tr(
+        "state_"
+        + (state if state in {"confirmed", "overridden", "estimated"} else "unknown")
+    )
 
 
 def _money(amount: Decimal) -> str:
-    # Do not round away supported sub-cent precision; keep at least two places.
-    whole, _, fraction = format(amount, "f").partition(".")
-    return f"{whole}.{fraction.ljust(2, '0')}"
+    return EmailLocale().amount(amount)
 
 
-def _row(item: DailyReportItem) -> DigestRow:
-    currency = item.currency or "currency unknown"
+def _row(item: DailyReportItem, locale: EmailLocale) -> DigestRow:
+    currency = item.currency or locale.tr("currency_unknown")
     return DigestRow(
         category_name=item.category_name,
         amount_label=(
-            "Amount unknown"
+            locale.tr("amount_unknown")
             if item.amount is None
-            else f"{_money(item.amount)} {currency}"
+            else f"{locale.amount(item.amount)} {currency}"
         ),
-        amount_detail="Unknown"
+        amount_detail=locale.tr("unknown_title")
         if item.amount is None
-        else _state_label(item.amount_state),
+        else _state_label(item.amount_state, locale),
         due_label=(
-            "Due date unknown"
+            locale.tr("due_unknown")
             if item.due_date is None
-            else f"Due {item.due_date.isoformat()} · {_state_label(item.due_date_state)}"
+            else locale.tr(
+                "due_label",
+                date=locale.date(item.due_date),
+                state=_state_label(item.due_date_state, locale),
+            )
         ),
         link=item.link,
     )
 
 
-def _currencies(items: Sequence[DailyReportItem]) -> tuple[DigestCurrency, ...]:
+def _currencies(
+    items: Sequence[DailyReportItem], locale: EmailLocale
+) -> tuple[DigestCurrency, ...]:
     groups: dict[str | None, list[DailyReportItem]] = defaultdict(list)
     for item in items:
         groups[item.currency or None].append(item)
@@ -120,29 +120,31 @@ def _currencies(items: Sequence[DailyReportItem]) -> tuple[DigestCurrency, ...]:
         ]
         detail = []
         if unknown:
-            detail.append(_count(unknown, "unknown amount", "unknown amounts"))
+            detail.append(locale.tr("unknown_amount_count", count=unknown))
         if unconfirmed:
-            detail.append(
-                _count(
-                    len(unconfirmed),
-                    "estimated/unconfirmed amount",
-                    "estimated/unconfirmed amounts",
-                )
-            )
+            detail.append(locale.tr("unconfirmed_amount_count", count=len(unconfirmed)))
         if currency is None:
             # Missing currencies could describe incompatible units. Never sum them.
-            detail.insert(0, "Not totalled: currency not specified")
+            detail.insert(0, locale.tr("not_totalled"))
         elif unknown or unconfirmed:
-            detail.insert(0, "Partial amounts")
+            detail.insert(0, locale.tr("partial_amounts"))
         else:
-            detail.append("All amounts confirmed or overridden")
+            detail.append(locale.tr("all_confirmed"))
         summaries.append(
             DigestCurrency(
-                currency=currency or "Currency not specified",
-                confirmed_label=f"{_money(sum(confirmed, Decimal(0)))} {currency} confirmed subtotal"
+                currency=currency or locale.tr("currency_unspecified"),
+                confirmed_label=locale.tr(
+                    "confirmed_subtotal",
+                    amount=locale.amount(sum(confirmed, Decimal(0))),
+                    currency=currency,
+                )
                 if currency and confirmed
                 else None,
-                unconfirmed_label=f"{_money(sum(unconfirmed, Decimal(0)))} {currency} estimated/unconfirmed subtotal"
+                unconfirmed_label=locale.tr(
+                    "unconfirmed_subtotal",
+                    amount=locale.amount(sum(unconfirmed, Decimal(0))),
+                    currency=currency,
+                )
                 if currency and unconfirmed
                 else None,
                 detail=" · ".join(detail),
@@ -157,11 +159,14 @@ def build_daily_digest(
     activity_count: int,
     integration_count: int,
     integration_health_truncated: bool = False,
+    language: Language = "en",
 ) -> DailyDigest:
     """Only reorder/format the supplied selection; amounts cover this digest only."""
+    locale = EmailLocale(language)
     presented = []
     all_items: list[DailyReportItem] = []
-    for key, title in SECTION_TITLES.items():
+    for key in SECTION_TITLES:
+        title = locale.tr(f"section_{key}")
         items = sections.get(key, ())
         if not items:
             continue
@@ -172,7 +177,7 @@ def build_daily_digest(
             DigestLedger(
                 name=name,
                 obligations=tuple(
-                    _row(item)
+                    _row(item, locale)
                     for item in sorted(
                         rows,
                         key=lambda row: (
@@ -190,29 +195,25 @@ def build_daily_digest(
         presented.append(DigestSection(title=title, count=len(items), ledgers=ledgers))
         all_items.extend(items)
     counts = [
-        f"{title}: {len(sections[key])}"
-        for key, title in SECTION_TITLES.items()
+        f"{locale.tr('section_' + key)}: {len(sections[key])}"
+        for key in SECTION_TITLES
         if sections.get(key)
     ]
     if integration_count:
-        counts.append(
-            f"{_count(integration_count, 'integration', 'integrations')} selected for review"
-        )
+        counts.append(locale.tr("integration_selected", count=integration_count))
     if activity_count:
-        counts.append(
-            f"{_count(activity_count, 'activity update', 'activity updates')} selected"
-        )
+        counts.append(locale.tr("activity_selected", count=activity_count))
     if all_items:
-        title = f"{_count(len(all_items), 'obligation needs', 'obligations need')} attention"
+        title = locale.tr("obligation_attention", count=len(all_items))
     elif integration_count:
-        title = f"{_count(integration_count, 'integration needs', 'integrations need')} review"
+        title = locale.tr("integration_attention", count=integration_count)
     else:
-        title = _count(activity_count, "activity update", "activity updates")
+        title = locale.tr("activity_count", count=activity_count)
     if not all_items and integration_count and integration_health_truncated:
-        title = f"At least {title}"
+        title = locale.tr("at_least", text=title)
     return DailyDigest(
         summary_title=title,
         summary_detail=" · ".join(counts),
         sections=tuple(presented),
-        currencies=_currencies(all_items),
+        currencies=_currencies(all_items, locale),
     )
