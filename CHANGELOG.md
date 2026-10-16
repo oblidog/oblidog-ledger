@@ -1,3 +1,17 @@
+## v0.20.0 (2026-10-16)
+
+### Feat
+
+- **reports**: redesign weekly overview with React Email (#519)
+- **i18n**: localize scheduled reports and transactional emails (#518)
+- **i18n**: stable API error codes and localized client errors (#517)
+- **i18n**: translate the application interface into Polish (#516)
+- **i18n**: add EN/PL foundation and user language preferences (#515)
+
+### Refactor
+
+- **email**: migrate transactional emails to React Email (#520)
+
 ## v0.19.0 (2026-10-15)
 
 ### Feat
