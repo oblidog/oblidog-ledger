@@ -36,12 +36,13 @@ jobs:
   test-backend:
     permissions:
       contents: read
-      id-token: write
+      id-token: write # Authenticate Codecov uploads with OIDC.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Validate deployment variants
         shell: bash
@@ -135,12 +136,12 @@ jobs:
         run: cp .github/ci.env .env
       - name: Set up Python
         if: steps.scope.outputs.run_heavy == 'true'
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.14"
       - name: Install uv
         if: steps.scope.outputs.run_heavy == 'true'
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
       - name: Test release tooling
         if: steps.scope.outputs.run_heavy == 'true'
         run: uv run --frozen pytest -q tests/test_extract_release_notes.py
@@ -161,7 +162,9 @@ jobs:
         working-directory: backend
       - name: Run tests
         if: steps.scope.outputs.run_heavy == 'true'
-        run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
+        env:
+          COVERAGE_COMMIT: ${{ github.sha }}
+        run: uv run bash scripts/tests-start.sh "Coverage for ${COVERAGE_COMMIT}"
         working-directory: backend
       - name: Export XML coverage report
         if: steps.scope.outputs.run_heavy == 'true'
@@ -206,7 +209,7 @@ jobs:
         if: ${{ always() && steps.scope.outputs.run_heavy == 'true' }}
       - name: Store coverage files
         if: steps.scope.outputs.run_heavy == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-html
           path: backend/htmlcov
