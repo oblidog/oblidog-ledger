@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 import { formatRegion } from "@/i18n/format"
 import { handleError } from "@/utils"
 
@@ -54,7 +55,9 @@ export function LedgerPreferenceFields({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="space-y-2">
-        <Label htmlFor={`${id}-country`}>Holiday calendar</Label>
+        <Label htmlFor={`${id}-country`}>
+          {i18n.t("app:ledgersettings.holiday_calendar")}
+        </Label>
         <Select
           value={country}
           onValueChange={onCountryChange}
@@ -73,7 +76,9 @@ export function LedgerPreferenceFields({
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${id}-currency`}>Default currency</Label>
+        <Label htmlFor={`${id}-currency`}>
+          {i18n.t("app:ledgersettings.default_currency")}
+        </Label>
         <Select
           value={currency}
           onValueChange={(value) => {
@@ -99,6 +104,8 @@ export function LedgerPreferenceFields({
 }
 
 export function LedgerPreferences({ ledger }: { ledger: LedgerPublic }) {
+  useTranslation()
+
   const { user } = useAuth()
   const owner = user?.id === ledger.owner_user_id
   const [country, setCountry] = useState(ledger.business_calendar_country)
@@ -126,7 +133,7 @@ export function LedgerPreferences({ ledger }: { ledger: LedgerPublic }) {
       void queryClient.invalidateQueries({
         queryKey: ["schedule-preview", ledger.id],
       })
-      showSuccessToast("Ledger preferences updated")
+      showSuccessToast(i18n.t("app:ledgersettings.ledger_preferences_updated"))
     },
     onError: handleError.bind(showErrorToast),
   })
@@ -136,9 +143,11 @@ export function LedgerPreferences({ ledger }: { ledger: LedgerPublic }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Preferences</CardTitle>
+        <CardTitle>{i18n.t("app:ledgersettings.preferences")}</CardTitle>
         <CardDescription>
-          Choose the holiday calendar and the currency for new categories.
+          {i18n.t(
+            "app:ledgersettings.choose_the_holiday_calendar_and_the_currency_for_new_categories",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -150,9 +159,9 @@ export function LedgerPreferences({ ledger }: { ledger: LedgerPublic }) {
           disabled={!owner || update.isPending}
         />
         <p className="text-sm text-muted-foreground">
-          The calendar applies to future schedule calculations and reports.
-          Existing due dates stay unchanged. The default currency applies only
-          to new categories.
+          {i18n.t(
+            "app:ledgersettings.the_calendar_applies_to_future_schedule_calculations_and_reports_existing_due_dates_s",
+          )}
         </p>
         {owner ? (
           <LoadingButton
@@ -160,11 +169,13 @@ export function LedgerPreferences({ ledger }: { ledger: LedgerPublic }) {
             disabled={!changed}
             onClick={() => update.mutate()}
           >
-            Save preferences
+            {i18n.t("app:ledgersettings.save_preferences")}
           </LoadingButton>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Only the ledger owner can change these preferences.
+            {i18n.t(
+              "app:ledgersettings.only_the_ledger_owner_can_change_these_preferences",
+            )}
           </p>
         )}
       </CardContent>

@@ -1,8 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
-import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
 import { clearBrowserSessionState } from "@/browserSession"
 import { LoginService, type UpdatePassword, UsersService } from "@/client"
 import {
@@ -16,30 +15,40 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
     current_password: z
       .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
+      .min(1, { error: () => i18n.t("app:usersettings.password_is_required") })
+      .min(8, {
+        error: () =>
+          i18n.t("app:usersettings.password_must_be_at_least_8_characters"),
+      }),
     new_password: z
       .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
-    confirm_password: z
-      .string()
-      .min(1, { message: "Password confirmation is required" }),
+      .min(1, { error: () => i18n.t("app:usersettings.password_is_required") })
+      .min(8, {
+        error: () =>
+          i18n.t("app:usersettings.password_must_be_at_least_8_characters"),
+      }),
+    confirm_password: z.string().min(1, {
+      error: () => i18n.t("app:usersettings.password_confirmation_is_required"),
+    }),
   })
   .refine((data) => data.new_password === data.confirm_password, {
-    message: "The passwords don't match",
+    error: () => i18n.t("app:usersettings.the_passwords_don_t_match"),
     path: ["confirm_password"],
   })
 
 type FormData = z.infer<typeof formSchema>
 
 const ChangePassword = () => {
+  useTranslation()
+
   const { showErrorToast } = useCustomToast()
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -72,7 +81,9 @@ const ChangePassword = () => {
 
   return (
     <div className="max-w-md">
-      <h3 className="text-lg font-semibold py-4">Change Password</h3>
+      <h3 className="text-lg font-semibold py-4">
+        {i18n.t("app:usersettings.change_password")}
+      </h3>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -83,7 +94,9 @@ const ChangePassword = () => {
             name="current_password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>Current Password</FormLabel>
+                <FormLabel>
+                  {i18n.t("app:usersettings.current_password")}
+                </FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="current-password-input"
@@ -102,7 +115,7 @@ const ChangePassword = () => {
             name="new_password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>New Password</FormLabel>
+                <FormLabel>{i18n.t("app:usersettings.new_password")}</FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="new-password-input"
@@ -121,7 +134,9 @@ const ChangePassword = () => {
             name="confirm_password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>
+                  {i18n.t("app:usersettings.confirm_password")}
+                </FormLabel>
                 <FormControl>
                   <PasswordInput
                     data-testid="confirm-password-input"
@@ -140,7 +155,7 @@ const ChangePassword = () => {
             loading={mutation.isPending}
             className="self-start"
           >
-            Update Password
+            {i18n.t("app:usersettings.update_password")}
           </LoadingButton>
         </form>
       </Form>

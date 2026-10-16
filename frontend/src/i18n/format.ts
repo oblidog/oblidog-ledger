@@ -1,7 +1,7 @@
 import { i18n } from "./index"
 import type { Language } from "./language"
 
-function locale(language?: Language) {
+export function getLocale(language?: Language) {
   return (language ?? i18n.resolvedLanguage) === "pl" ? "pl-PL" : "en-GB"
 }
 
@@ -21,7 +21,7 @@ export function formatDate(
   ) {
     throw new RangeError("Invalid calendar date")
   }
-  return new Intl.DateTimeFormat(locale(language), {
+  return new Intl.DateTimeFormat(getLocale(language), {
     ...options,
     timeZone: "UTC",
   }).format(date)
@@ -35,7 +35,7 @@ export function formatDateTime(
   },
   language?: Language,
 ) {
-  return new Intl.DateTimeFormat(locale(language), options).format(
+  return new Intl.DateTimeFormat(getLocale(language), options).format(
     typeof value === "string" ? new Date(value) : value,
   )
 }
@@ -45,7 +45,7 @@ export function formatNumber(
   options?: Intl.NumberFormatOptions,
   language?: Language,
 ) {
-  return new Intl.NumberFormat(locale(language), options).format(value)
+  return new Intl.NumberFormat(getLocale(language), options).format(value)
 }
 
 export function formatAmount(
@@ -59,7 +59,7 @@ export function formatAmount(
   // Intl accepts exact decimal strings at runtime; the project's TS Intl types
   // still only declare number/bigint. Never convert monetary strings to Number.
   const fractionDigits = Math.max(2, value.split(".")[1]?.length ?? 0)
-  const formatter = new Intl.NumberFormat(locale(language), {
+  const formatter = new Intl.NumberFormat(getLocale(language), {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   })
@@ -69,7 +69,7 @@ export function formatAmount(
 
 // Percentage points: 25 means 25%, not 2500%.
 export function formatPercentage(value: number, language?: Language) {
-  return new Intl.NumberFormat(locale(language), {
+  return new Intl.NumberFormat(getLocale(language), {
     style: "unit",
     unit: "percent",
     maximumFractionDigits: 2,
@@ -78,7 +78,7 @@ export function formatPercentage(value: number, language?: Language) {
 
 export function formatRegion(code: string, language?: Language) {
   return (
-    new Intl.DisplayNames([locale(language)], { type: "region" }).of(code) ??
+    new Intl.DisplayNames([getLocale(language)], { type: "region" }).of(code) ??
     code
   )
 }

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { isAxiosError } from "axios"
 import { type ReactNode, useId, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
 import {
   applyCategoryCounterparty,
@@ -33,6 +35,8 @@ export function ApplyCategoryCounterpartyDialog({
   disabled: boolean
   trigger: ReactNode
 }) {
+  useTranslation()
+
   const checkboxId = useId()
   const [open, setOpen] = useState(false)
   const [overwrite, setOverwrite] = useState(false)
@@ -47,7 +51,8 @@ export function ApplyCategoryCounterpartyDialog({
   })
   const mutation = useMutation({
     mutationFn: () => {
-      if (!preview.data) throw new Error("Preview is unavailable")
+      if (!preview.data)
+        throw new Error(i18n.t("app:counterparties.preview_is_unavailable"))
       return applyCategoryCounterparty(
         ledgerId,
         categoryId,
@@ -80,10 +85,14 @@ export function ApplyCategoryCounterpartyDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Apply counterparty to obligations</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:counterparties.apply_counterparty_to_obligations")}
+          </DialogTitle>
           <DialogDescription>
-            {categoryName}: update existing obligations in the current and next
-            period.
+            {categoryName}
+            {i18n.t(
+              "app:counterparties.update_existing_obligations_in_the_current_and_next_period",
+            )}
           </DialogDescription>
         </DialogHeader>
         <label htmlFor={checkboxId} className="flex items-center gap-2 text-sm">
@@ -93,31 +102,42 @@ export function ApplyCategoryCounterpartyDialog({
             disabled={mutation.isPending}
             onCheckedChange={(value) => setOverwrite(value === true)}
           />
-          Replace existing counterparty assignments
+          {i18n.t(
+            "app:counterparties.replace_existing_counterparty_assignments",
+          )}
         </label>
         <p className="text-sm text-muted-foreground">
-          By default, only obligations without a counterparty are updated.
-          Previous periods remain unchanged.
+          {i18n.t(
+            "app:counterparties.by_default_only_obligations_without_a_counterparty_are_updated_previous_periods_remai",
+          )}
         </p>
         {preview.isError ? (
           <div role="alert" className="space-y-2">
             <p>
-              Could not load the preview. Check the category counterparty and
-              try again.
+              {i18n.t(
+                "app:counterparties.could_not_load_the_preview_check_the_category_counterparty_and_try_again",
+              )}
             </p>
             <Button variant="outline" onClick={() => void preview.refetch()}>
-              Retry
+              {i18n.t("app:counterparties.retry")}
             </Button>
           </div>
         ) : preview.isFetching || !preview.data ? (
-          <p role="status">Loading preview…</p>
+          <p role="status">{i18n.t("app:counterparties.loading_preview")}</p>
         ) : (
           <div className="rounded-md border p-3 text-sm space-y-2">
             <p>
-              Counterparty: <strong>{preview.data.counterparty.name}</strong>
+              {i18n.t("app:counterparties.counterparty")}{" "}
+              <strong>{preview.data.counterparty.name}</strong>
             </p>
-            <p>Periods: {preview.data.periods.join(" · ")}</p>
-            <p>{preview.data.count} obligations will be updated.</p>
+            <p>
+              {i18n.t("app:counterparties.periods")}{" "}
+              {preview.data.periods.join(" · ")}
+            </p>
+            <p>
+              {preview.data.count}{" "}
+              {i18n.t("app:counterparties.obligations_will_be_updated")}
+            </p>
           </div>
         )}
         <DialogFooter>
@@ -126,7 +146,7 @@ export function ApplyCategoryCounterpartyDialog({
             disabled={mutation.isPending}
             onClick={() => setOpen(false)}
           >
-            Cancel
+            {i18n.t("app:counterparties.cancel")}
           </Button>
           <LoadingButton
             loading={mutation.isPending}
@@ -138,7 +158,7 @@ export function ApplyCategoryCounterpartyDialog({
             }
             onClick={() => mutation.mutate()}
           >
-            Apply counterparty
+            {i18n.t("app:counterparties.apply_counterparty")}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

@@ -1,0 +1,16 @@
+{
+  "close": "Close",
+  "pagination": "pagination",
+  "go_to_previous_page": "Go to previous page",
+  "previous": "Previous",
+  "go_to_next_page": "Go to next page",
+  "next": "Next",
+  "more_pages": "More pages",
+  "hide_password": "Hide password",
+  "show_password": "Show password",
+  "sidebar": "Sidebar",
+  "displays_the_mobile_sidebar": "Displays the mobile sidebar.",
+  "toggle_sidebar": "Toggle Sidebar",
+  "collapse_sidebar": "Collapse Sidebar",
+  "open_sidebar": "Open Sidebar"
+}

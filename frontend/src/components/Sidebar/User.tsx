@@ -1,7 +1,6 @@
 import { Link as RouterLink } from "@tanstack/react-router"
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react"
 import { useTranslation } from "react-i18next"
-
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
+import { i18n } from "@/i18n"
 import { getInitials } from "@/utils"
 
 interface UserInfoProps {
@@ -27,11 +27,13 @@ interface UserInfoProps {
 }
 
 function UserInfo({ fullName, email }: UserInfoProps) {
+  useTranslation()
+
   return (
     <div className="flex items-center gap-2.5 w-full min-w-0">
       <Avatar className="size-8">
         <AvatarFallback className="bg-zinc-600 text-white">
-          {getInitials(fullName || "User")}
+          {getInitials(fullName || i18n.t("app:sidebar.user"))}
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col items-start min-w-0">

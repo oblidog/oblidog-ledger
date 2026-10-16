@@ -1,9 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
 import { UsersService, type UserUpdateMe } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,17 +17,23 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
   full_name: z.string().max(30).optional(),
-  email: z.email({ message: "Invalid email address" }),
+  email: z.email({
+    error: () => i18n.t("app:usersettings.invalid_email_address"),
+  }),
 })
 
 type FormData = z.infer<typeof formSchema>
 
 const UserInformation = () => {
+  useTranslation()
+
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [editMode, setEditMode] = useState(false)
@@ -52,7 +57,7 @@ const UserInformation = () => {
     mutationFn: (data: UserUpdateMe) =>
       UsersService.updateUserMe({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("User updated successfully")
+      showSuccessToast(i18n.t("app:usersettings.user_updated_successfully"))
       toggleEditMode()
     },
     onError: handleError.bind(showErrorToast),
@@ -82,7 +87,9 @@ const UserInformation = () => {
 
   return (
     <div className="max-w-md">
-      <h3 className="text-lg font-semibold py-4">User Information</h3>
+      <h3 className="text-lg font-semibold py-4">
+        {i18n.t("app:usersettings.user_information")}
+      </h3>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -94,7 +101,7 @@ const UserInformation = () => {
             render={({ field }) =>
               editMode ? (
                 <FormItem>
-                  <FormLabel>Full name</FormLabel>
+                  <FormLabel>{i18n.t("app:usersettings.full_name")}</FormLabel>
                   <FormControl>
                     <Input type="text" {...field} />
                   </FormControl>
@@ -102,14 +109,14 @@ const UserInformation = () => {
                 </FormItem>
               ) : (
                 <FormItem>
-                  <FormLabel>Full name</FormLabel>
+                  <FormLabel>{i18n.t("app:usersettings.full_name")}</FormLabel>
                   <p
                     className={cn(
                       "py-2 truncate max-w-sm",
                       !field.value && "text-muted-foreground",
                     )}
                   >
-                    {field.value || "N/A"}
+                    {field.value || i18n.t("app:usersettings.n_a")}
                   </p>
                 </FormItem>
               )
@@ -122,7 +129,7 @@ const UserInformation = () => {
             render={({ field }) =>
               editMode ? (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{i18n.t("app:usersettings.email")}</FormLabel>
                   <FormControl>
                     <Input type="email" {...field} />
                   </FormControl>
@@ -130,7 +137,7 @@ const UserInformation = () => {
                 </FormItem>
               ) : (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{i18n.t("app:usersettings.email")}</FormLabel>
                   <p className="py-2 truncate max-w-sm">{field.value}</p>
                 </FormItem>
               )
@@ -145,7 +152,7 @@ const UserInformation = () => {
                   loading={mutation.isPending}
                   disabled={!form.formState.isDirty}
                 >
-                  Save
+                  {i18n.t("app:usersettings.save")}
                 </LoadingButton>
                 <Button
                   type="button"
@@ -153,12 +160,12 @@ const UserInformation = () => {
                   onClick={onCancel}
                   disabled={mutation.isPending}
                 >
-                  Cancel
+                  {i18n.t("app:usersettings.cancel")}
                 </Button>
               </>
             ) : (
               <Button type="button" onClick={toggleEditMode}>
-                Edit
+                {i18n.t("app:usersettings.edit")}
               </Button>
             )}
           </div>

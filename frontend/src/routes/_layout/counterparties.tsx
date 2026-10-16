@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import { UsersService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +28,7 @@ import {
 } from "@/features/counterparties/api"
 import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
 
 export const Route = createFileRoute("/_layout/counterparties")({
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/_layout/counterparties")({
     }
   },
   head: () => ({
-    meta: [{ title: "Counterparties - Oblidog" }],
+    meta: [{ title: i18n.t("app:counterparties.counterparties_oblidog") }],
   }),
 })
 
@@ -80,6 +81,8 @@ function CounterpartyFormDialog({
 }: {
   counterparty?: Counterparty
 }) {
+  useTranslation()
+
   const editing = Boolean(counterparty)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(
@@ -96,14 +99,17 @@ function CounterpartyFormDialog({
   const mutation = useMutation({
     mutationFn: () => {
       const input = toInput(form)
-      if (!input.name) throw new Error("Name is required")
+      if (!input.name)
+        throw new Error(i18n.t("app:counterparties.name_is_required"))
       return counterparty
         ? updateCounterparty(counterparty.id, input)
         : createCounterparty(input)
     },
     onSuccess: () => {
       showSuccessToast(
-        editing ? "Counterparty updated" : "Counterparty created",
+        editing
+          ? i18n.t("app:counterparties.counterparty_updated")
+          : i18n.t("app:counterparties.counterparty_created"),
       )
       setOpen(false)
       void queryClient.invalidateQueries({ queryKey: ["counterparties"] })
@@ -128,14 +134,16 @@ function CounterpartyFormDialog({
           <Button
             variant="ghost"
             size="icon"
-            aria-label={`Edit ${counterparty!.name}`}
+            aria-label={i18n.t("app:counterparties.edit", {
+              value1: counterparty!.name,
+            })}
           >
             <Pencil className="size-4" />
           </Button>
         ) : (
           <Button>
             <Plus className="mr-2 size-4" />
-            Add counterparty
+            {i18n.t("app:counterparties.add_counterparty")}
           </Button>
         )}
       </DialogTrigger>
@@ -149,10 +157,14 @@ function CounterpartyFormDialog({
         >
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Edit counterparty" : "Add counterparty"}
+              {editing
+                ? i18n.t("app:counterparties.edit_counterparty")
+                : i18n.t("app:counterparties.add_counterparty")}
             </DialogTitle>
             <DialogDescription>
-              Counterparties are shared across the whole Oblidog installation.
+              {i18n.t(
+                "app:counterparties.counterparties_are_shared_across_the_whole_oblidog_installation",
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -160,10 +172,12 @@ function CounterpartyFormDialog({
             <CounterpartyLogo counterparty={preview} className="size-12" />
             <div className="min-w-0">
               <p className="truncate font-medium">
-                {form.shortName || form.name || "Preview"}
+                {form.shortName ||
+                  form.name ||
+                  i18n.t("app:counterparties.preview")}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                {form.websiteUrl || "No website"}
+                {form.websiteUrl || i18n.t("app:counterparties.no_website")}
               </p>
             </div>
           </div>
@@ -171,7 +185,7 @@ function CounterpartyFormDialog({
           <div className="grid gap-4 py-2">
             <div className="grid gap-2">
               <Label htmlFor={`counterparty-name-${counterparty?.id ?? "new"}`}>
-                Name *
+                {i18n.t("app:counterparties.name")}
               </Label>
               <Input
                 id={`counterparty-name-${counterparty?.id ?? "new"}`}
@@ -192,7 +206,7 @@ function CounterpartyFormDialog({
               <Label
                 htmlFor={`counterparty-short-name-${counterparty?.id ?? "new"}`}
               >
-                Short name
+                {i18n.t("app:counterparties.short_name")}
               </Label>
               <Input
                 id={`counterparty-short-name-${counterparty?.id ?? "new"}`}
@@ -211,7 +225,7 @@ function CounterpartyFormDialog({
               <Label
                 htmlFor={`counterparty-logo-url-${counterparty?.id ?? "new"}`}
               >
-                Logo URL
+                {i18n.t("app:counterparties.logo_url")}
               </Label>
               <Input
                 id={`counterparty-logo-url-${counterparty?.id ?? "new"}`}
@@ -225,7 +239,9 @@ function CounterpartyFormDialog({
                 placeholder="https://example.com/logo.svg"
                 type="url"
                 pattern="https?://.+"
-                title="Enter a full HTTP or HTTPS URL, for example https://example.com"
+                title={i18n.t(
+                  "app:counterparties.enter_a_full_http_or_https_url_for_example_https_example_com",
+                )}
                 maxLength={2048}
               />
             </div>
@@ -233,7 +249,7 @@ function CounterpartyFormDialog({
               <Label
                 htmlFor={`counterparty-website-url-${counterparty?.id ?? "new"}`}
               >
-                Website URL
+                {i18n.t("app:counterparties.website_url")}
               </Label>
               <Input
                 id={`counterparty-website-url-${counterparty?.id ?? "new"}`}
@@ -247,7 +263,9 @@ function CounterpartyFormDialog({
                 placeholder="https://www.enea.pl"
                 type="url"
                 pattern="https?://.+"
-                title="Enter a full HTTP or HTTPS URL, for example https://example.com"
+                title={i18n.t(
+                  "app:counterparties.enter_a_full_http_or_https_url_for_example_https_example_com",
+                )}
                 maxLength={2048}
               />
             </div>
@@ -260,7 +278,7 @@ function CounterpartyFormDialog({
                 variant="outline"
                 disabled={mutation.isPending}
               >
-                Cancel
+                {i18n.t("app:counterparties.cancel")}
               </Button>
             </DialogClose>
             <LoadingButton
@@ -268,7 +286,9 @@ function CounterpartyFormDialog({
               disabled={!form.name.trim()}
               type="submit"
             >
-              {editing ? "Save changes" : "Create counterparty"}
+              {editing
+                ? i18n.t("app:counterparties.save_changes")
+                : i18n.t("app:counterparties.create_counterparty")}
             </LoadingButton>
           </DialogFooter>
         </form>
@@ -282,6 +302,8 @@ function DeleteCounterpartyDialog({
 }: {
   counterparty: Counterparty
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -289,7 +311,7 @@ function DeleteCounterpartyDialog({
   const mutation = useMutation({
     mutationFn: () => deleteCounterparty(counterparty.id),
     onSuccess: () => {
-      showSuccessToast("Counterparty deleted")
+      showSuccessToast(i18n.t("app:counterparties.counterparty_deleted"))
       setOpen(false)
       void queryClient.invalidateQueries({ queryKey: ["counterparties"] })
     },
@@ -302,23 +324,29 @@ function DeleteCounterpartyDialog({
         <Button
           variant="ghost"
           size="icon"
-          aria-label={`Delete ${counterparty.name}`}
+          aria-label={i18n.t("app:counterparties.delete", {
+            value1: counterparty.name,
+          })}
         >
           <Trash2 className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete counterparty?</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:counterparties.delete_counterparty")}
+          </DialogTitle>
           <DialogDescription>
-            Delete {counterparty.name} from the global catalog. Counterparties
-            assigned to categories or obligations cannot be deleted.
+            {i18n.t("app:counterparties.delete_f6fdbe")} {counterparty.name}{" "}
+            {i18n.t(
+              "app:counterparties.from_the_global_catalog_counterparties_assigned_to_categories_or_obligations_cannot_b",
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={mutation.isPending}>
-              Cancel
+              {i18n.t("app:counterparties.cancel")}
             </Button>
           </DialogClose>
           <LoadingButton
@@ -326,7 +354,7 @@ function DeleteCounterpartyDialog({
             loading={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            Delete
+            {i18n.t("app:counterparties.delete_f6fdbe")}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>
@@ -335,6 +363,8 @@ function DeleteCounterpartyDialog({
 }
 
 export function CounterpartiesAdmin() {
+  useTranslation()
+
   const [query, setQuery] = useState("")
   const counterparties = useQuery({
     queryKey: ["counterparties"],
@@ -356,34 +386,44 @@ export function CounterpartiesAdmin() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Counterparties</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {i18n.t("app:counterparties.counterparties")}
+          </h1>
           <p className="text-muted-foreground">
-            Manage the global catalog used by categories and obligations.
+            {i18n.t(
+              "app:counterparties.manage_the_global_catalog_used_by_categories_and_obligations",
+            )}
           </p>
         </div>
         <CounterpartyFormDialog />
       </div>
 
       <Input
-        aria-label="Search counterparties"
-        placeholder="Search by name, short name or website…"
+        aria-label={i18n.t("app:counterparties.search_counterparties")}
+        placeholder={i18n.t(
+          "app:counterparties.search_by_name_short_name_or_website",
+        )}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className="max-w-md"
       />
 
       {counterparties.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading counterparties…</p>
+        <p className="text-sm text-muted-foreground">
+          {i18n.t("app:counterparties.loading_counterparties")}
+        </p>
       ) : null}
       {counterparties.isError ? (
         <div className="flex items-center gap-3 text-sm text-destructive">
-          <span>Unable to load counterparties.</span>
+          <span>
+            {i18n.t("app:counterparties.unable_to_load_counterparties")}
+          </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => void counterparties.refetch()}
           >
-            Try again
+            {i18n.t("app:counterparties.try_again")}
           </Button>
         </div>
       ) : null}
@@ -392,8 +432,8 @@ export function CounterpartiesAdmin() {
       filtered.length === 0 ? (
         <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
           {query
-            ? "No counterparties match your search."
-            : "No counterparties yet."}
+            ? i18n.t("app:counterparties.no_counterparties_match_your_search")
+            : i18n.t("app:counterparties.no_counterparties_yet")}
         </p>
       ) : null}
 
@@ -428,7 +468,9 @@ export function CounterpartiesAdmin() {
                   <ExternalLink className="size-3 shrink-0" />
                 </a>
               ) : (
-                <p className="mt-1 text-sm text-muted-foreground">No website</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {i18n.t("app:counterparties.no_website")}
+                </p>
               )}
             </div>
             <div className="flex shrink-0 items-center">

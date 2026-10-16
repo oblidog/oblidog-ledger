@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { Check, Search, X } from "lucide-react"
 import { useEffect, useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { i18n } from "@/i18n"
 
 import { type CounterpartySummary, searchCounterparties } from "./api"
 import { CounterpartyLogo } from "./CounterpartyLogo"
@@ -17,6 +18,8 @@ export function CounterpartyPicker({
   disabled?: boolean
   onChange: (counterparty: CounterpartySummary | null) => Promise<void> | void
 }) {
+  useTranslation()
+
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [open, setOpen] = useState(false)
@@ -66,7 +69,7 @@ export function CounterpartyPicker({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label="Clear counterparty"
+            aria-label={i18n.t("app:counterparties.clear_counterparty")}
             disabled={disabled || saving}
             onClick={() => void choose(null)}
           >
@@ -80,9 +83,13 @@ export function CounterpartyPicker({
         <Input
           value={query}
           disabled={disabled || saving}
-          placeholder={value ? "Change counterparty…" : "Search counterparty…"}
+          placeholder={
+            value
+              ? i18n.t("app:counterparties.change_counterparty")
+              : i18n.t("app:counterparties.search_counterparty")
+          }
           className="pl-8"
-          aria-label="Search counterparty"
+          aria-label={i18n.t("app:counterparties.search_counterparty_4ff8a2")}
           onFocus={() => setOpen(true)}
           onChange={(event) => {
             setQuery(event.target.value)
@@ -95,15 +102,15 @@ export function CounterpartyPicker({
         <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
           {query.trim().length < 2 ? (
             <p className="px-3 py-2 text-xs text-muted-foreground">
-              Type at least 2 characters.
+              {i18n.t("app:counterparties.type_at_least_2_characters")}
             </p>
           ) : results.isLoading ? (
             <p className="px-3 py-2 text-xs text-muted-foreground">
-              Searching…
+              {i18n.t("app:counterparties.searching")}
             </p>
           ) : results.isError ? (
             <p className="px-3 py-2 text-xs text-destructive">
-              Unable to search counterparties.
+              {i18n.t("app:counterparties.unable_to_search_counterparties")}
             </p>
           ) : results.data?.items.length ? (
             results.data.items.map((counterparty) => (
@@ -129,7 +136,7 @@ export function CounterpartyPicker({
             ))
           ) : (
             <p className="px-3 py-2 text-xs text-muted-foreground">
-              No counterparties found.
+              {i18n.t("app:counterparties.no_counterparties_found")}
             </p>
           )}
         </div>

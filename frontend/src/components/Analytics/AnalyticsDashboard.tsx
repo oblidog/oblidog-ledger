@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, ArrowRight, BarChart3 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import {
   Bar,
   BarChart,
@@ -13,7 +14,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-
 import {
   AnalyticsService,
   CategoriesService,
@@ -43,19 +43,36 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { i18n } from "@/i18n"
+import { formatAmount as exactAmount, getLocale } from "@/i18n/format"
 
 type Period = { year: number; month: number }
 
 const paymentScheduleChartConfig = {
-  amount: { label: "Due", color: "var(--chart-1)" },
+  amount: {
+    get label() {
+      return i18n.t("app:analytics.due")
+    },
+    color: "var(--chart-1)",
+  },
 } satisfies ChartConfig
 
 const periodTotalsChartConfig = {
-  amount: { label: "Total", color: "var(--chart-1)" },
+  amount: {
+    get label() {
+      return i18n.t("app:analytics.total")
+    },
+    color: "var(--chart-1)",
+  },
 } satisfies ChartConfig
 
 const categoryHistoryChartConfig = {
-  amount: { label: "Amount", color: "var(--chart-3)" },
+  amount: {
+    get label() {
+      return i18n.t("app:analytics.amount")
+    },
+    color: "var(--chart-3)",
+  },
 } satisfies ChartConfig
 
 const categoryCostColors = [
@@ -81,22 +98,19 @@ function addMonths(period: Period, offset: number): Period {
 }
 
 function periodLabel(period: Period) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(getLocale(), {
     month: "short",
     year: "numeric",
   }).format(new Date(period.year, period.month - 1, 1))
 }
 
 function formatAmount(amount: string, currency: string | null) {
-  return `${Number(amount).toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}${currency ? ` ${currency}` : ""}`
+  return exactAmount(amount, currency)
 }
 
 function formatPercentage(value: string | null) {
   if (value === null) return "—"
-  return Number(value).toLocaleString("en-GB", {
+  return Number(value).toLocaleString(getLocale(), {
     maximumFractionDigits: 0,
   })
 }
@@ -106,16 +120,22 @@ function obligationsHref(ledgerId: string, period: Period) {
 }
 
 function QueryState({ message }: { message: string }) {
+  useTranslation()
+
   return (
     <Alert variant="destructive">
       <AlertCircle />
-      <AlertTitle>Analytics are unavailable</AlertTitle>
+      <AlertTitle>
+        {i18n.t("app:analytics.analytics_are_unavailable")}
+      </AlertTitle>
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )
 }
 
 export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
+  useTranslation()
+
   const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>()
   const selectablePeriods = useMemo(
@@ -213,15 +233,19 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
         <div>
           <div className="mb-2 flex items-center gap-2">
             <BarChart3 className="size-5 text-primary" />
-            <Badge variant="outline">Dashboard</Badge>
+            <Badge variant="outline">{i18n.t("app:analytics.dashboard")}</Badge>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {i18n.t("app:analytics.dashboard")}
+          </h1>
           <p className="mt-1 text-muted-foreground">
-            Review payment progress, the payment schedule, and period totals.
+            {i18n.t(
+              "app:analytics.review_payment_progress_the_payment_schedule_and_period_totals",
+            )}
           </p>
         </div>
         <div className="grid gap-1 text-sm font-medium">
-          Selected period
+          {i18n.t("app:analytics.selected_period")}
           <Select
             value={periodValue(selectedPeriod)}
             onValueChange={(value) => {
@@ -314,34 +338,45 @@ function PaymentProgressCard({
   ledgerId: string
   period: Period
 }) {
+  useTranslation()
+
   return (
     <Card className="gap-3 py-4">
       <CardHeader className="gap-1">
-        <CardTitle>Payment progress</CardTitle>
+        <CardTitle>{i18n.t("app:analytics.payment_progress")}</CardTitle>
         <CardDescription>{periodLabel(period)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : isError || !data ? (
-          <QueryState message="Payment progress could not be loaded." />
+          <QueryState
+            message={i18n.t(
+              "app:analytics.payment_progress_could_not_be_loaded",
+            )}
+          />
         ) : (
           <>
             {data.amount_summaries.length === 0 ? (
               <div className="space-y-1">
                 <p className="text-[28px] font-bold">—</p>
-                <p className="text-sm font-medium">No known payable amount</p>
+                <p className="text-sm font-medium">
+                  {i18n.t("app:analytics.no_known_payable_amount")}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {data.amount_summaries.map((summary) => {
                   const currencyLabel =
-                    summary.currency ?? "unspecified currency"
+                    summary.currency ??
+                    i18n.t("app:analytics.unspecified_currency")
                   const percentage = summary.paid_percentage
 
                   return (
                     <section
-                      aria-label={`Payment progress in ${currencyLabel}`}
+                      aria-label={i18n.t("app:analytics.payment_progress_in", {
+                        value1: currencyLabel,
+                      })}
                       className="space-y-2"
                       key={currencyLabel}
                     >
@@ -361,7 +396,9 @@ function PaymentProgressCard({
                         )}
                       </p>
                       <div
-                        aria-label={`Amount paid in ${currencyLabel}`}
+                        aria-label={i18n.t("app:analytics.amount_paid_in", {
+                          value1: currencyLabel,
+                        })}
                         aria-valuemax={100}
                         aria-valuemin={0}
                         aria-valuenow={
@@ -383,23 +420,21 @@ function PaymentProgressCard({
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              {data.paid_obligation_count} of {data.total_obligation_count}{" "}
-              obligations paid
+              {i18n.t("app:messages.paid_progress", {
+                paid: data.paid_obligation_count,
+                total: data.total_obligation_count,
+              })}
             </p>
             {!data.is_complete && (
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                {data.unknown_amount_count}{" "}
-                {data.unknown_amount_count === 1
-                  ? "obligation has"
-                  : "obligations have"}{" "}
-                an unknown amount and{" "}
-                {data.unknown_amount_count === 1 ? "is" : "are"} excluded from
-                amount totals
+                {i18n.t("app:messages.unknown_payable", {
+                  count: data.unknown_amount_count,
+                })}
               </p>
             )}
             <Button className="mt-2 px-0" variant="link" size="sm" asChild>
               <a href={obligationsHref(ledgerId, period)}>
-                View obligations
+                {i18n.t("app:analytics.view_obligations")}
                 <ArrowRight />
               </a>
             </Button>
@@ -421,6 +456,8 @@ function CashflowOverviewCards({
   isError: boolean
   isLoading: boolean
 }) {
+  useTranslation()
+
   if (isLoading) {
     return Array.from({ length: 3 }, (_, index) => (
       <Card className="gap-3 py-4" key={index}>
@@ -438,7 +475,11 @@ function CashflowOverviewCards({
     return (
       <Card className="gap-3 py-4 sm:col-span-2 xl:col-span-3">
         <CardContent className="pt-6">
-          <QueryState message="Payment schedule could not be loaded." />
+          <QueryState
+            message={i18n.t(
+              "app:analytics.payment_schedule_could_not_be_loaded",
+            )}
+          />
         </CardContent>
       </Card>
     )
@@ -452,16 +493,16 @@ function CashflowOverviewCards({
   return (
     <>
       <CashflowMetricCard
-        label="Remaining to pay"
+        label={i18n.t("app:analytics.remaining_to_pay")}
         values={data.currency_summaries.map((summary) => ({
           amount: summary.total_known_amount,
           currency: summary.currency,
         }))}
         emptyLabel="0"
-        emptyDescription="No known unpaid amounts"
+        emptyDescription={i18n.t("app:analytics.no_known_unpaid_amounts")}
       />
       <CashflowMetricCard
-        label="Overdue"
+        label={i18n.t("app:analytics.overdue")}
         values={data.currency_summaries
           .filter((summary) => Number(summary.overdue_known_amount) > 0)
           .map((summary) => ({
@@ -469,7 +510,7 @@ function CashflowOverviewCards({
             currency: summary.currency,
           }))}
         emptyLabel="0"
-        emptyDescription="No overdue obligations"
+        emptyDescription={i18n.t("app:analytics.no_overdue_obligations")}
         tone={
           data.currency_summaries.some(
             (summary) => Number(summary.overdue_known_amount) > 0,
@@ -480,7 +521,9 @@ function CashflowOverviewCards({
       />
       <Card className="gap-3 py-4">
         <CardHeader className="gap-1">
-          <CardDescription>Next payment due</CardDescription>
+          <CardDescription>
+            {i18n.t("app:analytics.next_payment_due")}
+          </CardDescription>
           <CardTitle className="text-[28px] font-bold">
             {nextDueDate ? formatDueDate(nextDueDate) : "0"}
           </CardTitle>
@@ -488,8 +531,8 @@ function CashflowOverviewCards({
         <CardContent>
           <p className="text-sm text-muted-foreground">
             {nextDueDate
-              ? "Earliest upcoming unpaid obligation."
-              : "No scheduled payment"}
+              ? i18n.t("app:analytics.earliest_upcoming_unpaid_obligation")
+              : i18n.t("app:analytics.no_scheduled_payment")}
           </p>
         </CardContent>
       </Card>
@@ -510,6 +553,8 @@ function CashflowMetricCard({
   emptyDescription?: string
   tone?: "destructive"
 }) {
+  useTranslation()
+
   return (
     <Card className="gap-3 py-4">
       <CardHeader className="gap-1">
@@ -529,7 +574,7 @@ function CashflowMetricCard({
       <CardContent>
         {values.length > 0 ? (
           <p className="text-sm text-muted-foreground">
-            {values.length} currenc{values.length === 1 ? "y" : "ies"}
+            {i18n.t("app:messages.currencies", { count: values.length })}
           </p>
         ) : emptyDescription ? (
           <p className="text-sm text-muted-foreground">{emptyDescription}</p>
@@ -554,24 +599,29 @@ function CashflowChart({
   ledgerId: string
   period: Period
 }) {
+  useTranslation()
+
   return (
     <Card className="min-w-0 overflow-hidden gap-4 py-5">
       <CardHeader>
-        <CardTitle>Payment schedule</CardTitle>
+        <CardTitle>{i18n.t("app:analytics.payment_schedule")}</CardTitle>
         <CardDescription>
-          Unpaid amounts grouped by due date in {periodLabel(period)}. Each
-          currency is shown separately.
+          {i18n.t("app:analytics.unpaid_amounts_grouped_by_due_date_in")}{" "}
+          {periodLabel(period)}
+          {i18n.t("app:analytics.each_currency_is_shown_separately")}
         </CardDescription>
       </CardHeader>
       <CardContent className="min-w-0 space-y-4">
         {isLoading ? (
           <Skeleton className="h-72 w-full" />
         ) : isError || !data ? (
-          <QueryState message="Cashflow could not be loaded." />
+          <QueryState
+            message={i18n.t("app:analytics.cashflow_could_not_be_loaded")}
+          />
         ) : data.currency_summaries.length === 0 ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              No unpaid known amounts.
+              {i18n.t("app:analytics.no_unpaid_known_amounts")}
             </p>
             <ScheduleCompletenessStatus data={data} />
           </div>
@@ -594,7 +644,7 @@ function CashflowChart({
             </div>
             <Button className="px-0" variant="link" size="sm" asChild>
               <a href={obligationsHref(ledgerId, period)}>
-                Review unpaid obligations
+                {i18n.t("app:analytics.review_unpaid_obligations")}
                 <ArrowRight />
               </a>
             </Button>
@@ -610,6 +660,8 @@ function ScheduleCompletenessStatus({
 }: {
   data: Awaited<ReturnType<typeof AnalyticsService.readRemainingPeriodCashflow>>
 }) {
+  useTranslation()
+
   if (data.is_complete) return null
 
   return (
@@ -619,8 +671,9 @@ function ScheduleCompletenessStatus({
           variant="outline"
           className="border-amber-500 text-amber-700 dark:text-amber-300"
         >
-          {data.unknown_amount_count} amount
-          {data.unknown_amount_count === 1 ? "" : "s"} unknown
+          {i18n.t("app:messages.unknown_amounts", {
+            count: data.unknown_amount_count,
+          })}
         </Badge>
       )}
       {data.without_due_date_count > 0 && (
@@ -628,8 +681,9 @@ function ScheduleCompletenessStatus({
           variant="outline"
           className="border-amber-500 text-amber-700 dark:text-amber-300"
         >
-          {data.without_due_date_count} obligation
-          {data.without_due_date_count === 1 ? "" : "s"} without a due date
+          {i18n.t("app:messages.without_due_date", {
+            count: data.without_due_date_count,
+          })}
         </Badge>
       )}
     </div>
@@ -643,6 +697,8 @@ function CashflowCurrencyChart({
     ReturnType<typeof AnalyticsService.readRemainingPeriodCashflow>
   >["currency_summaries"][number]
 }) {
+  useTranslation()
+
   const currency = summary.currency
   const chartData = summary.daily.map((point) => ({
     amount: Number(point.amount),
@@ -655,26 +711,34 @@ function CashflowCurrencyChart({
   return (
     <section className="min-w-0">
       <div className="mb-4 flex items-baseline justify-between gap-3">
-        <h3 className="font-semibold">{summary.currency ?? "No currency"}</h3>
+        <h3 className="font-semibold">
+          {summary.currency ?? i18n.t("app:analytics.no_currency")}
+        </h3>
         <strong>
           {formatAmount(summary.total_known_amount, summary.currency)}
         </strong>
       </div>
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div>
-          <p className="text-muted-foreground">Scheduled</p>
+          <p className="text-muted-foreground">
+            {i18n.t("app:analytics.scheduled")}
+          </p>
           <p className="font-medium">
             {formatAmount(summary.scheduled_known_amount, summary.currency)}
           </p>
         </div>
         <div>
-          <p className="text-muted-foreground">Unscheduled</p>
+          <p className="text-muted-foreground">
+            {i18n.t("app:analytics.unscheduled")}
+          </p>
           <p className="font-medium">
             {formatAmount(summary.unscheduled_known_amount, summary.currency)}
           </p>
         </div>
         <div>
-          <p className="text-muted-foreground">Overdue</p>
+          <p className="text-muted-foreground">
+            {i18n.t("app:analytics.overdue")}
+          </p>
           <p className="font-medium">
             <span
               className={
@@ -690,11 +754,13 @@ function CashflowCurrencyChart({
       </div>
       {summary.daily.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
-          No scheduled payments in this period.
+          {i18n.t("app:analytics.no_scheduled_payments_in_this_period")}
         </p>
       ) : (
         <ChartContainer
-          aria-label={`Scheduled payments for ${currency ?? "no currency"}`}
+          aria-label={i18n.t("app:analytics.scheduled_payments_for", {
+            value1: currency ?? i18n.t("app:analytics.no_currency_ed3595"),
+          })}
           className="mt-4 h-64 w-full"
           config={paymentScheduleChartConfig}
           data-testid="payment-schedule-chart"
@@ -719,7 +785,7 @@ function CashflowCurrencyChart({
                 angle: -90,
                 fill: "var(--muted-foreground)",
                 position: "insideLeft",
-                value: "Amount",
+                value: i18n.t("app:analytics.amount"),
               }}
               tickFormatter={formatCompactNumber}
               tickLine={false}
@@ -731,7 +797,9 @@ function CashflowCurrencyChart({
                 <ChartTooltipContent
                   formatter={(value) => (
                     <div className="flex min-w-32 flex-1 items-center justify-between gap-4">
-                      <span className="text-muted-foreground">Due</span>
+                      <span className="text-muted-foreground">
+                        {i18n.t("app:analytics.due")}
+                      </span>
                       <span className="font-mono font-medium tabular-nums">
                         {formatAmount(String(value), currency)}
                       </span>
@@ -745,7 +813,7 @@ function CashflowCurrencyChart({
                         {cumulative !== undefined && (
                           <span className="font-normal text-muted-foreground">
                             {formatAmount(String(cumulative), currency)}{" "}
-                            cumulative
+                            {i18n.t("app:analytics.cumulative")}
                           </span>
                         )}
                       </div>
@@ -772,14 +840,16 @@ function CashflowCurrencyChart({
         </ChartContainer>
       )}
       <p className="mt-2 text-xs text-muted-foreground">
-        Tap, hover, or focus a bar for exact and cumulative amounts.
+        {i18n.t(
+          "app:analytics.tap_hover_or_focus_a_bar_for_exact_and_cumulative_amounts",
+        )}
       </p>
     </section>
   )
 }
 
 function formatDueDate(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(getLocale(), {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -787,14 +857,14 @@ function formatDueDate(value: string) {
 }
 
 function formatShortDueDate(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(getLocale(), {
     day: "numeric",
     month: "short",
   }).format(new Date(`${value}T00:00:00`))
 }
 
 function formatCompactNumber(amount: number) {
-  return amount.toLocaleString("en-GB", {
+  return amount.toLocaleString(getLocale(), {
     maximumFractionDigits: 1,
     notation: "compact",
   })
@@ -859,7 +929,7 @@ function buildCategoryCostSummaries(
                   .slice(5)
                   .reduce((sum, category) => sum + category.amount, 0),
                 key: "other",
-                name: "Other",
+                name: i18n.t("app:analytics.other"),
               },
             ]
           : categories
@@ -893,25 +963,32 @@ function CategoryCostDonutCard({
   isLoading: boolean
   period: Period
 }) {
+  useTranslation()
+
   const summaries = data ? buildCategoryCostSummaries(data) : []
 
   return (
     <Card className="min-w-0 gap-4 py-5">
       <CardHeader>
-        <CardTitle>Costs by category</CardTitle>
+        <CardTitle>{i18n.t("app:analytics.costs_by_category")}</CardTitle>
         <CardDescription>
-          Known obligation amounts in {periodLabel(period)}. Canceled
-          obligations are excluded and currencies are shown separately.
+          {i18n.t("app:analytics.known_obligation_amounts_in")}{" "}
+          {periodLabel(period)}
+          {i18n.t(
+            "app:analytics.canceled_obligations_are_excluded_and_currencies_are_shown_separately",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="min-w-0 overflow-hidden">
         {isLoading ? (
           <Skeleton className="h-72 w-full" />
         ) : isError || !data ? (
-          <QueryState message="Category costs could not be loaded." />
+          <QueryState
+            message={i18n.t("app:analytics.category_costs_could_not_be_loaded")}
+          />
         ) : summaries.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No obligations in this period.
+            {i18n.t("app:analytics.no_obligations_in_this_period")}
           </p>
         ) : (
           <div className="grid min-w-0 gap-8 xl:grid-cols-2">
@@ -925,21 +1002,32 @@ function CategoryCostDonutCard({
 
               return (
                 <section
-                  aria-label={`Category costs in ${summary.currency ?? "no currency"}`}
+                  aria-label={i18n.t("app:analytics.category_costs_in", {
+                    value1:
+                      summary.currency ??
+                      i18n.t("app:analytics.no_currency_ed3595"),
+                  })}
                   className="min-w-0"
                   key={summary.currency ?? "none"}
                 >
                   <h3 className="mb-3 font-semibold">
-                    {summary.currency ?? "No currency"}
+                    {summary.currency ?? i18n.t("app:analytics.no_currency")}
                   </h3>
                   {summary.slices.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No known positive amounts.
+                      {i18n.t("app:analytics.no_known_positive_amounts")}
                     </p>
                   ) : (
                     <div className="grid min-w-0 items-center gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,1fr)]">
                       <ChartContainer
-                        aria-label={`Cost distribution for ${summary.currency ?? "no currency"}`}
+                        aria-label={i18n.t(
+                          "app:analytics.cost_distribution_for",
+                          {
+                            value1:
+                              summary.currency ??
+                              i18n.t("app:analytics.no_currency_ed3595"),
+                          },
+                        )}
                         className="mx-auto h-60 w-full max-w-72"
                         config={chartConfig}
                         data-testid="category-cost-donut"
@@ -1006,7 +1094,8 @@ function CategoryCostDonutCard({
                                       x={viewBox.cx}
                                       y={(viewBox.cy ?? 0) + 20}
                                     >
-                                      {summary.currency ?? "No currency"}
+                                      {summary.currency ??
+                                        i18n.t("app:analytics.no_currency")}
                                     </tspan>
                                   </text>
                                 )
@@ -1043,8 +1132,9 @@ function CategoryCostDonutCard({
                       className="mt-4 border-amber-500 text-amber-700 dark:text-amber-300"
                       variant="outline"
                     >
-                      {summary.unknownAmountCount} amount
-                      {summary.unknownAmountCount === 1 ? "" : "s"} unknown
+                      {i18n.t("app:messages.unknown_amounts", {
+                        count: summary.unknownAmountCount,
+                      })}
                     </Badge>
                   )}
                 </section>
@@ -1080,6 +1170,8 @@ function CategoryHistoryCard({
   selectedCategoryId: string | undefined
   setSelectedCategoryId: (categoryId: string) => void
 }) {
+  useTranslation()
+
   const knownPoints =
     data?.points.filter((point) => point.state === "known") ?? []
   const currency = knownPoints[0]?.currency ?? null
@@ -1110,9 +1202,13 @@ function CategoryHistoryCard({
     <Card>
       <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <CardTitle>Category amount history</CardTitle>
+          <CardTitle>
+            {i18n.t("app:analytics.category_amount_history")}
+          </CardTitle>
           <CardDescription>
-            Last six periods. Missing and unknown amounts remain explicit.
+            {i18n.t(
+              "app:analytics.last_six_periods_missing_and_unknown_amounts_remain_explicit",
+            )}
           </CardDescription>
         </div>
         {categoriesLoading ? (
@@ -1123,8 +1219,13 @@ function CategoryHistoryCard({
             value={selectedCategoryId}
             onValueChange={setSelectedCategoryId}
           >
-            <SelectTrigger aria-label="Select category" className="w-56">
-              <SelectValue placeholder="Select category" />
+            <SelectTrigger
+              aria-label={i18n.t("app:analytics.select_category")}
+              className="w-56"
+            >
+              <SelectValue
+                placeholder={i18n.t("app:analytics.select_category")}
+              />
             </SelectTrigger>
             <SelectContent>
               {categories.data.map((category) => (
@@ -1140,17 +1241,25 @@ function CategoryHistoryCard({
         {categoriesLoading || (selectedCategoryId && isLoading) ? (
           <Skeleton className="h-56 w-full" />
         ) : categoriesError || !categories ? (
-          <QueryState message="Categories could not be loaded." />
+          <QueryState
+            message={i18n.t("app:analytics.categories_could_not_be_loaded")}
+          />
         ) : categories.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Create a category to view its amount history.
+            {i18n.t(
+              "app:analytics.create_a_category_to_view_its_amount_history",
+            )}
           </p>
         ) : isError || !data ? (
-          <QueryState message="Category history could not be loaded." />
+          <QueryState
+            message={i18n.t(
+              "app:analytics.category_history_could_not_be_loaded",
+            )}
+          />
         ) : (
           <>
             <ChartContainer
-              aria-label="Category amount history"
+              aria-label={i18n.t("app:analytics.category_amount_history")}
               className="h-64 w-full"
               config={categoryHistoryChartConfig}
               data-testid="category-history-chart"
@@ -1175,7 +1284,7 @@ function CategoryHistoryCard({
                     angle: -90,
                     fill: "var(--muted-foreground)",
                     position: "insideLeft",
-                    value: "Amount",
+                    value: i18n.t("app:analytics.amount"),
                   }}
                   tickFormatter={formatCompactNumber}
                   tickLine={false}
@@ -1187,9 +1296,9 @@ function CategoryHistoryCard({
                     <ChartTooltipContent
                       formatter={(_value, _name, item) =>
                         item.payload.state === "unknown"
-                          ? "Amount unknown"
+                          ? i18n.t("app:analytics.amount_unknown")
                           : item.payload.state === "missing"
-                            ? "No obligation"
+                            ? i18n.t("app:analytics.no_obligation")
                             : formatAmount(
                                 String(item.payload.amount),
                                 currency,
@@ -1218,8 +1327,12 @@ function CategoryHistoryCard({
               </BarChart>
             </ChartContainer>
             <p className="mt-2 text-xs text-muted-foreground">
-              {currency ? `Amounts shown in ${currency}. ` : ""}
-              Tap, hover, or focus a bar for the exact value.
+              {currency
+                ? i18n.t("app:analytics.amounts_shown_in", { value1: currency })
+                : ""}
+              {i18n.t(
+                "app:analytics.tap_hover_or_focus_a_bar_for_the_exact_value",
+              )}
             </p>
           </>
         )}
@@ -1245,29 +1358,36 @@ function PeriodTotalsCard({
   isLoading: boolean
   ledgerId: string
 }) {
+  useTranslation()
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Obligation totals by period</CardTitle>
+        <CardTitle>
+          {i18n.t("app:analytics.obligation_totals_by_period")}
+        </CardTitle>
         <CardDescription>
-          Last six periods. Each currency is shown separately and is never
-          combined.
+          {i18n.t(
+            "app:analytics.last_six_periods_each_currency_is_shown_separately_and_is_never_combined",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <Skeleton className="h-56 w-full" />
         ) : isError || !data ? (
-          <QueryState message="Period totals could not be loaded." />
+          <QueryState
+            message={i18n.t("app:analytics.period_totals_could_not_be_loaded")}
+          />
         ) : data.points.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No periods to display.
+            {i18n.t("app:analytics.no_periods_to_display")}
           </p>
         ) : !data.points.some(
             (point) => point.currency_summaries.length > 0,
           ) ? (
           <p className="text-sm text-muted-foreground">
-            No known obligation amounts in this range.
+            {i18n.t("app:analytics.no_known_obligation_amounts_in_this_range")}
           </p>
         ) : (
           <div className="space-y-8">
@@ -1275,14 +1395,17 @@ function PeriodTotalsCard({
               new Set(
                 data.points.flatMap((point) =>
                   point.currency_summaries.map(
-                    (summary) => summary.currency ?? "No currency",
+                    (summary) =>
+                      summary.currency ?? i18n.t("app:analytics.no_currency"),
                   ),
                 ),
               ),
             ).map((currency) => {
               const amounts = data.points.map((point) => {
                 const summary = point.currency_summaries.find(
-                  (item) => (item.currency ?? "No currency") === currency,
+                  (item) =>
+                    (item.currency ?? i18n.t("app:analytics.no_currency")) ===
+                    currency,
                 )
                 return Number(summary?.total_known_amount ?? 0)
               })
@@ -1297,7 +1420,9 @@ function PeriodTotalsCard({
                 <section key={currency}>
                   <h3 className="mb-3 text-sm font-medium">{currency}</h3>
                   <ChartContainer
-                    aria-label={`Obligation totals in ${currency}`}
+                    aria-label={i18n.t("app:analytics.obligation_totals_in", {
+                      value1: currency,
+                    })}
                     className="h-64 w-full"
                     config={periodTotalsChartConfig}
                     data-testid="period-totals-chart"
@@ -1322,7 +1447,7 @@ function PeriodTotalsCard({
                           angle: -90,
                           fill: "var(--muted-foreground)",
                           position: "insideLeft",
-                          value: "Total",
+                          value: i18n.t("app:analytics.total"),
                         }}
                         tickFormatter={formatCompactNumber}
                         tickLine={false}
@@ -1337,14 +1462,15 @@ function PeriodTotalsCard({
                                 <span>
                                   {formatAmount(
                                     String(value),
-                                    currency === "No currency"
+                                    currency ===
+                                      i18n.t("app:analytics.no_currency")
                                       ? null
                                       : currency,
                                   )}
                                 </span>
                                 {item.payload.incomplete && (
                                   <span className="text-amber-700 dark:text-amber-300">
-                                    Incomplete period
+                                    {i18n.t("app:analytics.incomplete_period")}
                                   </span>
                                 )}
                               </div>
@@ -1378,18 +1504,24 @@ function PeriodTotalsCard({
                   <div className="sr-only">
                     {chartData.map((point) => (
                       <a href={point.href} key={point.period}>
-                        View obligations for {point.periodLabel}:{" "}
+                        {i18n.t("app:analytics.view_obligations_for")}{" "}
+                        {point.periodLabel}:{" "}
                         {formatAmount(
                           String(point.amount),
-                          currency === "No currency" ? null : currency,
+                          currency === i18n.t("app:analytics.no_currency")
+                            ? null
+                            : currency,
                         )}
-                        {point.incomplete ? " (incomplete)" : ""}
+                        {point.incomplete
+                          ? i18n.t("app:analytics.incomplete")
+                          : ""}
                       </a>
                     ))}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Tap a bar to view the period. Hover or focus for the exact
-                    total.
+                    {i18n.t(
+                      "app:analytics.tap_a_bar_to_view_the_period_hover_or_focus_for_the_exact_total",
+                    )}
                   </p>
                 </section>
               )

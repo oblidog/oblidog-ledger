@@ -1,11 +1,14 @@
 import { afterEach, beforeAll, expect, spyOn, test } from "bun:test"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Window } from "happy-dom"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { useTranslation } from "react-i18next"
+import { z } from "zod"
 import type { UserPublic } from "@/client"
 import { i18n } from "./index"
+import { useLocalizedForm } from "./useLocalizedForm"
 
 const browser = new Window({ url: "http://localhost" })
 Object.defineProperty(globalThis, "window", {
@@ -24,7 +27,16 @@ Object.defineProperty(globalThis, "localStorage", {
   value: browser.localStorage,
   configurable: true,
 })
-Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
+Object.assign(globalThis, {
+  IS_REACT_ACT_ENVIRONMENT: true,
+  getComputedStyle: browser.getComputedStyle.bind(browser),
+  MutationObserver: browser.MutationObserver,
+  HTMLElement: browser.HTMLElement,
+  HTMLInputElement: browser.HTMLInputElement,
+  Node: browser.Node,
+  NodeFilter: browser.NodeFilter,
+  CustomEvent: browser.CustomEvent,
+})
 Object.assign(browser, {
   __OBLIDOG_CONFIG__: { VITE_API_URL: "http://localhost:8000" },
 })
@@ -67,7 +79,11 @@ function NavigationLabel() {
   return <p data-testid="label">{t("navigation.obligations")}</p>
 }
 
-async function mount(account: UserPublic | null, demo = false) {
+async function mount(
+  account: UserPublic | null,
+  demo = false,
+  extra?: React.ReactNode,
+) {
   client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -82,6 +98,7 @@ async function mount(account: UserPublic | null, demo = false) {
         <Provider>
           <Selector />
           <NavigationLabel />
+          {extra}
         </Provider>
       </QueryClientProvider>,
     ),
@@ -158,4 +175,134 @@ test("failed save leaves account preference, rendered language and local storage
   expect(browser.document.documentElement.lang).toBe("en")
   expect(client.getQueryData<UserPublic>(["currentUser"])?.language).toBe("en")
   expect(browser.localStorage.getItem("oblidog-language")).toBeNull()
+})
+
+const validationSchema = z.object({
+  name: z.string().min(8, {
+    error: () => i18n.t("app:auth.password_must_be_at_least_8_characters"),
+  }),
+})
+function ValidationFixture() {
+  const form = useLocalizedForm({
+    resolver: zodResolver(validationSchema),
+    defaultValues: { name: "short" },
+  })
+  const field = form.register("name")
+  return (
+    <form onSubmit={form.handleSubmit(() => {})}>
+      <input {...field} aria-label="fixture" />
+      <button type="submit">Validate</button>
+      <p data-testid="validation">{form.formState.errors.name?.message}</p>
+      <span data-testid="value">{form.watch("name")}</span>
+    </form>
+  )
+}
+test("existing errors revalidate on language changes without resetting the form", async () => {
+  await mount(null, false, <ValidationFixture />)
+  await act(async () => {
+    browser.document
+      .querySelector("form")!
+      .dispatchEvent(
+        new browser.Event("submit", { bubbles: true, cancelable: true }),
+      )
+    await new Promise((resolve) => setTimeout(resolve, 20))
+  })
+  expect(
+    browser.document.querySelector('[data-testid="validation"]')!.textContent,
+  ).toBe("Password must be at least 8 characters")
+  await select("pl")
+  expect(
+    browser.document.querySelector('[data-testid="validation"]')!.textContent,
+  ).toBe("Hasło musi mieć co najmniej 8 znaków")
+  expect(
+    browser.document.querySelector('[data-testid="value"]')!.textContent,
+  ).toBe("short")
+})
+
+test("history translates known states but preserves user notes and names", async () => {
+  const { ObligationActionHistory } = await import(
+    "@/components/Obligations/ObligationActionHistory"
+  )
+  const historySpy = spyOn(
+    api.ObligationsService,
+    "readObligationActions",
+  ).mockResolvedValue({
+    data: [
+      {
+        id: "action",
+        obligation_id: "obligation",
+        action: "values_updated",
+        actor_type: "user",
+        actor_id: "user",
+        actor_display_name: "Custom_User",
+        integration_id: null,
+        run_id: null,
+        metadata: {},
+        created_at: "2026-01-01T12:00:00Z",
+        changes: {
+          notes: { from: "keep_old_notes", to: "keep_manual_notes" },
+          lifecycle: { from: "draft", to: "ready" },
+        },
+      },
+    ],
+    count: 1,
+  })
+  try {
+    await mount(
+      null,
+      false,
+      <ObligationActionHistory ledgerId="ledger" obligationKey="key" />,
+    )
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 40))
+    })
+    await select("pl")
+    const content = browser.document.body.textContent
+    expect(content).toContain("Gotowe do opłacenia")
+    expect(content).toContain("keep_manual_notes")
+    expect(content).toContain("Custom_User")
+    expect(content).not.toContain("keep manual notes")
+  } finally {
+    historySpy.mockRestore()
+  }
+})
+
+test("integration form errors translate on language changes", async () => {
+  const { IntegrationForm } = await import(
+    "@/components/Integrations/IntegrationForm"
+  )
+  const categoriesSpy = spyOn(
+    api.CategoriesService,
+    "readCategories",
+  ).mockResolvedValue({ data: [], count: 0 })
+  try {
+    await mount(
+      null,
+      false,
+      <IntegrationForm
+        ledgerId="ledger"
+        onClose={() => {}}
+        onSaved={() => {}}
+      />,
+    )
+    await act(async () => {
+      browser.document
+        .querySelector("form")!
+        .dispatchEvent(
+          new browser.Event("submit", { bubbles: true, cancelable: true }),
+        )
+    })
+    expect(browser.document.body.textContent).toContain(
+      "Enter a name and select a category.",
+    )
+    await select("pl")
+    expect(browser.document.body.textContent).toContain(
+      "Podaj nazwę i wybierz kategorię.",
+    )
+    expect(browser.document.body.textContent).not.toContain(
+      "Enter a name and select a category.",
+    )
+  } finally {
+    categoriesSpy.mockRestore()
+  }
 })

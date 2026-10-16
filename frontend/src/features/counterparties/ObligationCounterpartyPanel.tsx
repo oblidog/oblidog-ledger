@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Building2 } from "lucide-react"
-
+import { useTranslation } from "react-i18next"
 import { ObligationsService } from "@/client"
 import {
   Card,
@@ -10,6 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
 import { handleError } from "@/utils"
 
 import {
@@ -32,6 +34,8 @@ export function ObligationCounterpartyPanel({
   ledgerId: string
   canEdit: boolean
 }) {
+  useTranslation()
+
   const period = currentPeriod()
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
@@ -66,7 +70,9 @@ export function ObligationCounterpartyPanel({
       ),
     onError: handleError.bind(showErrorToast),
     onSuccess: (_, variables) => {
-      showSuccessToast("Obligation counterparty updated")
+      showSuccessToast(
+        i18n.t("app:counterparties.obligation_counterparty_updated"),
+      )
       void queryClient.invalidateQueries({
         queryKey: ["obligations", ledgerId],
       })
@@ -86,21 +92,26 @@ export function ObligationCounterpartyPanel({
       <CardHeader>
         <div className="flex items-center gap-2">
           <Building2 className="size-5 text-primary" />
-          <CardTitle>Counterparties this month</CardTitle>
+          <CardTitle>
+            {i18n.t("app:counterparties.counterparties_this_month")}
+          </CardTitle>
         </div>
         <CardDescription>
-          Counterparties are stored on each obligation. You can override the
-          category default without changing other periods.
+          {i18n.t(
+            "app:counterparties.counterparties_are_stored_on_each_obligation_you_can_override_the_category_default_wi",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {obligations.isLoading ? (
           <p className="text-sm text-muted-foreground">
-            Loading counterparties…
+            {i18n.t("app:counterparties.loading_counterparties")}
           </p>
         ) : obligations.isError ? (
           <p className="text-sm text-destructive">
-            Unable to load obligation counterparties.
+            {i18n.t(
+              "app:counterparties.unable_to_load_obligation_counterparties",
+            )}
           </p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -116,12 +127,13 @@ export function ObligationCounterpartyPanel({
                   />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs text-muted-foreground">
-                      {obligation.key} · {obligation.lifecycle}
+                      {obligation.key} ·{" "}
+                      {domainLabel("lifecycle", obligation.lifecycle)}
                     </p>
                     <p className="mt-1 truncate text-xs">
                       {obligation.counterparty?.short_name ||
                         obligation.counterparty?.name ||
-                        "No counterparty assigned"}
+                        i18n.t("app:counterparties.no_counterparty_assigned")}
                     </p>
                   </div>
                 </div>

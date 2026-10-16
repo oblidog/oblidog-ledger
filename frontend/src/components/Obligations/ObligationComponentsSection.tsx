@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, Pencil, Plus, Trash2, Wrench } from "lucide-react"
 import { useEffect, useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   type ObligationComponentCreate,
   type ObligationComponentPublic,
@@ -20,14 +20,41 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { i18n } from "@/i18n"
+import { formatAmount } from "@/i18n/format"
 import { handleError } from "@/utils"
 
 const componentTypes = [
-  { value: "invoice", label: "Invoice" },
-  { value: "invoice_item", label: "Invoice item" },
-  { value: "adjustment", label: "Adjustment" },
-  { value: "consumption", label: "Consumption" },
-  { value: "other", label: "Other" },
+  {
+    value: "invoice",
+    get label() {
+      return i18n.t("app:obligations.invoice")
+    },
+  },
+  {
+    value: "invoice_item",
+    get label() {
+      return i18n.t("app:obligations.invoice_item")
+    },
+  },
+  {
+    value: "adjustment",
+    get label() {
+      return i18n.t("app:obligations.adjustment")
+    },
+  },
+  {
+    value: "consumption",
+    get label() {
+      return i18n.t("app:obligations.consumption")
+    },
+  },
+  {
+    value: "other",
+    get label() {
+      return i18n.t("app:obligations.other")
+    },
+  },
 ]
 
 type ComponentFormValues = {
@@ -56,7 +83,7 @@ function componentTypeLabel(type: string) {
 
 function amountLabel(amount: string | null, currency: string | null) {
   if (amount === null) return "—"
-  return `${amount}${currency ? ` ${currency}` : ""}`
+  return formatAmount(amount, currency)
 }
 
 function FormFields({
@@ -68,10 +95,12 @@ function FormFields({
   onChange: (next: ComponentFormValues) => void
   currency: string | null
 }) {
+  useTranslation()
+
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <div className="space-y-2">
-        <Label htmlFor="component-type">Type</Label>
+        <Label htmlFor="component-type">{i18n.t("app:obligations.type")}</Label>
         <select
           id="component-type"
           className="border-input bg-background text-foreground h-9 w-full rounded-md border px-3 text-sm"
@@ -89,12 +118,14 @@ function FormFields({
       </div>
       {values.type === "other" ? (
         <div className="space-y-2">
-          <Label htmlFor="component-custom-type">Custom type</Label>
+          <Label htmlFor="component-custom-type">
+            {i18n.t("app:obligations.custom_type")}
+          </Label>
           <Input
             id="component-custom-type"
             value={values.customType}
             maxLength={64}
-            placeholder="e.g. meter reading"
+            placeholder={i18n.t("app:obligations.e_g_meter_reading")}
             onChange={(event) =>
               onChange({ ...values, customType: event.target.value })
             }
@@ -102,7 +133,9 @@ function FormFields({
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label htmlFor="component-label">Label</Label>
+        <Label htmlFor="component-label">
+          {i18n.t("app:obligations.label")}
+        </Label>
         <Input
           id="component-label"
           value={values.label}
@@ -113,7 +146,9 @@ function FormFields({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="component-amount">Amount (optional)</Label>
+        <Label htmlFor="component-amount">
+          {i18n.t("app:obligations.amount_optional")}
+        </Label>
         <div className="relative">
           <Input
             id="component-amount"
@@ -150,6 +185,8 @@ function ComponentForm({
   onCancel: () => void
   onSubmit: (requestBody: ObligationComponentCreate) => void
 }) {
+  useTranslation()
+
   const [values, setValues] = useState<ComponentFormValues>(emptyForm)
 
   useEffect(() => {
@@ -185,12 +222,14 @@ function ComponentForm({
       }}
     >
       <p className="font-medium">
-        {component ? "Edit component" : "Add component"}
+        {component
+          ? i18n.t("app:obligations.edit_component")
+          : i18n.t("app:obligations.add_component")}
       </p>
       <FormFields values={values} onChange={setValues} currency={currency} />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          Cancel
+          {i18n.t("app:obligations.cancel")}
         </Button>
         <LoadingButton
           type="submit"
@@ -198,7 +237,9 @@ function ComponentForm({
           loading={submitting}
           disabled={!canSubmit}
         >
-          {component ? "Save component" : "Add component"}
+          {component
+            ? i18n.t("app:obligations.save_component")
+            : i18n.t("app:obligations.add_component")}
         </LoadingButton>
       </div>
     </form>
@@ -210,31 +251,42 @@ function ComponentSourceCell({
 }: {
   component: ObligationComponentPublic
 }) {
+  useTranslation()
+
   const managed = isIntegrationManaged(component)
 
   if (!managed) {
-    return <span className="text-muted-foreground">Manual</span>
+    return (
+      <span className="text-muted-foreground">
+        {i18n.t("app:obligations.manual")}
+      </span>
+    )
   }
 
   return (
     <div className="min-w-44 space-y-1.5">
       <Badge variant="outline" className="gap-1">
-        <Wrench className="size-3" /> Integration
+        <Wrench className="size-3" /> {i18n.t("app:obligations.integration")}
       </Badge>
       <dl className="space-y-0.5 text-xs">
         <div className="flex gap-1">
-          <dt className="text-muted-foreground">Source:</dt>
+          <dt className="text-muted-foreground">
+            {i18n.t("app:obligations.source")}
+          </dt>
           <dd className="break-all">{component.source ?? "—"}</dd>
         </div>
         <div className="flex gap-1">
-          <dt className="text-muted-foreground">Reference:</dt>
+          <dt className="text-muted-foreground">
+            {i18n.t("app:obligations.reference")}
+          </dt>
           <dd className="break-all">{component.external_id ?? "—"}</dd>
         </div>
       </dl>
       {component.metadata ? (
         <details className="text-xs">
           <summary className="text-muted-foreground flex cursor-pointer items-center gap-1">
-            <ChevronDown className="size-3" /> Metadata
+            <ChevronDown className="size-3" />{" "}
+            {i18n.t("app:obligations.metadata")}
           </summary>
           <pre className="mt-1 max-w-80 whitespace-pre-wrap break-all rounded bg-muted/50 p-2">
             {JSON.stringify(component.metadata, null, 2)}
@@ -260,6 +312,8 @@ export function ObligationComponentsSection({
   onError: (message: string) => void
   onSuccess: (message: string) => void
 }) {
+  useTranslation()
+
   const queryClient = useQueryClient()
   const [formMode, setFormMode] = useState<ComponentFormMode>(null)
   const [removing, setRemoving] = useState<ObligationComponentPublic | null>(
@@ -288,7 +342,7 @@ export function ObligationComponentsSection({
       }),
     onError: handleError.bind(onError),
     onSuccess: () => {
-      onSuccess("Component added")
+      onSuccess(i18n.t("app:obligations.component_added"))
       setFormMode(null)
       invalidate()
     },
@@ -309,7 +363,7 @@ export function ObligationComponentsSection({
       }),
     onError: handleError.bind(onError),
     onSuccess: () => {
-      onSuccess("Component updated")
+      onSuccess(i18n.t("app:obligations.component_updated"))
       setFormMode(null)
       invalidate()
     },
@@ -323,7 +377,7 @@ export function ObligationComponentsSection({
       }),
     onError: handleError.bind(onError),
     onSuccess: () => {
-      onSuccess("Component removed")
+      onSuccess(i18n.t("app:obligations.component_removed"))
       setRemoving(null)
       invalidate()
     },
@@ -334,16 +388,17 @@ export function ObligationComponentsSection({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 id="components-heading" className="font-semibold">
-            Components
+            {i18n.t("app:obligations.components")}
           </h3>
           <p className="text-muted-foreground text-xs">
-            Informational details only; they are not summed into the obligation
-            amount.
+            {i18n.t(
+              "app:obligations.informational_details_only_they_are_not_summed_into_the_obligation_amount",
+            )}
           </p>
         </div>
         {canManage && !adding && !editing ? (
           <Button size="sm" onClick={() => setFormMode("create")}>
-            <Plus /> Add component
+            <Plus /> {i18n.t("app:obligations.add_component")}
           </Button>
         ) : null}
       </div>
@@ -369,17 +424,19 @@ export function ObligationComponentsSection({
       ) : null}
 
       {components.isLoading ? (
-        <p className="text-muted-foreground text-sm">Loading components…</p>
+        <p className="text-muted-foreground text-sm">
+          {i18n.t("app:obligations.loading_components")}
+        </p>
       ) : null}
       {components.isError ? (
         <div className="flex items-center gap-3 text-sm text-destructive">
-          <span>Unable to load components.</span>
+          <span>{i18n.t("app:obligations.unable_to_load_components")}</span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => void components.refetch()}
           >
-            Try again
+            {i18n.t("app:obligations.try_again")}
           </Button>
         </div>
       ) : null}
@@ -388,7 +445,7 @@ export function ObligationComponentsSection({
       components.data?.data.length === 0 ? (
         <div className="rounded-lg border border-dashed p-6 text-center">
           <p className="text-muted-foreground text-sm">
-            No components for this obligation.
+            {i18n.t("app:obligations.no_components_for_this_obligation")}
           </p>
         </div>
       ) : null}
@@ -397,11 +454,19 @@ export function ObligationComponentsSection({
           <Table className="min-w-[720px] table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[38%]">Component</TableHead>
-                <TableHead className="w-[18%] text-right">Amount</TableHead>
-                <TableHead className="w-[32%]">Source / reference</TableHead>
+                <TableHead className="w-[38%]">
+                  {i18n.t("app:obligations.component")}
+                </TableHead>
+                <TableHead className="w-[18%] text-right">
+                  {i18n.t("app:obligations.amount")}
+                </TableHead>
+                <TableHead className="w-[32%]">
+                  {i18n.t("app:obligations.source_reference")}
+                </TableHead>
                 {canManage ? (
-                  <TableHead className="w-[12%] text-right">Actions</TableHead>
+                  <TableHead className="w-[12%] text-right">
+                    {i18n.t("app:obligations.actions")}
+                  </TableHead>
                 ) : null}
               </TableRow>
             </TableHeader>
@@ -433,7 +498,9 @@ export function ObligationComponentsSection({
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={`Edit ${component.label}`}
+                              aria-label={i18n.t("app:obligations.edit", {
+                                value1: component.label,
+                              })}
                               onClick={() => setFormMode(component)}
                             >
                               <Pencil />
@@ -441,7 +508,9 @@ export function ObligationComponentsSection({
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={`Remove ${component.label}`}
+                              aria-label={i18n.t("app:obligations.remove", {
+                                value1: component.label,
+                              })}
                               onClick={() => setRemoving(component)}
                             >
                               <Trash2 />
@@ -465,8 +534,7 @@ export function ObligationComponentsSection({
       {removing ? (
         <div className="border-destructive/40 bg-destructive/5 space-y-2 rounded-lg border p-3 text-sm">
           <p>
-            Remove component <strong>{removing.label}</strong>? This cannot be
-            undone.
+            {i18n.t("app:messages.delete_component", { name: removing.label })}
           </p>
           <div className="flex justify-end gap-2">
             <Button
@@ -474,7 +542,7 @@ export function ObligationComponentsSection({
               size="sm"
               onClick={() => setRemoving(null)}
             >
-              Cancel
+              {i18n.t("app:obligations.cancel")}
             </Button>
             <LoadingButton
               variant="destructive"
@@ -482,7 +550,7 @@ export function ObligationComponentsSection({
               loading={remove.isPending}
               onClick={() => remove.mutate(removing.id)}
             >
-              Remove component
+              {i18n.t("app:obligations.remove_component")}
             </LoadingButton>
           </div>
         </div>

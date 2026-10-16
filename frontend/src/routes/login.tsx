@@ -6,9 +6,8 @@ import {
 } from "@tanstack/react-router"
 import { Info } from "lucide-react"
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
 import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -25,13 +24,17 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 
 const formSchema = z.object({
   username: z.email(),
   password: z
     .string()
-    .min(1, { message: "Password is required" })
-    .min(8, { message: "Password must be at least 8 characters" }),
+    .min(1, { error: () => i18n.t("app:auth.password_is_required") })
+    .min(8, {
+      error: () => i18n.t("app:auth.password_must_be_at_least_8_characters"),
+    }),
 }) satisfies z.ZodType<AccessToken>
 
 type FormData = z.infer<typeof formSchema>
@@ -48,13 +51,15 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       {
-        title: "Log In - Oblidog",
+        title: i18n.t("app:auth.log_in_oblidog"),
       },
     ],
   }),
 })
 
 function Login() {
+  useTranslation()
+
   const { loginMutation } = useAuth()
   const { data: appConfig } = usePublicAppConfig()
   const demoCredentials = appConfig?.demo_credentials
@@ -92,20 +97,28 @@ function Login() {
           className="flex flex-col gap-6"
         >
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold">Login to your account</h1>
+            <h1 className="text-2xl font-bold">
+              {i18n.t("app:auth.login_to_your_account")}
+            </h1>
             <p className="text-sm text-muted-foreground">
               {appConfig?.is_demo
-                ? "Explore Oblidog using the shared public demo account."
-                : "Access is limited to users invited by an administrator."}
+                ? i18n.t(
+                    "app:auth.explore_oblidog_using_the_shared_public_demo_account",
+                  )
+                : i18n.t(
+                    "app:auth.access_is_limited_to_users_invited_by_an_administrator",
+                  )}
             </p>
           </div>
 
           {passwordChanged && (
             <Alert data-testid="password-changed-message">
               <Info />
-              <AlertTitle>Password updated</AlertTitle>
+              <AlertTitle>{i18n.t("app:auth.password_updated")}</AlertTitle>
               <AlertDescription>
-                Your sessions were signed out. Log in with your new password.
+                {i18n.t(
+                  "app:auth.your_sessions_were_signed_out_log_in_with_your_new_password",
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -113,17 +126,22 @@ function Login() {
           {appConfig?.is_demo && demoCredentials && (
             <Alert data-testid="demo-credentials">
               <Info />
-              <AlertTitle>Public demo credentials</AlertTitle>
+              <AlertTitle>
+                {i18n.t("app:auth.public_demo_credentials")}
+              </AlertTitle>
               <AlertDescription className="space-y-1">
                 <p>
-                  Email: <strong>{demoCredentials.email}</strong>
+                  {i18n.t("app:auth.email_4c4e6b")}{" "}
+                  <strong>{demoCredentials.email}</strong>
                 </p>
                 <p>
-                  Password: <strong>{demoCredentials.password}</strong>
+                  {i18n.t("app:auth.password_be81ab")}{" "}
+                  <strong>{demoCredentials.password}</strong>
                 </p>
                 <p className="pt-1">
-                  The fields below are prefilled. Demo data is periodically
-                  reset.
+                  {i18n.t(
+                    "app:auth.the_fields_below_are_prefilled_demo_data_is_periodically_reset",
+                  )}
                 </p>
               </AlertDescription>
             </Alert>
@@ -135,7 +153,7 @@ function Login() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{i18n.t("app:auth.email")}</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="email-input"
@@ -155,20 +173,20 @@ function Login() {
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center">
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{i18n.t("app:auth.password")}</FormLabel>
                     {!appConfig?.is_demo && (
                       <RouterLink
                         to="/recover-password"
                         className="ml-auto text-sm underline-offset-4 hover:underline"
                       >
-                        Forgot your password?
+                        {i18n.t("app:auth.forgot_your_password")}
                       </RouterLink>
                     )}
                   </div>
                   <FormControl>
                     <PasswordInput
                       data-testid="password-input"
-                      placeholder="Password"
+                      placeholder={i18n.t("app:auth.password")}
                       {...field}
                     />
                   </FormControl>
@@ -178,7 +196,7 @@ function Login() {
             />
 
             <LoadingButton type="submit" loading={loginMutation.isPending}>
-              Log In
+              {i18n.t("app:auth.log_in")}
             </LoadingButton>
           </div>
         </form>

@@ -2,9 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MailPlus } from "lucide-react"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
-
 import { type UserInvitationCreate, UserInvitationsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -29,10 +28,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  email: z.email({ message: "Invalid email address" }),
+  email: z.email({ error: () => i18n.t("app:admin.invalid_email_address") }),
   full_name: z.string().optional(),
   is_superuser: z.boolean(),
 })
@@ -40,6 +41,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 const InviteUser = () => {
+  useTranslation()
+
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -59,7 +62,7 @@ const InviteUser = () => {
     mutationFn: (data: UserInvitationCreate) =>
       UserInvitationsService.createInvitation({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Invitation sent")
+      showSuccessToast(i18n.t("app:admin.invitation_sent"))
       form.reset()
       setIsOpen(false)
     },
@@ -81,15 +84,16 @@ const InviteUser = () => {
       <DialogTrigger asChild>
         <Button>
           <MailPlus />
-          Invite User
+          {i18n.t("app:admin.invite_user")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Invite User</DialogTitle>
+          <DialogTitle>{i18n.t("app:admin.invite_user")}</DialogTitle>
           <DialogDescription>
-            We will email a secure link so the recipient can create their own
-            password.
+            {i18n.t(
+              "app:admin.we_will_email_a_secure_link_so_the_recipient_can_create_their_own_password",
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -101,11 +105,12 @@ const InviteUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email <span className="text-destructive">*</span>
+                      {i18n.t("app:admin.email")}{" "}
+                      <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Email"
+                        placeholder={i18n.t("app:admin.email")}
                         type="email"
                         autoComplete="off"
                         {...field}
@@ -121,9 +126,13 @@ const InviteUser = () => {
                 name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>{i18n.t("app:admin.full_name")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Full name" type="text" {...field} />
+                      <Input
+                        placeholder={i18n.t("app:admin.full_name_eeb692")}
+                        type="text"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +150,9 @@ const InviteUser = () => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is superuser?</FormLabel>
+                    <FormLabel className="font-normal">
+                      {i18n.t("app:admin.is_superuser")}
+                    </FormLabel>
                   </FormItem>
                 )}
               />
@@ -150,11 +161,11 @@ const InviteUser = () => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  {i18n.t("app:admin.cancel")}
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Send invitation
+                {i18n.t("app:admin.send_invitation")}
               </LoadingButton>
             </DialogFooter>
           </form>

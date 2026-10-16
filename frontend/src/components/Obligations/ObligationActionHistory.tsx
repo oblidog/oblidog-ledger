@@ -1,41 +1,88 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { ChevronDown, Clock3 } from "lucide-react"
-
+import { useTranslation } from "react-i18next"
 import {
   type ObligationActionPublic,
   type ObligationActionType,
   ObligationsService,
 } from "@/client"
 import { Button } from "@/components/ui/button"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { formatAmount, formatDate, getLocale } from "@/i18n/format"
 
 const PAGE_SIZE = 20
 
 const actionLabels: Record<ObligationActionType, string> = {
-  created: "Created obligation",
-  values_updated: "Updated obligation",
-  components_changed: "Changed components",
-  marked_ready: "Marked as ready",
-  marked_paid: "Marked as paid",
-  canceled: "Canceled obligation",
-  reopened: "Reopened obligation",
-  marked_error: "Marked as error",
+  get created() {
+    return i18n.t("app:obligations.created_obligation")
+  },
+  get values_updated() {
+    return i18n.t("app:obligations.updated_obligation")
+  },
+  get components_changed() {
+    return i18n.t("app:obligations.changed_components")
+  },
+  get marked_ready() {
+    return i18n.t("app:obligations.marked_as_ready")
+  },
+  get marked_paid() {
+    return i18n.t("app:obligations.marked_as_paid")
+  },
+  get canceled() {
+    return i18n.t("app:obligations.canceled_obligation")
+  },
+  get reopened() {
+    return i18n.t("app:obligations.reopened_obligation")
+  },
+  get marked_error() {
+    return i18n.t("app:obligations.marked_as_error")
+  },
 }
 
 const fieldLabels: Record<string, string> = {
-  lifecycle: "Lifecycle",
-  current_amount: "Amount",
-  currency: "Currency",
-  issue_date: "Issue date",
-  due_date: "Due date",
-  paid_at: "Paid at",
-  notes: "Notes",
-  counterparty: "Counterparty",
-  amount_state: "Amount status",
-  amount_source: "Amount source",
-  issue_date_state: "Issue date status",
-  issue_date_source: "Issue date source",
-  due_date_state: "Due date status",
-  due_date_source: "Due date source",
+  get lifecycle() {
+    return i18n.t("app:obligations.lifecycle")
+  },
+  get current_amount() {
+    return i18n.t("app:obligations.amount")
+  },
+  get currency() {
+    return i18n.t("app:obligations.currency")
+  },
+  get issue_date() {
+    return i18n.t("app:obligations.issue_date")
+  },
+  get due_date() {
+    return i18n.t("app:obligations.due_date")
+  },
+  get paid_at() {
+    return i18n.t("app:obligations.paid_at")
+  },
+  get notes() {
+    return i18n.t("app:obligations.notes")
+  },
+  get counterparty() {
+    return i18n.t("app:obligations.counterparty")
+  },
+  get amount_state() {
+    return i18n.t("app:obligations.amount_status")
+  },
+  get amount_source() {
+    return i18n.t("app:obligations.amount_source")
+  },
+  get issue_date_state() {
+    return i18n.t("app:obligations.issue_date_status")
+  },
+  get issue_date_source() {
+    return i18n.t("app:obligations.issue_date_source")
+  },
+  get due_date_state() {
+    return i18n.t("app:obligations.due_date_status")
+  },
+  get due_date_source() {
+    return i18n.t("app:obligations.due_date_source")
+  },
 }
 
 type Change = { from?: unknown; to?: unknown }
@@ -56,28 +103,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function humanize(value: string) {
-  return value
-    .replace(/_/g, " ")
-    .replace(/^./, (letter: string) => letter.toUpperCase())
-}
-
 function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(getLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
 }
 
-function formatValue(value: unknown): string {
+function formatValue(value: unknown, field?: string): string {
   if (value === null || value === undefined || value === "") return "—"
-  if (typeof value === "boolean") return value ? "Yes" : "No"
+  if (typeof value === "boolean")
+    return value ? i18n.t("app:obligations.yes") : i18n.t("app:obligations.no")
   if (typeof value === "string") {
+    if (field === "lifecycle") return domainLabel("lifecycle", value)
+    if (field?.endsWith("_state")) return domainLabel("valueState", value)
+    if (field?.endsWith("_source")) return domainLabel("source", value)
+    if (field === "type") return domainLabel("componentType", value)
+    if (
+      (field === "issue_date" || field === "due_date") &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value)
+    )
+      return formatDate(value)
+    if (field === "current_amount" && /^-?\d+(\.\d+)?$/.test(value))
+      return formatAmount(value)
     const date = new Date(value)
-    if (/^\d{4}-\d{2}-\d{2}T/.test(value) && !Number.isNaN(date.valueOf())) {
+    if (
+      field === "paid_at" &&
+      /^\d{4}-\d{2}-\d{2}T/.test(value) &&
+      !Number.isNaN(date.valueOf())
+    ) {
       return formatDateTime(value)
     }
-    return value.replace(/_/g, " ")
+    return value
   }
   if (typeof value === "number") return String(value)
   return JSON.stringify(value)
@@ -88,29 +145,35 @@ function isChange(value: unknown): value is Change {
 }
 
 function componentName(component: ComponentSnapshot) {
-  return component.label || component.type || "Component"
+  return (
+    component.label ||
+    (component.type ? domainLabel("componentType", component.type) : null) ||
+    i18n.t("app:obligations.component")
+  )
 }
 
 function FieldDiff({ name, change }: { name: string; change: Change }) {
+  useTranslation()
+
   return (
     <div className="grid gap-0.5 sm:grid-cols-[9rem_1fr] sm:gap-3">
-      <dt className="text-muted-foreground">
-        {fieldLabels[name] ?? humanize(name)}
-      </dt>
+      <dt className="text-muted-foreground">{fieldLabels[name] ?? name}</dt>
       <dd className="min-w-0 break-all">
         <span className="line-through decoration-muted-foreground/60">
-          {formatValue(change.from)}
+          {formatValue(change.from, name)}
         </span>
         <span aria-hidden="true" className="text-muted-foreground px-2">
           →
         </span>
-        <span>{formatValue(change.to)}</span>
+        <span>{formatValue(change.to, name)}</span>
       </dd>
     </div>
   )
 }
 
 function ComponentDiffs({ changes }: { changes: ComponentChanges }) {
+  useTranslation()
+
   const rows = [
     ...(changes.added ?? []).map((component) => ({
       kind: "added" as const,
@@ -151,7 +214,8 @@ function ComponentDiffs({ changes }: { changes: ComponentChanges }) {
           </p>
           {kind !== "updated" && component.amount !== undefined ? (
             <p className="text-muted-foreground mt-1 text-xs">
-              Amount: {formatValue(component.amount)}
+              {i18n.t("app:obligations.amount_281473")}{" "}
+              {formatValue(component.amount)}
             </p>
           ) : null}
           {kind === "updated" && component.changes ? (
@@ -168,6 +232,8 @@ function ComponentDiffs({ changes }: { changes: ComponentChanges }) {
 }
 
 function ActionDetails({ action }: { action: ObligationActionPublic }) {
+  useTranslation()
+
   const componentValue = action.changes.components
   const components = isRecord(componentValue)
     ? (componentValue as ComponentChanges)
@@ -183,7 +249,7 @@ function ActionDetails({ action }: { action: ObligationActionPublic }) {
     return (
       <details className="mt-2 text-xs">
         <summary className="text-muted-foreground cursor-pointer">
-          Technical details
+          {i18n.t("app:obligations.technical_details")}
         </summary>
         <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-2">
           {JSON.stringify(action.changes, null, 2)}
@@ -216,7 +282,8 @@ function ActionDetails({ action }: { action: ObligationActionPublic }) {
   return (
     <details className="mt-3 text-xs sm:text-sm">
       <summary className="text-muted-foreground flex cursor-pointer items-center gap-1 font-medium">
-        <ChevronDown className="size-3.5" /> Show changes
+        <ChevronDown className="size-3.5" />{" "}
+        {i18n.t("app:obligations.show_changes")}
       </summary>
       <div className="mt-2">{content}</div>
     </details>
@@ -224,6 +291,8 @@ function ActionDetails({ action }: { action: ObligationActionPublic }) {
 }
 
 function ActionEntry({ action }: { action: ObligationActionPublic }) {
+  useTranslation()
+
   return (
     <li className="relative pl-7">
       <span className="bg-background absolute left-0 top-1 flex size-4 items-center justify-center rounded-full border">
@@ -232,7 +301,7 @@ function ActionEntry({ action }: { action: ObligationActionPublic }) {
       <div className="pb-5">
         <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
           <p className="font-medium">
-            {actionLabels[action.action] ?? humanize(action.action)}
+            {actionLabels[action.action] ?? action.action}
           </p>
           <time
             className="text-muted-foreground shrink-0 text-xs"
@@ -242,7 +311,7 @@ function ActionEntry({ action }: { action: ObligationActionPublic }) {
           </time>
         </div>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          {action.actor_display_name || humanize(action.actor_type)}
+          {action.actor_display_name || domainLabel("actor", action.actor_type)}
         </p>
         <ActionDetails action={action} />
       </div>
@@ -257,6 +326,8 @@ export function ObligationActionHistory({
   ledgerId: string
   obligationKey: string
 }) {
+  useTranslation()
+
   const history = useInfiniteQuery({
     queryKey: ["obligation-actions", ledgerId, obligationKey],
     initialPageParam: 0,
@@ -279,27 +350,29 @@ export function ObligationActionHistory({
       <div className="mb-3 flex items-center gap-2">
         <Clock3 className="text-muted-foreground size-4" />
         <h2 id="obligation-action-history" className="font-medium">
-          Action history
+          {i18n.t("app:obligations.action_history")}
         </h2>
       </div>
       {history.isPending ? (
-        <p className="text-muted-foreground text-sm">Loading action history…</p>
+        <p className="text-muted-foreground text-sm">
+          {i18n.t("app:obligations.loading_action_history")}
+        </p>
       ) : null}
       {history.isError ? (
         <div className="flex items-center gap-3 text-sm text-destructive">
-          <span>Unable to load action history.</span>
+          <span>{i18n.t("app:obligations.unable_to_load_action_history")}</span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => void history.refetch()}
           >
-            Try again
+            {i18n.t("app:obligations.try_again")}
           </Button>
         </div>
       ) : null}
       {!history.isPending && !history.isError && actions.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          No activity recorded yet.
+          {i18n.t("app:obligations.no_activity_recorded_yet")}
         </p>
       ) : null}
       {actions.length > 0 ? (
@@ -316,7 +389,9 @@ export function ObligationActionHistory({
           disabled={history.isFetchingNextPage}
           onClick={() => void history.fetchNextPage()}
         >
-          {history.isFetchingNextPage ? "Loading…" : "Load more"}
+          {history.isFetchingNextPage
+            ? i18n.t("app:obligations.loading")
+            : i18n.t("app:obligations.load_more")}
         </Button>
       ) : null}
     </section>

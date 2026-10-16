@@ -10,6 +10,7 @@ import {
   type UserPublic,
   UsersService,
 } from "@/client"
+import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
@@ -88,7 +89,7 @@ const useAuth = () => {
       if (error instanceof ApiError) {
         handleError.call(showErrorToast, error)
       } else {
-        showErrorToast("Unable to log out. Please try again.")
+        showErrorToast(i18n.t("app:common.unable_to_log_out_please_try_again"))
       }
       return
     }
