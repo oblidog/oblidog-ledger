@@ -1,6 +1,7 @@
 import { Plug, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
+import { LanguageSelector } from "@/components/Common/LanguageSelector"
 import { Logo } from "@/components/Common/Logo"
 import LedgerSwitcher from "@/components/Sidebar/LedgerSwitcher"
 import {
@@ -12,7 +13,7 @@ import {
 import { useActiveLedger } from "@/hooks/useActiveLedger"
 import useAuth from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
-import { Main } from "./Main"
+import { type Item, Main } from "./Main"
 import { primaryNavigation } from "./navigation"
 import { User } from "./User"
 
@@ -22,19 +23,19 @@ export function AppSidebar() {
 
   const { data: appConfig } = usePublicAppConfig()
 
-  const items = [
+  const items: Item[] = [
     ...primaryNavigation(activeLedgerId),
     ...(activeLedgerId && appConfig && !appConfig.is_demo
       ? [
           {
             icon: Plug,
-            title: "Integrations",
+            title: "navigation.integrations" as const,
             path: `/ledgers/${activeLedgerId}/integrations`,
           },
         ]
       : []),
     ...(currentUser?.is_superuser
-      ? [{ icon: Users, title: "Admin", path: "/admin" }]
+      ? [{ icon: Users, title: "navigation.admin" as const, path: "/admin" }]
       : []),
   ]
 
@@ -48,6 +49,7 @@ export function AppSidebar() {
         <Main items={items} />
       </SidebarContent>
       <SidebarFooter>
+        <LanguageSelector />
         <SidebarAppearance />
         <User user={currentUser} />
       </SidebarFooter>

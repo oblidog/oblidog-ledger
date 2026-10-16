@@ -1,0 +1,41 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "obligations": "Obligations",
+    "categories": "Categories",
+    "analytics": "Analytics",
+    "integrations": "Integrations",
+    "admin": "Admin",
+    "more": "More",
+    "settings": "User Settings",
+    "logout": "Log Out",
+    "loadingLedger": "Loading ledger…",
+    "noLedger": "No ledger selected",
+    "selectLedger": "Select ledger",
+    "workspace": "Current workspace",
+    "switchLedger": "Switch ledger",
+    "ledgerSettings": "Ledger settings",
+    "systemRun": "System Run",
+    "manageLedgers": "Manage ledgers"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "title": "Language",
+    "saveError": "Could not save the language. Please try again.",
+    "saving": "Saving language…"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "footer": {
+    "version": "Application version"
+  }
+}

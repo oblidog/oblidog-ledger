@@ -14,6 +14,10 @@ class User(Base):
         CheckConstraint(
             "session_version >= 1", name="ck_user_session_version_positive"
         ),
+        CheckConstraint(
+            "language IS NULL OR language IN ('en', 'pl')",
+            name="ck_user_language_supported",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -28,6 +32,7 @@ class User(Base):
     weekly_report_enabled: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default="true", nullable=False
     )
+    language: Mapped[str | None] = mapped_column(String(2), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     session_version: Mapped[int] = mapped_column(

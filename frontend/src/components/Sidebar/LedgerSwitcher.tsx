@@ -8,6 +8,7 @@ import {
   Settings,
   Tags,
 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ import useAuth from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
 export function LedgerSwitcher() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { isMobile, setOpenMobile } = useSidebar()
   const { user: currentUser } = useAuth()
@@ -49,7 +51,7 @@ export function LedgerSwitcher() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              tooltip={activeLedger?.name ?? "Select ledger"}
+              tooltip={activeLedger?.name ?? t("navigation.selectLedger")}
               size="lg"
               disabled={isLoading || ledgers.length === 0}
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
@@ -59,10 +61,12 @@ export function LedgerSwitcher() {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
                   {activeLedger?.name ??
-                    (isLoading ? "Loading ledger…" : "Select ledger")}
+                    (isLoading
+                      ? t("navigation.loadingLedger")
+                      : t("navigation.selectLedger"))}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  Current workspace
+                  {t("navigation.workspace")}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -74,7 +78,9 @@ export function LedgerSwitcher() {
             align="start"
             sideOffset={4}
           >
-            <DropdownMenuLabel>Switch ledger</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {t("navigation.switchLedger")}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {ledgers.map((ledger) => (
               <DropdownMenuItem
@@ -96,7 +102,7 @@ export function LedgerSwitcher() {
                       params={{ ledgerId: activeLedgerId }}
                     >
                       <Settings />
-                      Ledger settings
+                      {t("navigation.ledgerSettings")}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -106,7 +112,7 @@ export function LedgerSwitcher() {
                     params={{ ledgerId: activeLedgerId }}
                   >
                     <Tags />
-                    Categories
+                    {t("navigation.categories")}
                   </Link>
                 </DropdownMenuItem>
                 {!isDemo && activeLedger?.owner_user_id === currentUser?.id ? (
@@ -116,7 +122,7 @@ export function LedgerSwitcher() {
                       params={{ ledgerId: activeLedgerId }}
                     >
                       <Play />
-                      System Run
+                      {t("navigation.systemRun")}
                     </Link>
                   </DropdownMenuItem>
                 ) : null}
@@ -125,7 +131,7 @@ export function LedgerSwitcher() {
             <DropdownMenuItem asChild>
               <Link to="/ledgers">
                 <List />
-                Manage ledgers
+                {t("navigation.manageLedgers")}
                 <Badge variant="outline" className="ml-auto">
                   {ledgers.length}
                 </Badge>
