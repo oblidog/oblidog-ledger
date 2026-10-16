@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.api.deps import (
     require_ledger_owner_access,
     require_ledger_view_access,
 )
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.capabilities import Capability
 from app.models import IntegrationCredential, Ledger
 from app.schemas.integrations import (
@@ -48,17 +49,22 @@ def integration_errors(session: Session) -> Iterator[None]:
     ) as caught_error:
         session.rollback()
         raise HTTPException(
-            status_code=404, detail="Integration or category not found"
+            code="integration_not_found",
+            status_code=404,
+            detail="Integration or category not found",
         ) from caught_error
     except use_cases.IntegrationConflictError as exc:
         session.rollback()
         raise HTTPException(
+            code="integration_conflict",
+            params={"reason": exc.code},
             status_code=409,
             detail=IntegrationConflictDetail(code=exc.code).model_dump(mode="json"),
         ) from exc
     except use_cases.IntegrationLimitsError as caught_error:
         session.rollback()
         raise HTTPException(
+            code="integration_invalid_limits",
             status_code=422,
             detail="run_timeout_seconds must be less than stale_after_seconds",
         ) from caught_error
@@ -212,7 +218,11 @@ def revoke_integration_credential(
             )
         )
         if credential is None:
-            raise HTTPException(status_code=404, detail="Connection key not found")
+            raise HTTPException(
+                code="integration_key_not_found",
+                status_code=404,
+                detail="Connection key not found",
+            )
         if credential.revoked_at is None:
             credential.revoked_at = datetime.now(UTC)
             session.commit()

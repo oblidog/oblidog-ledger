@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { isAxiosError } from "axios"
 import { type ReactNode, useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
@@ -68,8 +67,7 @@ export function ApplyCategoryCounterpartyDialog({
       }
     },
     onError: (error) => {
-      if (isAxiosError(error)) handleError.bind(showErrorToast)(error)
-      else showErrorToast(error.message)
+      handleError.bind(showErrorToast)(error)
       void preview.refetch()
     },
   })

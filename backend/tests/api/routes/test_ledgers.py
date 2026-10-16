@@ -178,7 +178,7 @@ def test_get_ledger_returns_404_for_non_member(client: TestClient, db: Session) 
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_get_ledger_members_returns_members_for_authorized_user(
@@ -297,7 +297,7 @@ def test_post_ledger_members_returns_404_for_unknown_email(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "User not found"}
+    assert response.json()["detail"] == "User not found"
 
 
 def test_patch_ledger_member_updates_role(client: TestClient, db: Session) -> None:
@@ -390,7 +390,7 @@ def test_post_ledger_members_rejects_non_owner(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_post_ledger_members_returns_404_for_non_member_access(
@@ -416,4 +416,4 @@ def test_post_ledger_members_returns_404_for_non_member_access(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"

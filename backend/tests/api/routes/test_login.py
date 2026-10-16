@@ -72,7 +72,7 @@ def test_swagger_access_token_login_with_existing_browser_session(
             headers={"Origin": settings.FRONTEND_HOST},
         )
         assert protected.status_code == 403
-        assert protected.json() == {"detail": "Invalid CSRF token"}
+        assert protected.json()["detail"] == "Invalid CSRF token"
     finally:
         client.cookies.clear()
 
@@ -104,7 +104,7 @@ def test_browser_session_uses_http_only_cookie_and_csrf(client: TestClient) -> N
             headers={"Origin": settings.FRONTEND_HOST},
         )
         assert rejected.status_code == 403
-        assert rejected.json() == {"detail": "Invalid CSRF token"}
+        assert rejected.json()["detail"] == "Invalid CSRF token"
 
         accepted = client.post(
             f"{settings.API_V1_STR}/login/test-token",
@@ -175,7 +175,7 @@ def test_access_token_cannot_be_used_as_browser_session_cookie(
         response = client.get(f"{settings.API_V1_STR}/users/me")
 
         assert response.status_code == 403
-        assert response.json() == {"detail": "Could not validate credentials"}
+        assert response.json()["detail"] == "Could not validate credentials"
     finally:
         client.cookies.clear()
 
@@ -191,7 +191,7 @@ def test_browser_login_rejects_untrusted_origin(client: TestClient) -> None:
         headers={"Origin": "https://attacker.example"},
     )
     assert response.status_code == 403
-    assert response.json() == {"detail": "Origin is not allowed"}
+    assert response.json()["detail"] == "Origin is not allowed"
 
 
 def test_swagger_token_login_allows_same_origin_behind_tls_proxy(
@@ -227,7 +227,7 @@ def test_swagger_token_login_rejects_other_origin_behind_tls_proxy(
     )
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "Origin is not allowed"}
+    assert response.json()["detail"] == "Origin is not allowed"
 
 
 def test_browser_cors_explicitly_allows_credentials_and_csrf(
@@ -350,7 +350,7 @@ def test_recovery_html_content_rejects_inactive_user(
     )
 
     assert response.status_code == 400
-    assert response.json() == {"detail": "Inactive user"}
+    assert response.json()["detail"] == "Inactive user"
 
 
 def test_reset_password(client: TestClient, db: Session) -> None:
@@ -397,7 +397,7 @@ def test_reset_password(client: TestClient, db: Session) -> None:
         json={"new_password": random_lower_string(), "token": token},
     )
     assert reused.status_code == 400
-    assert reused.json() == {"detail": "Invalid token"}
+    assert reused.json()["detail"] == "Invalid token"
 
 
 def test_password_reset_token_hash_is_keyed_and_domain_separated() -> None:
@@ -479,7 +479,7 @@ def test_reset_password_rejects_expired_and_wrong_purpose_tokens(
             json={"new_password": random_lower_string(), "token": token},
         )
         assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid token"}
+        assert response.json()["detail"] == "Invalid token"
 
 
 def test_reset_password_rejects_token_expired_in_persisted_state(
@@ -503,7 +503,7 @@ def test_reset_password_rejects_token_expired_in_persisted_state(
     )
 
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid token"}
+    assert response.json()["detail"] == "Invalid token"
 
 
 def test_failed_password_validation_does_not_consume_reset_token(
@@ -543,7 +543,7 @@ def test_new_reset_token_invalidates_older_link(
         json={"new_password": random_lower_string(), "token": old_token},
     )
     assert old_response.status_code == 400
-    assert old_response.json() == {"detail": "Invalid token"}
+    assert old_response.json()["detail"] == "Invalid token"
 
     new_response = client.post(
         f"{settings.API_V1_STR}/reset-password/",

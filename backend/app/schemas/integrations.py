@@ -10,6 +10,7 @@ from app.domain.integrations import (
     IntegrationHealth,
     IntegrationResult,
 )
+from app.schemas.api_errors import ApiErrorResponse
 
 PositiveSeconds = Annotated[int, Field(strict=True, gt=0, le=2147483647)]
 Revision = Annotated[int, Field(strict=True, ge=0, le=9223372036854775807)]
@@ -152,7 +153,7 @@ class IntegrationConflictDetail(BaseModel):
     code: IntegrationConflictCode
 
 
-class IntegrationConflictResponse(BaseModel):
+class IntegrationConflictResponse(ApiErrorResponse):
     detail: IntegrationConflictDetail
 
 

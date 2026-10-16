@@ -1,13 +1,14 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.api.deps import (
     CurrentUser,
     SessionDep,
     get_current_active_superuser,
 )
+from app.core.api_errors import ApplicationError as HTTPException
 from app.schemas import (
     Message,
     UpdatePassword,
@@ -51,7 +52,9 @@ def update_user_me(
         )
     except user_service.UserEmailAlreadyExistsError as caught_error:
         raise HTTPException(
-            status_code=409, detail="User with this email already exists"
+            code="user_email_conflict",
+            status_code=409,
+            detail="User with this email already exists",
         ) from caught_error
 
 
@@ -90,11 +93,13 @@ def update_password_me(
         )
     except user_service.IncorrectPasswordError as caught_error:
         raise HTTPException(
-            status_code=400, detail="Incorrect password"
+            code="user_incorrect_password", status_code=400, detail="Incorrect password"
         ) from caught_error
     except user_service.SamePasswordError as caught_error:
         raise HTTPException(
-            status_code=400, detail="New password cannot be the same as the current one"
+            code="user_same_password",
+            status_code=400,
+            detail="New password cannot be the same as the current one",
         ) from caught_error
     return Message(message="Password updated successfully")
 
@@ -116,14 +121,16 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
         user_service.delete_user_me(session=session, current_user=current_user)
     except user_service.SelfDeleteForbiddenError as caught_error:
         raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+            code="user_self_delete_forbidden",
+            status_code=403,
+            detail="Super users are not allowed to delete themselves",
         ) from caught_error
     return Message(message="User deleted successfully")
 
 
 @router.post("/signup", include_in_schema=False)
 def signup_disabled() -> None:
-    raise HTTPException(status_code=404, detail="Not found")
+    raise HTTPException(code="resource_not_found", status_code=404, detail="Not found")
 
 
 @router.get("/{user_id}", response_model=UserPublic)
@@ -139,11 +146,14 @@ def read_user_by_id(
         )
     except user_service.InsufficientPrivilegesError as caught_error:
         raise HTTPException(
+            code="permission_denied",
             status_code=403,
             detail="The user doesn't have enough privileges",
         ) from caught_error
     except user_service.UserNotFoundError as caught_error:
-        raise HTTPException(status_code=404, detail="User not found") from caught_error
+        raise HTTPException(
+            code="user_not_found", status_code=404, detail="User not found"
+        ) from caught_error
 
 
 @router.patch(
@@ -169,12 +179,15 @@ def update_user(
         )
     except user_service.UserNotFoundError as caught_error:
         raise HTTPException(
+            code="user_not_found",
             status_code=404,
             detail="The user with this id does not exist in the system",
         ) from caught_error
     except user_service.UserEmailAlreadyExistsError as caught_error:
         raise HTTPException(
-            status_code=409, detail="User with this email already exists"
+            code="user_email_conflict",
+            status_code=409,
+            detail="User with this email already exists",
         ) from caught_error
 
 
@@ -190,9 +203,13 @@ def delete_user(
             session=session, current_user=current_user, user_id=user_id
         )
     except user_service.UserNotFoundError as caught_error:
-        raise HTTPException(status_code=404, detail="User not found") from caught_error
+        raise HTTPException(
+            code="user_not_found", status_code=404, detail="User not found"
+        ) from caught_error
     except user_service.SelfDeleteForbiddenError as caught_error:
         raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+            code="user_self_delete_forbidden",
+            status_code=403,
+            detail="Super users are not allowed to delete themselves",
         ) from caught_error
     return Message(message="User deleted successfully")

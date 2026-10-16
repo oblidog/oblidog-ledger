@@ -68,9 +68,10 @@ def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
 
     integration_response = client.get(f"{settings.API_V1_STR}/integration/context")
     assert integration_response.status_code == 403
-    assert integration_response.json() == {
-        "detail": "integrations is disabled in demo environment"
-    }
+    assert (
+        integration_response.json()["detail"]
+        == "integrations is disabled in demo environment"
+    )
 
     account_response = client.patch(
         f"{settings.API_V1_STR}/users/me",
@@ -78,17 +79,19 @@ def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
         json={"full_name": "Changed"},
     )
     assert account_response.status_code == 403
-    assert account_response.json() == {
-        "detail": "account_security is disabled in demo environment"
-    }
+    assert (
+        account_response.json()["detail"]
+        == "account_security is disabled in demo environment"
+    )
 
     recovery_response = client.post(
         f"{settings.API_V1_STR}/password-recovery/{user.email}"
     )
     assert recovery_response.status_code == 403
-    assert recovery_response.json() == {
-        "detail": "account_security is disabled in demo environment"
-    }
+    assert (
+        recovery_response.json()["detail"]
+        == "account_security is disabled in demo environment"
+    )
 
     membership_response = client.post(
         f"{settings.API_V1_STR}/ledgers/{ledger.id}/members",
@@ -96,9 +99,10 @@ def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
         json={"user_id": str(user.id), "role": "viewer"},
     )
     assert membership_response.status_code == 403
-    assert membership_response.json() == {
-        "detail": "account_security is disabled in demo environment"
-    }
+    assert (
+        membership_response.json()["detail"]
+        == "account_security is disabled in demo environment"
+    )
 
 
 @pytest.mark.usefixtures("demo_environment")

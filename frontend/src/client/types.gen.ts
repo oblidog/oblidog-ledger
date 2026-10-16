@@ -5,6 +5,26 @@ export type ClientOptions = {
 };
 
 /**
+ * ApiErrorResponse
+ */
+export type ApiErrorResponse = {
+    /**
+     * Detail
+     */
+    detail: unknown;
+    /**
+     * Code
+     */
+    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'legacy_import_running' | 'legacy_import_disabled' | 'legacy_import_not_found' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    /**
+     * Params
+     */
+    params?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
  * BillingPeriodInput
  */
 export type BillingPeriodInput = {
@@ -806,16 +826,6 @@ export type EnsuredObligationsPublic = {
 };
 
 /**
- * HTTPValidationError
- */
-export type HttpValidationError = {
-    /**
-     * Detail
-     */
-    detail?: Array<ValidationError>;
-};
-
-/**
  * IntegrationCategoryDataRecordCreate
  *
  * A category observation submitted by its authenticated integration.
@@ -854,6 +864,16 @@ export type IntegrationConflictDetail = {
  */
 export type IntegrationConflictResponse = {
     detail: IntegrationConflictDetail;
+    /**
+     * Code
+     */
+    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'legacy_import_running' | 'legacy_import_disabled' | 'legacy_import_not_found' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    /**
+     * Params
+     */
+    params?: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -2492,34 +2512,6 @@ export type UsersPublic = {
 };
 
 /**
- * ValidationError
- */
-export type ValidationError = {
-    /**
-     * Location
-     */
-    loc: Array<string | number>;
-    /**
-     * Message
-     */
-    msg: string;
-    /**
-     * Error Type
-     */
-    type: string;
-    /**
-     * Input
-     */
-    input?: unknown;
-    /**
-     * Context
-     */
-    ctx?: {
-        [key: string]: unknown;
-    };
-};
-
-/**
  * ValueState
  */
 export type ValueState = 'unknown' | 'estimated' | 'confirmed' | 'overridden';
@@ -2533,9 +2525,41 @@ export type LoginLoginAccessTokenData = {
 
 export type LoginLoginAccessTokenErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LoginLoginAccessTokenError = LoginLoginAccessTokenErrors[keyof LoginLoginAccessTokenErrors];
@@ -2558,9 +2582,41 @@ export type LoginLoginSessionData = {
 
 export type LoginLoginSessionErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LoginLoginSessionError = LoginLoginSessionErrors[keyof LoginLoginSessionErrors];
@@ -2581,6 +2637,47 @@ export type LoginLogoutData = {
     url: '/api/v1/login/logout';
 };
 
+export type LoginLogoutErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type LoginLogoutError = LoginLogoutErrors[keyof LoginLogoutErrors];
+
 export type LoginLogoutResponses = {
     /**
      * Successful Response
@@ -2596,6 +2693,47 @@ export type LoginTestTokenData = {
     query?: never;
     url: '/api/v1/login/test-token';
 };
+
+export type LoginTestTokenErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type LoginTestTokenError = LoginTestTokenErrors[keyof LoginTestTokenErrors];
 
 export type LoginTestTokenResponses = {
     /**
@@ -2620,9 +2758,41 @@ export type LoginRecoverPasswordData = {
 
 export type LoginRecoverPasswordErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LoginRecoverPasswordError = LoginRecoverPasswordErrors[keyof LoginRecoverPasswordErrors];
@@ -2645,9 +2815,41 @@ export type LoginResetPasswordData = {
 
 export type LoginResetPasswordErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LoginResetPasswordError = LoginResetPasswordErrors[keyof LoginResetPasswordErrors];
@@ -2675,9 +2877,41 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LoginRecoverPasswordHtmlContentError = LoginRecoverPasswordHtmlContentErrors[keyof LoginRecoverPasswordHtmlContentErrors];
@@ -2698,6 +2932,47 @@ export type LedgersReadLedgerPreferenceOptionsData = {
     url: '/api/v1/ledgers/preference-options';
 };
 
+export type LedgersReadLedgerPreferenceOptionsErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type LedgersReadLedgerPreferenceOptionsError = LedgersReadLedgerPreferenceOptionsErrors[keyof LedgersReadLedgerPreferenceOptionsErrors];
+
 export type LedgersReadLedgerPreferenceOptionsResponses = {
     /**
      * Successful Response
@@ -2713,6 +2988,47 @@ export type LedgersReadLedgersData = {
     query?: never;
     url: '/api/v1/ledgers/';
 };
+
+export type LedgersReadLedgersErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type LedgersReadLedgersError = LedgersReadLedgersErrors[keyof LedgersReadLedgersErrors];
 
 export type LedgersReadLedgersResponses = {
     /**
@@ -2732,9 +3048,41 @@ export type LedgersCreateLedgerData = {
 
 export type LedgersCreateLedgerErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersCreateLedgerError = LedgersCreateLedgerErrors[keyof LedgersCreateLedgerErrors];
@@ -2762,9 +3110,41 @@ export type LedgersReadLedgerData = {
 
 export type LedgersReadLedgerErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersReadLedgerError = LedgersReadLedgerErrors[keyof LedgersReadLedgerErrors];
@@ -2792,9 +3172,41 @@ export type LedgersUpdateLedgerData = {
 
 export type LedgersUpdateLedgerErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersUpdateLedgerError = LedgersUpdateLedgerErrors[keyof LedgersUpdateLedgerErrors];
@@ -2822,9 +3234,41 @@ export type LedgersReadLedgerMembersData = {
 
 export type LedgersReadLedgerMembersErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersReadLedgerMembersError = LedgersReadLedgerMembersErrors[keyof LedgersReadLedgerMembersErrors];
@@ -2852,9 +3296,41 @@ export type LedgersShareLedgerData = {
 
 export type LedgersShareLedgerErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersShareLedgerError = LedgersShareLedgerErrors[keyof LedgersShareLedgerErrors];
@@ -2882,9 +3358,41 @@ export type LedgersDeleteAllCategoriesData = {
 
 export type LedgersDeleteAllCategoriesErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersDeleteAllCategoriesError = LedgersDeleteAllCategoriesErrors[keyof LedgersDeleteAllCategoriesErrors];
@@ -2921,9 +3429,41 @@ export type CategoriesReadCategoriesData = {
 
 export type CategoriesReadCategoriesErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadCategoriesError = CategoriesReadCategoriesErrors[keyof CategoriesReadCategoriesErrors];
@@ -2951,9 +3491,41 @@ export type CategoriesCreateCategoryData = {
 
 export type CategoriesCreateCategoryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesCreateCategoryError = CategoriesCreateCategoryErrors[keyof CategoriesCreateCategoryErrors];
@@ -2981,9 +3553,41 @@ export type LedgersDeleteAllObligationsData = {
 
 export type LedgersDeleteAllObligationsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersDeleteAllObligationsError = LedgersDeleteAllObligationsErrors[keyof LedgersDeleteAllObligationsErrors];
@@ -3028,9 +3632,41 @@ export type ObligationsReadObligationsData = {
 
 export type ObligationsReadObligationsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsReadObligationsError = ObligationsReadObligationsErrors[keyof ObligationsReadObligationsErrors];
@@ -3058,9 +3694,41 @@ export type ObligationsCreateObligationData = {
 
 export type ObligationsCreateObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsCreateObligationError = ObligationsCreateObligationErrors[keyof ObligationsCreateObligationErrors];
@@ -3092,9 +3760,41 @@ export type LedgersRemoveLedgerMemberData = {
 
 export type LedgersRemoveLedgerMemberErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersRemoveLedgerMemberError = LedgersRemoveLedgerMemberErrors[keyof LedgersRemoveLedgerMemberErrors];
@@ -3126,9 +3826,41 @@ export type LedgersUpdateLedgerMemberData = {
 
 export type LedgersUpdateLedgerMemberErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LedgersUpdateLedgerMemberError = LedgersUpdateLedgerMemberErrors[keyof LedgersUpdateLedgerMemberErrors];
@@ -3165,9 +3897,41 @@ export type AnalyticsReadPeriodPaymentSummaryData = {
 
 export type AnalyticsReadPeriodPaymentSummaryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type AnalyticsReadPeriodPaymentSummaryError = AnalyticsReadPeriodPaymentSummaryErrors[keyof AnalyticsReadPeriodPaymentSummaryErrors];
@@ -3208,9 +3972,41 @@ export type AnalyticsReadCategoryAmountHistoryData = {
 
 export type AnalyticsReadCategoryAmountHistoryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type AnalyticsReadCategoryAmountHistoryError = AnalyticsReadCategoryAmountHistoryErrors[keyof AnalyticsReadCategoryAmountHistoryErrors];
@@ -3247,9 +4043,41 @@ export type AnalyticsReadObligationPeriodTotalsData = {
 
 export type AnalyticsReadObligationPeriodTotalsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type AnalyticsReadObligationPeriodTotalsError = AnalyticsReadObligationPeriodTotalsErrors[keyof AnalyticsReadObligationPeriodTotalsErrors];
@@ -3298,9 +4126,41 @@ export type AnalyticsReadComponentHistoryData = {
 
 export type AnalyticsReadComponentHistoryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type AnalyticsReadComponentHistoryError = AnalyticsReadComponentHistoryErrors[keyof AnalyticsReadComponentHistoryErrors];
@@ -3337,9 +4197,41 @@ export type AnalyticsReadRemainingPeriodCashflowData = {
 
 export type AnalyticsReadRemainingPeriodCashflowErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type AnalyticsReadRemainingPeriodCashflowError = AnalyticsReadRemainingPeriodCashflowErrors[keyof AnalyticsReadRemainingPeriodCashflowErrors];
@@ -3367,9 +4259,41 @@ export type CategoriesPreviewPaymentScheduleData = {
 
 export type CategoriesPreviewPaymentScheduleErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesPreviewPaymentScheduleError = CategoriesPreviewPaymentScheduleErrors[keyof CategoriesPreviewPaymentScheduleErrors];
@@ -3402,9 +4326,41 @@ export type CategoriesReadCategoryGroupsData = {
 
 export type CategoriesReadCategoryGroupsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadCategoryGroupsError = CategoriesReadCategoryGroupsErrors[keyof CategoriesReadCategoryGroupsErrors];
@@ -3432,9 +4388,41 @@ export type CategoriesCreateCategoryGroupData = {
 
 export type CategoriesCreateCategoryGroupErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesCreateCategoryGroupError = CategoriesCreateCategoryGroupErrors[keyof CategoriesCreateCategoryGroupErrors];
@@ -3466,9 +4454,41 @@ export type CategoriesUpdateCategoryGroupData = {
 
 export type CategoriesUpdateCategoryGroupErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesUpdateCategoryGroupError = CategoriesUpdateCategoryGroupErrors[keyof CategoriesUpdateCategoryGroupErrors];
@@ -3500,9 +4520,41 @@ export type CategoriesArchiveCategoryGroupData = {
 
 export type CategoriesArchiveCategoryGroupErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesArchiveCategoryGroupError = CategoriesArchiveCategoryGroupErrors[keyof CategoriesArchiveCategoryGroupErrors];
@@ -3534,9 +4586,41 @@ export type CategoriesUpdateCategoryData = {
 
 export type CategoriesUpdateCategoryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesUpdateCategoryError = CategoriesUpdateCategoryErrors[keyof CategoriesUpdateCategoryErrors];
@@ -3589,9 +4673,41 @@ export type CategoriesReadCategoryDataRecordsData = {
 
 export type CategoriesReadCategoryDataRecordsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadCategoryDataRecordsError = CategoriesReadCategoryDataRecordsErrors[keyof CategoriesReadCategoryDataRecordsErrors];
@@ -3623,9 +4739,41 @@ export type CategoriesReadLatestCategoryDataRecordData = {
 
 export type CategoriesReadLatestCategoryDataRecordErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadLatestCategoryDataRecordError = CategoriesReadLatestCategoryDataRecordErrors[keyof CategoriesReadLatestCategoryDataRecordErrors];
@@ -3657,9 +4805,41 @@ export type CategoriesReadCategoryDataSchemaData = {
 
 export type CategoriesReadCategoryDataSchemaErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadCategoryDataSchemaError = CategoriesReadCategoryDataSchemaErrors[keyof CategoriesReadCategoryDataSchemaErrors];
@@ -3691,9 +4871,41 @@ export type CategoriesCreateCategoryDataSchemaData = {
 
 export type CategoriesCreateCategoryDataSchemaErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesCreateCategoryDataSchemaError = CategoriesCreateCategoryDataSchemaErrors[keyof CategoriesCreateCategoryDataSchemaErrors];
@@ -3725,9 +4937,41 @@ export type CategoriesArchiveCategoryData = {
 
 export type CategoriesArchiveCategoryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesArchiveCategoryError = CategoriesArchiveCategoryErrors[keyof CategoriesArchiveCategoryErrors];
@@ -3759,9 +5003,41 @@ export type CategoriesRestoreCategoryData = {
 
 export type CategoriesRestoreCategoryErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesRestoreCategoryError = CategoriesRestoreCategoryErrors[keyof CategoriesRestoreCategoryErrors];
@@ -3806,9 +5082,41 @@ export type CategoriesExportCategoryDataRecordsCsvData = {
 
 export type CategoriesExportCategoryDataRecordsCsvErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesExportCategoryDataRecordsCsvError = CategoriesExportCategoryDataRecordsCsvErrors[keyof CategoriesExportCategoryDataRecordsCsvErrors];
@@ -3838,9 +5146,41 @@ export type CategoriesReadCategoryDataSchemasData = {
 
 export type CategoriesReadCategoryDataSchemasErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadCategoryDataSchemasError = CategoriesReadCategoryDataSchemasErrors[keyof CategoriesReadCategoryDataSchemasErrors];
@@ -3876,9 +5216,41 @@ export type CategoriesReadCategoryDataSchemaVersionData = {
 
 export type CategoriesReadCategoryDataSchemaVersionErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CategoriesReadCategoryDataSchemaVersionError = CategoriesReadCategoryDataSchemaVersionErrors[keyof CategoriesReadCategoryDataSchemaVersionErrors];
@@ -3915,9 +5287,41 @@ export type CounterpartiesPreviewCategoryCounterpartyApplyData = {
 
 export type CounterpartiesPreviewCategoryCounterpartyApplyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesPreviewCategoryCounterpartyApplyError = CounterpartiesPreviewCategoryCounterpartyApplyErrors[keyof CounterpartiesPreviewCategoryCounterpartyApplyErrors];
@@ -3949,9 +5353,41 @@ export type CounterpartiesApplyCategoryCounterpartyData = {
 
 export type CounterpartiesApplyCategoryCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesApplyCategoryCounterpartyError = CounterpartiesApplyCategoryCounterpartyErrors[keyof CounterpartiesApplyCategoryCounterpartyErrors];
@@ -3972,6 +5408,47 @@ export type CounterpartiesReadCounterpartiesData = {
     url: '/api/v1/counterparties';
 };
 
+export type CounterpartiesReadCounterpartiesErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type CounterpartiesReadCounterpartiesError = CounterpartiesReadCounterpartiesErrors[keyof CounterpartiesReadCounterpartiesErrors];
+
 export type CounterpartiesReadCounterpartiesResponses = {
     /**
      * Successful Response
@@ -3990,9 +5467,41 @@ export type CounterpartiesCreateCounterpartyData = {
 
 export type CounterpartiesCreateCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesCreateCounterpartyError = CounterpartiesCreateCounterpartyErrors[keyof CounterpartiesCreateCounterpartyErrors];
@@ -4024,9 +5533,41 @@ export type CounterpartiesSearchCounterpartiesData = {
 
 export type CounterpartiesSearchCounterpartiesErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesSearchCounterpartiesError = CounterpartiesSearchCounterpartiesErrors[keyof CounterpartiesSearchCounterpartiesErrors];
@@ -4054,9 +5595,41 @@ export type CounterpartiesDeleteCounterpartyData = {
 
 export type CounterpartiesDeleteCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesDeleteCounterpartyError = CounterpartiesDeleteCounterpartyErrors[keyof CounterpartiesDeleteCounterpartyErrors];
@@ -4084,9 +5657,41 @@ export type CounterpartiesReadCounterpartyData = {
 
 export type CounterpartiesReadCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesReadCounterpartyError = CounterpartiesReadCounterpartyErrors[keyof CounterpartiesReadCounterpartyErrors];
@@ -4114,9 +5719,41 @@ export type CounterpartiesUpdateCounterpartyData = {
 
 export type CounterpartiesUpdateCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesUpdateCounterpartyError = CounterpartiesUpdateCounterpartyErrors[keyof CounterpartiesUpdateCounterpartyErrors];
@@ -4148,9 +5785,41 @@ export type CounterpartiesAssignCategoryCounterpartyData = {
 
 export type CounterpartiesAssignCategoryCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesAssignCategoryCounterpartyError = CounterpartiesAssignCategoryCounterpartyErrors[keyof CounterpartiesAssignCategoryCounterpartyErrors];
@@ -4182,9 +5851,41 @@ export type CounterpartiesReadObligationCounterpartyData = {
 
 export type CounterpartiesReadObligationCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesReadObligationCounterpartyError = CounterpartiesReadObligationCounterpartyErrors[keyof CounterpartiesReadObligationCounterpartyErrors];
@@ -4218,9 +5919,41 @@ export type CounterpartiesAssignObligationCounterpartyData = {
 
 export type CounterpartiesAssignObligationCounterpartyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type CounterpartiesAssignObligationCounterpartyError = CounterpartiesAssignObligationCounterpartyErrors[keyof CounterpartiesAssignObligationCounterpartyErrors];
@@ -4243,6 +5976,47 @@ export type IntegrationReadIntegrationContextData = {
     url: '/api/v1/integration/context';
 };
 
+export type IntegrationReadIntegrationContextErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type IntegrationReadIntegrationContextError = IntegrationReadIntegrationContextErrors[keyof IntegrationReadIntegrationContextErrors];
+
 export type IntegrationReadIntegrationContextResponses = {
     /**
      * Successful Response
@@ -4261,13 +6035,41 @@ export type IntegrationStartIntegrationRunData = {
 
 export type IntegrationStartIntegrationRunErrors = {
     /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
      * Integration run conflict
      */
     409: IntegrationConflictResponse;
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationStartIntegrationRunError = IntegrationStartIntegrationRunErrors[keyof IntegrationStartIntegrationRunErrors];
@@ -4290,13 +6092,41 @@ export type IntegrationFinishIntegrationRunData = {
 
 export type IntegrationFinishIntegrationRunErrors = {
     /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
      * Integration run conflict
      */
     409: IntegrationConflictResponse;
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationFinishIntegrationRunError = IntegrationFinishIntegrationRunErrors[keyof IntegrationFinishIntegrationRunErrors];
@@ -4316,6 +6146,47 @@ export type IntegrationReadLatestIntegrationCategoryDataRecordData = {
     query?: never;
     url: '/api/v1/integration/category/data-records/latest';
 };
+
+export type IntegrationReadLatestIntegrationCategoryDataRecordErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type IntegrationReadLatestIntegrationCategoryDataRecordError = IntegrationReadLatestIntegrationCategoryDataRecordErrors[keyof IntegrationReadLatestIntegrationCategoryDataRecordErrors];
 
 export type IntegrationReadLatestIntegrationCategoryDataRecordResponses = {
     /**
@@ -4352,9 +6223,41 @@ export type IntegrationReadIntegrationCategoryDataRecordsData = {
 
 export type IntegrationReadIntegrationCategoryDataRecordsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationReadIntegrationCategoryDataRecordsError = IntegrationReadIntegrationCategoryDataRecordsErrors[keyof IntegrationReadIntegrationCategoryDataRecordsErrors];
@@ -4377,9 +6280,41 @@ export type IntegrationCreateIntegrationCategoryDataRecordData = {
 
 export type IntegrationCreateIntegrationCategoryDataRecordErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationCreateIntegrationCategoryDataRecordError = IntegrationCreateIntegrationCategoryDataRecordErrors[keyof IntegrationCreateIntegrationCategoryDataRecordErrors];
@@ -4399,6 +6334,47 @@ export type IntegrationReadIntegrationCategoryDataSchemaData = {
     query?: never;
     url: '/api/v1/integration/category/schema';
 };
+
+export type IntegrationReadIntegrationCategoryDataSchemaErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type IntegrationReadIntegrationCategoryDataSchemaError = IntegrationReadIntegrationCategoryDataSchemaErrors[keyof IntegrationReadIntegrationCategoryDataSchemaErrors];
 
 export type IntegrationReadIntegrationCategoryDataSchemaResponses = {
     /**
@@ -4431,9 +6407,41 @@ export type IntegrationReadIntegrationObligationsData = {
 
 export type IntegrationReadIntegrationObligationsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationReadIntegrationObligationsError = IntegrationReadIntegrationObligationsErrors[keyof IntegrationReadIntegrationObligationsErrors];
@@ -4463,9 +6471,41 @@ export type IntegrationReadIntegrationObligationData = {
 
 export type IntegrationReadIntegrationObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationReadIntegrationObligationError = IntegrationReadIntegrationObligationErrors[keyof IntegrationReadIntegrationObligationErrors];
@@ -4495,9 +6535,41 @@ export type IntegrationUpdateIntegrationObligationData = {
 
 export type IntegrationUpdateIntegrationObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationUpdateIntegrationObligationError = IntegrationUpdateIntegrationObligationErrors[keyof IntegrationUpdateIntegrationObligationErrors];
@@ -4527,9 +6599,41 @@ export type IntegrationReadIntegrationObligationComponentsData = {
 
 export type IntegrationReadIntegrationObligationComponentsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationReadIntegrationObligationComponentsError = IntegrationReadIntegrationObligationComponentsErrors[keyof IntegrationReadIntegrationObligationComponentsErrors];
@@ -4559,9 +6663,41 @@ export type IntegrationUpsertIntegrationObligationComponentData = {
 
 export type IntegrationUpsertIntegrationObligationComponentErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationUpsertIntegrationObligationComponentError = IntegrationUpsertIntegrationObligationComponentErrors[keyof IntegrationUpsertIntegrationObligationComponentErrors];
@@ -4591,9 +6727,41 @@ export type IntegrationMarkIntegrationObligationReadyData = {
 
 export type IntegrationMarkIntegrationObligationReadyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationMarkIntegrationObligationReadyError = IntegrationMarkIntegrationObligationReadyErrors[keyof IntegrationMarkIntegrationObligationReadyErrors];
@@ -4623,9 +6791,41 @@ export type IntegrationMarkIntegrationObligationPaidData = {
 
 export type IntegrationMarkIntegrationObligationPaidErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationMarkIntegrationObligationPaidError = IntegrationMarkIntegrationObligationPaidErrors[keyof IntegrationMarkIntegrationObligationPaidErrors];
@@ -4655,9 +6855,41 @@ export type IntegrationCancelIntegrationObligationData = {
 
 export type IntegrationCancelIntegrationObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationCancelIntegrationObligationError = IntegrationCancelIntegrationObligationErrors[keyof IntegrationCancelIntegrationObligationErrors];
@@ -4687,9 +6919,41 @@ export type IntegrationReopenIntegrationObligationData = {
 
 export type IntegrationReopenIntegrationObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationReopenIntegrationObligationError = IntegrationReopenIntegrationObligationErrors[keyof IntegrationReopenIntegrationObligationErrors];
@@ -4719,9 +6983,41 @@ export type IntegrationMarkIntegrationObligationErrorData = {
 
 export type IntegrationMarkIntegrationObligationErrorErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationMarkIntegrationObligationErrorError = IntegrationMarkIntegrationObligationErrorErrors[keyof IntegrationMarkIntegrationObligationErrorErrors];
@@ -4751,9 +7047,41 @@ export type IntegrationAppendIntegrationObligationNoteData = {
 
 export type IntegrationAppendIntegrationObligationNoteErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationAppendIntegrationObligationNoteError = IntegrationAppendIntegrationObligationNoteErrors[keyof IntegrationAppendIntegrationObligationNoteErrors];
@@ -4790,9 +7118,41 @@ export type IntegrationsListIntegrationsData = {
 
 export type IntegrationsListIntegrationsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsListIntegrationsError = IntegrationsListIntegrationsErrors[keyof IntegrationsListIntegrationsErrors];
@@ -4820,13 +7180,41 @@ export type IntegrationsCreateIntegrationData = {
 
 export type IntegrationsCreateIntegrationErrors = {
     /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
      * Integration state or identity conflict
      */
     409: IntegrationConflictResponse;
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsCreateIntegrationError = IntegrationsCreateIntegrationErrors[keyof IntegrationsCreateIntegrationErrors];
@@ -4858,9 +7246,41 @@ export type IntegrationsGetIntegrationData = {
 
 export type IntegrationsGetIntegrationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsGetIntegrationError = IntegrationsGetIntegrationErrors[keyof IntegrationsGetIntegrationErrors];
@@ -4892,13 +7312,41 @@ export type IntegrationsUpdateIntegrationData = {
 
 export type IntegrationsUpdateIntegrationErrors = {
     /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
      * Integration state or revision conflict
      */
     409: IntegrationConflictResponse;
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsUpdateIntegrationError = IntegrationsUpdateIntegrationErrors[keyof IntegrationsUpdateIntegrationErrors];
@@ -4930,9 +7378,41 @@ export type IntegrationsGenerateIntegrationCredentialData = {
 
 export type IntegrationsGenerateIntegrationCredentialErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsGenerateIntegrationCredentialError = IntegrationsGenerateIntegrationCredentialErrors[keyof IntegrationsGenerateIntegrationCredentialErrors];
@@ -4968,9 +7448,41 @@ export type IntegrationsRevokeIntegrationCredentialData = {
 
 export type IntegrationsRevokeIntegrationCredentialErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsRevokeIntegrationCredentialError = IntegrationsRevokeIntegrationCredentialErrors[keyof IntegrationsRevokeIntegrationCredentialErrors];
@@ -5011,9 +7523,41 @@ export type IntegrationsListIntegrationRunsData = {
 
 export type IntegrationsListIntegrationRunsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type IntegrationsListIntegrationRunsError = IntegrationsListIntegrationRunsErrors[keyof IntegrationsListIntegrationRunsErrors];
@@ -5041,9 +7585,41 @@ export type LegacyImportReadLegacyImportJobData = {
 
 export type LegacyImportReadLegacyImportJobErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LegacyImportReadLegacyImportJobError = LegacyImportReadLegacyImportJobErrors[keyof LegacyImportReadLegacyImportJobErrors];
@@ -5071,9 +7647,41 @@ export type LegacyImportStartLegacyImportData = {
 
 export type LegacyImportStartLegacyImportErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type LegacyImportStartLegacyImportError = LegacyImportStartLegacyImportErrors[keyof LegacyImportStartLegacyImportErrors];
@@ -5110,9 +7718,41 @@ export type ObligationsEnsureObligationsData = {
 
 export type ObligationsEnsureObligationsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsEnsureObligationsError = ObligationsEnsureObligationsErrors[keyof ObligationsEnsureObligationsErrors];
@@ -5144,9 +7784,41 @@ export type ObligationsReadObligationComponentsData = {
 
 export type ObligationsReadObligationComponentsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsReadObligationComponentsError = ObligationsReadObligationComponentsErrors[keyof ObligationsReadObligationComponentsErrors];
@@ -5178,9 +7850,41 @@ export type ObligationsAddObligationComponentData = {
 
 export type ObligationsAddObligationComponentErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsAddObligationComponentError = ObligationsAddObligationComponentErrors[keyof ObligationsAddObligationComponentErrors];
@@ -5221,9 +7925,41 @@ export type ObligationsReadObligationActionsData = {
 
 export type ObligationsReadObligationActionsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsReadObligationActionsError = ObligationsReadObligationActionsErrors[keyof ObligationsReadObligationActionsErrors];
@@ -5255,9 +7991,41 @@ export type ObligationsUpsertObligationComponentData = {
 
 export type ObligationsUpsertObligationComponentErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsUpsertObligationComponentError = ObligationsUpsertObligationComponentErrors[keyof ObligationsUpsertObligationComponentErrors];
@@ -5293,9 +8061,41 @@ export type ObligationsRemoveObligationComponentData = {
 
 export type ObligationsRemoveObligationComponentErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsRemoveObligationComponentError = ObligationsRemoveObligationComponentErrors[keyof ObligationsRemoveObligationComponentErrors];
@@ -5331,9 +8131,41 @@ export type ObligationsUpdateObligationComponentData = {
 
 export type ObligationsUpdateObligationComponentErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsUpdateObligationComponentError = ObligationsUpdateObligationComponentErrors[keyof ObligationsUpdateObligationComponentErrors];
@@ -5365,9 +8197,41 @@ export type ObligationsReadObligationData = {
 
 export type ObligationsReadObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsReadObligationError = ObligationsReadObligationErrors[keyof ObligationsReadObligationErrors];
@@ -5399,9 +8263,41 @@ export type ObligationsUpdateObligationData = {
 
 export type ObligationsUpdateObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsUpdateObligationError = ObligationsUpdateObligationErrors[keyof ObligationsUpdateObligationErrors];
@@ -5433,9 +8329,41 @@ export type ObligationsMarkObligationReadyData = {
 
 export type ObligationsMarkObligationReadyErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsMarkObligationReadyError = ObligationsMarkObligationReadyErrors[keyof ObligationsMarkObligationReadyErrors];
@@ -5467,9 +8395,41 @@ export type ObligationsMarkObligationPaidData = {
 
 export type ObligationsMarkObligationPaidErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsMarkObligationPaidError = ObligationsMarkObligationPaidErrors[keyof ObligationsMarkObligationPaidErrors];
@@ -5501,9 +8461,41 @@ export type ObligationsCancelObligationData = {
 
 export type ObligationsCancelObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsCancelObligationError = ObligationsCancelObligationErrors[keyof ObligationsCancelObligationErrors];
@@ -5535,9 +8527,41 @@ export type ObligationsReopenObligationData = {
 
 export type ObligationsReopenObligationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type ObligationsReopenObligationError = ObligationsReopenObligationErrors[keyof ObligationsReopenObligationErrors];
@@ -5557,6 +8581,47 @@ export type SystemRunsReadSystemRunTasksData = {
     query?: never;
     url: '/api/v1/system-runs/tasks';
 };
+
+export type SystemRunsReadSystemRunTasksErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type SystemRunsReadSystemRunTasksError = SystemRunsReadSystemRunTasksErrors[keyof SystemRunsReadSystemRunTasksErrors];
 
 export type SystemRunsReadSystemRunTasksResponses = {
     /**
@@ -5583,9 +8648,41 @@ export type SystemRunsReadSystemRunsData = {
 
 export type SystemRunsReadSystemRunsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type SystemRunsReadSystemRunsError = SystemRunsReadSystemRunsErrors[keyof SystemRunsReadSystemRunsErrors];
@@ -5608,9 +8705,41 @@ export type SystemRunsStartSystemRunData = {
 
 export type SystemRunsStartSystemRunErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type SystemRunsStartSystemRunError = SystemRunsStartSystemRunErrors[keyof SystemRunsStartSystemRunErrors];
@@ -5638,9 +8767,41 @@ export type SystemRunsReadSystemRunData = {
 
 export type SystemRunsReadSystemRunErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type SystemRunsReadSystemRunError = SystemRunsReadSystemRunErrors[keyof SystemRunsReadSystemRunErrors];
@@ -5672,9 +8833,41 @@ export type UserInvitationsListInvitationsData = {
 
 export type UserInvitationsListInvitationsErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UserInvitationsListInvitationsError = UserInvitationsListInvitationsErrors[keyof UserInvitationsListInvitationsErrors];
@@ -5697,9 +8890,41 @@ export type UserInvitationsCreateInvitationData = {
 
 export type UserInvitationsCreateInvitationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UserInvitationsCreateInvitationError = UserInvitationsCreateInvitationErrors[keyof UserInvitationsCreateInvitationErrors];
@@ -5727,9 +8952,41 @@ export type UserInvitationsResendInvitationData = {
 
 export type UserInvitationsResendInvitationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UserInvitationsResendInvitationError = UserInvitationsResendInvitationErrors[keyof UserInvitationsResendInvitationErrors];
@@ -5757,9 +9014,41 @@ export type UserInvitationsRevokeInvitationData = {
 
 export type UserInvitationsRevokeInvitationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UserInvitationsRevokeInvitationError = UserInvitationsRevokeInvitationErrors[keyof UserInvitationsRevokeInvitationErrors];
@@ -5787,9 +9076,41 @@ export type UserInvitationsInspectInvitationData = {
 
 export type UserInvitationsInspectInvitationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UserInvitationsInspectInvitationError = UserInvitationsInspectInvitationErrors[keyof UserInvitationsInspectInvitationErrors];
@@ -5817,9 +9138,41 @@ export type UserInvitationsAcceptInvitationData = {
 
 export type UserInvitationsAcceptInvitationErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UserInvitationsAcceptInvitationError = UserInvitationsAcceptInvitationErrors[keyof UserInvitationsAcceptInvitationErrors];
@@ -5851,9 +9204,41 @@ export type UsersReadUsersData = {
 
 export type UsersReadUsersErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersReadUsersError = UsersReadUsersErrors[keyof UsersReadUsersErrors];
@@ -5874,6 +9259,47 @@ export type UsersDeleteUserMeData = {
     url: '/api/v1/users/me';
 };
 
+export type UsersDeleteUserMeErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type UsersDeleteUserMeError = UsersDeleteUserMeErrors[keyof UsersDeleteUserMeErrors];
+
 export type UsersDeleteUserMeResponses = {
     /**
      * Successful Response
@@ -5889,6 +9315,47 @@ export type UsersReadUserMeData = {
     query?: never;
     url: '/api/v1/users/me';
 };
+
+export type UsersReadUserMeErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type UsersReadUserMeError = UsersReadUserMeErrors[keyof UsersReadUserMeErrors];
 
 export type UsersReadUserMeResponses = {
     /**
@@ -5908,9 +9375,41 @@ export type UsersUpdateUserMeData = {
 
 export type UsersUpdateUserMeErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersUpdateUserMeError = UsersUpdateUserMeErrors[keyof UsersUpdateUserMeErrors];
@@ -5931,6 +9430,47 @@ export type UsersReadReportPreferencesData = {
     url: '/api/v1/users/me/report-preferences';
 };
 
+export type UsersReadReportPreferencesErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type UsersReadReportPreferencesError = UsersReadReportPreferencesErrors[keyof UsersReadReportPreferencesErrors];
+
 export type UsersReadReportPreferencesResponses = {
     /**
      * Successful Response
@@ -5949,9 +9489,41 @@ export type UsersUpdateReportPreferencesData = {
 
 export type UsersUpdateReportPreferencesErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersUpdateReportPreferencesError = UsersUpdateReportPreferencesErrors[keyof UsersUpdateReportPreferencesErrors];
@@ -5974,9 +9546,41 @@ export type UsersUpdatePasswordMeData = {
 
 export type UsersUpdatePasswordMeErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersUpdatePasswordMeError = UsersUpdatePasswordMeErrors[keyof UsersUpdatePasswordMeErrors];
@@ -6004,9 +9608,41 @@ export type UsersDeleteUserData = {
 
 export type UsersDeleteUserErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersDeleteUserError = UsersDeleteUserErrors[keyof UsersDeleteUserErrors];
@@ -6034,9 +9670,41 @@ export type UsersReadUserByIdData = {
 
 export type UsersReadUserByIdErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersReadUserByIdError = UsersReadUserByIdErrors[keyof UsersReadUserByIdErrors];
@@ -6064,9 +9732,41 @@ export type UsersUpdateUserData = {
 
 export type UsersUpdateUserErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UsersUpdateUserError = UsersUpdateUserErrors[keyof UsersUpdateUserErrors];
@@ -6094,9 +9794,41 @@ export type UtilsTestEmailData = {
 
 export type UtilsTestEmailErrors = {
     /**
-     * Validation Error
+     * Application error with stable code; legacy detail is unchanged
      */
-    422: HttpValidationError;
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
 };
 
 export type UtilsTestEmailError = UtilsTestEmailErrors[keyof UtilsTestEmailErrors];
@@ -6117,6 +9849,47 @@ export type UtilsHealthCheckData = {
     url: '/api/v1/utils/health-check/';
 };
 
+export type UtilsHealthCheckErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type UtilsHealthCheckError = UtilsHealthCheckErrors[keyof UtilsHealthCheckErrors];
+
 export type UtilsHealthCheckResponses = {
     /**
      * Response Utils-Health Check
@@ -6134,6 +9907,47 @@ export type UtilsReadinessCheckData = {
     query?: never;
     url: '/api/v1/utils/readiness-check/';
 };
+
+export type UtilsReadinessCheckErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type UtilsReadinessCheckError = UtilsReadinessCheckErrors[keyof UtilsReadinessCheckErrors];
 
 export type UtilsReadinessCheckResponses = {
     /**

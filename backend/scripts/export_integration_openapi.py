@@ -8,6 +8,7 @@ from fastapi.routing import APIRoute
 
 from app.api.routes.integration import router as integration_router
 from app.core.config import settings
+from app.schemas.api_errors import ApiErrorResponse
 
 DATA_RECORD_SCHEMA_NAMES = (
     "IntegrationCategoryDataRecordCreate",
@@ -26,7 +27,14 @@ def build_integration_app() -> FastAPI:
         version="1.0.0",
         generate_unique_id_function=custom_generate_unique_id,
     )
-    app.include_router(integration_router, prefix=settings.API_V1_STR)
+    app.include_router(
+        integration_router,
+        prefix=settings.API_V1_STR,
+        responses={
+            status: {"model": ApiErrorResponse}
+            for status in (400, 401, 403, 404, 409, 413, 422, 500, 503)
+        },
+    )
     return app
 
 

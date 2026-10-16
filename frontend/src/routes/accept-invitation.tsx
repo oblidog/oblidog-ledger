@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link as RouterLink } from "@tanstack/react-router"
-import type { AxiosError } from "axios"
 import { CircleCheckBig, CircleX, LoaderCircle } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -22,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import { i18n } from "@/i18n"
+import { getApiErrorMessage } from "@/i18n/apiErrors"
 import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 
 const searchSchema = z.object({
@@ -51,33 +51,7 @@ const invitationErrorMessage = (error: Error | null, hasToken: boolean) => {
   if (!hasToken)
     return i18n.t("app:auth.this_invitation_link_is_missing_its_token")
 
-  const detail = (
-    (error as AxiosError | null)?.response?.data as
-      | { detail?: string }
-      | undefined
-  )?.detail
-
-  if (detail === "Invitation has expired") {
-    return i18n.t(
-      "app:auth.this_invitation_has_expired_ask_an_administrator_to_resend_it",
-    )
-  }
-  if (detail === "Invitation has been revoked") {
-    return i18n.t(
-      "app:auth.this_invitation_has_been_revoked_ask_an_administrator_for_a_new_one_message",
-    )
-  }
-  if (detail === "Invitation has already been accepted") {
-    return i18n.t(
-      "app:auth.this_invitation_has_already_been_used_you_can_sign_in_to_your_account",
-    )
-  }
-  if (detail === "Invitation not found") {
-    return i18n.t("app:auth.this_invitation_link_is_invalid")
-  }
-  return i18n.t(
-    "app:auth.we_could_not_verify_this_invitation_please_try_again_or_ask_an_administrator_for_a_ne",
-  )
+  return getApiErrorMessage(error)
 }
 
 export const Route = createFileRoute("/accept-invitation")({

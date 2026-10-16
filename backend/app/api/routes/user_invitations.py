@@ -1,9 +1,10 @@
 import uuid
 from typing import NoReturn
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.config import settings
 from app.models import UserInvitation
 from app.schemas import (
@@ -58,22 +59,36 @@ def _send_invitation(email: str, token: str) -> None:
 
 def _raise_http_error(exc: Exception) -> NoReturn:
     if isinstance(exc, invitation_service.InvitationNotFoundError):
-        raise HTTPException(status_code=404, detail="Invitation not found")
+        raise HTTPException(
+            code="invitation_not_found", status_code=404, detail="Invitation not found"
+        )
     if isinstance(exc, invitation_service.InvitationExpiredError):
-        raise HTTPException(status_code=410, detail="Invitation has expired")
+        raise HTTPException(
+            code="invitation_expired", status_code=410, detail="Invitation has expired"
+        )
     if isinstance(exc, invitation_service.InvitationRevokedError):
-        raise HTTPException(status_code=410, detail="Invitation has been revoked")
+        raise HTTPException(
+            code="invitation_revoked",
+            status_code=410,
+            detail="Invitation has been revoked",
+        )
     if isinstance(exc, invitation_service.InvitationAcceptedError):
         raise HTTPException(
-            status_code=409, detail="Invitation has already been accepted"
+            code="invitation_accepted",
+            status_code=409,
+            detail="Invitation has already been accepted",
         )
     if isinstance(exc, invitation_service.InvitationAlreadyExistsError):
         raise HTTPException(
-            status_code=409, detail="An active invitation for this email already exists"
+            code="invitation_conflict",
+            status_code=409,
+            detail="An active invitation for this email already exists",
         )
     if isinstance(exc, invitation_service.InvitationUserAlreadyExistsError):
         raise HTTPException(
-            status_code=409, detail="A user with this email already exists"
+            code="user_email_conflict",
+            status_code=409,
+            detail="A user with this email already exists",
         )
     raise exc
 

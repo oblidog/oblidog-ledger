@@ -45,7 +45,7 @@ def test_readiness_fails_without_exposing_database_error(
     response = client.get(f"{settings.API_V1_STR}/utils/readiness-check/")
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "Service unavailable"}
+    assert response.json()["detail"] == "Service unavailable"
     assert "secret-password" not in response.text
 
 

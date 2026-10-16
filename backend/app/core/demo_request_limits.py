@@ -7,6 +7,7 @@ from typing import Any
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.core.api_errors import error_body
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -99,4 +100,6 @@ class DemoRequestLimitsMiddleware:
             detail,
             scope["method"],
         )
-        await JSONResponse({"detail": detail}, status_code=code)(scope, receive, send)
+        await JSONResponse(
+            error_body("demo_request_too_large", detail), status_code=code
+        )(scope, receive, send)

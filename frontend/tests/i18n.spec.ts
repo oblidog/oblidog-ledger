@@ -229,3 +229,38 @@ test("visible JSON errors follow the language without losing the draft", async (
     page.getByText("Enter valid JSON before saving.", { exact: true }),
   ).toBeAttached()
 })
+
+test("API errors use stable codes in Polish and hide unknown diagnostics", async ({
+  page,
+}) => {
+  await api(page, false)
+  let payload = {
+    code: "auth_invalid_credentials",
+    detail: "operator-only diagnostic",
+    params: {},
+  }
+  await page.route("**/login/session", (route) =>
+    route.fulfill({ status: 400, json: payload }),
+  )
+  await page.goto("/login")
+  await (await selector(page)).selectOption("pl")
+  await page.getByTestId("email-input").fill("user@example.com")
+  await page.getByTestId("password-input").fill("valid-password")
+  await page.getByRole("button", { name: "Zaloguj się", exact: true }).click()
+  await expect(
+    page.getByText("Nieprawidłowy e-mail lub hasło", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("operator-only diagnostic", { exact: true }),
+  ).toHaveCount(0)
+  payload = { ...payload, code: "future_unknown_error" }
+  await page.getByRole("button", { name: "Zaloguj się", exact: true }).click()
+  await expect(
+    page.getByText("Nie udało się wykonać operacji. Spróbuj ponownie.", {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("operator-only diagnostic", { exact: true }),
+  ).toHaveCount(0)
+})

@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import or_, select
 
 from app.api.deps import (
@@ -12,6 +12,7 @@ from app.api.deps import (
     require_ledger_edit_access,
     require_ledger_view_access,
 )
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.business_date import business_today
 from app.domain import BillingPeriod, ObligationKey
 from app.models import Category, Ledger, Obligation, User
@@ -47,10 +48,14 @@ def _category_for_counterparty_apply(
         statement = statement.with_for_update()
     category = session.scalar(statement)
     if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise HTTPException(
+            code="category_not_found", status_code=404, detail="Category not found"
+        )
     if category.counterparty_id is None:
         raise HTTPException(
-            status_code=409, detail="Assign a category counterparty first"
+            code="counterparty_required",
+            status_code=409,
+            detail="Assign a category counterparty first",
         )
     return category
 
@@ -131,12 +136,16 @@ def apply_category_counterparty(
         period.month,
     ) != (assignment.period_year, assignment.period_month):
         raise HTTPException(
-            status_code=409, detail="Category or period changed. Reload the preview."
+            code="counterparty_preview_stale",
+            status_code=409,
+            detail="Category or period changed. Reload the preview.",
         )
     counterparty = category.counterparty
     if counterparty is None:
         raise HTTPException(
-            status_code=409, detail="Assign a category counterparty first"
+            code="counterparty_required",
+            status_code=409,
+            detail="Assign a category counterparty first",
         )
     targets = _counterparty_apply_targets(
         session, category, period, overwrite=assignment.overwrite, lock=True
@@ -202,7 +211,9 @@ def read_counterparty(
         )
     except counterparty_service.CounterpartyNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Counterparty not found"
+            code="counterparty_not_found",
+            status_code=404,
+            detail="Counterparty not found",
         ) from caught_error
     return CounterpartyPublic.model_validate(counterparty)
 
@@ -220,10 +231,14 @@ def create_counterparty(
         )
     except counterparty_service.DuplicateCounterpartyError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Counterparty already exists"
+            code="counterparty_conflict",
+            status_code=409,
+            detail="Counterparty already exists",
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="counterparty_invalid_values", status_code=422, detail=str(exc)
+        ) from exc
     return CounterpartyPublic.model_validate(counterparty)
 
 
@@ -243,14 +258,20 @@ def update_counterparty(
         )
     except counterparty_service.CounterpartyNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Counterparty not found"
+            code="counterparty_not_found",
+            status_code=404,
+            detail="Counterparty not found",
         ) from caught_error
     except counterparty_service.DuplicateCounterpartyError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Counterparty already exists"
+            code="counterparty_conflict",
+            status_code=409,
+            detail="Counterparty already exists",
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="counterparty_invalid_values", status_code=422, detail=str(exc)
+        ) from exc
     return CounterpartyPublic.model_validate(counterparty)
 
 
@@ -267,11 +288,13 @@ def delete_counterparty(
         )
     except counterparty_service.CounterpartyNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Counterparty not found"
+            code="counterparty_not_found",
+            status_code=404,
+            detail="Counterparty not found",
         ) from caught_error
     except counterparty_service.CounterpartyInUseError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Counterparty is in use"
+            code="counterparty_in_use", status_code=409, detail="Counterparty is in use"
         ) from caught_error
     return Message(message="Counterparty deleted")
 
@@ -294,7 +317,9 @@ def assign_category_counterparty(
         )
     )
     if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise HTTPException(
+            code="category_not_found", status_code=404, detail="Category not found"
+        )
     if assignment.counterparty_id is not None:
         try:
             counterparty_service.get_counterparty(
@@ -302,7 +327,9 @@ def assign_category_counterparty(
             )
         except counterparty_service.CounterpartyNotFoundError as caught_error:
             raise HTTPException(
-                status_code=404, detail="Counterparty not found"
+                code="counterparty_not_found",
+                status_code=404,
+                detail="Counterparty not found",
             ) from caught_error
     category.counterparty_id = assignment.counterparty_id
     session.commit()
@@ -327,7 +354,7 @@ def read_obligation_counterparty(
         )
     except (ValueError, ObligationNotFoundError) as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     return _counterparty_summary_or_none(obligation.counterparty)
 
@@ -350,7 +377,7 @@ def assign_obligation_counterparty(
         )
     except (ValueError, ObligationNotFoundError) as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     if assignment.counterparty_id is not None:
         try:
@@ -359,7 +386,9 @@ def assign_obligation_counterparty(
             )
         except counterparty_service.CounterpartyNotFoundError as caught_error:
             raise HTTPException(
-                status_code=404, detail="Counterparty not found"
+                code="counterparty_not_found",
+                status_code=404,
+                detail="Counterparty not found",
             ) from caught_error
     obligation.counterparty_id = assignment.counterparty_id
     session.commit()

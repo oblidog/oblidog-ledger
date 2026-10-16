@@ -2,12 +2,13 @@ import asyncio
 import os
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic.networks import EmailStr
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.deps import get_current_active_superuser
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.config import settings
 from app.core.db import engine
 from app.demo_seed import DEMO_EMAIL, DEMO_PASSWORD_ENV
@@ -74,6 +75,7 @@ async def readiness_check() -> bool:
         )
     except TimeoutError, SQLAlchemyError:
         raise HTTPException(
+            code="service_unavailable",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Service unavailable",
         ) from None

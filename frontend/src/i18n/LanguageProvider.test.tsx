@@ -293,14 +293,14 @@ test("integration form errors translate on language changes", async () => {
         )
     })
     expect(browser.document.body.textContent).toContain(
-      "Enter a name and select a category.",
+      "Name: this field is required",
     )
     await select("pl")
     expect(browser.document.body.textContent).toContain(
-      "Podaj nazwę i wybierz kategorię.",
+      "Nazwa: to pole jest wymagane",
     )
     expect(browser.document.body.textContent).not.toContain(
-      "Enter a name and select a category.",
+      "Name: this field is required",
     )
   } finally {
     categoriesSpy.mockRestore()
