@@ -1,4 +1,11 @@
-import { Column, Heading, Row, Section, Text } from "@react-email/components"
+import {
+  Column,
+  Heading,
+  Link,
+  Row,
+  Section,
+  Text,
+} from "@react-email/components"
 import type { ReactNode } from "react"
 import {
   EmailButton,
@@ -149,8 +156,25 @@ export default function WeeklyOverviewEmail({
       </Text>
       <TemplateIf
         tokens={tokens}
-        expression="not ledgers"
-        show={!context.ledgers.length}
+        expression="weekly_size_notice"
+        show={Boolean(context.weekly_size_notice)}
+      >
+        <Text style={detailStyle}>
+          {v("weekly_size_notice", context.weekly_size_notice ?? "")}
+        </Text>
+        <Text style={detailStyle}>
+          <Link
+            href={v("app_url", context.app_url ?? "")}
+            style={{ color: "#1c614d", textDecoration: "underline" }}
+          >
+            {t("open_data")} →
+          </Link>
+        </Text>
+      </TemplateIf>
+      <TemplateIf
+        tokens={tokens}
+        expression="not ledgers and not weekly_size_notice"
+        show={!context.ledgers.length && !context.weekly_size_notice}
       >
         <Text style={detailStyle}>{t("weekly_empty")}</Text>
       </TemplateIf>
@@ -289,8 +313,8 @@ export default function WeeklyOverviewEmail({
                   <MinorHeading>{t("upcoming")}</MinorHeading>
                   <TemplateIf
                     tokens={tokens}
-                    expression="not item.upcoming"
-                    show={!item.upcoming.length}
+                    expression="not item.upcoming and not item.upcoming_omitted"
+                    show={!item.upcoming.length && !item.upcoming_omitted}
                   >
                     <Text style={detailStyle}>{t("none")}</Text>
                   </TemplateIf>
@@ -325,6 +349,22 @@ export default function WeeklyOverviewEmail({
                       </Text>
                     )}
                   </TemplateLoop>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.upcoming_omitted"
+                    show={Boolean(item.upcoming_omitted)}
+                  >
+                    <Text style={detailStyle}>
+                      {v(
+                        "tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted)",
+                        emailCopy("weekly_upcoming_omitted", language, {
+                          shown: item.upcoming.length,
+                          total:
+                            item.upcoming.length + (item.upcoming_omitted ?? 0),
+                        }),
+                      )}
+                    </Text>
+                  </TemplateIf>
                 </Section>
               )}
             </TemplateLoop>

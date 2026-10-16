@@ -8,6 +8,7 @@ on:
       - backend/app/email_i18n.py
       - backend/app/email-locales/**
       - backend/app/services/weekly_monthly_overview_report.py
+      - backend/app/services/weekly_overview_rendering.py
       - backend/app/email-templates/**
       - backend/app/utils.py
       - backend/app/services/daily_digest_presentation.py

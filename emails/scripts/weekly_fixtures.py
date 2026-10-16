@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.email_i18n import EmailLocale, recipient_language  # noqa: E402
-from app.email_rendering import render_email_template  # noqa: E402
+from app.services.weekly_overview_rendering import render_weekly_overview  # noqa: E402
 
 _AMOUNT_FIELDS = (
     "total_known_amount",
@@ -59,13 +59,8 @@ def weekly_context(raw: dict, language: str) -> dict:
 
 def render_weekly_fixture(raw: dict, language: str) -> tuple[str, str]:
     context = weekly_context(raw, language)
-    return tuple(
-        render_email_template(
-            template_name=f"weekly_monthly_overview_report.{extension}",
-            context=context,
-            language=language,
-        )
-        for extension in ("html", "txt")
+    return render_weekly_overview(
+        context=context, language=recipient_language(language)
     )
 
 

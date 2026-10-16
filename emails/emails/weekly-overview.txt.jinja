@@ -2,7 +2,9 @@
 {{ tr('period') }}: {{ period }}
 {{ tr('snapshot') }}: {{ report_date }}
 
-{% if not ledgers %}{{ tr('weekly_empty') }}
+{% if weekly_size_notice %}{{ weekly_size_notice }}
+{{ tr('open_data') }}: {{ app_url }}
+{% endif %}{% if not ledgers and not weekly_size_notice %}{{ tr('weekly_empty') }}
 {% endif %}{% for ledger in ledgers %}{{ ledger.ledger_name }}
 {% if not ledger.currencies %}  {{ tr('no_obligations') }}
 {% endif %}{% for item in ledger.currencies %}  {{ tr('currency') }}: {{ item.currency or tr('currency_unspecified') }}
@@ -18,9 +20,10 @@
   {{ tr('change_previous') }}: {{ fmt_amount(item.total_change) if item.total_change is not none else tr('na_incomplete') }}
 {% if item.upcoming %}  {{ tr('upcoming') }}:
 {% for obligation in item.upcoming %}    - {{ fmt_date(obligation.due_date) }}: {{ obligation.category_name }} — {{ fmt_amount(obligation.amount) }} {{ item.currency or '' }}
-{% endfor %}{% else %}  {{ tr('upcoming') }}: {{ tr('none') }}
+{% endfor %}{% elif not item.upcoming_omitted %}  {{ tr('upcoming') }}: {{ tr('none') }}
 {% endif %}
-{% endfor %}
+{% if item.upcoming_omitted %}  {{ tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted) }}
+{% endif %}{% endfor %}
 {% endfor %}
 {% if app_url %}{{ tr('open_oblidog') }}: {{ app_url }}
 {% endif %}{{ tr('weekly_footer') }}

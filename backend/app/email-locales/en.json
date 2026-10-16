@@ -137,5 +137,7 @@
   "weekly_count_progress": "Paid obligations (by count)",
   "weekly_incomplete_notice": "Amounts include known values only; the full total is not yet available.",
   "weekly_comparison": "Previous month comparison",
-  "weekly_empty": "No obligations in this snapshot."
+  "weekly_empty": "No obligations in this snapshot.",
+  "weekly_size_notice": "This email was shortened. Summary blocks: {shown_groups} of {total_groups}; upcoming payments: {shown_payments} of {total_payments}. Open Oblidog for the full report.",
+  "weekly_upcoming_omitted": "Upcoming payments in this currency: showing {shown} of {total}. Open Oblidog for the complete list."
 }

@@ -169,3 +169,133 @@ def test_actual_weekly_render_adds_configured_application_link_and_keeps_cadence
         )
         is None
     )
+
+
+@pytest.mark.parametrize("language", ["en", "pl"])
+def test_large_weekly_summary_blocks_are_bounded_with_matching_notices(language):
+    from app.services.weekly_overview_rendering import WEEKLY_OVERVIEW_HTML_BUDGET
+
+    raw = load_weekly_fixture("normal")
+    item = raw["ledgers"][0]["currencies"][0]
+    raw["ledgers"][0]["currencies"] = [
+        {**copy.deepcopy(item), "currency": code}
+        for code in ("PLN", "EUR", "USD", "GBP")
+    ]
+    raw["ledgers"] = [
+        {**copy.deepcopy(raw["ledgers"][0]), "ledger_name": f"Ledger_{index}"}
+        for index in range(6)
+    ]
+    original = copy.deepcopy(raw)
+    markup, text = render_weekly_fixture(raw, language)
+    assert raw == original
+    assert len(markup.encode("utf-8")) <= WEEKLY_OVERVIEW_HTML_BUDGET
+    shown = markup.count("<h3")
+    assert 0 < shown < 24
+    locale = EmailLocale(language)
+    notice = locale.tr(
+        "weekly_size_notice",
+        shown_groups=shown,
+        total_groups=24,
+        shown_payments=0,
+        total_payments=48,
+    )
+    for body in (visible_text(markup), " ".join(text.split())):
+        assert notice in body
+        assert locale.tr("weekly_empty") not in body
+        assert locale.amount("1200.1234") in body
+        assert locale.amount("900.00") in body
+        assert locale.amount("300.1234") in body
+    assert raw["app_url"] in text
+    assert markup.count('href="' + html.escape(raw["app_url"], quote=True) + '"') == 2
+    from emails.message import Message
+
+    message = Message(
+        html=markup,
+        text=text,
+        subject="Weekly test",
+        mail_from=("Oblidog", "noreply@example.com"),
+    )
+    for part in message.as_message().walk():
+        if part.get_content_type() == "text/html":
+            assert len(part.get_payload(decode=True)) <= WEEKLY_OVERVIEW_HTML_BUDGET
+
+
+@pytest.mark.parametrize("language", ["en", "pl"])
+def test_large_payment_list_preserves_all_summaries_and_reports_exact_omissions(
+    language,
+):
+    from app.services.weekly_overview_rendering import WEEKLY_OVERVIEW_HTML_BUDGET
+
+    raw = load_weekly_fixture("normal")
+    item = raw["ledgers"][0]["currencies"][0]
+    item["upcoming"] = [
+        {
+            "category_name": f"Payment_{index}_" + "ą<&" * 25,
+            "due_date": "2026-10-20",
+            "amount": "9007199254740993.00100",
+        }
+        for index in range(350)
+    ]
+    original = copy.deepcopy(raw)
+    markup, text = render_weekly_fixture(raw, language)
+    assert raw == original
+    assert len(markup.encode("utf-8")) <= WEEKLY_OVERVIEW_HTML_BUDGET
+    shown = markup.count("Payment_")
+    assert 0 < shown < 350
+    locale = EmailLocale(language)
+    for body in (visible_text(markup), " ".join(text.split())):
+        assert (
+            locale.tr(
+                "weekly_size_notice",
+                shown_groups=1,
+                total_groups=1,
+                shown_payments=shown,
+                total_payments=350,
+            )
+            in body
+        )
+        assert locale.tr("weekly_upcoming_omitted", shown=shown, total=350) in body
+        assert locale.amount("1200.1234") in body
+        assert locale.amount("9007199254740993.00100") in body
+        assert "Payment_0_" in body and f"Payment_{shown - 1}_" in body
+        assert f"Payment_{shown}_" not in body
+    assert "&lt;&amp;" in markup and "<&" in text
+
+
+@pytest.mark.parametrize("language", ["en", "pl"])
+def test_huge_escaped_ledger_can_be_omitted_without_claiming_empty_month(language):
+    from app.services.weekly_overview_rendering import render_weekly_overview
+    from weekly_fixtures import weekly_context
+
+    raw = load_weekly_fixture("normal")
+    raw["ledgers"][0]["ledger_name"] = "ą<&" * 50000
+    markup, text = render_weekly_overview(
+        context=weekly_context(raw, language), language=language
+    )
+    locale = EmailLocale(language)
+    assert len(markup.encode("utf-8")) <= 90 * 1024
+    for body in (visible_text(markup), " ".join(text.split())):
+        assert (
+            locale.tr(
+                "weekly_size_notice",
+                shown_groups=0,
+                total_groups=1,
+                shown_payments=0,
+                total_payments=2,
+            )
+            in body
+        )
+        assert locale.tr("weekly_empty") not in body
+    assert raw["app_url"] in text
+
+
+def test_small_weekly_stays_complete_and_impossibly_small_budget_fails():
+    from app.services.weekly_overview_rendering import render_weekly_overview
+    from weekly_fixtures import weekly_context
+
+    raw = load_weekly_fixture("normal")
+    markup, text = render_weekly_fixture(raw, "en")
+    assert "This email was shortened" not in markup + text
+    assert markup.count("Internet_Custom") == 1
+    with pytest.raises(ValueError, match="exceeds HTML budget"):
+        render_weekly_overview(context=weekly_context(raw, "en"), html_budget=100)

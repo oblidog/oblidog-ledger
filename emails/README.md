@@ -175,8 +175,9 @@ Each ledger has separate currency cards. Known total, paid and remaining amounts
 are prominent; incomplete totals keep a visible notice. All status counts,
 unknown/unconfirmed counts, overdue count/known amount, previous-month total and
 eligible change remain available. The percentage is explicitly **by obligation
-count**, never monetary progress. Upcoming rows retain the complete original
-selection and order. No totals across currencies or new ratios are calculated.
+count**, never monetary progress. The original selection and row order are
+preserved; large messages show a bounded prefix as described below. No totals
+across currencies or new ratios are calculated.
 
 `fixtures/weekly/*.json` contains decimal strings and ISO dates, shared with the
 React preview. `scripts/weekly_fixtures.py` converts them to Decimal/date inputs
@@ -187,3 +188,20 @@ synthetic names and 40 upcoming payments are retained without horizontal overflo
 at 320/390 px. Layout uses email-compatible presentation tables with two compact
 amount columns and single-column payment rows. Browser checks supplement, but
 do not replace, mailbox-client testing.
+
+### Weekly HTML size budget
+
+`weekly_overview_rendering.py` enforces a 90 KiB UTF-8 budget after Jinja renders.
+Summary blocks (each currency card or empty ledger) take priority over upcoming
+payment rows. If all summaries fit, the renderer retains the largest fitting
+prefix of payment rows; otherwise it retains a prefix of summary blocks without
+payment rows. Calculated values in retained blocks and the input objects are
+never modified.
+
+Every shortened candidate includes EN/PL counts of visible/selected summary
+blocks and upcoming payments, plus a full-data link near the top. Each retained
+currency also states its own shown/selected payment count when shortened; zero
+visible rows are not labeled as an empty source list. HTML and text use the same
+selection and notices. An impossible base layout raises rather than sending
+oversized HTML. Tests cover the 6-ledger/4-currency regression, large escaped
+payment lists, giant Unicode names, input immutability and serialized MIME size.

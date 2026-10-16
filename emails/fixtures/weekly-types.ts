@@ -20,6 +20,7 @@ export type WeeklyCurrency = {
   previous_total_known_amount: string
   previous_total_is_complete: boolean
   total_change: string | null
+  upcoming_omitted?: number
   upcoming: WeeklyPayment[]
 }
 export type WeeklyContext = {
@@ -27,5 +28,6 @@ export type WeeklyContext = {
   report_date: string
   period: string
   app_url?: string
+  weekly_size_notice?: string
   ledgers: { ledger_name: string; currencies: WeeklyCurrency[] }[]
 }

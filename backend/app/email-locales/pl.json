@@ -157,5 +157,7 @@
   "weekly_count_progress": "Opłacone zobowiązania (według liczby)",
   "weekly_incomplete_notice": "Kwoty obejmują tylko znane wartości; pełna suma nie jest jeszcze dostępna.",
   "weekly_comparison": "Porównanie z poprzednim miesiącem",
-  "weekly_empty": "Brak zobowiązań w tym zestawieniu."
+  "weekly_empty": "Brak zobowiązań w tym zestawieniu.",
+  "weekly_size_notice": "Wiadomość została skrócona. Bloki podsumowania: {shown_groups} z {total_groups}; najbliższe płatności: {shown_payments} z {total_payments}. Pełny raport znajdziesz w Oblidogu.",
+  "weekly_upcoming_omitted": "Najbliższe płatności w tej walucie: pokazano {shown} z {total}. Pełna lista jest dostępna w Oblidogu."
 }
