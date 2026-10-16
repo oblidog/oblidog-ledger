@@ -248,12 +248,9 @@ If you don't want to start with the default models and want to remove them / mod
 
 ## Email Templates
 
-The email templates are in `./backend/app/email-templates/`. Here, there are two directories: `build` and `src`. The `src` directory contains the source files that are used to build the final email templates. The `build` directory contains the final email templates that are used by the application.
-
-New email designs use the [React Email workspace](../emails/README.md). Its
-committed HTML/Jinja and text artifacts live in the same `build` directory and
-are checked for freshness in CI. Existing MJML templates remain until migrated.
-
-For legacy MJML templates, ensure you have the [MJML extension](https://github.com/mjmlio/vscode-mjml) installed in your VS Code.
-
-Once you have the MJML extension installed, you can create a new email template in the `src` directory. After creating the new email template and with the `.mjml` file open in your editor, open the command palette with `Ctrl+Shift+P` and search for `MJML: Export to HTML`. This will convert the `.mjml` file to a `.html` file and now you can save it in the build directory.
+All email designs use the [React Email workspace](../emails/README.md).
+Sources and authored plain-text templates live under `emails/`; generated
+HTML/Jinja and text artifacts live in `backend/app/email-templates/build`.
+Run `bun run email:export` after source changes and commit the artifacts.
+`bun run email:check` verifies freshness in CI. Runtime delivery uses only
+Python/Jinja and the packaged build directory; MJML and Node are not required.

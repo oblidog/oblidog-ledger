@@ -4,11 +4,10 @@ React Email owns presentation. Python owns data selection, calculations,
 preferences, scheduling, SMTP and runtime Jinja rendering. No JavaScript service
 or external rendering API is involved in delivery.
 
-This workspace contains a foundation example and the live **daily digest** and
-**weekly monthly overview**. Transactional layouts retain their existing design;
-their React Email migration remains in #481. Canonical transactional Jinja
-sources live in `templates/` and are copied by the exporter. Historical MJML
-sources remain available with matching translation calls.
+This workspace owns the daily digest, weekly overview and all four transactional
+layouts (invitation, password reset, new account and test email). All use shared
+React Email components and authored plain-text templates. The legacy MJML and
+copied transactional HTML sources have been removed after checking their callers.
 
 ## Commands (repository root)
 
@@ -21,7 +20,7 @@ bun run email:export              # generate HTML/Jinja + text in backend/app/em
 bun run email:check               # byte-for-byte freshness check, does not rewrite files
 bun run --filter @oblidog/emails typecheck
 uv run --locked python emails/scripts/render_previews.py
-uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py tests/test_weekly_email_rendering.py
+uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py tests/test_weekly_email_rendering.py tests/test_transactional_email_rendering.py
 ```
 
 `email:dev` previews `foundation.tsx` with its synthetic normal data.
@@ -205,3 +204,27 @@ visible rows are not labeled as an empty source list. HTML and text use the same
 selection and notices. An impossible base layout raises rather than sending
 oversized HTML. Tests cover the 6-ledger/4-currency regression, large escaped
 payment lists, giant Unicode names, input immutability and serialized MIME size.
+
+## Transactional messages
+
+`components/transactional.tsx` shares the report shell, typography, action button
+and footer. Four small files in `emails/` expose each design in the React Email
+preview server. `scripts/export.tsx` fixes the message kind at build time and
+exports each existing artifact name; recipient data stays escaped Jinja context.
+The corresponding `emails/{reset_password,user_invitation,new_account,test_email}.txt.jinja`
+files provide explicit plain-text alternatives. Every action has a visible URL
+fallback. Recipient locale, token URLs, expiry and authentication behavior remain
+owned by existing Python generators and callers.
+
+`fixtures/transactional/*.json` covers normal, long content, escaped values and
+missing optional names in EN/PL. The Python preview command writes
+`previews/{template}-{case}-{language}.{html,txt}`. Rendering uses no images,
+external fonts or JavaScript. Regression tests inspect decoded multipart bodies
+and exact action/fallback URLs, including encoded token characters. Captured-mail
+invitation/password-reset flows remain covered by isolated Playwright/Mailpit CI.
+
+New-account generation currently has no active application caller. Its public
+generator and artifact names are retained and migrated for compatibility; this
+change does not activate a new account-email flow. All four MJML sources and the
+editor-specific MJML export instructions are retired. Backend wheel/Docker
+packaging continues to use the same build directory and all HTML/text assets.

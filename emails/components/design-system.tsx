@@ -66,6 +66,8 @@ export function EmailLayout({
                   lineHeight: "28px",
                   fontWeight: 700,
                   letterSpacing: "-0.5px",
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-word",
                 }}
               >
                 {projectName}
@@ -123,6 +125,8 @@ export function EmailHeading({
           fontSize: "15px",
           lineHeight: "24px",
           margin: "0 0 24px",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
         }}
       >
         {intro}
@@ -322,7 +326,14 @@ export function EmailFooter({
 }) {
   return (
     <Text
-      style={{ color: muted, fontSize: "12px", lineHeight: "19px", margin: 0 }}
+      style={{
+        color: muted,
+        fontSize: "12px",
+        lineHeight: "19px",
+        margin: 0,
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
+      }}
     >
       {projectName} · {tagline}
       <br />

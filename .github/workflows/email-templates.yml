@@ -14,6 +14,7 @@ on:
       - backend/app/services/daily_digest_presentation.py
       - backend/app/services/daily_digest_rendering.py
       - backend/app/services/daily_obligation_report.py
+      - tests/test_transactional_email_rendering.py
       - tests/test_weekly_email_rendering.py
       - tests/test_email_localization.py
       - tests/test_email_templates.py
@@ -49,7 +50,7 @@ jobs:
       - name: Verify committed HTML and text are fresh
         run: bun run email:check
       - name: Verify runtime data, conditions, escaping and text delivery
-        run: uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py tests/test_weekly_email_rendering.py
+        run: uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py tests/test_weekly_email_rendering.py tests/test_transactional_email_rendering.py
       - name: Render all synthetic fixture previews through Python
         run: uv run --locked python emails/scripts/render_previews.py
       - name: Build Python wheel and verify packaged templates

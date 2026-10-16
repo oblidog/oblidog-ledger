@@ -48,28 +48,19 @@ def main() -> None:
                 (args.out / f"weekly-{fixture.stem}-{language}.{extension}").write_text(
                     content
                 )
-    for language in ("en", "pl"):
-        transactional = {
-            "project_name": "Oblidog",
-            "email": "recipient@example.com",
-            "username": "Custom_User_<>&",
-            "password": "synthetic-password",
-            "valid_hours": 22,
-            "link": "https://example.com/unchanged-link",
-        }
-        for template in (
-            "test_email",
-            "reset_password",
-            "new_account",
-            "user_invitation",
-        ):
-            for extension in ("html", "txt"):
-                content = render_email_template(
-                    template_name=f"{template}.{extension}",
-                    context=transactional,
-                    language=language,
-                )
-                (args.out / f"{template}-{language}.{extension}").write_text(content)
+    for fixture in sorted((ROOT / "emails/fixtures/transactional").glob("*.json")):
+        messages = json.loads(fixture.read_text())
+        for language in ("en", "pl"):
+            for template, context in messages.items():
+                for extension in ("html", "txt"):
+                    content = render_email_template(
+                        template_name=f"{template}.{extension}",
+                        context=context,
+                        language=language,
+                    )
+                    (
+                        args.out / f"{template}-{fixture.stem}-{language}.{extension}"
+                    ).write_text(content)
     print(f"Rendered fixture previews in {args.out}")  # noqa: T201
 
 
