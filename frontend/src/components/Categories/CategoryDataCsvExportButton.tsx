@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { apiUrl } from "@/config"
 import useCustomToast from "@/hooks/useCustomToast"
 import { i18n } from "@/i18n"
+import { getApiErrorMessage } from "@/i18n/apiErrors"
 
 type CategoryDataCsvExportButtonProps = {
   ledgerId: string
@@ -52,15 +53,14 @@ export function CategoryDataCsvExportButton(
       })
       if (!response.ok) {
         const payload = await response.json().catch(() => null)
-        throw new Error(
-          payload?.detail ??
-            i18n.t("app:categories.could_not_export_category_data"),
-        )
+        showErrorToast(getApiErrorMessage(payload))
+        return
       }
       if (!response.headers.get("content-type")?.startsWith("text/csv")) {
-        throw new Error(
+        showErrorToast(
           i18n.t("app:categories.the_export_response_was_not_a_csv_file"),
         )
+        return
       }
 
       const blobUrl = URL.createObjectURL(await response.blob())
@@ -71,12 +71,8 @@ export function CategoryDataCsvExportButton(
       link.click()
       link.remove()
       URL.revokeObjectURL(blobUrl)
-    } catch (error) {
-      showErrorToast(
-        error instanceof Error
-          ? error.message
-          : i18n.t("app:categories.could_not_export_category_data"),
-      )
+    } catch {
+      showErrorToast(i18n.t("errors:network_error"))
     } finally {
       setIsExporting(false)
     }

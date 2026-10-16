@@ -1,9 +1,10 @@
 import uuid
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import SessionDep, require_ledger_view_access
+from app.core.api_errors import ApplicationError as HTTPException
 from app.domain import BillingPeriod
 from app.models import Ledger
 from app.schemas import (
@@ -88,10 +89,12 @@ def read_category_amount_history(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="analytics_invalid_range", status_code=422, detail=str(exc)
+        ) from exc
 
     return CategoryAmountHistoryPublic(
         category_id=history.category_id,
@@ -128,7 +131,9 @@ def read_obligation_period_totals(
             to_period=_parse_period(to),
         )
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="analytics_invalid_range", status_code=422, detail=str(exc)
+        ) from exc
 
     return ObligationPeriodTotalsPublic(
         points=[
@@ -177,10 +182,12 @@ def read_component_history(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="analytics_invalid_range", status_code=422, detail=str(exc)
+        ) from exc
 
     return ComponentHistoryPublic(
         match_by=history.match_by,

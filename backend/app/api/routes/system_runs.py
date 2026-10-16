@@ -3,10 +3,11 @@ from datetime import UTC, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from sqlalchemy import select
 
 from app.api.deps import SessionDep, get_current_active_superuser
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.config import settings
 from app.domain import TaskRunMode
 from app.domain.system_run import SystemRunTrigger
@@ -73,6 +74,8 @@ def start_system_run(
     known_tasks = {task.name: task for task in SYSTEM_RUN_TASK_REGISTRY}
     if unknown := manual_tasks - known_tasks.keys():
         raise HTTPException(
+            code="system_run_unknown_tasks",
+            params={"tasks": sorted(unknown)},
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Unknown system-run tasks: {', '.join(sorted(unknown))}",
         )
@@ -80,6 +83,8 @@ def start_system_run(
         name for name in manual_tasks if known_tasks[name].mode is TaskRunMode.DISABLED
     ]:
         raise HTTPException(
+            code="system_run_disabled_tasks",
+            params={"tasks": sorted(disabled)},
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Disabled tasks cannot be started: {', '.join(sorted(disabled))}",
         )
@@ -89,6 +94,8 @@ def start_system_run(
         if known_tasks[name].mode is not TaskRunMode.MANUAL_ONLY
     ]:
         raise HTTPException(
+            code="system_run_non_manual_tasks",
+            params={"tasks": sorted(non_manual)},
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Only manual-only tasks may be selected: {', '.join(sorted(non_manual))}",
         )
@@ -110,6 +117,7 @@ def start_system_run(
     )
     if run is None:
         raise HTTPException(
+            code="system_run_running",
             status_code=status.HTTP_409_CONFLICT,
             detail="A System Run is already running",
         )
@@ -136,6 +144,8 @@ def read_system_run(*, session: SessionDep, system_run_id: uuid.UUID) -> Any:
     run = session.get(SystemRun, system_run_id)
     if run is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="System run not found"
+            code="system_run_not_found",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="System run not found",
         )
     return _to_public(session, run)

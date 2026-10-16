@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 
 from app.api.deps import ApiContext, require_scope
 from app.api.routes.categories import (
@@ -16,6 +16,7 @@ from app.api.routes.obligations import (
     to_obligation_component_public,
     to_obligation_public,
 )
+from app.core.api_errors import ApplicationError as HTTPException
 from app.domain import (
     BillingPeriod,
     ObligationActionActor,
@@ -90,7 +91,9 @@ def read_latest_integration_category_data_record(
         )
     except (CategoryNotFoundError, CategoryDataSchemaNotFoundError) as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data record not found"
+            code="category_data_not_found",
+            status_code=404,
+            detail="Category data record not found",
         ) from caught_error
     return _to_category_data_record_public(category_data)
 
@@ -122,7 +125,7 @@ def read_integration_category_data_records(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     return CategoryDataRecordsPublic(
         data=[_to_category_data_record_public(record) for record in records],
@@ -147,14 +150,18 @@ def create_integration_category_data_record(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category data schema not configured"
+            code="category_schema_not_configured",
+            status_code=409,
+            detail="Category data schema not configured",
         ) from caught_error
     except CategoryDataValidationError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="category_data_invalid", status_code=422, detail=str(exc)
+        ) from exc
     return _to_category_data_record_public(category_data)
 
 
@@ -170,11 +177,13 @@ def read_integration_category_data_schema(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data schema not found"
+            code="category_schema_not_found",
+            status_code=404,
+            detail="Category data schema not found",
         ) from caught_error
     return _to_category_data_schema_public(category_schema)
 
@@ -199,21 +208,35 @@ def _resolve_integration_obligation_key(
 
     if legacy_key is not None:
         if legacy_key.category_code != context.category.code:
-            raise HTTPException(status_code=404, detail="Obligation not found")
+            raise HTTPException(
+                code="obligation_not_found",
+                status_code=404,
+                detail="Obligation not found",
+            )
         return legacy_key
 
     match = _OBLIGATION_PERIOD_PATTERN.fullmatch(period)
     if match is None:
-        raise HTTPException(status_code=422, detail="Invalid obligation period")
+        raise HTTPException(
+            code="obligation_invalid_period",
+            status_code=422,
+            detail="Invalid obligation period",
+        )
     year = int(match["year"])
     month = int(match["month"])
     if year < 1:
-        raise HTTPException(status_code=422, detail="Invalid obligation period")
+        raise HTTPException(
+            code="obligation_invalid_period",
+            status_code=422,
+            detail="Invalid obligation period",
+        )
     try:
         billing_period = BillingPeriod(year=year, month=month)
     except ValueError as exc:
         raise HTTPException(
-            status_code=422, detail="Invalid obligation period"
+            code="obligation_invalid_period",
+            status_code=422,
+            detail="Invalid obligation period",
         ) from exc
     return ObligationKey(
         category_code=context.category.code,
@@ -226,7 +249,7 @@ def _not_found_as_http(call: Any) -> ObligationPublic:
         return to_obligation_public(call())
     except ObligationNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
 
 
@@ -279,7 +302,7 @@ def read_integration_obligation_components(
         )
     except ObligationNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     return ObligationComponentsPublic(
         data=[to_obligation_component_public(component) for component in components],
@@ -308,7 +331,7 @@ def upsert_integration_obligation_component(
         )
     except ObligationNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     return ObligationComponentUpsertResult(
         component=to_obligation_component_public(outcome.component),
@@ -333,15 +356,18 @@ def update_integration_obligation(
         )
     except ObligationNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     except ObligationReadOnlyError as caught_error:
         raise HTTPException(
+            code="obligation_read_only",
             status_code=409,
             detail="Only draft and collecting data obligations can be edited",
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="obligation_invalid_values", status_code=422, detail=str(exc)
+        ) from exc
     return to_obligation_public(obligation)
 
 
@@ -358,14 +384,18 @@ def _run_integration_action(
         )
     except ObligationNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     except ObligationInvalidLifecycleError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Invalid obligation lifecycle"
+            code="obligation_invalid_lifecycle",
+            status_code=409,
+            detail="Invalid obligation lifecycle",
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="obligation_invalid_lifecycle", status_code=422, detail=str(exc)
+        ) from exc
     return to_obligation_public(obligation)
 
 
@@ -446,6 +476,6 @@ def append_integration_obligation_note(
         )
     except ObligationNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Obligation not found"
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
         ) from caught_error
     return to_obligation_public(obligation)

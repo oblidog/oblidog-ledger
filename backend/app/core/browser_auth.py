@@ -9,6 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.responses import JSONResponse
 
 from app.core import security
+from app.core.api_errors import error_body
 from app.core.config import settings
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
@@ -97,7 +98,9 @@ class BrowserSessionSecurityMiddleware(BaseHTTPMiddleware):
             ):
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={"detail": "Origin is not allowed"},
+                    content=error_body(
+                        "auth_origin_forbidden", "Origin is not allowed"
+                    ),
                 )
 
             csrf_token = session_csrf_token(request)
@@ -115,7 +118,7 @@ class BrowserSessionSecurityMiddleware(BaseHTTPMiddleware):
                 if provided is None or not secrets.compare_digest(provided, csrf_token):
                     return JSONResponse(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        content={"detail": "Invalid CSRF token"},
+                        content=error_body("auth_csrf_invalid", "Invalid CSRF token"),
                     )
 
         response = await call_next(request)

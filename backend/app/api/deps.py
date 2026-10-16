@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Request, status
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
@@ -18,6 +18,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.core import security
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.capabilities import (
     Capability,
     CapabilityDisabledError,
@@ -76,7 +77,9 @@ def require_capability(capability: Capability) -> Callable[[], None]:
         try:
             ensure_capability(capability)
         except CapabilityDisabledError as exc:
-            raise HTTPException(status_code=403, detail=str(exc)) from exc
+            raise HTTPException(
+                code="capability_disabled", status_code=403, detail=str(exc)
+            ) from exc
 
     return dependency
 
@@ -88,7 +91,9 @@ def enforce_demo_request_capabilities(request: Request) -> None:
     try:
         ensure_capability(capability)
     except CapabilityDisabledError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
+        raise HTTPException(
+            code="capability_disabled", status_code=403, detail=str(exc)
+        ) from exc
 
 
 def enforce_demo_write_policy(request: Request) -> None:
@@ -114,7 +119,9 @@ def enforce_demo_write_policy(request: Request) -> None:
         request.method,
         getattr(route, "path", "unknown"),
     )
-    raise HTTPException(status_code=403, detail="Demo is temporarily read-only")
+    raise HTTPException(
+        code="demo_read_only", status_code=403, detail="Demo is temporarily read-only"
+    )
 
 
 def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> User:
@@ -122,6 +129,7 @@ def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> 
     token = token or request.cookies.get(settings.SESSION_COOKIE_NAME)
     if token is None:
         raise HTTPException(
+            code="auth_required",
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
@@ -138,20 +146,26 @@ def get_current_user(session: SessionDep, token: TokenDep, request: Request) -> 
         user_id = uuid.UUID(token_data.sub)
     except (InvalidTokenError, ValidationError, ValueError) as caught_error:
         raise HTTPException(
+            code="auth_invalid_token",
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         ) from caught_error
     user = user_service.get_user_by_id(session=session, user_id=user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            code="user_not_found", status_code=404, detail="User not found"
+        )
     if token_data.session_version != user.session_version:
         raise HTTPException(
+            code="auth_session_expired",
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(
+            code="user_inactive", status_code=400, detail="Inactive user"
+        )
     return user
 
 
@@ -170,7 +184,9 @@ CurrentActionActor = Annotated[ObligationActionActor, Depends(get_current_action
 
 def get_api_context(session: SessionDep, token: IntegrationTokenDep) -> ApiContext:
     if token is None or token.scheme.lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(
+            code="auth_invalid_api_key", status_code=401, detail="Invalid API key"
+        )
 
     key_hash = api_key_service.hash_api_key(token.credentials)
     credential = session.scalar(
@@ -179,21 +195,29 @@ def get_api_context(session: SessionDep, token: IntegrationTokenDep) -> ApiConte
     if credential is None or not api_key_service.verify_api_key(
         token.credentials, credential.key_hash
     ):
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(
+            code="auth_invalid_api_key", status_code=401, detail="Invalid API key"
+        )
 
     now = datetime.now(UTC)
     if credential.revoked_at is not None or (
         credential.expires_at is not None and credential.expires_at <= now
     ):
-        raise HTTPException(status_code=401, detail="API key is inactive")
+        raise HTTPException(
+            code="auth_inactive_api_key", status_code=401, detail="API key is inactive"
+        )
 
     integration = session.get(Integration, credential.integration_id)
     if integration is None:
-        raise HTTPException(status_code=401, detail="API key is inactive")
+        raise HTTPException(
+            code="auth_inactive_api_key", status_code=401, detail="API key is inactive"
+        )
     ledger = session.get(Ledger, integration.ledger_id)
     category = session.get(Category, integration.category_id)
     if ledger is None or category is None or not ledger.is_active:
-        raise HTTPException(status_code=401, detail="API key is inactive")
+        raise HTTPException(
+            code="auth_inactive_api_key", status_code=401, detail="API key is inactive"
+        )
 
     credential.last_used_at = now
     session.commit()
@@ -219,7 +243,9 @@ def require_scope(_scope: str) -> Callable[[ApiContext], ApiContext]:
 def get_current_active_superuser(current_user: CurrentUser) -> User:
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=403, detail="The user doesn't have enough privileges"
+            code="permission_denied",
+            status_code=403,
+            detail="The user doesn't have enough privileges",
         )
     return current_user
 
@@ -237,7 +263,9 @@ def require_ledger_view_access(
         )
     )
     if ledger is None:
-        raise HTTPException(status_code=404, detail="Ledger not found")
+        raise HTTPException(
+            code="ledger_not_found", status_code=404, detail="Ledger not found"
+        )
     return ledger
 
 
@@ -251,7 +279,9 @@ def require_ledger_owner_access(
         )
     )
     if ledger is None:
-        raise HTTPException(status_code=404, detail="Ledger not found")
+        raise HTTPException(
+            code="ledger_not_found", status_code=404, detail="Ledger not found"
+        )
     return ledger
 
 
@@ -275,5 +305,7 @@ def require_ledger_edit_access(
         )
     )
     if ledger is None:
-        raise HTTPException(status_code=404, detail="Ledger not found")
+        raise HTTPException(
+            code="ledger_not_found", status_code=404, detail="Ledger not found"
+        )
     return ledger

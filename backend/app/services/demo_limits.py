@@ -4,10 +4,10 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.config import settings
 from app.core.demo_identity import DEMO_EMAIL
 from app.models import User
@@ -56,6 +56,8 @@ def remaining_capacity(
 def reject_limit(resource: str, limit: int) -> None:
     logger.warning("Demo quota reached resource=%s limit=%d", resource, limit)
     raise HTTPException(
+        code="demo_limit_reached",
+        params={"limit": limit, "resource": resource},
         status_code=409,
         detail=f"Demo limit reached: at most {limit} {resource}. Data is periodically reset.",
     )

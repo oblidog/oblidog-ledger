@@ -83,7 +83,11 @@ test("Expired invitation explains how to recover", async ({ page }) => {
     await route.fulfill({
       status: 410,
       contentType: "application/json",
-      body: JSON.stringify({ detail: "Invitation has expired" }),
+      body: JSON.stringify({
+        detail: "Invitation has expired",
+        code: "invitation_expired",
+        params: {},
+      }),
     })
   })
 

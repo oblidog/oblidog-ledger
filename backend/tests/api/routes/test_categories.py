@@ -70,7 +70,7 @@ def test_get_category_groups_returns_404_for_user_without_access(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_post_category_group_creates_group_for_editor(
@@ -130,7 +130,7 @@ def test_post_category_group_rejects_viewer(client: TestClient, db: Session) -> 
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_post_category_group_rejects_duplicate_name(
@@ -153,7 +153,7 @@ def test_post_category_group_rejects_duplicate_name(
     )
 
     assert response.status_code == 409
-    assert response.json() == {"detail": "Category group already exists"}
+    assert response.json()["detail"] == "Category group already exists"
 
 
 def test_patch_category_group_updates_group_and_returns_404_when_missing(
@@ -183,7 +183,7 @@ def test_patch_category_group_updates_group_and_returns_404_when_missing(
     assert updated.json()["name"] == "Updated group"
     assert updated.json()["description"] == "Updated description"
     assert missing.status_code == 404
-    assert missing.json() == {"detail": "Category group not found"}
+    assert missing.json()["detail"] == "Category group not found"
 
 
 def test_patch_category_group_archive_succeeds_for_empty_group(
@@ -244,7 +244,7 @@ def test_patch_category_group_archive_fails_when_active_child_categories_exist(
     )
 
     assert response.status_code == 409
-    assert response.json() == {"detail": "Category group has active categories"}
+    assert response.json()["detail"] == "Category group has active categories"
 
 
 def test_patch_category_group_archive_returns_404_for_missing_group(
@@ -262,7 +262,7 @@ def test_patch_category_group_archive_returns_404_for_missing_group(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Category group not found"}
+    assert response.json()["detail"] == "Category group not found"
 
 
 def test_get_categories_returns_only_categories_for_that_ledger(
@@ -432,7 +432,7 @@ def test_get_categories_returns_404_for_user_without_access(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_post_category_creates_category_under_correct_group(
@@ -512,7 +512,7 @@ def test_post_category_rejects_cross_ledger_group_reference(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Category group not found"}
+    assert response.json()["detail"] == "Category group not found"
 
 
 def test_post_category_rejects_archived_group(client: TestClient, db: Session) -> None:
@@ -545,7 +545,7 @@ def test_post_category_rejects_archived_group(client: TestClient, db: Session) -
     )
 
     assert response.status_code == 409
-    assert response.json() == {"detail": "Category group is archived"}
+    assert response.json()["detail"] == "Category group is archived"
 
 
 def test_post_category_rejects_viewer(client: TestClient, db: Session) -> None:
@@ -581,7 +581,7 @@ def test_post_category_rejects_viewer(client: TestClient, db: Session) -> None:
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_patch_category_archive_archives_category_for_authorized_editor(
@@ -661,7 +661,7 @@ def test_patch_category_archive_returns_404_for_non_member_access(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_patch_category_rejects_code_change(client: TestClient, db: Session) -> None:
@@ -740,7 +740,7 @@ def test_patch_category_updates_category_and_returns_404_when_missing(
     assert updated.json()["name"] == "Updated electricity"
     assert updated.json()["first_due_date"] == "2026-01-15"
     assert missing.status_code == 404
-    assert missing.json() == {"detail": "Category not found"}
+    assert missing.json()["detail"] == "Category not found"
 
 
 def test_patch_category_moves_category_to_another_active_group(

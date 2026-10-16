@@ -211,8 +211,13 @@ for (const width of [320, 375, 414]) {
     await expect.poll(() => attempts).toBe(1)
     release()
     await expect(
-      page.getByText("Payment failed. Try again.", { exact: true }),
+      page.getByText("Could not complete this action. Try again.", {
+        exact: true,
+      }),
     ).toBeVisible()
+    await expect(
+      page.getByText("Payment failed. Try again.", { exact: true }),
+    ).toHaveCount(0)
     await expect(pay).toBeEnabled()
     await expect(confirmation).toBeVisible()
     await page.unroute("**/mark-paid*")

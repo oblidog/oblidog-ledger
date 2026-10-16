@@ -33,6 +33,7 @@ import {
   readComponentHistory,
 } from "@/features/analytics/componentHistoryApi"
 import { i18n } from "@/i18n"
+import { getApiErrorMessage } from "@/i18n/apiErrors"
 import { domainLabel } from "@/i18n/domainLabels"
 import { formatAmount as exactAmount, getLocale } from "@/i18n/format"
 
@@ -61,22 +62,6 @@ function periodLabel(period: Period) {
 
 function formatAmount(amount: string, currency: string | null) {
   return exactAmount(amount, currency)
-}
-
-function errorMessage(error: unknown) {
-  if (typeof error === "object" && error !== null && "detail" in error) {
-    return String((error as { detail: unknown }).detail)
-  }
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "error" in error &&
-    typeof (error as { error?: unknown }).error === "object"
-  ) {
-    const nested = (error as { error: { detail?: unknown } }).error
-    if (nested.detail) return String(nested.detail)
-  }
-  return i18n.t("app:analytics.the_selected_comparison_could_not_be_loaded")
 }
 
 export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
@@ -293,7 +278,7 @@ export function ComponentHistoryTable({
               {i18n.t("app:analytics.component_history_is_unavailable")}
             </AlertTitle>
             <AlertDescription>
-              {errorMessage(history.error)}{" "}
+              {getApiErrorMessage(history.error)}{" "}
               {i18n.t(
                 "app:analytics.try_another_comparison_criterion_if_component_identities_are_ambiguous",
               )}

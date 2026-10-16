@@ -2,13 +2,14 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import (
     SessionDep,
     require_ledger_edit_access,
     require_ledger_view_access,
 )
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.business_date import business_today
 from app.domain.business_calendar import BusinessCalendar
 from app.domain.payment_schedule import next_payment
@@ -155,7 +156,9 @@ def create_category_group(
         )
     except DuplicateCategoryGroupError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category group already exists"
+            code="category_group_conflict",
+            status_code=409,
+            detail="Category group already exists",
         ) from caught_error
 
     return _to_category_group_public(category_group)
@@ -182,14 +185,20 @@ def update_category_group(
         )
     except CategoryGroupNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category group not found"
+            code="category_group_not_found",
+            status_code=404,
+            detail="Category group not found",
         ) from caught_error
     except DuplicateCategoryGroupError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category group already exists"
+            code="category_group_conflict",
+            status_code=409,
+            detail="Category group already exists",
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="category_group_invalid_values", status_code=422, detail=str(exc)
+        ) from exc
 
     return _to_category_group_public(category_group)
 
@@ -212,10 +221,13 @@ def archive_category_group(
         )
     except CategoryGroupNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category group not found"
+            code="category_group_not_found",
+            status_code=404,
+            detail="Category group not found",
         ) from caught_error
     except CategoryGroupHasActiveChildrenError as caught_error:
         raise HTTPException(
+            code="category_group_in_use",
             status_code=409,
             detail="Category group has active categories",
         ) from caught_error
@@ -273,28 +285,37 @@ def create_category(
         )
     except CategoryGroupNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category group not found"
+            code="category_group_not_found",
+            status_code=404,
+            detail="Category group not found",
         ) from caught_error
     except CrossLedgerReferenceError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category group not found"
+            code="category_group_not_found",
+            status_code=404,
+            detail="Category group not found",
         ) from caught_error
     except DuplicateCategoryError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category already exists"
+            code="category_conflict", status_code=409, detail="Category already exists"
         ) from caught_error
     except DuplicateCategoryCodeError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category code already exists"
+            code="category_code_conflict",
+            status_code=409,
+            detail="Category code already exists",
         ) from caught_error
     except InvalidCategoryCodeError as caught_error:
         raise HTTPException(
+            code="category_code_invalid",
             status_code=422,
             detail="Category code must contain exactly four uppercase English letters",
         ) from caught_error
     except CategoryGroupArchivedError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category group is archived"
+            code="category_group_archived",
+            status_code=409,
+            detail="Category group is archived",
         ) from caught_error
 
     return _to_category_public(category)
@@ -327,31 +348,40 @@ def update_category(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryGroupNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category group not found"
+            code="category_group_not_found",
+            status_code=404,
+            detail="Category group not found",
         ) from caught_error
     except CategoryGroupArchivedError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category group is archived"
+            code="category_group_archived",
+            status_code=409,
+            detail="Category group is archived",
         ) from caught_error
     except DuplicateCategoryError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category already exists"
+            code="category_conflict", status_code=409, detail="Category already exists"
         ) from caught_error
     except DuplicateCategoryCodeError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Category code already exists"
+            code="category_code_conflict",
+            status_code=409,
+            detail="Category code already exists",
         ) from caught_error
     except InvalidCategoryCodeError as caught_error:
         raise HTTPException(
+            code="category_code_invalid",
             status_code=422,
             detail="Category code must contain exactly four uppercase English letters",
         ) from caught_error
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="category_invalid_values", status_code=422, detail=str(exc)
+        ) from exc
 
     return _to_category_public(category)
 
@@ -392,11 +422,13 @@ def read_category_data_records(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data schema not found"
+            code="category_schema_not_found",
+            status_code=404,
+            detail="Category data schema not found",
         ) from caught_error
     return CategoryDataRecordsPublic(
         data=[_to_category_data_record_public(record) for record in records],
@@ -422,11 +454,13 @@ def read_latest_category_data_record(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data records not found"
+            code="category_data_not_found",
+            status_code=404,
+            detail="Category data records not found",
         ) from caught_error
     return _to_category_data_record_public(record)
 
@@ -447,11 +481,13 @@ def read_category_data_schema(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data schema not found"
+            code="category_schema_not_found",
+            status_code=404,
+            detail="Category data schema not found",
         ) from caught_error
     return _to_category_data_schema_public(category_schema)
 
@@ -484,14 +520,17 @@ def create_category_data_schema(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except InvalidCategoryDataSchemaError as exc:
         raise HTTPException(
-            status_code=422, detail=f"Invalid JSON Schema: {exc}"
+            code="category_schema_invalid",
+            status_code=422,
+            detail=f"Invalid JSON Schema: {exc}",
         ) from exc
     except IncompatibleCategoryDataSchemaError as exc:
         raise HTTPException(
+            code="category_schema_incompatible",
             status_code=409,
             detail=f"Schema is incompatible with existing category data: {exc}",
         ) from exc
@@ -516,7 +555,7 @@ def archive_category(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
 
     return _to_category_public(category)
@@ -540,10 +579,11 @@ def restore_category(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryGroupArchivedError as caught_error:
         raise HTTPException(
+            code="category_group_archived",
             status_code=409,
             detail="Category group must be active before restoring a category",
         ) from caught_error

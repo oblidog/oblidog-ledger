@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.api.deps import SessionDep, require_ledger_view_access
+from app.core.api_errors import ApplicationError as HTTPException
 from app.models import CategoryDataSchema, Ledger
 from app.schemas import CategoryDataSchemaPublic
 from app.use_cases import category_data_schemas as category_data_schema_use_cases
@@ -50,7 +51,7 @@ def read_category_data_schemas(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
 
     return CategoryDataSchemasPublic(
@@ -84,11 +85,13 @@ def read_category_data_schema_version(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data schema not found"
+            code="category_schema_not_found",
+            status_code=404,
+            detail="Category data schema not found",
         ) from caught_error
 
     return _to_category_data_schema_public(category_schema)

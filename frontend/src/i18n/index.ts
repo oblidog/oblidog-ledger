@@ -5,12 +5,28 @@ import { appResources } from "./appResources"
 import { browserLanguage, readLocalLanguage } from "./language"
 import enCommon from "./locales/en/common.json"
 import enDomain from "./locales/en/domain.json"
+import enErrors from "./locales/en/errors.json"
+import enValidation from "./locales/en/validation.json"
 import plCommon from "./locales/pl/common.json"
 import plDomain from "./locales/pl/domain.json"
+import plErrors from "./locales/pl/errors.json"
+import plValidation from "./locales/pl/validation.json"
 
 export const resources = {
-  en: { common: enCommon, app: appResources.en, domain: enDomain },
-  pl: { common: plCommon, app: appResources.pl, domain: plDomain },
+  en: {
+    common: enCommon,
+    app: appResources.en,
+    domain: enDomain,
+    errors: enErrors,
+    validation: enValidation,
+  },
+  pl: {
+    common: plCommon,
+    app: appResources.pl,
+    domain: plDomain,
+    errors: plErrors,
+    validation: plValidation,
+  },
 } as const
 
 export const i18n = createInstance()

@@ -2,8 +2,8 @@
 
 The interface supports English (`en`) and Polish (`pl`), including authentication,
 ledger workspaces, administration, analytics, accessible controls, and form
-validation. API-originated errors and server-rendered emails remain tracked in
-#513 and #514. User-defined names, notes, schema labels and external diagnostics
+validation. Server-rendered emails remain tracked in
+#514. User-defined names, notes, schema labels and external diagnostics
 are preserved.
 
 ## Language resolution
@@ -119,3 +119,6 @@ cover language switching, existing validation, titles, category dialogs, user
 content, shared-demo isolation and horizontal overflow. The same spec is also
 included by the regular Playwright CI project. An optional
 `I18N_CHROMIUM_EXECUTABLE` can select an already installed Chromium binary.
+
+API failures use the additive stable-code contract described in [API errors](api-errors.md).
+Translate errors with `getApiErrorMessage`; do not compare or render server prose.

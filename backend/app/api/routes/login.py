@@ -2,12 +2,13 @@ import secrets
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.browser_auth import (
     CSRF_HEADER_NAME,
     clear_session_cookie,
@@ -32,9 +33,15 @@ def _authenticate(session: SessionDep, form_data: OAuth2PasswordRequestForm) -> 
         session=session, email=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise HTTPException(
+            code="auth_invalid_credentials",
+            status_code=400,
+            detail="Incorrect email or password",
+        )
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(
+            code="user_inactive", status_code=400, detail="Inactive user"
+        )
     return user
 
 
@@ -129,7 +136,9 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
             new_password=body.new_password,
         )
     except password_reset_service.InvalidPasswordResetTokenError as caught_error:
-        raise HTTPException(status_code=400, detail="Invalid token") from caught_error
+        raise HTTPException(
+            code="auth_invalid_token", status_code=400, detail="Invalid token"
+        ) from caught_error
     return Message(message="Password updated successfully")
 
 
@@ -146,11 +155,14 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
 
     if not user:
         raise HTTPException(
+            code="user_not_found",
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(
+            code="user_inactive", status_code=400, detail="Inactive user"
+        )
     delivery = password_reset_service.issue_password_reset(session=session, user=user)
     email_data = generate_reset_password_email(
         email_to=user.email, email=email, token=delivery.token

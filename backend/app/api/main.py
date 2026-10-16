@@ -19,12 +19,20 @@ from app.api.routes import (
     users,
     utils,
 )
+from app.schemas.api_errors import ApiErrorResponse
 
 api_router = APIRouter(
+    responses={
+        status: {
+            "model": ApiErrorResponse,
+            "description": "Application error with stable code; legacy detail is unchanged",
+        }
+        for status in (400, 401, 403, 404, 409, 413, 422, 500, 503)
+    },
     dependencies=[
         Depends(enforce_demo_request_capabilities),
         Depends(enforce_demo_write_policy),
-    ]
+    ],
 )
 api_router.include_router(login.router)
 api_router.include_router(ledgers.router)
