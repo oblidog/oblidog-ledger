@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 concurrency:
   group: update-dev-release-pr
@@ -13,11 +12,16 @@ concurrency:
 
 jobs:
   update-release-pr:
+    timeout-minutes: 10
+    permissions:
+      contents: read # Read release history.
+      pull-requests: write # Create or update the release PR.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout dev with complete history
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           ref: dev
           fetch-depth: 0
 

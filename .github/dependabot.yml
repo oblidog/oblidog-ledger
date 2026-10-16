@@ -12,8 +12,10 @@ multi-ecosystem-groups:
     labels: [dependencies, internal]
 
 updates:
-  # GitHub Actions
+  # GitHub Actions: Dependabot updates full SHA pins and their version comments.
   - package-ecosystem: github-actions
+    cooldown:
+      default-days: 7
     directory: /
     schedule:
       interval: weekly
@@ -28,6 +30,8 @@ updates:
         update-types: [minor, patch]
   # Python uv
   - package-ecosystem: uv
+    cooldown:
+      default-days: 7
     directory: /
     schedule:
       interval: weekly
@@ -42,6 +46,8 @@ updates:
         update-types: [minor, patch]
   # bun
   - package-ecosystem: bun
+    cooldown:
+      default-days: 7
     directory: /
     schedule:
       interval: weekly
@@ -56,6 +62,8 @@ updates:
     multi-ecosystem-group: playwright
   # Docker
   - package-ecosystem: docker
+    cooldown:
+      default-days: 7
     directories:
       - /backend
       - /frontend
@@ -70,6 +78,8 @@ updates:
     multi-ecosystem-group: playwright
   # Docker Compose
   - package-ecosystem: docker-compose
+    cooldown:
+      default-days: 7
     directory: /
     schedule:
       interval: weekly
