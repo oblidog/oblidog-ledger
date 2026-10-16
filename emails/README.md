@@ -4,9 +4,10 @@ React Email owns presentation. Python owns data selection, calculations,
 preferences, scheduling, SMTP and runtime Jinja rendering. No JavaScript service
 or external rendering API is involved in delivery.
 
-This workspace contains a foundation example and the live **daily digest**.
-Weekly and transactional migrations remain in #480 and #481. Existing MJML
-sources stay in place until migrated.
+This workspace owns the daily digest, weekly overview and all four transactional
+layouts (invitation, password reset, new account and test email). All use shared
+React Email components and authored plain-text templates. The legacy MJML and
+copied transactional HTML sources have been removed after checking their callers.
 
 ## Commands (repository root)
 
@@ -19,7 +20,7 @@ bun run email:export              # generate HTML/Jinja + text in backend/app/em
 bun run email:check               # byte-for-byte freshness check, does not rewrite files
 bun run --filter @oblidog/emails typecheck
 uv run --locked python emails/scripts/render_previews.py
-uv run --locked pytest -q tests/test_email_templates.py
+uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py tests/test_weekly_email_rendering.py tests/test_transactional_email_rendering.py
 ```
 
 `email:dev` previews `foundation.tsx` with its synthetic normal data.
@@ -131,3 +132,99 @@ fails rendering instead of sending oversized HTML.
 Regression cases include the review's mixed 35/40/20 digest, 70 obligations,
 large escaped Unicode fields, priority preservation and the real report entry
 point. Small digests retain all their data without size-truncation notices.
+
+## Localization
+
+Daily digests, weekly monthly overviews, password recovery, invitations, new
+account and test emails render EN/PL subjects and HTML/text bodies. Each render
+receives an explicit recipient language; null, unsupported values and recipients
+without an account fall back to English. Inviter and browser preferences do not
+select the recipient language. The cached Jinja environment has no mutable locale.
+
+`backend/app/email-locales/{en,pl}.json` is shared by Python runtime rendering
+and React Email previews. Use semantic keys, complete sentences and named
+placeholders. Tests enforce matching keys and placeholders. English plurals use
+one/other; Polish uses one/few/many/other, including 12 versus 22. Runtime
+`EmailLocale` is immutable and passed into presentation and template rendering.
+
+Amounts use Decimal throughout, retain sub-cent precision and at least two
+fraction digits, and use a decimal point in English or comma in Polish. Dates
+are ISO in English and DD.MM.YYYY in Polish; timestamps retain the report
+timezone. Currency codes and grouping, selection, scheduling, delivery keys,
+user content and external diagnostics keep their original meaning.
+
+`email:export` and `email:check` cover all committed HTML/text artifacts. They
+contain locale-neutral Jinja translation calls; the backend supplies the locale
+without Node at runtime. The preview command additionally renders
+`daily-{normal,empty,unknown,multi-currency,long-content}-{en,pl}`, the weekly matrix described below, and every transactional email in both languages.
+The localized fixtures use the production presentation and size-budget renderer.
+Tests cover interleaved recipients, multipart output, escaping, pluralization,
+precision, omitted counts and the 90 KiB limit. Scheduled delivery regression
+tests verify both languages in one run and retry deduplication.
+
+## Weekly monthly overview
+
+`emails/weekly-overview.tsx` and `weekly-overview.txt.jinja` export the live weekly
+HTML/text artifacts using the same shell, typography, summaries and footer as
+the daily digest. Python retains the existing calculations, recipient selection,
+Monday cadence, reporting timezone, comparison eligibility and ISO-week delivery
+key. The only new context value is a configured application link to the ledgers.
+
+Each ledger has separate currency cards. Known total, paid and remaining amounts
+are prominent; incomplete totals keep a visible notice. All status counts,
+unknown/unconfirmed counts, overdue count/known amount, previous-month total and
+eligible change remain available. The percentage is explicitly **by obligation
+count**, never monetary progress. The original selection and row order are
+preserved; large messages show a bounded prefix as described below. No totals
+across currencies or new ratios are calculated.
+
+`fixtures/weekly/*.json` contains decimal strings and ISO dates, shared with the
+React preview. `scripts/weekly_fixtures.py` converts them to Decimal/date inputs
+and renders through production Jinja. The preview command writes both EN/PL
+HTML and text for normal, empty, no-ledger, unknown, zero, previous-month-only,
+unavailable-comparison, multi-ledger/currency and long-content cases. Long
+synthetic names and 40 upcoming payments are retained without horizontal overflow
+at 320/390 px. Layout uses email-compatible presentation tables with two compact
+amount columns and single-column payment rows. Browser checks supplement, but
+do not replace, mailbox-client testing.
+
+### Weekly HTML size budget
+
+`weekly_overview_rendering.py` enforces a 90 KiB UTF-8 budget after Jinja renders.
+Summary blocks (each currency card or empty ledger) take priority over upcoming
+payment rows. If all summaries fit, the renderer retains the largest fitting
+prefix of payment rows; otherwise it retains a prefix of summary blocks without
+payment rows. Calculated values in retained blocks and the input objects are
+never modified.
+
+Every shortened candidate includes EN/PL counts of visible/selected summary
+blocks and upcoming payments, plus a full-data link near the top. Each retained
+currency also states its own shown/selected payment count when shortened; zero
+visible rows are not labeled as an empty source list. HTML and text use the same
+selection and notices. An impossible base layout raises rather than sending
+oversized HTML. Tests cover the 6-ledger/4-currency regression, large escaped
+payment lists, giant Unicode names, input immutability and serialized MIME size.
+
+## Transactional messages
+
+`components/transactional.tsx` shares the report shell, typography, action button
+and footer. Four small files in `emails/` expose each design in the React Email
+preview server. `scripts/export.tsx` fixes the message kind at build time and
+exports each existing artifact name; recipient data stays escaped Jinja context.
+The corresponding `emails/{reset_password,user_invitation,new_account,test_email}.txt.jinja`
+files provide explicit plain-text alternatives. Every action has a visible URL
+fallback. Recipient locale, token URLs, expiry and authentication behavior remain
+owned by existing Python generators and callers.
+
+`fixtures/transactional/*.json` covers normal, long content, escaped values and
+missing optional names in EN/PL. The Python preview command writes
+`previews/{template}-{case}-{language}.{html,txt}`. Rendering uses no images,
+external fonts or JavaScript. Regression tests inspect decoded multipart bodies
+and exact action/fallback URLs, including encoded token characters. Captured-mail
+invitation/password-reset flows remain covered by isolated Playwright/Mailpit CI.
+
+New-account generation currently has no active application caller. Its public
+generator and artifact names are retained and migrated for compatibility; this
+change does not activate a new account-email flow. All four MJML sources and the
+editor-specific MJML export instructions are retired. Backend wheel/Docker
+packaging continues to use the same build directory and all HTML/text assets.

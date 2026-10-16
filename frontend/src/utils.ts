@@ -1,19 +1,10 @@
-import type { AxiosError } from "axios"
-
-function extractErrorMessage(err: AxiosError): string {
-  const errDetail = (err.response?.data as any)?.detail
-  if (Array.isArray(errDetail) && errDetail.length > 0) {
-    return errDetail[0].msg
-  }
-  return errDetail || "Something went wrong."
-}
+import { getApiErrorMessage } from "@/i18n/apiErrors"
 
 export const handleError = function (
   this: (msg: string) => void,
-  err: AxiosError,
+  err: unknown,
 ) {
-  const errorMessage = extractErrorMessage(err)
-  this(errorMessage)
+  this(getApiErrorMessage(err))
 }
 
 export const getInitials = (name: string): string => {

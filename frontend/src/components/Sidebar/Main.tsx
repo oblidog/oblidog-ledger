@@ -1,5 +1,6 @@
 import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
 import type { LucideIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import {
   SidebarGroup,
@@ -12,7 +13,13 @@ import {
 
 export type Item = {
   icon: LucideIcon
-  title: string
+  title:
+    | "navigation.dashboard"
+    | "navigation.obligations"
+    | "navigation.categories"
+    | "navigation.analytics"
+    | "navigation.integrations"
+    | "navigation.admin"
   path: string
   exact?: boolean
 }
@@ -22,6 +29,7 @@ interface MainProps {
 }
 
 export function Main({ items }: MainProps) {
+  const { t } = useTranslation()
   const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouterState()
   const currentPath = router.location.pathname
@@ -46,13 +54,13 @@ export function Main({ items }: MainProps) {
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
-                  tooltip={item.title}
+                  tooltip={t(item.title)}
                   isActive={isActive}
                   asChild
                 >
                   <RouterLink to={item.path} onClick={handleMenuClick}>
                     <item.icon />
-                    <span>{item.title}</span>
+                    <span>{t(item.title)}</span>
                   </RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

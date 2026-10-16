@@ -12,12 +12,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
 from app.domain import BillingPeriod, ObligationLifecycle, ValueState
+from app.email_i18n import EmailLocale, recipient_language
 from app.models import Ledger, LedgerMembership, Obligation, User
+from app.services.weekly_overview_rendering import render_weekly_overview
 from app.use_cases.analytics import (
     get_obligation_period_totals,
     summarize_period_payment_progress,
 )
-from app.utils import EmailData, render_email_template
+from app.utils import EmailData
 
 if TYPE_CHECKING:
     from app.use_cases.system_runs import SystemRunContext
@@ -88,22 +90,20 @@ class WeeklyMonthlyOverviewReport:
         overviews = _build_user_overviews(
             session=session, user=user, report_date=context.business_date
         )
+        language = recipient_language(user.language)
+        locale = EmailLocale(language)
         template_context = {
             "project_name": settings.PROJECT_NAME,
-            "report_date": context.business_date.isoformat(),
-            "period": f"{context.business_date.year:04d}-{context.business_date.month:02d}",
+            "report_date": locale.date(context.business_date),
+            "period": locale.period(context.business_date),
             "ledgers": overviews,
+            "app_url": f"{settings.FRONTEND_HOST.rstrip('/')}/ledgers",
         }
+        html, text = render_weekly_overview(context=template_context, language=language)
         return EmailData(
-            subject=f"{settings.PROJECT_NAME} - Weekly monthly overview",
-            html_content=render_email_template(
-                template_name="weekly_monthly_overview_report.html",
-                context=template_context,
-            ),
-            text_content=render_email_template(
-                template_name="weekly_monthly_overview_report.txt",
-                context=template_context,
-            ),
+            subject=f"{settings.PROJECT_NAME} - {locale.tr('weekly_subject')}",
+            html_content=html,
+            text_content=text,
         )
 
 

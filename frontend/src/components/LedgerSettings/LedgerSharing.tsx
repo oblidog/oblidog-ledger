@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query"
 import { Check, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   type LedgerAccessRole,
   type LedgerShare,
@@ -40,14 +40,27 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
 
 const shareRoles: Array<{ value: LedgerAccessRole; label: string }> = [
-  { value: "viewer", label: "Viewer" },
-  { value: "editor", label: "Editor" },
+  {
+    value: "viewer",
+    get label() {
+      return i18n.t("app:ledgersettings.viewer")
+    },
+  },
+  {
+    value: "editor",
+    get label() {
+      return i18n.t("app:ledgersettings.editor")
+    },
+  },
 ]
 
 export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
+  useTranslation()
+
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<LedgerAccessRole>("viewer")
   const queryClient = useQueryClient()
@@ -60,7 +73,7 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
     mutationFn: (requestBody: LedgerShare) =>
       LedgersService.shareLedger({ ledgerId, requestBody }),
     onSuccess: () => {
-      showSuccessToast("Ledger shared successfully")
+      showSuccessToast(i18n.t("app:ledgersettings.ledger_shared_successfully"))
       setEmail("")
       void queryClient.invalidateQueries({
         queryKey: ["ledger-members", ledgerId],
@@ -82,7 +95,7 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
         requestBody: { role },
       }),
     onSuccess: () => {
-      showSuccessToast("Ledger access updated")
+      showSuccessToast(i18n.t("app:ledgersettings.ledger_access_updated"))
       void queryClient.invalidateQueries({
         queryKey: ["ledger-members", ledgerId],
       })
@@ -93,7 +106,7 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
     mutationFn: (userId: string) =>
       LedgersService.removeLedgerMember({ ledgerId, userId }),
     onSuccess: () => {
-      showSuccessToast("Ledger access removed")
+      showSuccessToast(i18n.t("app:ledgersettings.ledger_access_removed"))
       void queryClient.invalidateQueries({
         queryKey: ["ledger-members", ledgerId],
       })
@@ -112,11 +125,12 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="size-5" />
-          Ledger access
+          {i18n.t("app:ledgersettings.ledger_access")}
         </CardTitle>
         <CardDescription>
-          Share this ledger with another provisioned user and choose their
-          access level.
+          {i18n.t(
+            "app:ledgersettings.share_this_ledger_with_another_provisioned_user_and_choose_their_access_level",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -128,7 +142,7 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
             placeholder="user@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            aria-label="User email"
+            aria-label={i18n.t("app:ledgersettings.user_email")}
           />
           <Select
             value={role}
@@ -149,14 +163,18 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
             type="submit"
             disabled={!email.trim() || shareMutation.isPending}
           >
-            Share ledger
+            {i18n.t("app:ledgersettings.share_ledger")}
           </Button>
         </form>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">Current members</p>
+          <p className="text-sm font-medium">
+            {i18n.t("app:ledgersettings.current_members")}
+          </p>
           {members.data.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No members yet.</p>
+            <p className="text-sm text-muted-foreground">
+              {i18n.t("app:ledgersettings.no_members_yet")}
+            </p>
           ) : (
             <div className="divide-y rounded-lg border">
               {members.data.map((member) => (
@@ -177,7 +195,7 @@ export function LedgerSharing({ ledgerId }: { ledgerId: string }) {
                   {member.role === "owner" ? (
                     <Badge variant="outline" className="shrink-0">
                       <Check />
-                      owner
+                      {i18n.t("app:ledgersettings.owner")}
                     </Badge>
                   ) : (
                     <div className="flex shrink-0 items-center gap-2">
@@ -231,26 +249,37 @@ function RemoveMemberDialog({
   isPending: boolean
   onConfirm: () => void
 }) {
+  useTranslation()
+
   const [open, setOpen] = useState(false)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={`Remove ${email}`}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={i18n.t("app:ledgersettings.remove", { value1: email })}
+        >
           <Trash2 />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Remove ledger access?</DialogTitle>
+          <DialogTitle>
+            {i18n.t("app:ledgersettings.remove_ledger_access")}
+          </DialogTitle>
           <DialogDescription>
-            {email} will no longer be able to access this ledger.
+            {email}{" "}
+            {i18n.t(
+              "app:ledgersettings.will_no_longer_be_able_to_access_this_ledger",
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={isPending}>
-              Cancel
+              {i18n.t("app:ledgersettings.cancel")}
             </Button>
           </DialogClose>
           <LoadingButton
@@ -261,7 +290,7 @@ function RemoveMemberDialog({
               setOpen(false)
             }}
           >
-            Remove access
+            {i18n.t("app:ledgersettings.remove_access")}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

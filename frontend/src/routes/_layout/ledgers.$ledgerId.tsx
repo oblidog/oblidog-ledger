@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-router"
 import { Play, Settings, Tags } from "lucide-react"
 import { Suspense } from "react"
-
+import { useTranslation } from "react-i18next"
 import { LedgersService } from "@/client"
 import { ObligationWorkspace } from "@/components/Obligations/ObligationWorkspace"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchPublicAppConfig } from "@/config"
 import useAuth from "@/hooks/useAuth"
+import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
   beforeLoad: async ({ location, params }) => {
@@ -36,10 +37,12 @@ export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
     return { appConfig }
   },
   component: LedgerDetails,
-  head: () => ({ meta: [{ title: "Ledger - Oblidog" }] }),
+  head: () => ({ meta: [{ title: i18n.t("app:ledgers.ledger_oblidog") }] }),
 })
 
 function LedgerDetails() {
+  useTranslation()
+
   const { ledgerId } = Route.useParams()
   const location = useLocation()
   const isWorkspace = location.pathname === `/ledgers/${ledgerId}`
@@ -74,7 +77,9 @@ function LedgerDetails() {
             <h1 className="text-2xl font-bold tracking-tight">{ledger.name}</h1>
             <p className="mt-1 text-muted-foreground">
               {ledger.description ||
-                "Review and manage obligations for this ledger."}
+                i18n.t(
+                  "app:ledgers.review_and_manage_obligations_for_this_ledger",
+                )}
             </p>
           </div>
           <div className="hidden gap-2 md:flex">
@@ -82,17 +87,17 @@ function LedgerDetails() {
               <Button variant="outline" asChild>
                 <Link to="/ledgers/$ledgerId/system-run" params={{ ledgerId }}>
                   <Play />
-                  System Run
+                  {i18n.t("app:ledgers.system_run")}
                 </Link>
               </Button>
             )}
             <Button variant="outline" asChild>
-              <Link to="/">Dashboard</Link>
+              <Link to="/">{i18n.t("app:ledgers.dashboard")}</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
                 <Tags />
-                Categories
+                {i18n.t("app:ledgers.categories")}
               </Link>
             </Button>
             {!appConfig.is_demo && (
@@ -100,7 +105,7 @@ function LedgerDetails() {
                 <Link
                   to="/ledgers/$ledgerId/settings"
                   params={{ ledgerId }}
-                  aria-label="Ledger settings"
+                  aria-label={i18n.t("app:ledgers.ledger_settings")}
                 >
                   <Settings />
                 </Link>
@@ -124,6 +129,8 @@ function LedgerDetails() {
 }
 
 function ObligationWorkspaceSkeleton() {
+  useTranslation()
+
   return (
     <Card>
       <CardContent className="space-y-4 pt-6">

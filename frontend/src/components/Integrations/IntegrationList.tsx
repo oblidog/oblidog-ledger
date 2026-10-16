@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { EllipsisVertical, Plus, RefreshCw } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   CategoriesService,
   IntegrationsService,
@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useAuth from "@/hooks/useAuth"
+import { i18n } from "@/i18n"
 import { IntegrationForm } from "./IntegrationForm"
 import {
   changesLabel,
@@ -37,6 +38,8 @@ import {
 const PAGE_SIZE = 24
 
 export function IntegrationList({ ledgerId }: { ledgerId: string }) {
+  useTranslation()
+
   const navigate = useNavigate()
   const { user } = useAuth()
   const [page, setPage] = useState(0)
@@ -69,14 +72,18 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
     <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Integrations</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {i18n.t("app:integrations.integrations")}
+          </h1>
           <p className="mt-1 text-muted-foreground">
-            Monitor external integrations for{" "}
-            {ledger.data?.name ?? "this ledger"}.
+            {i18n.t("app:integrations.monitor_external_integrations_for")}{" "}
+            {ledger.data?.name ?? i18n.t("app:integrations.this_ledger")}.
           </p>
           {!isOwner && (
             <p className="mt-1 text-sm text-muted-foreground">
-              Only the ledger owner can change configuration.
+              {i18n.t(
+                "app:integrations.only_the_ledger_owner_can_change_configuration",
+              )}
             </p>
           )}
         </div>
@@ -86,11 +93,11 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
             onClick={() => void integrations.refetch()}
             disabled={integrations.isFetching}
           >
-            <RefreshCw /> Refresh
+            <RefreshCw /> {i18n.t("app:integrations.refresh")}
           </Button>
           {isOwner && (
             <Button onClick={() => setCreating(true)}>
-              <Plus /> Add integration
+              <Plus /> {i18n.t("app:integrations.add_integration")}
             </Button>
           )}
         </div>
@@ -101,25 +108,35 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
           retry={() => void integrations.refetch()}
         />
       )}
-      {integrations.isPending && <p role="status">Loading integrations…</p>}
+      {integrations.isPending && (
+        <p role="status">{i18n.t("app:integrations.loading_integrations")}</p>
+      )}
       {integrations.data?.count === 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <h2 className="font-semibold">No integrations yet</h2>
+          <h2 className="font-semibold">
+            {i18n.t("app:integrations.no_integrations_yet")}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {isOwner
-              ? "Add an integration here, then copy its connection key into the runner configuration."
-              : "The ledger owner can register integrations here. Their status will appear after the runners start reporting."}
+              ? i18n.t(
+                  "app:integrations.add_an_integration_here_then_copy_its_connection_key_into_the_runner_configuration",
+                )
+              : i18n.t(
+                  "app:integrations.the_ledger_owner_can_register_integrations_here_their_status_will_appear_after_the_ru",
+                )}
           </p>
         </div>
       )}
       {connectionKey && (
         <Card>
           <CardHeader>
-            <CardTitle>Connection key</CardTitle>
+            <CardTitle>{i18n.t("app:integrations.connection_key")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-destructive">
-              Copy this key now. It will not be displayed again.
+              {i18n.t(
+                "app:integrations.copy_this_key_now_it_will_not_be_displayed_again",
+              )}
             </p>
             <code className="block break-all rounded-md border p-3 text-sm">
               {connectionKey}
@@ -132,10 +149,10 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                 )
               }
             >
-              Copy configuration
+              {i18n.t("app:integrations.copy_configuration")}
             </Button>
             <Button variant="ghost" onClick={() => setConnectionKey(null)}>
-              I copied the key
+              {i18n.t("app:integrations.i_copied_the_key")}
             </Button>
           </CardContent>
         </Card>
@@ -146,13 +163,17 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead>Integration</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last run</TableHead>
-                  <TableHead>Result</TableHead>
-                  <TableHead>Changes</TableHead>
-                  <TableHead className="w-16 text-right">Actions</TableHead>
+                  <TableHead>
+                    {i18n.t("app:integrations.integration")}
+                  </TableHead>
+                  <TableHead>{i18n.t("app:integrations.category")}</TableHead>
+                  <TableHead>{i18n.t("app:integrations.status")}</TableHead>
+                  <TableHead>{i18n.t("app:integrations.last_run")}</TableHead>
+                  <TableHead>{i18n.t("app:integrations.result")}</TableHead>
+                  <TableHead>{i18n.t("app:integrations.changes")}</TableHead>
+                  <TableHead className="w-16 text-right">
+                    {i18n.t("app:integrations.actions")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -167,7 +188,9 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                         {item.name}
                       </Link>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {item.enabled ? "Enabled" : "Disabled"}
+                        {item.enabled
+                          ? i18n.t("app:integrations.enabled")
+                          : i18n.t("app:integrations.disabled")}
                       </p>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
@@ -191,11 +214,15 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            aria-label={`Actions for ${item.name}`}
+                            aria-label={i18n.t(
+                              "app:integrations.actions_for_9e1489",
+                              { value1: item.name },
+                            )}
                           >
                             <EllipsisVertical />
                             <span className="sr-only">
-                              Actions for {item.name}
+                              {i18n.t("app:integrations.actions_for")}{" "}
+                              {item.name}
                             </span>
                           </Button>
                         </DropdownMenuTrigger>
@@ -205,7 +232,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                               to="/ledgers/$ledgerId/integrations/$integrationId"
                               params={{ ledgerId, integrationId: item.id }}
                             >
-                              View integration
+                              {i18n.t("app:integrations.view_integration")}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
@@ -222,7 +249,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
                                 sort: "desc",
                               }}
                             >
-                              View category data
+                              {i18n.t("app:integrations.view_category_data")}
                             </Link>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -237,7 +264,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
       )}
       {((integrations.data?.count ?? 0) > PAGE_SIZE || page > 0) && (
         <nav
-          aria-label="Integration pages"
+          aria-label={i18n.t("app:integrations.integration_pages")}
           className="flex flex-wrap items-center justify-between gap-2"
         >
           <Button
@@ -245,9 +272,11 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
             disabled={page === 0 || integrations.isFetching}
             onClick={() => setPage((value) => value - 1)}
           >
-            Previous
+            {i18n.t("app:integrations.previous")}
           </Button>
-          <span className="text-sm">Page {page + 1}</span>
+          <span className="text-sm">
+            {i18n.t("app:integrations.page")} {page + 1}
+          </span>
           <Button
             variant="outline"
             disabled={
@@ -257,7 +286,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
             }
             onClick={() => setPage((value) => value + 1)}
           >
-            Next
+            {i18n.t("app:integrations.next")}
           </Button>
         </nav>
       )}

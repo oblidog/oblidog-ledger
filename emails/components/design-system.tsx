@@ -22,14 +22,16 @@ export function EmailLayout({
   projectName,
   children,
   footer,
+  language = "en",
 }: {
   preview: string
   projectName: string
   children: ReactNode
   footer: ReactNode
+  language?: string
 }) {
   return (
-    <Html lang="en">
+    <Html lang={language}>
       <Head>
         <meta name="color-scheme" content="light" />
         <style>{`@media only screen and (max-width: 480px) { .email-content { padding: 24px 20px !important; } .email-shell { padding: 16px 8px !important; } }`}</style>
@@ -64,6 +66,8 @@ export function EmailLayout({
                   lineHeight: "28px",
                   fontWeight: 700,
                   letterSpacing: "-0.5px",
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-word",
                 }}
               >
                 {projectName}
@@ -121,6 +125,8 @@ export function EmailHeading({
           fontSize: "15px",
           lineHeight: "24px",
           margin: "0 0 24px",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
         }}
       >
         {intro}
@@ -312,15 +318,24 @@ export function EmailButton({
 export function EmailFooter({
   projectName,
   note,
+  tagline = "Keep your payments on a leash.",
 }: {
   projectName: string
   note: string
+  tagline?: string
 }) {
   return (
     <Text
-      style={{ color: muted, fontSize: "12px", lineHeight: "19px", margin: 0 }}
+      style={{
+        color: muted,
+        fontSize: "12px",
+        lineHeight: "19px",
+        margin: 0,
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
+      }}
     >
-      {projectName} · Keep your payments on a leash.
+      {projectName} · {tagline}
       <br />
       {note}
     </Text>

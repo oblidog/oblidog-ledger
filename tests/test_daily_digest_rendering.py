@@ -301,7 +301,7 @@ def test_production_render_keeps_empty_selection_silent_and_uses_real_adapter(
     )
     report = module.DailyObligationReport()
     context = SimpleNamespace(business_date=date(2026, 10, 15))
-    user = SimpleNamespace(id="synthetic-user")
+    user = SimpleNamespace(id="synthetic-user", language=None)
     assert report.render(session=None, user=user, context=context) is None
     assert (
         report.delivery_key(user=user, context=context)

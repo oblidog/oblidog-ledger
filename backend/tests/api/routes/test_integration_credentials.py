@@ -196,7 +196,7 @@ def test_integration_rejects_invalid_obligation_periods(
             headers=connection_headers,
         )
         assert response.status_code == 422
-        assert response.json() == {"detail": "Invalid obligation period"}
+        assert response.json()["detail"] == "Invalid obligation period"
 
 
 def test_integration_derives_category_data_and_component_source_from_context(

@@ -1,19 +1,38 @@
+import { useTranslation } from "react-i18next"
 import type { IntegrationHealth, IntegrationPublic } from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { i18n } from "@/i18n"
+import { getLocale } from "@/i18n/format"
 
 const healthLabels: Record<IntegrationHealth, string> = {
-  disabled: "Disabled",
-  timed_out: "Timed out",
-  stale: "Report overdue",
-  running: "Running",
-  never_run: "Never run",
-  error: "Failed",
-  healthy: "Healthy",
+  get disabled() {
+    return i18n.t("app:integrations.disabled")
+  },
+  get timed_out() {
+    return i18n.t("app:integrations.timed_out")
+  },
+  get stale() {
+    return i18n.t("app:integrations.report_overdue")
+  },
+  get running() {
+    return i18n.t("app:integrations.running")
+  },
+  get never_run() {
+    return i18n.t("app:integrations.never_run")
+  },
+  get error() {
+    return i18n.t("app:integrations.failed")
+  },
+  get healthy() {
+    return i18n.t("app:integrations.healthy")
+  },
 }
 
 export function HealthBadge({ health }: { health: IntegrationHealth }) {
+  useTranslation()
+
   return (
     <Badge
       variant={
@@ -31,7 +50,7 @@ export function HealthBadge({ health }: { health: IntegrationHealth }) {
 
 export function dateTime(value: string | null) {
   return value
-    ? new Intl.DateTimeFormat(undefined, {
+    ? new Intl.DateTimeFormat(getLocale(), {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(new Date(value))
@@ -40,19 +59,19 @@ export function dateTime(value: string | null) {
 
 export function resultLabel(item: IntegrationPublic) {
   return item.last_result === "success"
-    ? "Success"
+    ? i18n.t("app:integrations.success")
     : item.last_result === "failure"
-      ? "Failure"
-      : "No result yet"
+      ? i18n.t("app:integrations.failure")
+      : i18n.t("app:integrations.no_result_yet")
 }
 
 export function changesLabel(item: IntegrationPublic) {
-  if (item.last_result === null) return "No result yet"
+  if (item.last_result === null) return i18n.t("app:integrations.no_result_yet")
   return item.last_changes_detected === true
-    ? "Changes detected"
+    ? i18n.t("app:integrations.changes_detected")
     : item.last_changes_detected === false
-      ? "No changes"
-      : "Unknown"
+      ? i18n.t("app:integrations.no_changes")
+      : i18n.t("app:integrations.unknown_bc7819")
 }
 
 export function LoadError({
@@ -62,17 +81,23 @@ export function LoadError({
   retry: () => void
   hasData?: boolean
 }) {
+  useTranslation()
+
   return (
     <Alert variant="destructive">
-      <AlertTitle>Could not refresh integrations</AlertTitle>
+      <AlertTitle>
+        {i18n.t("app:integrations.could_not_refresh_integrations")}
+      </AlertTitle>
       <AlertDescription>
         <p>
           {hasData
-            ? "Displayed data may be out of date."
-            : "Check your connection and access to this ledger."}
+            ? i18n.t("app:integrations.displayed_data_may_be_out_of_date")
+            : i18n.t(
+                "app:integrations.check_your_connection_and_access_to_this_ledger",
+              )}
         </p>
         <Button variant="outline" size="sm" onClick={retry}>
-          Try again
+          {i18n.t("app:integrations.try_again")}
         </Button>
       </AlertDescription>
     </Alert>

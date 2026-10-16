@@ -1,0 +1,26 @@
+{
+  "reset_password": {
+    "project_name": "Custom_<>&",
+    "email": "recipient@example.com",
+    "username": "<img src=x> & {{ 7*7 }}",
+    "valid_hours": 48,
+    "link": "https://example.com/reset-password?token=synthetic-reset-token&extra=%2B%2F%3D"
+  },
+  "user_invitation": {
+    "project_name": "Custom_<>&",
+    "email": "recipient@example.com",
+    "valid_hours": 48,
+    "link": "https://example.com/accept-invitation?token=synthetic-invitation-token&extra=%2B%2F%3D"
+  },
+  "new_account": {
+    "project_name": "Custom_<>&",
+    "email": "recipient@example.com",
+    "username": "<img src=x> & {{ 7*7 }}",
+    "password": "synthetic<&\"",
+    "link": "https://example.com/?extra=%2B%2F%3D&view=account"
+  },
+  "test_email": {
+    "project_name": "Custom_<>&",
+    "email": "recipient@example.com"
+  }
+}

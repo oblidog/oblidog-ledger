@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Building2 } from "lucide-react"
-
+import { useTranslation } from "react-i18next"
 import { CategoriesService } from "@/client"
 import {
   Card,
@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
 
 import {
@@ -20,6 +21,8 @@ import {
 import { CounterpartyPicker } from "./CounterpartyPicker"
 
 export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
+  useTranslation()
+
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
   const categories = useQuery({
@@ -42,7 +45,9 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
       ),
     onError: handleError.bind(showErrorToast),
     onSuccess: () => {
-      showSuccessToast("Category counterparty updated")
+      showSuccessToast(
+        i18n.t("app:counterparties.category_counterparty_updated"),
+      )
       void queryClient.invalidateQueries({ queryKey: ["categories", ledgerId] })
     },
   })
@@ -57,19 +62,24 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Building2 className="size-5 text-primary" />
-          <CardTitle>Counterparties</CardTitle>
+          <CardTitle>{i18n.t("app:counterparties.counterparties")}</CardTitle>
         </div>
         <CardDescription>
-          Choose the default counterparty copied to newly created obligations.
-          Changing it does not rewrite existing obligations.
+          {i18n.t(
+            "app:counterparties.choose_the_default_counterparty_copied_to_newly_created_obligations_changing_it_does_",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {categories.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading categories…</p>
+          <p className="text-sm text-muted-foreground">
+            {i18n.t("app:counterparties.loading_categories")}
+          </p>
         ) : categories.isError ? (
           <p className="text-sm text-destructive">
-            Unable to load category counterparties.
+            {i18n.t(
+              "app:counterparties.unable_to_load_category_counterparties",
+            )}
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -80,7 +90,8 @@ export function CategoryCounterpartyPanel({ ledgerId }: { ledgerId: string }) {
                 className="rounded-lg border p-3"
               >
                 <p className="mb-3 text-xs text-muted-foreground">
-                  Default for category code {category.code}
+                  {i18n.t("app:counterparties.default_for_category_code")}{" "}
+                  {category.code}
                 </p>
                 <CounterpartyPicker
                   value={category.counterparty ?? null}

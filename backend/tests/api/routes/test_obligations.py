@@ -192,13 +192,15 @@ def test_mark_obligation_paid_rejects_draft_and_collecting_data(
     collecting_response = client.post(url, headers=headers)
 
     assert draft_response.status_code == 409
-    assert draft_response.json() == {
-        "detail": "Only ready obligations can be marked as paid"
-    }
+    assert (
+        draft_response.json()["detail"]
+        == "Only ready obligations can be marked as paid"
+    )
     assert collecting_response.status_code == 409
-    assert collecting_response.json() == {
-        "detail": "Only ready obligations can be marked as paid"
-    }
+    assert (
+        collecting_response.json()["detail"]
+        == "Only ready obligations can be marked as paid"
+    )
 
 
 def test_mark_obligation_paid_is_idempotent_and_patch_cannot_set_lifecycle(
@@ -249,7 +251,7 @@ def test_mark_obligation_paid_rejects_viewer(client: TestClient, db: Session) ->
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_cancel_obligation_moves_collecting_data_to_canceled(
@@ -301,9 +303,9 @@ def test_cancel_obligation_rejects_other_lifecycles(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Only obligations collecting data can be canceled"
-    }
+    assert (
+        response.json()["detail"] == "Only obligations collecting data can be canceled"
+    )
 
 
 def test_cancel_obligation_rejects_viewer(client: TestClient, db: Session) -> None:
@@ -331,7 +333,7 @@ def test_cancel_obligation_rejects_viewer(client: TestClient, db: Session) -> No
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 @pytest.mark.parametrize(
@@ -392,9 +394,10 @@ def test_reopen_obligation_rejects_other_lifecycles(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Only ready, paid, canceled, or error obligations can be reopened"
-    }
+    assert (
+        response.json()["detail"]
+        == "Only ready, paid, canceled, or error obligations can be reopened"
+    )
 
 
 def test_reopen_obligation_rejects_viewer(client: TestClient, db: Session) -> None:
@@ -422,7 +425,7 @@ def test_reopen_obligation_rejects_viewer(client: TestClient, db: Session) -> No
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_ensure_obligations_creates_current_and_next_period_for_active_categories(
@@ -537,7 +540,7 @@ def test_ensure_obligations_rejects_viewer(client: TestClient, db: Session) -> N
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Ledger not found"}
+    assert response.json()["detail"] == "Ledger not found"
 
 
 def test_obligations_endpoints_happy_path_and_filters(
@@ -796,9 +799,10 @@ def test_update_obligation_rejects_read_only_lifecycles(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Only draft and collecting data obligations can be edited"
-    }
+    assert (
+        response.json()["detail"]
+        == "Only draft and collecting data obligations can be edited"
+    )
 
 
 def test_update_obligation_validates_resulting_dates_and_allows_clearing_values(
@@ -837,9 +841,9 @@ def test_update_obligation_validates_resulting_dates_and_allows_clearing_values(
         json={"due_date": "2026-08-19"},
     )
     assert invalid_response.status_code == 422
-    assert invalid_response.json() == {
-        "detail": "issue_date cannot be later than due_date"
-    }
+    assert (
+        invalid_response.json()["detail"] == "issue_date cannot be later than due_date"
+    )
 
     response = client.patch(
         f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/ELEC-2026-08",
@@ -932,9 +936,10 @@ def test_mark_obligation_ready_rejects_missing_required_values(
     )
 
     assert response.status_code == 422
-    assert response.json() == {
-        "detail": "current_amount and due_date are required to mark ready"
-    }
+    assert (
+        response.json()["detail"]
+        == "current_amount and due_date are required to mark ready"
+    )
 
 
 def test_create_ready_obligation_requires_amount_and_due_date(
@@ -1032,7 +1037,7 @@ def test_create_obligation_rejects_duplicate(client: TestClient, db: Session) ->
     )
 
     assert response.status_code == 409
-    assert response.json() == {"detail": "Obligation already exists"}
+    assert response.json()["detail"] == "Obligation already exists"
 
 
 def test_create_obligation_rejects_negative_current_amount(
@@ -1112,9 +1117,10 @@ def test_create_obligation_rejects_automatic_category(
     )
 
     assert response.status_code == 422
-    assert response.json() == {
-        "detail": "Manual obligations are not allowed for automatic categories"
-    }
+    assert (
+        response.json()["detail"]
+        == "Manual obligations are not allowed for automatic categories"
+    )
 
 
 def test_read_obligation_rejects_invalid_business_key(
@@ -1132,7 +1138,7 @@ def test_read_obligation_rejects_invalid_business_key(
     )
 
     assert response.status_code == 422
-    assert response.json() == {"detail": "Invalid obligation key"}
+    assert response.json()["detail"] == "Invalid obligation key"
 
 
 def test_create_obligation_returns_404_for_missing_category(
@@ -1151,7 +1157,7 @@ def test_create_obligation_returns_404_for_missing_category(
     )
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Category not found"}
+    assert response.json()["detail"] == "Category not found"
 
 
 def test_obligation_category_and_lookup_are_scoped_to_ledger(
@@ -1193,9 +1199,9 @@ def test_obligation_category_and_lookup_are_scoped_to_ledger(
     )
 
     assert create_response.status_code == 404
-    assert create_response.json() == {"detail": "Category not found"}
+    assert create_response.json()["detail"] == "Category not found"
     assert detail_response.status_code == 404
-    assert detail_response.json() == {"detail": "Obligation not found"}
+    assert detail_response.json()["detail"] == "Obligation not found"
 
 
 def test_obligation_endpoints_require_authentication(

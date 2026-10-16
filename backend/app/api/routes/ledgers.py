@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
 from app.api.deps import (
@@ -10,6 +10,7 @@ from app.api.deps import (
     require_ledger_owner_access,
     require_ledger_view_access,
 )
+from app.core.api_errors import ApplicationError as HTTPException
 from app.core.config import settings
 from app.domain import Currency
 from app.domain.business_calendar import (
@@ -129,7 +130,9 @@ def update_ledger(
             default_currency=ledger_in.default_currency,
         )
     except ValueError as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
+        raise HTTPException(
+            code="ledger_invalid_values", status_code=422, detail=str(error)
+        ) from error
 
     return _to_ledger_public(updated_ledger)
 
@@ -163,6 +166,7 @@ def delete_all_categories(
         )
     except LedgerCategoriesInUseError as caught_error:
         raise HTTPException(
+            code="ledger_categories_in_use",
             status_code=409,
             detail="Categories cannot be deleted while ledger obligations exist",
         ) from caught_error
@@ -197,7 +201,9 @@ def share_ledger(
             email=str(share_in.email),
         )
         if target_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                code="user_not_found", status_code=404, detail="User not found"
+            )
         target_user_id = target_user.id
 
     assert target_user_id is not None
@@ -210,13 +216,17 @@ def share_ledger(
         )
     except LedgerNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Ledger not found"
+            code="ledger_not_found", status_code=404, detail="Ledger not found"
         ) from caught_error
     except UserNotFoundError as caught_error:
-        raise HTTPException(status_code=404, detail="User not found") from caught_error
+        raise HTTPException(
+            code="user_not_found", status_code=404, detail="User not found"
+        ) from caught_error
     except LedgerAccessConflictError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Ledger membership conflict"
+            code="ledger_membership_conflict",
+            status_code=409,
+            detail="Ledger membership conflict",
         ) from caught_error
 
     return _to_ledger_member_public(membership)
@@ -239,11 +249,15 @@ def update_ledger_member(
         )
     except LedgerMembershipNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Ledger member not found"
+            code="ledger_member_not_found",
+            status_code=404,
+            detail="Ledger member not found",
         ) from caught_error
     except LedgerAccessConflictError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Owner access cannot be changed"
+            code="ledger_owner_change_forbidden",
+            status_code=409,
+            detail="Owner access cannot be changed",
         ) from caught_error
 
     return _to_ledger_member_public(membership)
@@ -264,11 +278,15 @@ def remove_ledger_member(
         )
     except LedgerMembershipNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Ledger member not found"
+            code="ledger_member_not_found",
+            status_code=404,
+            detail="Ledger member not found",
         ) from caught_error
     except LedgerAccessConflictError as caught_error:
         raise HTTPException(
-            status_code=409, detail="Owner access cannot be removed"
+            code="ledger_owner_remove_forbidden",
+            status_code=409,
+            detail="Owner access cannot be removed",
         ) from caught_error
 
     return Message(message="Ledger member removed")

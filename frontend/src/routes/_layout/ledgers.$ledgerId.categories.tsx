@@ -2,18 +2,23 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router"
 import { Tags } from "lucide-react"
 import { Suspense } from "react"
-
+import { useTranslation } from "react-i18next"
 import { LedgersService } from "@/client"
 import CategoryWorkspace from "@/components/Categories/CategoryWorkspace"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId/categories")({
   component: LedgerCategories,
-  head: () => ({ meta: [{ title: "Categories - Oblidog" }] }),
+  head: () => ({
+    meta: [{ title: i18n.t("app:categories.categories_oblidog") }],
+  }),
 })
 
 function LedgerCategories() {
+  useTranslation()
+
   const { ledgerId } = Route.useParams()
   const location = useLocation()
   const { data: ledger } = useSuspenseQuery({
@@ -34,7 +39,9 @@ function LedgerCategories() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{ledger.name}</h1>
           <p className="mt-1 text-muted-foreground">
-            Manage category groups and categories for this ledger.
+            {i18n.t(
+              "app:categories.manage_category_groups_and_categories_for_this_ledger",
+            )}
           </p>
         </div>
       </div>
@@ -46,6 +53,8 @@ function LedgerCategories() {
 }
 
 function CategoryWorkspaceSkeleton() {
+  useTranslation()
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {Array.from({ length: 2 }, (_, index) => (

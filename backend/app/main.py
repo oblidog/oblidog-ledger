@@ -10,6 +10,7 @@ from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
+from app.core.api_errors import install_error_handlers
 from app.core.browser_auth import CSRF_HEADER_NAME, BrowserSessionSecurityMiddleware
 from app.core.config import settings
 from app.core.demo_request_limits import DemoRequestLimitsMiddleware
@@ -45,6 +46,9 @@ app = FastAPI(
     redoc_url=None,
     generate_unique_id_function=custom_generate_unique_id,
 )
+
+
+install_error_handlers(app)
 
 
 def docs_favicon(_request: Request) -> FileResponse:

@@ -1,3 +1,5 @@
+import { i18n } from "@/i18n"
+import { getLocale } from "@/i18n/format"
 import type { IntegrationRun } from "./runHistoryApi"
 
 export type RunStatus =
@@ -21,9 +23,11 @@ export function runStatus(run: IntegrationRun, now: number): RunStatus {
 
 export function runChanges(run: IntegrationRun): string {
   if (run.result !== "success") return "—"
-  if (run.changes_detected === true) return "Changes detected"
-  if (run.changes_detected === false) return "No changes"
-  return "Changes unknown"
+  if (run.changes_detected === true)
+    return i18n.t("app:integrations.changes_detected")
+  if (run.changes_detected === false)
+    return i18n.t("app:integrations.no_changes")
+  return i18n.t("app:integrations.changes_unknown")
 }
 
 export function runDuration(run: IntegrationRun, status: RunStatus): string {
@@ -36,6 +40,6 @@ export function runDuration(run: IntegrationRun, status: RunStatus): string {
   )
   if (!Number.isFinite(seconds)) return "—"
   return seconds < 60
-    ? `${seconds.toFixed(1)} s`
-    : `${(seconds / 60).toFixed(1)} min`
+    ? `${seconds.toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s`
+    : `${(seconds / 60).toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} min`
 }

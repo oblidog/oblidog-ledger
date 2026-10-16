@@ -1,0 +1,16 @@
+{
+  "close": "Zamknij",
+  "pagination": "stronicowanie",
+  "go_to_previous_page": "Przejdź do poprzedniej strony",
+  "previous": "Poprzednie",
+  "go_to_next_page": "Przejdź do następnej strony",
+  "next": "Następne",
+  "more_pages": "Więcej stron",
+  "hide_password": "Ukryj hasło",
+  "show_password": "Pokaż hasło",
+  "sidebar": "Panel boczny",
+  "displays_the_mobile_sidebar": "Wyświetla mobilny panel boczny.",
+  "toggle_sidebar": "Przełącz panel boczny",
+  "collapse_sidebar": "Zwiń panel boczny",
+  "open_sidebar": "Otwórz panel boczny"
+}

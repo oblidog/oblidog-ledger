@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-
+import { useTranslation } from "react-i18next"
 import {
   type UserReportPreferences,
   type UserReportPreferencesUpdate,
@@ -20,6 +19,8 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 const queryKey = ["user-report-preferences"]
@@ -29,6 +30,8 @@ function ReportSettingsForm({
 }: {
   preferences: UserReportPreferences
 }) {
+  useTranslation()
+
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const form = useForm<UserReportPreferences>({
@@ -45,7 +48,7 @@ function ReportSettingsForm({
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data)
       form.reset(data)
-      showSuccessToast("Report preferences saved")
+      showSuccessToast(i18n.t("app:usersettings.report_preferences_saved"))
     },
     onError: handleError.bind(showErrorToast),
   })
@@ -80,10 +83,11 @@ function ReportSettingsForm({
                 />
               </FormControl>
               <div className="space-y-1">
-                <FormLabel>Daily report</FormLabel>
+                <FormLabel>{i18n.t("app:usersettings.daily_report")}</FormLabel>
                 <FormDescription>
-                  Receive payment reminders, recent activity and integration
-                  alerts when there is something to report.
+                  {i18n.t(
+                    "app:usersettings.receive_payment_reminders_recent_activity_and_integration_alerts_when_there_is_someth",
+                  )}
                 </FormDescription>
               </div>
             </FormItem>
@@ -104,17 +108,22 @@ function ReportSettingsForm({
                 />
               </FormControl>
               <div className="space-y-1">
-                <FormLabel>Weekly report</FormLabel>
+                <FormLabel>
+                  {i18n.t("app:usersettings.weekly_report")}
+                </FormLabel>
                 <FormDescription>
-                  Receive a monthly payment overview each Monday.
+                  {i18n.t(
+                    "app:usersettings.receive_a_monthly_payment_overview_each_monday",
+                  )}
                 </FormDescription>
               </div>
             </FormItem>
           )}
         />
         <p className="text-sm text-muted-foreground">
-          Reports cover your active ledgers and follow the application's
-          delivery schedule. Changes apply to future reports.
+          {i18n.t(
+            "app:usersettings.reports_cover_your_active_ledgers_and_follow_the_application_s_delivery_schedule_chan",
+          )}
         </p>
         <LoadingButton
           type="submit"
@@ -122,7 +131,7 @@ function ReportSettingsForm({
           disabled={!form.formState.isDirty}
           className="self-start"
         >
-          Save
+          {i18n.t("app:usersettings.save")}
         </LoadingButton>
       </form>
     </Form>
@@ -130,6 +139,8 @@ function ReportSettingsForm({
 }
 
 export default function ReportSettings() {
+  useTranslation()
+
   const { data: appConfig, isPending: configPending } = usePublicAppConfig()
   const query = useQuery({
     queryKey,
@@ -138,18 +149,24 @@ export default function ReportSettings() {
 
   return (
     <div className="max-w-md">
-      <h3 className="text-lg font-semibold py-4">Email reports</h3>
+      <h3 className="text-lg font-semibold py-4">
+        {i18n.t("app:usersettings.email_reports")}
+      </h3>
       {appConfig?.is_demo ? (
         <p className="text-sm text-muted-foreground">
-          Email reports are disabled in the demo.
+          {i18n.t("app:usersettings.email_reports_are_disabled_in_the_demo")}
         </p>
       ) : query.isPending || configPending ? (
-        <p role="status">Loading report preferences…</p>
+        <p role="status">
+          {i18n.t("app:usersettings.loading_report_preferences")}
+        </p>
       ) : query.isError ? (
         <div className="space-y-3">
-          <p role="alert">Could not load report preferences.</p>
+          <p role="alert">
+            {i18n.t("app:usersettings.could_not_load_report_preferences")}
+          </p>
           <Button variant="outline" onClick={() => query.refetch()}>
-            Retry
+            {i18n.t("app:usersettings.retry")}
           </Button>
         </div>
       ) : (

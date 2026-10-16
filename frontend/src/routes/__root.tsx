@@ -3,6 +3,7 @@ import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import ErrorComponent from "@/components/Common/ErrorComponent"
 import NotFound from "@/components/Common/NotFound"
+import { LocalizedPageTitle } from "@/i18n/LocalizedPageTitle"
 
 const showDevtools =
   import.meta.env.DEV && import.meta.env.VITE_DISABLE_DEVTOOLS !== "true"
@@ -11,6 +12,7 @@ export const Route = createRootRoute({
   component: () => (
     <>
       <HeadContent />
+      <LocalizedPageTitle />
       <Outlet />
       {showDevtools && (
         <>

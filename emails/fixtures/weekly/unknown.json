@@ -1,0 +1,37 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-19",
+  "period": "2026-10",
+  "app_url": "https://example.com/ledgers?scope=mine&view=monthly",
+  "ledgers": [
+    {
+      "ledger_name": "Household_Custom",
+      "currencies": [
+        {
+          "currency": null,
+          "total_known_amount": "0.00",
+          "paid_known_amount": "0.00",
+          "remaining_known_amount": "0.00",
+          "ready_count": 0,
+          "paid_count": 0,
+          "not_ready_count": 2,
+          "overdue_count": 1,
+          "overdue_known_amount": "0.00",
+          "paid_percentage": "0.00",
+          "incomplete_count": 2,
+          "total_is_complete": false,
+          "previous_total_known_amount": "10.00",
+          "previous_total_is_complete": false,
+          "total_change": null,
+          "upcoming": [
+            {
+              "category_name": "Unknown_Custom",
+              "due_date": "2026-10-20",
+              "amount": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

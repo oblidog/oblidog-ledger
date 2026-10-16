@@ -1,6 +1,7 @@
 import { Appearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import { Footer } from "./Footer"
+import { LanguageSelector } from "./LanguageSelector"
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -13,7 +14,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <Logo variant="full" className="h-16" asLink={false} />
       </div>
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <LanguageSelector />
           <Appearance />
         </div>
         <div className="flex flex-1 items-center justify-center">

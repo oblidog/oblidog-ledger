@@ -4,23 +4,23 @@ import type { Item } from "./Main"
 
 export function primaryNavigation(ledgerId: string | null): Item[] {
   return [
-    { icon: Home, title: "Dashboard", path: "/" },
+    { icon: Home, title: "navigation.dashboard", path: "/" },
     ...(ledgerId
       ? [
           {
             icon: ListChecks,
-            title: "Obligations",
+            title: "navigation.obligations" as const,
             path: `/ledgers/${ledgerId}`,
             exact: true,
           },
           {
             icon: Tags,
-            title: "Categories",
+            title: "navigation.categories" as const,
             path: `/ledgers/${ledgerId}/categories`,
           },
           {
             icon: ChartNoAxesCombined,
-            title: "Analytics",
+            title: "navigation.analytics" as const,
             path: `/ledgers/${ledgerId}/analytics`,
           },
         ]

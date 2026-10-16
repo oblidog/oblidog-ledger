@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from ..email_i18n import EmailLocale, Language
 from ..email_rendering import render_email_template
 from .daily_digest_presentation import DailyDigest, DigestSection
 
@@ -59,12 +60,14 @@ def render_daily_digest(
     integration_health_truncated: bool,
     app_url: str,
     html_budget: int = DAILY_DIGEST_HTML_BUDGET,
+    language: Language = "en",
 ) -> tuple[str, str]:
     """Retain a priority prefix, with explicit omissions in both MIME alternatives.
 
     Only presentation is shortened. Never slice rendered HTML or mutate the
     original selection. The binary search bounds rendering to O(log N) probes.
     """
+    locale = EmailLocale(language)
     obligation_count = sum(section.count for section in digest.sections)
     health_count = sum(len(items) for items in integration_health.values())
     activity_count = sum(len(items) for items in activity.values())
@@ -77,17 +80,21 @@ def render_daily_digest(
             max(0, keep - obligation_count - health_count), activity_count
         )
         notice = (
-            "This email was shortened. "
-            f"Showing {obligations_kept} of {obligation_count} selected obligations, "
-            f"{health_kept} of {health_count} selected integrations and "
-            f"{activity_kept} of {activity_count} selected activity updates. "
-            "Open Oblidog to review the remaining items."
+            locale.tr(
+                "size_notice",
+                obligations_kept=obligations_kept,
+                obligation_count=obligation_count,
+                health_kept=health_kept,
+                health_count=health_count,
+                activity_kept=activity_kept,
+                activity_count=activity_count,
+            )
             if shortened
             else ""
         )
         return {
             "project_name": project_name,
-            "report_date": report_date,
+            "report_date": locale.date(report_date),
             "digest": _take_obligations(digest, obligations_kept)
             if shortened
             else digest,
@@ -102,7 +109,9 @@ def render_daily_digest(
 
     def render(context: dict[str, Any], extension: str) -> str:
         return render_email_template(
-            template_name=f"daily_obligation_report.{extension}", context=context
+            template_name=f"daily_obligation_report.{extension}",
+            context=context,
+            language=language,
         )
 
     full = candidate(total, shortened=False)

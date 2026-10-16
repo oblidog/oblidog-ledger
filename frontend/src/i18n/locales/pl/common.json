@@ -1,0 +1,41 @@
+{
+  "navigation": {
+    "dashboard": "Pulpit",
+    "obligations": "Zobowiązania",
+    "categories": "Kategorie",
+    "analytics": "Analizy",
+    "integrations": "Integracje",
+    "admin": "Administracja",
+    "more": "Więcej",
+    "settings": "Ustawienia użytkownika",
+    "logout": "Wyloguj się",
+    "loadingLedger": "Ładowanie rejestru…",
+    "noLedger": "Nie wybrano rejestru",
+    "selectLedger": "Wybierz rejestr",
+    "workspace": "Bieżący obszar roboczy",
+    "switchLedger": "Przełącz rejestr",
+    "ledgerSettings": "Ustawienia rejestru",
+    "systemRun": "Uruchomienie systemowe",
+    "manageLedgers": "Zarządzaj rejestrami"
+  },
+  "appearance": {
+    "title": "Wygląd",
+    "toggle": "Zmień motyw",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "Systemowy"
+  },
+  "language": {
+    "title": "Język",
+    "saveError": "Nie udało się zapisać języka. Spróbuj ponownie.",
+    "saving": "Zapisywanie języka…"
+  },
+  "actions": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "close": "Zamknij"
+  },
+  "footer": {
+    "version": "Wersja aplikacji"
+  }
+}

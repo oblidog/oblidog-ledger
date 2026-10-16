@@ -1,9 +1,10 @@
 // @ts-nocheck
+
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, notFound } from "@tanstack/react-router"
 import { ArrowLeft, ArrowUpDown, Database, ListPlus } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import {
   ApiError,
   CategoriesService,
@@ -47,6 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { i18n } from "@/i18n"
 
 const PAGE_SIZE = 20
 
@@ -70,7 +72,9 @@ export const Route = createFileRoute(
     sort: search.sort === "asc" ? "asc" : "desc",
   }),
   component: CategoryDataHistory,
-  head: () => ({ meta: [{ title: "Category data - Oblidog" }] }),
+  head: () => ({
+    meta: [{ title: i18n.t("app:categories.category_data_oblidog") }],
+  }),
 })
 
 function dateStart(value?: string) {
@@ -103,6 +107,8 @@ async function readCategoryDataSchemas(ledgerId: string, categoryId: string) {
 }
 
 function CategoryDataHistory() {
+  useTranslation()
+
   const { ledgerId, categoryId } = Route.useParams()
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -220,7 +226,7 @@ function CategoryDataHistory() {
     return (
       <div className="mx-auto w-full max-w-6xl">
         <p className="rounded-md border border-destructive/50 p-4 text-sm text-destructive">
-          Could not load the selected category data.
+          {i18n.t("app:categories.could_not_load_the_selected_category_data")}
         </p>
       </div>
     )
@@ -233,11 +239,13 @@ function CategoryDataHistory() {
       <div className="mx-auto w-full max-w-6xl space-y-4">
         <Button variant="ghost" size="sm" asChild>
           <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
-            <ArrowLeft /> Back to categories
+            <ArrowLeft /> {i18n.t("app:categories.back_to_categories")}
           </Link>
         </Button>
         <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-          No custom-data schema is available for this category.
+          {i18n.t(
+            "app:categories.no_custom_data_schema_is_available_for_this_category",
+          )}
         </p>
       </div>
     )
@@ -261,7 +269,7 @@ function CategoryDataHistory() {
         <Button variant="ghost" size="sm" className="w-fit" asChild>
           <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
             <ArrowLeft />
-            Back to categories
+            {i18n.t("app:categories.back_to_categories")}
           </Link>
         </Button>
         <div className="flex flex-wrap gap-2">
@@ -278,7 +286,7 @@ function CategoryDataHistory() {
               params={{ ledgerId, categoryId }}
             >
               <ListPlus />
-              Manage custom fields
+              {i18n.t("app:categories.manage_custom_fields")}
             </Link>
           </Button>
         </div>
@@ -290,25 +298,33 @@ function CategoryDataHistory() {
             <Database className="size-5 text-primary" />
           </div>
           <h1 className="leading-none font-semibold">
-            Custom data history for {category.name}
+            {i18n.t("app:categories.custom_data_history_for")} {category.name}
           </h1>
           <CardDescription>
             {countQuery.isLoading
-              ? "Loading records…"
-              : `${count} record${count === 1 ? "" : "s"} for schema version ${selectedVersion}.`}
+              ? i18n.t("app:categories.loading_records")
+              : i18n.t("app:messages.schema_records", {
+                  count,
+                  version: selectedVersion,
+                })}
           </CardDescription>
         </CardHeader>
         <CardContent className="min-w-0 space-y-5">
           <div className="grid gap-3 md:grid-cols-5">
             <div className="space-y-1 text-sm">
-              <span className="font-medium">Schema version</span>
+              <span className="font-medium">
+                {i18n.t("app:categories.schema_version")}
+              </span>
               <Select
                 value={String(selectedVersion)}
                 onValueChange={(value) =>
                   updateSearch({ schema: Number(value) })
                 }
               >
-                <SelectTrigger className="w-full" aria-label="Schema version">
+                <SelectTrigger
+                  className="w-full"
+                  aria-label={i18n.t("app:categories.schema_version")}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,8 +333,10 @@ function CategoryDataHistory() {
                       key={schema.version}
                       value={String(schema.version)}
                     >
-                      Version {schema.version}
-                      {schema.is_active ? " (active)" : ""}
+                      {i18n.t("app:categories.version")} {schema.version}
+                      {schema.is_active
+                        ? i18n.t("app:categories.active_506950")
+                        : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -329,7 +347,7 @@ function CategoryDataHistory() {
                 htmlFor="category-data-observed-from"
                 className="font-medium"
               >
-                Observed from
+                {i18n.t("app:categories.observed_from")}
               </label>
               <Input
                 id="category-data-observed-from"
@@ -345,7 +363,7 @@ function CategoryDataHistory() {
                 htmlFor="category-data-observed-to"
                 className="font-medium"
               >
-                Observed to
+                {i18n.t("app:categories.observed_to")}
               </label>
               <Input
                 id="category-data-observed-to"
@@ -357,7 +375,9 @@ function CategoryDataHistory() {
               />
             </div>
             <div className="space-y-1 text-sm">
-              <span className="font-medium">Observation order</span>
+              <span className="font-medium">
+                {i18n.t("app:categories.observation_order")}
+              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -366,7 +386,9 @@ function CategoryDataHistory() {
                   updateSearch({ sort: search.sort === "asc" ? "desc" : "asc" })
                 }
               >
-                {search.sort === "asc" ? "Oldest first" : "Newest first"}
+                {search.sort === "asc"
+                  ? i18n.t("app:categories.oldest_first")
+                  : i18n.t("app:categories.newest_first")}
                 <ArrowUpDown />
               </Button>
             </div>
@@ -380,7 +402,7 @@ function CategoryDataHistory() {
                   }
                 />
                 <Label htmlFor="show-category-data-differences">
-                  Show differences
+                  {i18n.t("app:categories.show_differences")}
                 </Label>
               </div>
             </div>
@@ -393,12 +415,15 @@ function CategoryDataHistory() {
             </div>
           ) : countQuery.isError || recordsQuery.isError ? (
             <p className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">
-              Could not load the custom-data history.
+              {i18n.t("app:categories.could_not_load_the_custom_data_history")}
             </p>
           ) : count === 0 ? (
             <p className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-              No records were saved with schema version {selectedVersion} for
-              the selected date range.
+              {i18n.t(
+                "app:categories.no_records_were_saved_with_schema_version",
+              )}{" "}
+              {selectedVersion}{" "}
+              {i18n.t("app:categories.for_the_selected_date_range")}
             </p>
           ) : (
             <>
@@ -407,10 +432,10 @@ function CategoryDataHistory() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="sticky left-0 z-10 bg-muted">
-                        Observed
+                        {i18n.t("app:categories.observed")}
                       </TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Schema</TableHead>
+                      <TableHead>{i18n.t("app:categories.source")}</TableHead>
+                      <TableHead>{i18n.t("app:categories.schema")}</TableHead>
                       {properties.map(([name, schema]) => (
                         <TableHead key={name}>{schema.title ?? name}</TableHead>
                       ))}
@@ -457,7 +482,8 @@ function CategoryDataHistory() {
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {pageStart}–{pageEnd} of {count}
+                  {i18n.t("app:categories.showing")} {pageStart}–{pageEnd}{" "}
+                  {i18n.t("app:categories.of")} {count}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -468,7 +494,7 @@ function CategoryDataHistory() {
                     }
                     disabled={page === 0 || recordsQuery.isFetching}
                   >
-                    Previous
+                    {i18n.t("app:categories.previous_50f942")}
                   </Button>
                   <Button
                     variant="outline"
@@ -476,7 +502,7 @@ function CategoryDataHistory() {
                     onClick={() => setPage((current) => current + 1)}
                     disabled={!canGoNext || recordsQuery.isFetching}
                   >
-                    Next
+                    {i18n.t("app:categories.next")}
                   </Button>
                 </div>
               </div>

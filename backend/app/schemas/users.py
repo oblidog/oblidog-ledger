@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -26,6 +27,7 @@ class UserUpdate(BaseModel):
 
 
 class UserUpdateMe(BaseModel):
+    language: Literal["en", "pl"] | None = None
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
 
@@ -52,6 +54,7 @@ class UserReportPreferencesUpdate(BaseModel):
 class UserPublic(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
+    language: Literal["en", "pl"] | None = None
     id: uuid.UUID
     created_at: datetime
 

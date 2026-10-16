@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Mail, RotateCw, UserRoundX } from "lucide-react"
 import { useState } from "react"
-
+import { useTranslation } from "react-i18next"
 import { type UserInvitationPublic, UserInvitationsService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,10 +24,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
+import { getLocale } from "@/i18n/format"
 import { handleError } from "@/utils"
 
 const formatDate = (value: string) =>
-  new Intl.DateTimeFormat(undefined, {
+  new Intl.DateTimeFormat(getLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
@@ -40,13 +43,15 @@ const statusVariant = (status: UserInvitationPublic["status"]) => {
 }
 
 const statusLabel = (status: UserInvitationPublic["status"]) =>
-  status.charAt(0).toUpperCase() + status.slice(1)
+  domainLabel("invitation", status)
 
 function InvitationActions({
   invitation,
 }: {
   invitation: UserInvitationPublic
 }) {
+  useTranslation()
+
   const [revokeOpen, setRevokeOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -61,7 +66,7 @@ function InvitationActions({
       UserInvitationsService.resendInvitation({
         invitationId: invitation.id,
       }),
-    onSuccess: () => showSuccessToast("Invitation resent"),
+    onSuccess: () => showSuccessToast(i18n.t("app:admin.invitation_resent")),
     onError: handleError.bind(showErrorToast),
     onSettled: refreshInvitations,
   })
@@ -72,7 +77,7 @@ function InvitationActions({
         invitationId: invitation.id,
       }),
     onSuccess: () => {
-      showSuccessToast("Invitation revoked")
+      showSuccessToast(i18n.t("app:admin.invitation_revoked"))
       setRevokeOpen(false)
     },
     onError: handleError.bind(showErrorToast),
@@ -88,32 +93,37 @@ function InvitationActions({
         size="sm"
         loading={resendMutation.isPending}
         onClick={() => resendMutation.mutate()}
-        aria-label={`Resend invitation to ${invitation.email}`}
+        aria-label={i18n.t("app:admin.resend_invitation_to", {
+          value1: invitation.email,
+        })}
       >
         <RotateCw />
-        Resend
+        {i18n.t("app:admin.resend")}
       </LoadingButton>
       <Dialog open={revokeOpen} onOpenChange={setRevokeOpen}>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setRevokeOpen(true)}
-          aria-label={`Revoke invitation for ${invitation.email}`}
+          aria-label={i18n.t("app:admin.revoke_invitation_for", {
+            value1: invitation.email,
+          })}
         >
           <UserRoundX />
-          Revoke
+          {i18n.t("app:admin.revoke")}
         </Button>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Revoke invitation?</DialogTitle>
+            <DialogTitle>{i18n.t("app:admin.revoke_invitation")}</DialogTitle>
             <DialogDescription>
-              The invitation link sent to {invitation.email} will stop working.
+              {i18n.t("app:admin.the_invitation_link_sent_to")}{" "}
+              {invitation.email} {i18n.t("app:admin.will_stop_working")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline" disabled={revokeMutation.isPending}>
-                Cancel
+                {i18n.t("app:admin.cancel")}
               </Button>
             </DialogClose>
             <LoadingButton
@@ -121,7 +131,7 @@ function InvitationActions({
               loading={revokeMutation.isPending}
               onClick={() => revokeMutation.mutate()}
             >
-              Revoke invitation
+              {i18n.t("app:admin.revoke_invitation_aa0129")}
             </LoadingButton>
           </DialogFooter>
         </DialogContent>
@@ -135,26 +145,32 @@ export function InvitationsTable({
 }: {
   invitations: UserInvitationPublic[]
 }) {
+  useTranslation()
+
   return (
     <section className="space-y-3" aria-labelledby="invitations-heading">
       <div>
         <h2 id="invitations-heading" className="text-lg font-semibold">
-          Invitations
+          {i18n.t("app:admin.invitations")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Invitations are separate from active user accounts.
+          {i18n.t(
+            "app:admin.invitations_are_separate_from_active_user_accounts",
+          )}
         </p>
       </div>
       <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>Recipient</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Sent</TableHead>
-              <TableHead>Expires</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{i18n.t("app:admin.recipient")}</TableHead>
+              <TableHead>{i18n.t("app:admin.role")}</TableHead>
+              <TableHead>{i18n.t("app:admin.status")}</TableHead>
+              <TableHead>{i18n.t("app:admin.sent")}</TableHead>
+              <TableHead>{i18n.t("app:admin.expires")}</TableHead>
+              <TableHead className="text-right">
+                {i18n.t("app:admin.actions")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -180,7 +196,9 @@ export function InvitationsTable({
                         invitation.is_superuser ? "default" : "secondary"
                       }
                     >
-                      {invitation.is_superuser ? "Superuser" : "User"}
+                      {invitation.is_superuser
+                        ? i18n.t("app:admin.superuser")
+                        : i18n.t("app:admin.user")}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -209,7 +227,7 @@ export function InvitationsTable({
                   colSpan={6}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No invitations yet.
+                  {i18n.t("app:admin.no_invitations_yet")}
                 </TableCell>
               </TableRow>
             )}

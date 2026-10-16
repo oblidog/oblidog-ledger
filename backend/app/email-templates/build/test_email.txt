@@ -1,0 +1,4 @@
+{{ project_name }}
+{{ tr('test_for', email=email) }}
+{{ tr('test_delivery_ok') }}
+{{ tr('transactional_footer', project_name=project_name) }}

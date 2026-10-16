@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 
 from app.api.deps import SessionDep, require_ledger_view_access
+from app.core.api_errors import ApplicationError as HTTPException
 from app.models import Ledger
 from app.use_cases import category_data_csv
 from app.use_cases.exceptions import (
@@ -36,14 +37,18 @@ def export_category_data_records_csv(
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category not found"
+            code="category_not_found", status_code=404, detail="Category not found"
         ) from caught_error
     except CategoryDataSchemaNotFoundError as caught_error:
         raise HTTPException(
-            status_code=404, detail="Category data schema not found"
+            code="category_schema_not_found",
+            status_code=404,
+            detail="Category data schema not found",
         ) from caught_error
     except category_data_csv.UnsupportedCategoryDataCsvSchemaError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            code="category_csv_unsupported", status_code=422, detail=str(exc)
+        ) from exc
 
     return Response(
         content=content.encode("utf-8"),

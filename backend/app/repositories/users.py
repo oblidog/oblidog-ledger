@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models import User
 
 USER_UPDATE_FIELDS = {
+    "language",
     "email",
     "full_name",
     "hashed_password",

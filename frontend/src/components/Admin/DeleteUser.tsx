@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
-
+import { useTranslation } from "react-i18next"
 import { UsersService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +16,8 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { i18n } from "@/i18n"
+import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 
 interface DeleteUserProps {
@@ -25,6 +26,8 @@ interface DeleteUserProps {
 }
 
 const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
+  useTranslation()
+
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -37,7 +40,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
   const mutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      showSuccessToast("The user was deleted successfully")
+      showSuccessToast(i18n.t("app:admin.the_user_was_deleted_successfully"))
       setIsOpen(false)
       onSuccess()
     },
@@ -59,22 +62,23 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
         onClick={() => setIsOpen(true)}
       >
         <Trash2 />
-        Delete User
+        {i18n.t("app:admin.delete_user")}
       </DropdownMenuItem>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{i18n.t("app:admin.delete_user")}</DialogTitle>
             <DialogDescription>
-              Delete this user account permanently. You will not be able to undo
-              this action.
+              {i18n.t(
+                "app:admin.delete_this_user_account_permanently_you_will_not_be_able_to_undo_this_action",
+              )}
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="mt-4">
             <DialogClose asChild>
               <Button variant="outline" disabled={mutation.isPending}>
-                Cancel
+                {i18n.t("app:admin.cancel")}
               </Button>
             </DialogClose>
             <LoadingButton
@@ -82,7 +86,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
               type="submit"
               loading={mutation.isPending}
             >
-              Delete
+              {i18n.t("app:admin.delete")}
             </LoadingButton>
           </DialogFooter>
         </form>

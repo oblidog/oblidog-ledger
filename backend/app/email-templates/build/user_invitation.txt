@@ -1,0 +1,4 @@
+{{ tr('invitation_title', project_name=project_name) }}
+{{ tr('invitation_intro', email=email) }}
+{{ tr('invitation_action') }}: {{ link }}
+{{ tr('invitation_expiry', count=valid_hours) }} {{ tr('invitation_ignore') }}

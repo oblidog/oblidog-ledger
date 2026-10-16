@@ -1,0 +1,7 @@
+{{ project_name }} - {{ tr('new_title') }}
+{{ tr('new_welcome') }}
+{{ tr('new_details') }}
+{% if username %}{{ tr('username') }}: {{ username }}{% endif %}
+{{ tr('password') }}: {{ password }}
+{{ tr('dashboard_action') }}: {{ link }}
+{{ tr('transactional_footer', project_name=project_name) }}
