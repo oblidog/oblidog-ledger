@@ -156,7 +156,9 @@ for (const width of [320, 375, 414]) {
     await page.getByText(name, { exact: true }).click()
     const details = page.getByRole("dialog", { name: key })
     await expect(details.getByText("125.00 PLN", { exact: true })).toBeVisible()
-    await expect(details.getByText("2026-10-20", { exact: true })).toBeVisible()
+    await expect(
+      details.getByText("20 Oct 2026", { exact: true }),
+    ).toBeVisible()
     await expectNoOverflow(page)
     expect(
       await details
