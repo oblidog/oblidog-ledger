@@ -1,6 +1,10 @@
 import { afterEach, expect, test } from "bun:test"
 import { AxiosError } from "axios"
-import { apiErrorPayload, getApiErrorMessage } from "./apiErrors"
+import {
+  apiErrorPayload,
+  getApiErrorMessage,
+  isAuthenticationFailure,
+} from "./apiErrors"
 import { i18n } from "./index"
 
 afterEach(async () => {
@@ -180,4 +184,37 @@ test("network failures have a localized fallback and quota parameters are valida
       params: { limit: { secret: "x" } },
     }),
   ).toBe(i18n.t("errors:generic_error"))
+})
+
+test("permission, demo and CSRF failures do not sign the user out", () => {
+  for (const code of [
+    "permission_denied",
+    "demo_read_only",
+    "capability_disabled",
+    "auth_csrf_invalid",
+    "auth_origin_forbidden",
+    "future_unknown",
+  ])
+    expect(
+      isAuthenticationFailure({ response: { status: 403, data: { code } } }),
+    ).toBe(false)
+  for (const code of [
+    "auth_required",
+    "auth_invalid_token",
+    "auth_session_expired",
+  ])
+    expect(
+      isAuthenticationFailure({ response: { status: 403, data: { code } } }),
+    ).toBe(true)
+  expect(
+    isAuthenticationFailure({
+      response: { status: 401, data: { detail: "legacy" } },
+    }),
+  ).toBe(true)
+  expect(
+    isAuthenticationFailure({
+      response: { status: 400, data: { code: "auth_invalid_credentials" } },
+    }),
+  ).toBe(false)
+  expect(isAuthenticationFailure(new Error("offline"))).toBe(false)
 })

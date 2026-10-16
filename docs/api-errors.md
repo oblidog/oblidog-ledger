@@ -25,6 +25,9 @@ localized generic message for unknown codes, old string-only responses, malforme
 bodies or unexpected failures. The Ledger frontend uses
 `getApiErrorMessage(error)` for Axios errors, generated adapter wrappers and
 parsed fetch response bodies. Transport errors use a localized connection message.
+Only session authentication codes trigger a login redirect. Permission, demo and
+CSRF failures remain on the current page so their translated message is visible;
+legacy responses without codes retain the status-based redirect behavior.
 Do not render arbitrary `Error.message`, server `detail`, validation `msg`, `input`
 or exception values from `ctx` to users.
 

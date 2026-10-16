@@ -8,21 +8,17 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
 import { configureBrowserSession } from "./browserSession"
-import { ApiError } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
+import { isAuthenticationFailure } from "./i18n/apiErrors"
 import { LanguageProvider } from "./i18n/LanguageProvider"
 import { routeTree } from "./routeTree.gen"
 
 configureBrowserSession()
 
 const handleApiError = (error: Error) => {
-  if (!(error instanceof ApiError)) return
-
-  const invalidSession = [401, 403].includes(error.response?.status ?? 0)
-
-  if (invalidSession) {
+  if (isAuthenticationFailure(error)) {
     window.location.replace("/login")
   }
 }

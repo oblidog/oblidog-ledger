@@ -135,3 +135,18 @@ export function getApiErrorMessage(error: unknown): string {
 
   return i18n.t("errors:generic_error")
 }
+
+/** Only session failures should redirect; permission/demo/CSRF errors stay visible. */
+export function isAuthenticationFailure(error: unknown): boolean {
+  const raw = object(error)
+  const response = object(raw?.response)
+  if (response?.status !== 401 && response?.status !== 403) return false
+  const code = apiErrorPayload(error)?.code
+  // Keep the old status-based behavior for servers without the additive contract.
+  if (code === undefined) return true
+  return (
+    code === "auth_required" ||
+    code === "auth_invalid_token" ||
+    code === "auth_session_expired"
+  )
+}

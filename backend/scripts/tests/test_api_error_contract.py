@@ -17,6 +17,9 @@ from app.api.routes import integrations, login, obligations
 from app.core.api_error_codes import ErrorCode
 from app.core.api_errors import ApplicationError, install_error_handlers
 from app.domain.integrations import IntegrationConflictCode
+from app.services import auth as auth_service
+from app.use_cases import integrations as integration_use_cases
+from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import ObligationInvalidLifecycleError
 
 
@@ -39,7 +42,7 @@ def api() -> FastAPI:
 def test_auth_preserves_status_detail_and_adds_code(
     api: FastAPI, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(login.auth_service, "authenticate", Mock(return_value=None))
+    monkeypatch.setattr(auth_service, "authenticate", Mock(return_value=None))
     response = TestClient(api).post(
         "/login/access-token", data={"username": "a@example.com", "password": "bad"}
     )
@@ -55,7 +58,7 @@ def test_lifecycle_is_typed_independently_of_exception_message(
     api: FastAPI, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        obligations.obligation_use_cases,
+        obligation_use_cases,
         "mark_obligation_paid",
         Mock(
             side_effect=ObligationInvalidLifecycleError("arbitrary private diagnostic")
@@ -77,9 +80,9 @@ def test_integration_conflict_retains_structured_legacy_detail(
 ) -> None:
     reason = next(iter(IntegrationConflictCode))
     monkeypatch.setattr(
-        integrations.use_cases,
+        integration_use_cases,
         "update_integration",
-        Mock(side_effect=integrations.use_cases.IntegrationConflictError(reason)),
+        Mock(side_effect=integration_use_cases.IntegrationConflictError(reason)),
     )
     response = TestClient(api).patch(
         f"/ledgers/{uuid.uuid4()}/integrations/{uuid.uuid4()}",
