@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import { Menu } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Logo } from "@/components/Common/Logo"
 import { Button } from "@/components/ui/button"
@@ -9,13 +10,14 @@ import { cn } from "@/lib/utils"
 import { primaryNavigation } from "./navigation"
 
 export function MobileShell() {
+  const { t } = useTranslation()
   const { activeLedger, activeLedgerId, isLoading } = useActiveLedger()
   const { toggleSidebar } = useSidebar()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
   const items = primaryNavigation(activeLedgerId).filter(
-    (item) => item.title !== "Analytics",
+    (item) => item.title !== "navigation.analytics",
   )
 
   return (
@@ -24,13 +26,15 @@ export function MobileShell() {
         <Logo variant="full" className="h-5" />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">
           {activeLedger?.name ??
-            (isLoading ? "Loading ledger…" : "No ledger selected")}
+            (isLoading
+              ? t("navigation.loadingLedger")
+              : t("navigation.noLedger"))}
         </span>
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          aria-label="More"
+          aria-label={t("navigation.more")}
         >
           <Menu />
         </Button>
@@ -48,7 +52,7 @@ export function MobileShell() {
               )}
             >
               <item.icon className="size-5" />
-              {item.title}
+              {t(item.title)}
             </Link>
           )
         })}
@@ -58,7 +62,7 @@ export function MobileShell() {
           className="flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground"
         >
           <Menu className="size-5" />
-          More
+          {t("navigation.more")}
         </button>
       </nav>
     </>

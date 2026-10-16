@@ -1146,6 +1146,48 @@ export type IntegrationRunFinish = {
 };
 
 /**
+ * IntegrationRunPublic
+ */
+export type IntegrationRunPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Integration Id
+     */
+    integration_id: string;
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * Deadline At
+     */
+    deadline_at: string;
+    /**
+     * Finished At
+     */
+    finished_at: string | null;
+    /**
+     * Result
+     */
+    result: string | null;
+    /**
+     * Changes Detected
+     */
+    changes_detected: boolean | null;
+    /**
+     * Error Code
+     */
+    error_code: string | null;
+    /**
+     * Error Message
+     */
+    error_message: string | null;
+};
+
+/**
  * IntegrationRunStart
  */
 export type IntegrationRunStart = {
@@ -1157,6 +1199,20 @@ export type IntegrationRunStart = {
      * Expected Revision
      */
     expected_revision: number;
+};
+
+/**
+ * IntegrationRunsPublic
+ */
+export type IntegrationRunsPublic = {
+    /**
+     * Data
+     */
+    data: Array<IntegrationRunPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -2336,6 +2392,10 @@ export type UserPublic = {
      */
     full_name?: string | null;
     /**
+     * Language
+     */
+    language?: 'en' | 'pl' | null;
+    /**
      * Id
      */
     id: string;
@@ -2403,6 +2463,10 @@ export type UserUpdate = {
  * UserUpdateMe
  */
 export type UserUpdateMe = {
+    /**
+     * Language
+     */
+    language?: 'en' | 'pl' | null;
     /**
      * Full Name
      */
@@ -4919,6 +4983,49 @@ export type IntegrationsRevokeIntegrationCredentialResponses = {
 };
 
 export type IntegrationsRevokeIntegrationCredentialResponse = IntegrationsRevokeIntegrationCredentialResponses[keyof IntegrationsRevokeIntegrationCredentialResponses];
+
+export type IntegrationsListIntegrationRunsData = {
+    body?: never;
+    path: {
+        /**
+         * Integration Id
+         */
+        integration_id: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/ledgers/{ledger_id}/integrations/{integration_id}/runs';
+};
+
+export type IntegrationsListIntegrationRunsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type IntegrationsListIntegrationRunsError = IntegrationsListIntegrationRunsErrors[keyof IntegrationsListIntegrationRunsErrors];
+
+export type IntegrationsListIntegrationRunsResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntegrationRunsPublic;
+};
+
+export type IntegrationsListIntegrationRunsResponse = IntegrationsListIntegrationRunsResponses[keyof IntegrationsListIntegrationRunsResponses];
 
 export type LegacyImportReadLegacyImportJobData = {
     body?: never;

@@ -94,6 +94,9 @@ const useAuth = () => {
     }
 
     clearBrowserSessionState()
+    // Persistent observers (including the language provider) must see sign-out
+    // before the cache is removed.
+    queryClient.setQueryData(["currentUser"], null)
     queryClient.clear()
     navigate({ to: "/login" })
   }

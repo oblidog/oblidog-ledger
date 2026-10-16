@@ -4,6 +4,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { useEffect, useId, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { type Currency, type LedgerPublic, LedgersService } from "@/client"
 import {
   Card,
@@ -23,9 +24,8 @@ import {
 } from "@/components/ui/select"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { formatRegion } from "@/i18n/format"
 import { handleError } from "@/utils"
-
-const regionNames = new Intl.DisplayNames(["en"], { type: "region" })
 
 export function useLedgerPreferenceOptions() {
   return useSuspenseQuery({
@@ -48,6 +48,7 @@ export function LedgerPreferenceFields({
   onCurrencyChange: (value: Currency) => void
   disabled?: boolean
 }) {
+  useTranslation()
   const options = useLedgerPreferenceOptions()
   const id = useId()
   return (
@@ -65,7 +66,7 @@ export function LedgerPreferenceFields({
           <SelectContent>
             {options.countries.map((code) => (
               <SelectItem key={code} value={code}>
-                {regionNames.of(code) ?? code} ({code})
+                {formatRegion(code)} ({code})
               </SelectItem>
             ))}
           </SelectContent>

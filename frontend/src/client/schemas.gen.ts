@@ -182,8 +182,7 @@ export const CategoryAmountHistoryPointPublicSchema = {
         current_amount: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -1023,8 +1022,7 @@ export const ComponentHistoryTotalPublicSchema = {
         amount: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -1049,8 +1047,7 @@ export const ComponentHistoryValuePublicSchema = {
         amount: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -1420,22 +1417,18 @@ export const CurrencyCashflowPublicSchema = {
         },
         total_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Total Known Amount'
         },
         scheduled_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Scheduled Known Amount'
         },
         unscheduled_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Unscheduled Known Amount'
         },
         overdue_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Overdue Known Amount'
         },
         daily: {
@@ -1474,19 +1467,16 @@ export const CurrencyPaymentSummaryPublicSchema = {
         },
         total_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Total Known Amount'
         },
         paid_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Paid Known Amount'
         },
         paid_percentage: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -1521,7 +1511,6 @@ export const CurrencyPeriodTotalPublicSchema = {
         },
         total_known_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Total Known Amount'
         }
     },
@@ -1555,12 +1544,10 @@ export const DailyCashflowPublicSchema = {
         },
         amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Amount'
         },
         cumulative_amount: {
             type: 'string',
-            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
             title: 'Cumulative Amount'
         },
         is_overdue: {
@@ -1963,8 +1950,7 @@ export const IntegrationObligationComponentUpsertSchema = {
                     type: 'number'
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -2298,6 +2284,100 @@ export const IntegrationRunFinishSchema = {
     title: 'IntegrationRunFinish'
 } as const;
 
+export const IntegrationRunPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        integration_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Integration Id'
+        },
+        started_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Started At'
+        },
+        deadline_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Deadline At'
+        },
+        finished_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Finished At'
+        },
+        result: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Result'
+        },
+        changes_detected: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Changes Detected'
+        },
+        error_code: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Error Code'
+        },
+        error_message: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Error Message'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'integration_id',
+        'started_at',
+        'deadline_at',
+        'finished_at',
+        'result',
+        'changes_detected',
+        'error_code',
+        'error_message'
+    ],
+    title: 'IntegrationRunPublic'
+} as const;
+
 export const IntegrationRunStartSchema = {
     properties: {
         run_id: {
@@ -2319,6 +2399,28 @@ export const IntegrationRunStartSchema = {
         'expected_revision'
     ],
     title: 'IntegrationRunStart'
+} as const;
+
+export const IntegrationRunsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                $ref: '#/components/schemas/IntegrationRunPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'data',
+        'count'
+    ],
+    title: 'IntegrationRunsPublic'
 } as const;
 
 export const IntegrationUpdateSchema = {
@@ -3095,8 +3197,7 @@ export const ObligationComponentCreateSchema = {
                     type: 'number'
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3175,8 +3276,7 @@ export const ObligationComponentPublicSchema = {
         amount: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3279,8 +3379,7 @@ export const ObligationComponentUpdateSchema = {
                     type: 'number'
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3352,8 +3451,7 @@ export const ObligationComponentUpsertSchema = {
                     type: 'number'
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3470,8 +3568,7 @@ export const ObligationCreateSchema = {
                     minimum: 0
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3532,8 +3629,7 @@ export const ObligationIntegrationUpdateSchema = {
                     minimum: 0
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3752,8 +3848,7 @@ export const ObligationPublicSchema = {
         current_amount: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -3877,8 +3972,7 @@ export const ObligationUpdateSchema = {
                     minimum: 0
                 },
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -4007,8 +4101,7 @@ export const PeriodPaymentSummaryPublicSchema = {
         paid_percentage: {
             anyOf: [
                 {
-                    type: 'string',
-                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                    type: 'string'
                 },
                 {
                     type: 'null'
@@ -4712,6 +4805,21 @@ export const UserPublicSchema = {
             ],
             title: 'Full Name'
         },
+        language: {
+            anyOf: [
+                {
+                    type: 'string',
+                    enum: [
+                        'en',
+                        'pl'
+                    ]
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Language'
+        },
         id: {
             type: 'string',
             format: 'uuid',
@@ -4839,6 +4947,21 @@ export const UserUpdateSchema = {
 
 export const UserUpdateMeSchema = {
     properties: {
+        language: {
+            anyOf: [
+                {
+                    type: 'string',
+                    enum: [
+                        'en',
+                        'pl'
+                    ]
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Language'
+        },
         full_name: {
             anyOf: [
                 {
