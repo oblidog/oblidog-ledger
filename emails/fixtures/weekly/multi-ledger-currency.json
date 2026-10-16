@@ -1,0 +1,94 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-19",
+  "period": "2026-10",
+  "app_url": "https://example.com/ledgers?scope=mine&view=monthly",
+  "ledgers": [
+    {
+      "ledger_name": "Household_Custom",
+      "currencies": [
+        {
+          "currency": "PLN",
+          "total_known_amount": "1200.1234",
+          "paid_known_amount": "900.00",
+          "remaining_known_amount": "300.1234",
+          "ready_count": 2,
+          "paid_count": 1,
+          "not_ready_count": 1,
+          "overdue_count": 1,
+          "overdue_known_amount": "80.00",
+          "paid_percentage": "25.00",
+          "incomplete_count": 0,
+          "total_is_complete": true,
+          "previous_total_known_amount": "1180.00",
+          "previous_total_is_complete": true,
+          "total_change": "20.1234",
+          "upcoming": [
+            {
+              "category_name": "Internet_Custom",
+              "due_date": "2026-10-20",
+              "amount": "120.1234"
+            },
+            {
+              "category_name": "Insurance_Custom",
+              "due_date": "2026-10-23",
+              "amount": "100.00"
+            }
+          ]
+        },
+        {
+          "currency": "EUR",
+          "total_known_amount": "24.90",
+          "paid_known_amount": "24.90",
+          "remaining_known_amount": "0.00",
+          "ready_count": 0,
+          "paid_count": 1,
+          "not_ready_count": 0,
+          "overdue_count": 0,
+          "overdue_known_amount": "0.00",
+          "paid_percentage": "100.00",
+          "incomplete_count": 0,
+          "total_is_complete": true,
+          "previous_total_known_amount": "24.90",
+          "previous_total_is_complete": true,
+          "total_change": "0.00",
+          "upcoming": []
+        }
+      ]
+    },
+    {
+      "ledger_name": "Workshop_Custom",
+      "currencies": [
+        {
+          "currency": "GBP",
+          "total_known_amount": "1200.1234",
+          "paid_known_amount": "900.00",
+          "remaining_known_amount": "300.1234",
+          "ready_count": 2,
+          "paid_count": 1,
+          "not_ready_count": 1,
+          "overdue_count": 1,
+          "overdue_known_amount": "80.00",
+          "paid_percentage": "25.00",
+          "incomplete_count": 0,
+          "total_is_complete": true,
+          "previous_total_known_amount": "1180.00",
+          "previous_total_is_complete": true,
+          "total_change": "20.1234",
+          "upcoming": [
+            {
+              "category_name": "Internet_Custom",
+              "due_date": "2026-10-20",
+              "amount": "120.1234"
+            },
+            {
+              "category_name": "Insurance_Custom",
+              "due_date": "2026-10-23",
+              "amount": "100.00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

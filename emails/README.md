@@ -4,11 +4,11 @@ React Email owns presentation. Python owns data selection, calculations,
 preferences, scheduling, SMTP and runtime Jinja rendering. No JavaScript service
 or external rendering API is involved in delivery.
 
-This workspace contains a foundation example and the live **daily digest**.
-Weekly and transactional layouts retain their existing design; their React
-Email migrations remain in #480 and #481. Canonical localized Jinja sources
-live in `templates/` and are copied by the exporter. Historical MJML sources
-remain available with matching translation calls.
+This workspace contains a foundation example and the live **daily digest** and
+**weekly monthly overview**. Transactional layouts retain their existing design;
+their React Email migration remains in #481. Canonical transactional Jinja
+sources live in `templates/` and are copied by the exporter. Historical MJML
+sources remain available with matching translation calls.
 
 ## Commands (repository root)
 
@@ -21,7 +21,7 @@ bun run email:export              # generate HTML/Jinja + text in backend/app/em
 bun run email:check               # byte-for-byte freshness check, does not rewrite files
 bun run --filter @oblidog/emails typecheck
 uv run --locked python emails/scripts/render_previews.py
-uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py
+uv run --locked pytest -q tests/test_email_templates.py tests/test_daily_digest_rendering.py tests/test_email_localization.py tests/test_weekly_email_rendering.py
 ```
 
 `email:dev` previews `foundation.tsx` with its synthetic normal data.
@@ -157,9 +157,51 @@ user content and external diagnostics keep their original meaning.
 `email:export` and `email:check` cover all committed HTML/text artifacts. They
 contain locale-neutral Jinja translation calls; the backend supplies the locale
 without Node at runtime. The preview command additionally renders
-`daily-{normal,empty,unknown,multi-currency,long-content}-{en,pl}`, weekly empty
-and multi-currency cases, and every transactional email in both languages.
+`daily-{normal,empty,unknown,multi-currency,long-content}-{en,pl}`, the weekly matrix described below, and every transactional email in both languages.
 The localized fixtures use the production presentation and size-budget renderer.
 Tests cover interleaved recipients, multipart output, escaping, pluralization,
 precision, omitted counts and the 90 KiB limit. Scheduled delivery regression
 tests verify both languages in one run and retry deduplication.
+
+## Weekly monthly overview
+
+`emails/weekly-overview.tsx` and `weekly-overview.txt.jinja` export the live weekly
+HTML/text artifacts using the same shell, typography, summaries and footer as
+the daily digest. Python retains the existing calculations, recipient selection,
+Monday cadence, reporting timezone, comparison eligibility and ISO-week delivery
+key. The only new context value is a configured application link to the ledgers.
+
+Each ledger has separate currency cards. Known total, paid and remaining amounts
+are prominent; incomplete totals keep a visible notice. All status counts,
+unknown/unconfirmed counts, overdue count/known amount, previous-month total and
+eligible change remain available. The percentage is explicitly **by obligation
+count**, never monetary progress. The original selection and row order are
+preserved; large messages show a bounded prefix as described below. No totals
+across currencies or new ratios are calculated.
+
+`fixtures/weekly/*.json` contains decimal strings and ISO dates, shared with the
+React preview. `scripts/weekly_fixtures.py` converts them to Decimal/date inputs
+and renders through production Jinja. The preview command writes both EN/PL
+HTML and text for normal, empty, no-ledger, unknown, zero, previous-month-only,
+unavailable-comparison, multi-ledger/currency and long-content cases. Long
+synthetic names and 40 upcoming payments are retained without horizontal overflow
+at 320/390 px. Layout uses email-compatible presentation tables with two compact
+amount columns and single-column payment rows. Browser checks supplement, but
+do not replace, mailbox-client testing.
+
+### Weekly HTML size budget
+
+`weekly_overview_rendering.py` enforces a 90 KiB UTF-8 budget after Jinja renders.
+Summary blocks (each currency card or empty ledger) take priority over upcoming
+payment rows. If all summaries fit, the renderer retains the largest fitting
+prefix of payment rows; otherwise it retains a prefix of summary blocks without
+payment rows. Calculated values in retained blocks and the input objects are
+never modified.
+
+Every shortened candidate includes EN/PL counts of visible/selected summary
+blocks and upcoming payments, plus a full-data link near the top. Each retained
+currency also states its own shown/selected payment count when shortened; zero
+visible rows are not labeled as an empty source list. HTML and text use the same
+selection and notices. An impossible base layout raises rather than sending
+oversized HTML. Tests cover the 6-ledger/4-currency regression, large escaped
+payment lists, giant Unicode names, input immutability and serialized MIME size.
