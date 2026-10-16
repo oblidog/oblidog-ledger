@@ -151,5 +151,11 @@
   "reset_expiry_other": "Link do resetowania hasła wygaśnie za {count} godzin.",
   "new_title": "Nowe konto",
   "new_welcome": "Witaj na swoim nowym koncie!",
-  "new_details": "Oto dane Twojego konta:"
+  "new_details": "Oto dane Twojego konta:",
+  "weekly_intro": "Co już opłacono, ile pozostało i jakie płatności się zbliżają.",
+  "weekly_footer": "Twoje tygodniowe podsumowanie bieżącego miesiąca. Zarządzaj powiadomieniami e-mail w ustawieniach Oblidoga.",
+  "weekly_count_progress": "Opłacone zobowiązania (według liczby)",
+  "weekly_incomplete_notice": "Kwoty obejmują tylko znane wartości; pełna suma nie jest jeszcze dostępna.",
+  "weekly_comparison": "Porównanie z poprzednim miesiącem",
+  "weekly_empty": "Brak zobowiązań w tym zestawieniu."
 }

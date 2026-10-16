@@ -131,5 +131,11 @@
   "reset_expiry_other": "The password reset link expires in {count} hours.",
   "new_title": "New Account",
   "new_welcome": "Welcome to your new account!",
-  "new_details": "Here are your account details:"
+  "new_details": "Here are your account details:",
+  "weekly_intro": "What has been paid, what remains and what is due next.",
+  "weekly_footer": "Your weekly current-month overview. Manage email notifications in Oblidog settings.",
+  "weekly_count_progress": "Paid obligations (by count)",
+  "weekly_incomplete_notice": "Amounts include known values only; the full total is not yet available.",
+  "weekly_comparison": "Previous month comparison",
+  "weekly_empty": "No obligations in this snapshot."
 }

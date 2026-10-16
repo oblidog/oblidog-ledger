@@ -96,6 +96,7 @@ class WeeklyMonthlyOverviewReport:
             "report_date": locale.date(context.business_date),
             "period": locale.period(context.business_date),
             "ledgers": overviews,
+            "app_url": f"{settings.FRONTEND_HOST.rstrip('/')}/ledgers",
         }
         return EmailData(
             subject=f"{settings.PROJECT_NAME} - {locale.tr('weekly_subject')}",

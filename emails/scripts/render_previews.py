@@ -9,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.email_rendering import render_email_template  # noqa: E402
-from localized_fixtures import render_localized_fixture, weekly_fixture_context  # noqa: E402
+from localized_fixtures import render_localized_fixture  # noqa: E402
+from weekly_fixtures import render_weekly_fixture  # noqa: E402
 
 
 def main() -> None:
@@ -39,18 +40,15 @@ def main() -> None:
                 (args.out / f"daily-{fixture.stem}-{language}.{extension}").write_text(
                     content
                 )
-    for language in ("en", "pl"):
-        for empty in (False, True):
-            for extension in ("html", "txt"):
-                content = render_email_template(
-                    template_name=f"weekly_monthly_overview_report.{extension}",
-                    context=weekly_fixture_context(language, empty=empty),
-                    language=language,
+    for fixture in sorted((ROOT / "emails/fixtures/weekly").glob("*.json")):
+        raw = json.loads(fixture.read_text())
+        for language in ("en", "pl"):
+            html, text = render_weekly_fixture(raw, language)
+            for extension, content in (("html", html), ("txt", text)):
+                (args.out / f"weekly-{fixture.stem}-{language}.{extension}").write_text(
+                    content
                 )
-                (
-                    args.out
-                    / f"weekly-{'empty' if empty else 'multi-currency'}-{language}.{extension}"
-                ).write_text(content)
+    for language in ("en", "pl"):
         transactional = {
             "project_name": "Oblidog",
             "email": "recipient@example.com",

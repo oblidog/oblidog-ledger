@@ -1,0 +1,7 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-19",
+  "period": "2026-10",
+  "app_url": "https://example.com/ledgers?scope=mine&view=monthly",
+  "ledgers": []
+}

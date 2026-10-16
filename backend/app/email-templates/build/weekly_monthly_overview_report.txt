@@ -2,14 +2,16 @@
 {{ tr('period') }}: {{ period }}
 {{ tr('snapshot') }}: {{ report_date }}
 
-{% for ledger in ledgers %}{{ ledger.ledger_name }}
+{% if not ledgers %}{{ tr('weekly_empty') }}
+{% endif %}{% for ledger in ledgers %}{{ ledger.ledger_name }}
 {% if not ledger.currencies %}  {{ tr('no_obligations') }}
 {% endif %}{% for item in ledger.currencies %}  {{ tr('currency') }}: {{ item.currency or tr('currency_unspecified') }}
-  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }}{% if not item.total_is_complete %} {{ tr('incomplete') }}{% endif %}
+  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }}{% if not item.total_is_complete %} {{ tr('incomplete') }}
+  {{ tr('weekly_incomplete_notice') }}{% endif %}
   {{ tr('paid_known') }}: {{ fmt_amount(item.paid_known_amount) }}
   {{ tr('remaining_known') }}: {{ fmt_amount(item.remaining_known_amount) }}
   {{ tr('obligations') }}: {{ tr('ready') }}={{ item.ready_count }}, {{ tr('paid') }}={{ item.paid_count }}, {{ tr('not_ready') }}={{ item.not_ready_count }}
-  {{ tr('paid_percentage') }}: {{ fmt_amount(item.paid_percentage) ~ '%' if item.paid_percentage is not none else tr('na') }}
+  {{ tr('weekly_count_progress') }}: {{ fmt_amount(item.paid_percentage) ~ '%' if item.paid_percentage is not none else tr('na') }}
   {{ tr('section_overdue') }}: {{ item.overdue_count }} / {{ fmt_amount(item.overdue_known_amount) }}
   {{ tr('unknown_values') }}: {{ item.incomplete_count }}
   {{ tr('previous_total') }}: {{ fmt_amount(item.previous_total_known_amount) }}{% if not item.previous_total_is_complete %} {{ tr('incomplete') }}{% endif %}
@@ -20,3 +22,5 @@
 {% endif %}
 {% endfor %}
 {% endfor %}
+{% if app_url %}{{ tr('open_oblidog') }}: {{ app_url }}
+{% endif %}{{ tr('weekly_footer') }}
