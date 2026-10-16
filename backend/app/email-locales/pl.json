@@ -159,5 +159,8 @@
   "weekly_comparison": "Porównanie z poprzednim miesiącem",
   "weekly_empty": "Brak zobowiązań w tym zestawieniu.",
   "weekly_size_notice": "Wiadomość została skrócona. Bloki podsumowania: {shown_groups} z {total_groups}; najbliższe płatności: {shown_payments} z {total_payments}. Pełny raport znajdziesz w Oblidogu.",
-  "weekly_upcoming_omitted": "Najbliższe płatności w tej walucie: pokazano {shown} z {total}. Pełna lista jest dostępna w Oblidogu."
+  "weekly_upcoming_omitted": "Najbliższe płatności w tej walucie: pokazano {shown} z {total}. Pełna lista jest dostępna w Oblidogu.",
+  "transactional_eyebrow": "Powiadomienia dotyczące konta",
+  "transactional_footer": "Wiadomość wysłana automatycznie przez {project_name}.",
+  "test_delivery_ok": "Jeśli widzisz tę wiadomość, dostarczanie poczty działa."
 }

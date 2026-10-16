@@ -1,0 +1,26 @@
+{
+  "reset_password": {
+    "project_name": "Oblidog_Custom_LongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrand",
+    "email": "long-recipient-address@example.com",
+    "username": "Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_",
+    "valid_hours": 48,
+    "link": "https://example.com/reset-password?token=synthetic-reset-token&source=syntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsynthetic"
+  },
+  "user_invitation": {
+    "project_name": "Oblidog_Custom_LongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrand",
+    "email": "long-recipient-address@example.com",
+    "valid_hours": 48,
+    "link": "https://example.com/accept-invitation?token=synthetic-invitation-token&source=syntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsynthetic"
+  },
+  "new_account": {
+    "project_name": "Oblidog_Custom_LongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrand",
+    "email": "long-recipient-address@example.com",
+    "username": "Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_Long_Unbroken_Name_",
+    "password": "synthetic-long-password-synthetic-long-password-synthetic-long-password-synthetic-long-password-synthetic-long-password-synthetic-long-password-synthetic-long-password-synthetic-long-password-",
+    "link": "https://example.com/syntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsyntheticsynthetic"
+  },
+  "test_email": {
+    "project_name": "Oblidog_Custom_LongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrandLongBrand",
+    "email": "long-recipient-address@example.com"
+  }
+}

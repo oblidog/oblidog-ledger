@@ -1,0 +1,24 @@
+{
+  "reset_password": {
+    "project_name": "Oblidog",
+    "email": "recipient@example.com",
+    "valid_hours": 48,
+    "link": "https://example.com/reset-password?token=synthetic-reset-token"
+  },
+  "user_invitation": {
+    "project_name": "Oblidog",
+    "email": "recipient@example.com",
+    "valid_hours": 48,
+    "link": "https://example.com/accept-invitation?token=synthetic-invitation-token"
+  },
+  "new_account": {
+    "project_name": "Oblidog",
+    "email": "recipient@example.com",
+    "password": "synthetic-password",
+    "link": "https://example.com"
+  },
+  "test_email": {
+    "project_name": "Oblidog",
+    "email": "recipient@example.com"
+  }
+}
