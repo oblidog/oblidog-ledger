@@ -30,6 +30,9 @@ export function LanguageSelector() {
         <option value="pl" lang="pl">
           Polski
         </option>
+        <option value="de" lang="de">
+          Deutsch
+        </option>
       </select>
       {isSaving && (
         <span role="status" className="sr-only">

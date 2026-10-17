@@ -5006,7 +5006,8 @@ export const UserPublicSchema = {
                     type: 'string',
                     enum: [
                         'en',
-                        'pl'
+                        'pl',
+                        'de'
                     ]
                 },
                 {
@@ -5148,7 +5149,8 @@ export const UserUpdateMeSchema = {
                     type: 'string',
                     enum: [
                         'en',
-                        'pl'
+                        'pl',
+                        'de'
                     ]
                 },
                 {

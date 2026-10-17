@@ -2414,7 +2414,7 @@ export type UserPublic = {
     /**
      * Language
      */
-    language?: 'en' | 'pl' | null;
+    language?: 'en' | 'pl' | 'de' | null;
     /**
      * Id
      */
@@ -2486,7 +2486,7 @@ export type UserUpdateMe = {
     /**
      * Language
      */
-    language?: 'en' | 'pl' | null;
+    language?: 'en' | 'pl' | 'de' | null;
     /**
      * Full Name
      */

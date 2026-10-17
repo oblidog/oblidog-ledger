@@ -2,7 +2,16 @@ import { createInstance } from "i18next"
 import { initReactI18next } from "react-i18next"
 import { z } from "zod"
 import { appResources } from "./appResources"
-import { browserLanguage, readLocalLanguage } from "./language"
+import {
+  browserLanguage,
+  readLocalLanguage,
+  supportedLanguage,
+  supportedLanguages,
+} from "./language"
+import deCommon from "./locales/de/common.json"
+import deDomain from "./locales/de/domain.json"
+import deErrors from "./locales/de/errors.json"
+import deValidation from "./locales/de/validation.json"
 import enCommon from "./locales/en/common.json"
 import enDomain from "./locales/en/domain.json"
 import enErrors from "./locales/en/errors.json"
@@ -19,6 +28,13 @@ export const resources = {
     domain: enDomain,
     errors: enErrors,
     validation: enValidation,
+  },
+  de: {
+    common: deCommon,
+    app: appResources.de,
+    domain: deDomain,
+    errors: deErrors,
+    validation: deValidation,
   },
   pl: {
     common: plCommon,
@@ -39,7 +55,7 @@ void i18n.use(initReactI18next).init({
         ? []
         : (navigator.languages ?? [navigator.language ?? "en"]),
     ),
-  supportedLngs: ["en", "pl"],
+  supportedLngs: [...supportedLanguages],
   fallbackLng: "en",
   defaultNS: "common",
   interpolation: { escapeValue: false },
@@ -48,9 +64,9 @@ void i18n.use(initReactI18next).init({
 })
 
 function updateDocumentLanguage(language: string) {
-  z.config(language === "pl" ? z.locales.pl() : z.locales.en())
-  if (typeof document !== "undefined")
-    document.documentElement.lang = language === "pl" ? "pl" : "en"
+  const resolved = supportedLanguage(language) ?? "en"
+  z.config({ en: z.locales.en, pl: z.locales.pl, de: z.locales.de }[resolved]())
+  if (typeof document !== "undefined") document.documentElement.lang = resolved
 }
 i18n.on("languageChanged", updateDocumentLanguage)
 updateDocumentLanguage(i18n.resolvedLanguage ?? "en")

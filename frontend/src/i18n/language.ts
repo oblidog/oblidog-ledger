@@ -1,9 +1,9 @@
-export const supportedLanguages = ["en", "pl"] as const
+export const supportedLanguages = ["en", "pl", "de"] as const
 export type Language = (typeof supportedLanguages)[number]
 export const languageStorageKey = "oblidog-language"
 
 export function supportedLanguage(value: unknown): Language | null {
-  return value === "en" || value === "pl" ? value : null
+  return value === "en" || value === "pl" || value === "de" ? value : null
 }
 
 export function browserLanguage(languages: readonly string[]): Language {

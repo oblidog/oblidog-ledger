@@ -1,0 +1,16 @@
+{
+  "close": "Schließen",
+  "pagination": "Seitennavigation",
+  "go_to_previous_page": "Zur vorherigen Seite",
+  "previous": "Zurück",
+  "go_to_next_page": "Zur nächsten Seite",
+  "next": "Weiter",
+  "more_pages": "Weitere Seiten",
+  "hide_password": "Passwort verbergen",
+  "show_password": "Passwort anzeigen",
+  "sidebar": "Seitenleiste",
+  "displays_the_mobile_sidebar": "Zeigt die mobile Seitenleiste an.",
+  "toggle_sidebar": "Seitenleiste umschalten",
+  "collapse_sidebar": "Seitenleiste einklappen",
+  "open_sidebar": "Seitenleiste öffnen"
+}

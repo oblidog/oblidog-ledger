@@ -6,12 +6,16 @@ import { resources } from "./index"
 const titles = Object.entries(resources.en.app).flatMap(([feature, entries]) =>
   Object.entries(entries)
     .filter(([, text]) => text.endsWith("- Oblidog"))
-    .map(([key, en]) => ({
-      en,
-      pl: (resources.pl.app as Record<string, Record<string, string>>)[feature][
-        key
-      ],
-    })),
+    .map(([key]) =>
+      Object.fromEntries(
+        Object.entries(resources).map(([language, namespaces]) => [
+          language,
+          (namespaces.app as Record<string, Record<string, string>>)[feature][
+            key
+          ],
+        ]),
+      ),
+    ),
 )
 
 export function LocalizedPageTitle() {
@@ -25,11 +29,11 @@ export function LocalizedPageTitle() {
         .slice(-1)[0],
   })
   useEffect(() => {
-    const entry = titles.find((item) => item.en === title || item.pl === title)
+    const entry = titles.find((item) =>
+      Object.values(item).includes(title ?? ""),
+    )
     document.title = entry
-      ? i18n.resolvedLanguage === "pl"
-        ? entry.pl
-        : entry.en
+      ? (entry[i18n.resolvedLanguage ?? "en"] ?? entry.en)
       : (title ?? "Oblidog")
   }, [title, i18n.resolvedLanguage])
   return null

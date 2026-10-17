@@ -1,8 +1,13 @@
 import { i18n } from "./index"
-import type { Language } from "./language"
+import { type Language, supportedLanguage } from "./language"
 
 export function getLocale(language?: Language) {
-  return (language ?? i18n.resolvedLanguage) === "pl" ? "pl-PL" : "en-GB"
+  const locales: Record<Language, string> = {
+    en: "en-GB",
+    pl: "pl-PL",
+    de: "de-DE",
+  }
+  return locales[supportedLanguage(language ?? i18n.resolvedLanguage) ?? "en"]
 }
 
 // Calendar dates have no timezone. Formatting at UTC preserves the stored day.

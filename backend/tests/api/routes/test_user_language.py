@@ -53,8 +53,10 @@ def login(client: TestClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_language_persists_across_login_and_partial_profile_updates(
     language_client: tuple[TestClient, Session, User],
+    language: str,
 ) -> None:
     client, session, user = language_client
     other = user_service.create_user(
@@ -63,19 +65,19 @@ def test_language_persists_across_login_and_partial_profile_updates(
     )
     headers = login(client)
     assert client.get(URL, headers=headers).json()["language"] is None
-    response = client.patch(URL, headers=headers, json={"language": "pl"})
+    response = client.patch(URL, headers=headers, json={"language": language})
     assert response.status_code == 200
-    assert response.json()["language"] == "pl"
+    assert response.json()["language"] == language
     session.refresh(user)
-    assert user.language == "pl"
+    assert user.language == language
     assert user.daily_report_enabled and user.weekly_report_enabled
-    assert client.get(URL, headers=login(client)).json()["language"] == "pl"
+    assert client.get(URL, headers=login(client)).json()["language"] == language
     assert (
         client.patch(URL, headers=headers, json={"full_name": "Example"}).status_code
         == 200
     )
     session.refresh(user)
-    assert user.language == "pl"
+    assert user.language == language
     for value in ("en", None):
         assert (
             client.patch(URL, headers=headers, json={"language": value}).json()[
@@ -87,7 +89,7 @@ def test_language_persists_across_login_and_partial_profile_updates(
     assert other.language is None
 
 
-@pytest.mark.parametrize("value", ["de", "pl-PL", "", 1, True, ["pl"]])
+@pytest.mark.parametrize("value", ["fr", "pl-PL", "", 1, True, ["pl"]])
 def test_language_rejects_unsupported_values(
     language_client: tuple[TestClient, Session, User], value: object
 ) -> None:

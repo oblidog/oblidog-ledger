@@ -1,3 +1,21 @@
+import deAdmin from "./locales/de/app/admin.json"
+import deAnalytics from "./locales/de/app/analytics.json"
+import deAuth from "./locales/de/app/auth.json"
+import deCategories from "./locales/de/app/categories.json"
+import deCommon from "./locales/de/app/common.json"
+import deCounterparties from "./locales/de/app/counterparties.json"
+import deFilters from "./locales/de/app/filters.json"
+import deIntegrations from "./locales/de/app/integrations.json"
+import deLedgers from "./locales/de/app/ledgers.json"
+import deLedgersettings from "./locales/de/app/ledgersettings.json"
+import deMessages from "./locales/de/app/messages.json"
+import deObligations from "./locales/de/app/obligations.json"
+import dePending from "./locales/de/app/pending.json"
+import deSettings from "./locales/de/app/settings.json"
+import deSidebar from "./locales/de/app/sidebar.json"
+import deSystem from "./locales/de/app/system.json"
+import deUi from "./locales/de/app/ui.json"
+import deUsersettings from "./locales/de/app/usersettings.json"
 import enAdmin from "./locales/en/app/admin.json"
 import enAnalytics from "./locales/en/app/analytics.json"
 import enAuth from "./locales/en/app/auth.json"
@@ -55,6 +73,26 @@ export const appResources = {
     auth: enAuth,
     messages: enMessages,
     filters: enFilters,
+  },
+  de: {
+    admin: deAdmin,
+    analytics: deAnalytics,
+    categories: deCategories,
+    common: deCommon,
+    integrations: deIntegrations,
+    ledgersettings: deLedgersettings,
+    ledgers: deLedgers,
+    obligations: deObligations,
+    pending: dePending,
+    sidebar: deSidebar,
+    usersettings: deUsersettings,
+    ui: deUi,
+    counterparties: deCounterparties,
+    system: deSystem,
+    settings: deSettings,
+    auth: deAuth,
+    messages: deMessages,
+    filters: deFilters,
   },
   pl: {
     admin: plAdmin,

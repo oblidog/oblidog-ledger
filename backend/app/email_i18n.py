@@ -9,19 +9,21 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Literal
 
-Language = Literal["en", "pl"]
+Language = Literal["en", "pl", "de"]
 _DIRECTORY = Path(__file__).parent / "email-locales"
 _CATALOGS = MappingProxyType(
     {
         language: MappingProxyType(
             json.loads((_DIRECTORY / f"{language}.json").read_text())
         )
-        for language in ("en", "pl")
+        for language in ("en", "pl", "de")
     }
 )
 
 
 def recipient_language(preference: object = None) -> Language:
+    if preference == "de":
+        return "de"
     return "pl" if preference == "pl" else "en"
 
 
@@ -57,25 +59,27 @@ class EmailLocale:
         except InvalidOperation:
             return str(value)
         whole, _, fraction = format(number, "f").partition(".")
-        separator = "," if self.language == "pl" else "."
+        separator = "," if self.language in ("pl", "de") else "."
         return f"{whole}{separator}{fraction.ljust(2, '0')}"
 
     def date(self, value: CalendarDate | str) -> str:
         parsed = CalendarDate.fromisoformat(value) if isinstance(value, str) else value
         return (
-            parsed.strftime("%d.%m.%Y") if self.language == "pl" else parsed.isoformat()
+            parsed.strftime("%d.%m.%Y")
+            if self.language in ("pl", "de")
+            else parsed.isoformat()
         )
 
     def datetime(self, value: Timestamp) -> str:
         return (
             value.strftime("%d.%m.%Y %H:%M %z")
-            if self.language == "pl"
+            if self.language in ("pl", "de")
             else value.isoformat(timespec="minutes")
         )
 
     def period(self, value: CalendarDate) -> str:
         return (
             value.strftime("%m.%Y")
-            if self.language == "pl"
+            if self.language in ("pl", "de")
             else value.strftime("%Y-%m")
         )
