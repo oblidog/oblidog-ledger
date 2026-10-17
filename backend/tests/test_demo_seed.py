@@ -17,6 +17,7 @@ from app.models import (
     CategoryGroup,
     Counterparty,
     Integration,
+    IntegrationRun,
     Ledger,
     Obligation,
     ObligationComponent,
@@ -129,6 +130,21 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
         db.scalars(select(Counterparty).where(Counterparty.id.in_(counterparty_ids)))
     )
     assert len(integrations) == 12
+    runs = list(
+        db.scalars(
+            select(IntegrationRun).where(
+                IntegrationRun.integration_id.in_([item.id for item in integrations])
+            )
+        )
+    )
+    assert len(runs) == 12
+    by_id = {item.id: item for item in integrations}
+    for run in runs:
+        integration = by_id[run.integration_id]
+        assert run.id == integration.current_run_id
+        assert run.result == integration.last_result
+        assert run.error_code == integration.last_error_code
+        assert run.finished_at == integration.current_finished_at
     assert all(category.counterparty_id is not None for category in categories)
     assert all(category.currency == "EUR" for category in categories)
     assert len(counterparties) == 10

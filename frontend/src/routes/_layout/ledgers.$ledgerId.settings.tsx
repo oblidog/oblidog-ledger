@@ -8,6 +8,7 @@ import { Archive, ArrowLeft, BookOpen, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { LedgersService } from "@/client"
+import { DemoRestrictedSection } from "@/components/Common/DemoRestrictedSection"
 import { LedgerPreferences } from "@/components/LedgerSettings/LedgerPreferences"
 import LedgerSharing from "@/components/LedgerSettings/LedgerSharing"
 import { Badge } from "@/components/ui/badge"
@@ -138,223 +139,225 @@ function LedgerSettings() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{i18n.t("app:ledgers.ledger_details")}</CardTitle>
-          <CardDescription>
-            {i18n.t(
-              "app:ledgers.update_the_name_and_description_shown_throughout_the_workspace",
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="ledger-name">{i18n.t("app:ledgers.name")}</Label>
-            <Input
-              id="ledger-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              maxLength={255}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ledger-description">
-              {i18n.t("app:ledgers.description")}
-            </Label>
-            <textarea
-              id="ledger-description"
-              className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:bg-input/30 flex min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </div>
-          <Button
-            disabled={!name.trim() || updateMutation.isPending}
-            onClick={() => updateMutation.mutate()}
-          >
-            {i18n.t("app:ledgers.save_details")}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="size-5" />
-            {i18n.t("app:ledgers.category_visibility")}
-          </CardTitle>
-          <CardDescription>
-            {i18n.t(
-              "app:ledgers.choose_whether_archived_groups_and_categories_should_be_shown_in_the_workspace",
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="show-archived-categories"
-              checked={includeArchived}
-              onCheckedChange={(checked) =>
-                setIncludeArchived(checked === true)
-              }
-            />
-            <Label htmlFor="show-archived-categories">
-              {i18n.t("app:ledgers.show_archived")}
-            </Label>
-          </div>
-        </CardContent>
-      </Card>
-      <LedgerPreferences key={ledgerId} ledger={ledger} />
-      <LedgerSharing ledgerId={ledgerId} />
-
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <Trash2 className="size-5" />
-            {i18n.t("app:ledgers.danger_area")}
-          </CardTitle>
-          <CardDescription>
-            {i18n.t(
-              "app:ledgers.these_actions_are_permanent_and_cannot_be_undone",
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col justify-between gap-4 rounded-lg border border-destructive/30 p-4 sm:flex-row sm:items-center">
-            <div>
-              <p className="font-medium">
-                {i18n.t("app:ledgers.delete_all_categories")}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {i18n.t(
-                  "app:ledgers.permanently_delete_every_category_group_and_category_in_this_ledger",
-                )}
-              </p>
+      <DemoRestrictedSection>
+        <Card>
+          <CardHeader>
+            <CardTitle>{i18n.t("app:ledgers.ledger_details")}</CardTitle>
+            <CardDescription>
+              {i18n.t(
+                "app:ledgers.update_the_name_and_description_shown_throughout_the_workspace",
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="ledger-name">{i18n.t("app:ledgers.name")}</Label>
+              <Input
+                id="ledger-name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                maxLength={255}
+              />
             </div>
-            <Dialog open={dangerOpen} onOpenChange={setDangerOpen}>
-              <DialogTrigger asChild>
-                <Button variant="destructive">
-                  {i18n.t("app:ledgers.delete_all_categories")}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {i18n.t("app:ledgers.delete_all_categories_d1a5c3")}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {i18n.t(
-                      "app:ledgers.this_permanently_deletes_all_category_groups_and_categories_in",
-                    )}{" "}
-                    <strong>{ledger.name}</strong>
-                    {i18n.t("app:ledgers.enter_the_ledger_name_to_confirm")}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-2 py-2">
-                  <Label htmlFor="delete-categories-confirmation">
-                    {i18n.t("app:ledgers.ledger_name")}
-                  </Label>
-                  <Input
-                    id="delete-categories-confirmation"
-                    value={confirmationName}
-                    onChange={(event) =>
-                      setConfirmationName(event.target.value)
-                    }
-                  />
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button
-                      variant="outline"
-                      disabled={deleteCategoriesMutation.isPending}
-                    >
-                      {i18n.t("app:ledgers.cancel")}
-                    </Button>
-                  </DialogClose>
-                  <Button
-                    variant="destructive"
-                    disabled={
-                      confirmationName !== ledger.name ||
-                      deleteCategoriesMutation.isPending
-                    }
-                    onClick={() => deleteCategoriesMutation.mutate()}
-                  >
-                    {i18n.t("app:ledgers.delete_permanently")}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="flex flex-col justify-between gap-4 rounded-lg border border-destructive/30 p-4 sm:flex-row sm:items-center">
-            <div>
-              <p className="font-medium">
-                {i18n.t("app:ledgers.delete_all_obligations")}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {i18n.t(
-                  "app:ledgers.permanently_delete_every_obligation_in_this_ledger",
-                )}
-              </p>
+            <div className="space-y-2">
+              <Label htmlFor="ledger-description">
+                {i18n.t("app:ledgers.description")}
+              </Label>
+              <textarea
+                id="ledger-description"
+                className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:bg-input/30 flex min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
             </div>
-            <Dialog
-              open={obligationsDangerOpen}
-              onOpenChange={setObligationsDangerOpen}
+            <Button
+              disabled={!name.trim() || updateMutation.isPending}
+              onClick={() => updateMutation.mutate()}
             >
-              <DialogTrigger asChild>
-                <Button variant="destructive">
-                  {i18n.t("app:ledgers.delete_all_obligations")}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {i18n.t("app:ledgers.delete_all_obligations_660067")}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {i18n.t(
-                      "app:ledgers.this_permanently_deletes_every_obligation_in",
-                    )}{" "}
-                    <strong>{ledger.name}</strong>
-                    {i18n.t("app:ledgers.enter_the_ledger_name_to_confirm")}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-2 py-2">
-                  <Label htmlFor="delete-obligations-confirmation">
-                    {i18n.t("app:ledgers.ledger_name")}
-                  </Label>
-                  <Input
-                    id="delete-obligations-confirmation"
-                    value={obligationsConfirmationName}
-                    onChange={(event) =>
-                      setObligationsConfirmationName(event.target.value)
-                    }
-                  />
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button
-                      variant="outline"
-                      disabled={deleteObligationsMutation.isPending}
-                    >
-                      {i18n.t("app:ledgers.cancel")}
-                    </Button>
-                  </DialogClose>
-                  <Button
-                    variant="destructive"
-                    disabled={
-                      obligationsConfirmationName !== ledger.name ||
-                      deleteObligationsMutation.isPending
-                    }
-                    onClick={() => deleteObligationsMutation.mutate()}
-                  >
-                    {i18n.t("app:ledgers.delete_permanently")}
+              {i18n.t("app:ledgers.save_details")}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Archive className="size-5" />
+              {i18n.t("app:ledgers.category_visibility")}
+            </CardTitle>
+            <CardDescription>
+              {i18n.t(
+                "app:ledgers.choose_whether_archived_groups_and_categories_should_be_shown_in_the_workspace",
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="show-archived-categories"
+                checked={includeArchived}
+                onCheckedChange={(checked) =>
+                  setIncludeArchived(checked === true)
+                }
+              />
+              <Label htmlFor="show-archived-categories">
+                {i18n.t("app:ledgers.show_archived")}
+              </Label>
+            </div>
+          </CardContent>
+        </Card>
+        <LedgerPreferences key={ledgerId} ledger={ledger} />
+        <LedgerSharing ledgerId={ledgerId} />
+
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="size-5" />
+              {i18n.t("app:ledgers.danger_area")}
+            </CardTitle>
+            <CardDescription>
+              {i18n.t(
+                "app:ledgers.these_actions_are_permanent_and_cannot_be_undone",
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col justify-between gap-4 rounded-lg border border-destructive/30 p-4 sm:flex-row sm:items-center">
+              <div>
+                <p className="font-medium">
+                  {i18n.t("app:ledgers.delete_all_categories")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {i18n.t(
+                    "app:ledgers.permanently_delete_every_category_group_and_category_in_this_ledger",
+                  )}
+                </p>
+              </div>
+              <Dialog open={dangerOpen} onOpenChange={setDangerOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive">
+                    {i18n.t("app:ledgers.delete_all_categories")}
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {i18n.t("app:ledgers.delete_all_categories_d1a5c3")}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {i18n.t(
+                        "app:ledgers.this_permanently_deletes_all_category_groups_and_categories_in",
+                      )}{" "}
+                      <strong>{ledger.name}</strong>
+                      {i18n.t("app:ledgers.enter_the_ledger_name_to_confirm")}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-2 py-2">
+                    <Label htmlFor="delete-categories-confirmation">
+                      {i18n.t("app:ledgers.ledger_name")}
+                    </Label>
+                    <Input
+                      id="delete-categories-confirmation"
+                      value={confirmationName}
+                      onChange={(event) =>
+                        setConfirmationName(event.target.value)
+                      }
+                    />
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button
+                        variant="outline"
+                        disabled={deleteCategoriesMutation.isPending}
+                      >
+                        {i18n.t("app:ledgers.cancel")}
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      variant="destructive"
+                      disabled={
+                        confirmationName !== ledger.name ||
+                        deleteCategoriesMutation.isPending
+                      }
+                      onClick={() => deleteCategoriesMutation.mutate()}
+                    >
+                      {i18n.t("app:ledgers.delete_permanently")}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="flex flex-col justify-between gap-4 rounded-lg border border-destructive/30 p-4 sm:flex-row sm:items-center">
+              <div>
+                <p className="font-medium">
+                  {i18n.t("app:ledgers.delete_all_obligations")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {i18n.t(
+                    "app:ledgers.permanently_delete_every_obligation_in_this_ledger",
+                  )}
+                </p>
+              </div>
+              <Dialog
+                open={obligationsDangerOpen}
+                onOpenChange={setObligationsDangerOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="destructive">
+                    {i18n.t("app:ledgers.delete_all_obligations")}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {i18n.t("app:ledgers.delete_all_obligations_660067")}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {i18n.t(
+                        "app:ledgers.this_permanently_deletes_every_obligation_in",
+                      )}{" "}
+                      <strong>{ledger.name}</strong>
+                      {i18n.t("app:ledgers.enter_the_ledger_name_to_confirm")}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-2 py-2">
+                    <Label htmlFor="delete-obligations-confirmation">
+                      {i18n.t("app:ledgers.ledger_name")}
+                    </Label>
+                    <Input
+                      id="delete-obligations-confirmation"
+                      value={obligationsConfirmationName}
+                      onChange={(event) =>
+                        setObligationsConfirmationName(event.target.value)
+                      }
+                    />
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button
+                        variant="outline"
+                        disabled={deleteObligationsMutation.isPending}
+                      >
+                        {i18n.t("app:ledgers.cancel")}
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      variant="destructive"
+                      disabled={
+                        obligationsConfirmationName !== ledger.name ||
+                        deleteObligationsMutation.isPending
+                      }
+                      onClick={() => deleteObligationsMutation.mutate()}
+                    >
+                      {i18n.t("app:ledgers.delete_permanently")}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardContent>
+        </Card>
+      </DemoRestrictedSection>
     </div>
   )
 }

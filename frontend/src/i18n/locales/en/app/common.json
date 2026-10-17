@@ -22,5 +22,12 @@
   "success": "Success!",
   "something_went_wrong": "Something went wrong!",
   "clipboard_not_supported": "Clipboard not supported",
-  "copy_failed": "Copy failed"
+  "copy_failed": "Copy failed",
+  "demo_badge": "DEMO",
+  "demo_read_only_badge": "Read-only",
+  "demo_info": "About this demo",
+  "demo_restricted": "Unavailable in the public demo",
+  "demo_restricted_description": "You can explore these settings. Changes, sharing and external operations are disabled in the public demo.",
+  "demo_sample_data": "Example configuration and run history. These are illustrative records, not live connections or real executions.",
+  "demo_limits_description": "Account changes, integration credentials, sharing and manual system runs are disabled."
 }

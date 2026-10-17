@@ -17,7 +17,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
-import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { i18n } from "@/i18n"
 import { getInitials } from "@/utils"
 
@@ -47,7 +46,6 @@ function UserInfo({ fullName, email }: UserInfoProps) {
 export function User({ user }: { user: any }) {
   const { t } = useTranslation()
   const { logout } = useAuth()
-  const { data: appConfig } = usePublicAppConfig()
   const { isMobile, setOpenMobile } = useSidebar()
 
   if (!user) return null
@@ -85,14 +83,12 @@ export function User({ user }: { user: any }) {
               <UserInfo fullName={user?.full_name} email={user?.email} />
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {!appConfig?.is_demo && (
-              <RouterLink to="/settings" onClick={handleMenuClick}>
-                <DropdownMenuItem>
-                  <Settings />
-                  {t("navigation.settings")}
-                </DropdownMenuItem>
-              </RouterLink>
-            )}
+            <RouterLink to="/settings" onClick={handleMenuClick}>
+              <DropdownMenuItem>
+                <Settings />
+                {t("navigation.settings")}
+              </DropdownMenuItem>
+            </RouterLink>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               {t("navigation.logout")}

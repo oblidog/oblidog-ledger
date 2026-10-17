@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 
-import { DemoBanner } from "@/components/Common/DemoBanner"
+import { DemoIndicator } from "@/components/Common/DemoIndicator"
 import { Footer } from "@/components/Common/Footer"
 import AppSidebar from "@/components/Sidebar/AppSidebar"
 import { MobileShell } from "@/components/Sidebar/MobileShell"
@@ -27,10 +27,10 @@ function Layout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <DemoBanner />
         <MobileShell />
         <header className="sticky top-0 z-10 hidden h-16 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex">
           <SidebarTrigger className="-ml-1 text-muted-foreground" />
+          <DemoIndicator />
         </header>
         <main className="flex-1 p-4 pb-20 md:p-8">
           <div className="mx-auto max-w-7xl">

@@ -26,15 +26,12 @@ import {
 } from "@/components/ui/sidebar"
 import { useActiveLedger } from "@/hooks/useActiveLedger"
 import useAuth from "@/hooks/useAuth"
-import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 
 export function LedgerSwitcher() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { isMobile, setOpenMobile } = useSidebar()
   const { user: currentUser } = useAuth()
-  const { data: appConfig } = usePublicAppConfig()
-  const isDemo = appConfig?.is_demo === true
   const { activeLedger, activeLedgerId, isLoading, ledgers, setLastLedgerId } =
     useActiveLedger()
 
@@ -95,17 +92,15 @@ export function LedgerSwitcher() {
             <DropdownMenuSeparator />
             {activeLedgerId && (
               <>
-                {!isDemo && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/ledgers/$ledgerId/settings"
-                      params={{ ledgerId: activeLedgerId }}
-                    >
-                      <Settings />
-                      {t("navigation.ledgerSettings")}
-                    </Link>
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/ledgers/$ledgerId/settings"
+                    params={{ ledgerId: activeLedgerId }}
+                  >
+                    <Settings />
+                    {t("navigation.ledgerSettings")}
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link
                     to="/ledgers/$ledgerId/categories"
@@ -115,7 +110,7 @@ export function LedgerSwitcher() {
                     {t("navigation.categories")}
                   </Link>
                 </DropdownMenuItem>
-                {!isDemo && activeLedger?.owner_user_id === currentUser?.id ? (
+                {activeLedger?.owner_user_id === currentUser?.id ? (
                   <DropdownMenuItem asChild>
                     <Link
                       to="/ledgers/$ledgerId/system-run"

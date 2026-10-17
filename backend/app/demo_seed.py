@@ -25,7 +25,15 @@ from app.domain import (
     RecurrenceUnit,
 )
 from app.domain.integrations import IntegrationResult
-from app.models import Category, Counterparty, Integration, Ledger, Obligation, User
+from app.models import (
+    Category,
+    Counterparty,
+    Integration,
+    IntegrationRun,
+    Ledger,
+    Obligation,
+    User,
+)
 from app.schemas import UserCreate
 from app.services import counterparties as counterparty_service
 from app.services import obligations as obligation_service
@@ -462,6 +470,20 @@ def _create_integrations(
         session.add(integration)
         session.commit()
         session.refresh(integration)
+        session.add(
+            IntegrationRun(
+                id=run_id,
+                integration_id=integration.id,
+                started_at=integration.current_started_at,
+                deadline_at=integration.current_deadline_at,
+                finished_at=integration.current_finished_at,
+                result=integration.last_result,
+                changes_detected=integration.last_changes_detected,
+                error_code=integration.last_error_code,
+                error_message=integration.last_error_message,
+            )
+        )
+        session.commit()
         integrations[spec.code] = integration
     return integrations
 

@@ -8,6 +8,7 @@ import {
   IntegrationsService,
   LedgersService,
 } from "@/client"
+import { DemoPreviewNotice } from "@/components/Common/DemoRestrictedSection"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -25,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useAuth from "@/hooks/useAuth"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { i18n } from "@/i18n"
 import { IntegrationForm } from "./IntegrationForm"
 import {
@@ -40,6 +42,8 @@ const PAGE_SIZE = 24
 export function IntegrationList({ ledgerId }: { ledgerId: string }) {
   useTranslation()
 
+  const { data: config } = usePublicAppConfig()
+  const demo = config?.is_demo === true
   const navigate = useNavigate()
   const { user } = useAuth()
   const [page, setPage] = useState(0)
@@ -96,12 +100,16 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
             <RefreshCw /> {i18n.t("app:integrations.refresh")}
           </Button>
           {isOwner && (
-            <Button onClick={() => setCreating(true)}>
+            <Button
+              disabled={!config || demo}
+              onClick={() => setCreating(true)}
+            >
               <Plus /> {i18n.t("app:integrations.add_integration")}
             </Button>
           )}
         </div>
       </div>
+      {demo && <DemoPreviewNotice />}
       {integrations.isError && (
         <LoadError
           hasData={!!integrations.data}
@@ -290,7 +298,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
           </Button>
         </nav>
       )}
-      {creating && isOwner && (
+      {creating && isOwner && !demo && (
         <IntegrationForm
           ledgerId={ledgerId}
           onClose={() => setCreating(false)}

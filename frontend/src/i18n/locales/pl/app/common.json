@@ -22,5 +22,12 @@
   "success": "Gotowe!",
   "something_went_wrong": "Coś poszło nie tak!",
   "clipboard_not_supported": "Schowek nie jest obsługiwany",
-  "copy_failed": "Kopiowanie nie powiodło się"
+  "copy_failed": "Kopiowanie nie powiodło się",
+  "demo_badge": "DEMO",
+  "demo_read_only_badge": "Tylko odczyt",
+  "demo_info": "O wersji demo",
+  "demo_restricted": "Niedostępne w publicznym demo",
+  "demo_restricted_description": "Możesz przeglądać te ustawienia. Zmiany, udostępnianie i operacje zewnętrzne są wyłączone w publicznym demo.",
+  "demo_sample_data": "Przykładowa konfiguracja i historia uruchomień. To dane poglądowe, a nie aktywne połączenia ani rzeczywiste wykonania.",
+  "demo_limits_description": "Zmiany konta, klucze integracji, udostępnianie i ręczne uruchamianie zadań systemowych są wyłączone."
 }

@@ -406,3 +406,88 @@ for (const fail of [false, true]) {
     ).toHaveLength(fail ? 0 : 1)
   })
 }
+
+test("create dialog shares value fields, keeps period bounds and refreshes the list", async ({
+  page,
+}) => {
+  const fixture = await mockWorkspace(page)
+  await page.route("**/api/v1/ledgers/mobile-ledger/categories?**", (route) =>
+    route.fulfill({
+      json: {
+        data: [
+          {
+            id: "manual",
+            code: "WATR",
+            name: "Water",
+            currency: "EUR",
+            data_source_policy: "manual",
+          },
+          {
+            id: "automatic",
+            code: "AUTO",
+            name: "Automatic",
+            currency: "PLN",
+            data_source_policy: "automatic",
+          },
+        ],
+        count: 2,
+      },
+    }),
+  )
+  let submitted: unknown
+  let listReads = 0
+  page.on("request", (request) => {
+    if (
+      request.method() === "GET" &&
+      new URL(request.url()).pathname.endsWith("/obligations")
+    )
+      listReads++
+  })
+  await page.route(
+    "**/api/v1/ledgers/mobile-ledger/obligations?**",
+    async (route) => {
+      if (route.request().method() !== "POST") return route.fallback()
+      submitted = route.request().postDataJSON()
+      await route.fulfill({
+        json: { ...fixture.obligation, key: "WATR-2026-10" },
+      })
+    },
+  )
+  await openWorkspace(page)
+  await page.getByRole("button", { name: "New obligation" }).click()
+  const dialog = page.getByRole("dialog", {
+    name: "Create manual obligation",
+    exact: true,
+  })
+  await dialog.getByLabel("Category", { exact: true }).selectOption("WATR")
+  await expect(dialog.locator('option[value="AUTO"]')).toHaveCount(0)
+  await expect(dialog.getByLabel("Billing period")).toHaveValue("2026-10")
+  await dialog.getByLabel("Is the data ready?").check()
+  const submit = dialog.getByRole("button", { name: "Create obligation" })
+  await expect(submit).toBeDisabled()
+  await dialog.getByLabel("Current amount").fill("0")
+  await dialog.getByLabel("Issue date").fill("2026-10-05")
+  await expect(dialog.getByLabel("Due date")).toHaveAttribute(
+    "min",
+    "2026-10-05",
+  )
+  await expect(dialog.getByLabel("Due date")).toHaveAttribute(
+    "max",
+    "2026-11-10",
+  )
+  await dialog.getByLabel("Due date").fill("2026-10-20")
+  await dialog.getByLabel("Notes").fill("Invoice notes")
+  const before = listReads
+  await submit.click()
+  await expect(dialog).not.toBeVisible()
+  expect(submitted).toEqual({
+    category_code: "WATR",
+    period: { year: 2026, month: 10 },
+    data_ready: true,
+    current_amount: "0",
+    issue_date: "2026-10-05",
+    due_date: "2026-10-20",
+    notes: "Invoice notes",
+  })
+  await expect.poll(() => listReads).toBeGreaterThan(before)
+})

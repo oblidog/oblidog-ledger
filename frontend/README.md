@@ -106,3 +106,19 @@ make e2e-down
 To update the tests, navigate to the tests directory and modify the existing test files or add new ones as needed.
 
 For more information on writing and running Playwright tests, refer to the official [Playwright documentation](https://playwright.dev/docs/intro).
+
+### Public demo previews
+
+Demo navigation exposes ledger settings, account settings, integrations and
+System Run. Settings and sensitive actions remain disabled with an inline
+explanation; backend capability checks still reject these writes. Integration
+reads use the normal ledger access checks and the seeded demo records, including
+run history. System Run uses explicitly labelled presentation data and never
+requests administrator-only history on behalf of the demo account.
+
+The authenticated layout shows a compact `DEMO` information button in the desktop
+and mobile headers. The full notice stays on the login page; read-only mode also
+has a persistent label. Marketing screenshots hide only the indicator with
+Playwright's screenshot `style` option, leaving demo mode and its restrictions
+active. The API-mocked desktop/mobile regression tests run with
+`bun run test:i18n` and do not connect to a backend or database.
