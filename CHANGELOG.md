@@ -1,3 +1,10 @@
+## v0.20.2 (2026-10-17)
+
+### Refactor
+
+- **demo**: expose read-only feature previews and compact demo indicator (#537)
+- **frontend**: split category and obligation workspaces (#534)
+
 ## v0.20.1 (2026-10-16)
 
 ### Fix
