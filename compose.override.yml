@@ -91,7 +91,7 @@ services:
       EMAILS_FROM_EMAIL: "noreply@example.com"
 
   mailpit:
-    image: axllent/mailpit:v1.27.4
+    image: axllent/mailpit:v1.31.4
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
