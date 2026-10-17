@@ -45,9 +45,9 @@ updates:
       non-major:
         update-types: [minor, patch]
   # bun
+  # Keep the Playwright package and browser image eligible together; Docker
+  # registries may omit publication dates and bypass cooldown.
   - package-ecosystem: bun
-    cooldown:
-      default-days: 7
     directory: /
     schedule:
       interval: weekly
@@ -61,9 +61,9 @@ updates:
     patterns: ["@playwright/test"]
     multi-ecosystem-group: playwright
   # Docker
+  # Keep the Playwright package and browser image eligible together; Docker
+  # registries may omit publication dates and bypass cooldown.
   - package-ecosystem: docker
-    cooldown:
-      default-days: 7
     directories:
       - /backend
       - /frontend
