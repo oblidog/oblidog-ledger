@@ -8,9 +8,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app.email_rendering import render_email_template  # noqa: E402
-from localized_fixtures import render_localized_fixture  # noqa: E402
-from weekly_fixtures import render_weekly_fixture  # noqa: E402
+from app.email_rendering import render_email_template
+from localized_fixtures import render_localized_fixture
+from weekly_fixtures import render_weekly_fixture
 
 
 def main() -> None:
@@ -34,7 +34,7 @@ def main() -> None:
             (args.out / f"daily-{fixture.stem}.{extension}").write_text(rendered)
     for fixture in sorted((ROOT / "emails/fixtures/localized").glob("*.json")):
         raw = json.loads(fixture.read_text())
-        for language in ("en", "pl"):
+        for language in ("en", "pl", "de"):
             html, text = render_localized_fixture(raw, language)
             for extension, content in (("html", html), ("txt", text)):
                 (args.out / f"daily-{fixture.stem}-{language}.{extension}").write_text(
@@ -42,7 +42,7 @@ def main() -> None:
                 )
     for fixture in sorted((ROOT / "emails/fixtures/weekly").glob("*.json")):
         raw = json.loads(fixture.read_text())
-        for language in ("en", "pl"):
+        for language in ("en", "pl", "de"):
             html, text = render_weekly_fixture(raw, language)
             for extension, content in (("html", html), ("txt", text)):
                 (args.out / f"weekly-{fixture.stem}-{language}.{extension}").write_text(
@@ -50,7 +50,7 @@ def main() -> None:
                 )
     for fixture in sorted((ROOT / "emails/fixtures/transactional").glob("*.json")):
         messages = json.loads(fixture.read_text())
-        for language in ("en", "pl"):
+        for language in ("en", "pl", "de"):
             for template, context in messages.items():
                 for extension in ("html", "txt"):
                     content = render_email_template(
@@ -61,7 +61,7 @@ def main() -> None:
                     (
                         args.out / f"{template}-{fixture.stem}-{language}.{extension}"
                     ).write_text(content)
-    print(f"Rendered fixture previews in {args.out}")  # noqa: T201
+    print(f"Rendered fixture previews in {args.out}")
 
 
 if __name__ == "__main__":

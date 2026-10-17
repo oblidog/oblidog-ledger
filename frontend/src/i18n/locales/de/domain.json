@@ -1,0 +1,88 @@
+{
+  "lifecycle": {
+    "draft": "Entwurf",
+    "collecting_data": "Datenerfassung",
+    "ready": "Bereit",
+    "paid": "Bezahlt",
+    "canceled": "Storniert",
+    "error": "Fehler",
+    "unpaid": "Unbezahlt"
+  },
+  "valueState": {
+    "unknown": "Unbekannt",
+    "estimated": "Geschätzt",
+    "confirmed": "Bestätigt",
+    "overridden": "Überschrieben"
+  },
+  "source": {
+    "unknown": "Unbekannt",
+    "automatic": "Automatisch",
+    "manual": "Manuell",
+    "mixed": "Gemischt"
+  },
+  "categoryMode": {
+    "manual": "Manuell",
+    "automatic": "Automatisch",
+    "hybrid": "Hybrid"
+  },
+  "actor": {
+    "user": "Benutzer",
+    "system": "System",
+    "integration": "Integration"
+  },
+  "componentType": {
+    "invoice": "Rechnung",
+    "invoice_item": "Rechnungsposten",
+    "adjustment": "Korrektur",
+    "consumption": "Verbrauch",
+    "other": "Sonstige"
+  },
+  "runStatus": {
+    "running": "Wird ausgeführt",
+    "success": "Erfolg",
+    "partial_failure": "Teilweise fehlgeschlagen",
+    "failure": "Fehlschlag",
+    "succeeded": "Erfolgreich",
+    "failed": "Fehlgeschlagen",
+    "skipped": "Übersprungen"
+  },
+  "runMode": {
+    "scheduled": "Geplant",
+    "manual_only": "Nur manuell",
+    "disabled": "Deaktiviert",
+    "manual": "Manuell"
+  },
+  "skipReason": {
+    "disabled": "Deaktiviert",
+    "manual_only": "Nur manuell",
+    "not_due": "Nicht fällig",
+    "not_configured": "Nicht konfiguriert",
+    "no_eligible_targets": "Keine geeigneten Ziele",
+    "prerequisite_failed": "Voraussetzung fehlgeschlagen"
+  },
+  "difference": {
+    "added": "Hinzugefügt",
+    "removed": "Entfernt",
+    "changed": "Geändert",
+    "unchanged": "Unverändert"
+  },
+  "invitation": {
+    "pending": "Ausstehend",
+    "accepted": "Angenommen",
+    "expired": "Abgelaufen",
+    "revoked": "Widerrufen"
+  },
+  "task": {
+    "ensure_obligations": "Zahlungsverpflichtungen sicherstellen",
+    "estimate_obligation_amounts": "Beträge der Zahlungsverpflichtungen schätzen",
+    "legacy_import": "Legacy-Import",
+    "scheduled_reports": "Geplante Berichte",
+    "maintenance_cleanup": "Wartungsbereinigung"
+  },
+  "summaryField": {
+    "estimated_obligations": "Geschätzte Zahlungsverpflichtungen",
+    "timed_out": "Zeitüberschreitung",
+    "deleted_integration_runs": "Gelöschte Integrationsausführungen",
+    "deleted_system_runs": "Gelöschte Systemläufe"
+  }
+}

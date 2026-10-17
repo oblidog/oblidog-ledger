@@ -14,8 +14,8 @@ from emails.message import Message
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
-from app.email_i18n import EmailLocale  # noqa: E402
-from app.email_rendering import render_email_template  # noqa: E402
+from app.email_i18n import EmailLocale
+from app.email_rendering import render_email_template
 
 KINDS = ("reset_password", "user_invitation", "new_account", "test_email")
 CASES = ("normal", "long-content", "escaped", "missing-name")
@@ -35,7 +35,7 @@ class Links(HTMLParser):
         self.text.append(data)
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 @pytest.mark.parametrize("name", CASES)
 @pytest.mark.parametrize("kind", KINDS)
 def test_all_transactional_parts_keep_context_actions_expiry_and_shared_layout(
@@ -115,7 +115,7 @@ def test_all_transactional_parts_keep_context_actions_expiry_and_shared_layout(
         assert context["link"] in parts["text/plain"]
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_actual_generators_preserve_encoded_tokens_and_subjects(monkeypatch, language):
     from urllib.parse import parse_qs, urlparse
 

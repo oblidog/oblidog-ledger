@@ -48,10 +48,10 @@ const blankPayment: WeeklyPayment = {
 function previewAmount(value: string | null, language: EmailLanguage): string {
   if (value === null) return emailCopy("unknown_amount_lower", language)
   const [whole, fraction = ""] = value.split(".")
-  return `${whole}${language === "pl" ? "," : "."}${fraction.padEnd(2, "0")}`
+  return `${whole}${language !== "en" ? "," : "."}${fraction.padEnd(2, "0")}`
 }
 function previewDate(value: string, language: EmailLanguage): string {
-  return language === "pl" ? value.split("-").reverse().join(".") : value
+  return language !== "en" ? value.split("-").reverse().join(".") : value
 }
 function AmountMetric({
   label,
@@ -146,7 +146,7 @@ export default function WeeklyOverviewEmail({
       }
     >
       <EmailHeading
-        eyebrow={`${t("period")}: ${v("period", language === "pl" ? context.period.split("-").reverse().join(".") : context.period)}`}
+        eyebrow={`${t("period")}: ${v("period", language !== "en" ? context.period.split("-").reverse().join(".") : context.period)}`}
         intro={`${t("snapshot")}: ${v("report_date", previewDate(context.report_date, language))}`}
       >
         {t("weekly_subject")}

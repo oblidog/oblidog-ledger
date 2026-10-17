@@ -45,3 +45,12 @@ test("formats timestamps, percentages and country names using the chosen locale"
   expect(formatRegion("PL", "pl")).toBe("Polska")
   expect(formatRegion("PL", "en")).toBe("Poland")
 })
+
+test("formats German amounts, calendar dates and country names", () => {
+  expect(formatAmount("1234.50", "EUR", "de")).toBe("1.234,50 EUR")
+  expect(formatDate("2026-10-17", { dateStyle: "short" }, "de")).toBe(
+    "17.10.26",
+  )
+  expect(formatDate("2026-10-17", { month: "long" }, "de")).toBe("Oktober")
+  expect(formatRegion("DE", "de")).toBe("Deutschland")
+})

@@ -293,3 +293,60 @@ test("failed logout hides diagnostics and preserves the signed-in session", asyn
     page.getByTestId("user-menu").filter({ visible: true }),
   ).toBeVisible()
 })
+
+test("German login translates validation and survives reload", async ({
+  page,
+}) => {
+  await api(page, false)
+  await page.goto("/login")
+  await page.getByTestId("password-input").fill("short")
+  await page.getByTestId("password-input").blur()
+  await (await selector(page)).selectOption("de")
+  await expect(page).toHaveTitle("Anmelden - Oblidog")
+  await expect(page.locator("html")).toHaveAttribute("lang", "de")
+  await expect(
+    page.getByText("Das Passwort muss mindestens 8 Zeichen lang sein", {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(page.getByTestId("password-input")).toHaveValue("short")
+  await noOverflow(page)
+  await page.reload()
+  await expect(page).toHaveTitle("Anmelden - Oblidog")
+  await expect(page.getByTestId("language-selector")).toHaveValue("de")
+})
+
+test("German account choice persists and preserves category content", async ({
+  page,
+}) => {
+  const writes = await api(page, true)
+  await page.goto(`/ledgers/${ledgerId}/categories`)
+  await (await selector(page)).selectOption("de")
+  await expect(page).toHaveTitle("Kategorien - Oblidog")
+  expect(writes).toEqual([{ language: "de" }])
+  if ((page.viewportSize()?.width ?? 1280) < 768) {
+    await page
+      .getByRole("dialog", { name: "Seitenleiste" })
+      .getByRole("link", { name: "Kategorien", exact: true })
+      .click()
+  }
+  await expect(page.getByText("Custom_category", { exact: true })).toBeVisible()
+  await page
+    .getByRole("button", { name: "Neue Kategorie", exact: true })
+    .click()
+  await expect(page.getByRole("dialog")).toBeVisible()
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByText(
+        "Zahlungsverpflichtungen folgen dem Zahlungsplan und können auch manuell erstellt werden.",
+      ),
+  ).toBeVisible()
+  await noOverflow(page)
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Schließen", exact: true })
+    .click()
+  await page.reload()
+  await expect(page).toHaveTitle("Kategorien - Oblidog")
+})

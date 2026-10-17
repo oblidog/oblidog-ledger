@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "emails/scripts"))
 
-from app.email_i18n import EmailLocale  # noqa: E402
-from weekly_fixtures import load_weekly_fixture, render_weekly_fixture  # noqa: E402
+from app.email_i18n import EmailLocale
+from weekly_fixtures import load_weekly_fixture, render_weekly_fixture
 
 CASES = sorted(path.stem for path in (ROOT / "emails/fixtures/weekly").glob("*.json"))
 
@@ -26,7 +26,7 @@ def visible_text(markup: str) -> str:
     return " ".join(html.unescape(re.sub(r"<[^>]*>", " ", markup)).split())
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 @pytest.mark.parametrize("name", CASES)
 def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
     raw = load_weekly_fixture(name)
@@ -103,7 +103,7 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
         assert locale.tr("weekly_incomplete_notice") in visible_text(markup)
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_count_percentage_is_not_reinterpreted_as_amount_progress(language):
     markup, text = render_weekly_fixture(load_weekly_fixture("normal"), language)
     locale = EmailLocale(language)
@@ -171,7 +171,7 @@ def test_actual_weekly_render_adds_configured_application_link_and_keeps_cadence
     )
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_large_weekly_summary_blocks_are_bounded_with_matching_notices(language):
     from app.services.weekly_overview_rendering import WEEKLY_OVERVIEW_HTML_BUDGET
 
@@ -220,7 +220,7 @@ def test_large_weekly_summary_blocks_are_bounded_with_matching_notices(language)
             assert len(part.get_payload(decode=True)) <= WEEKLY_OVERVIEW_HTML_BUDGET
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_large_payment_list_preserves_all_summaries_and_reports_exact_omissions(
     language,
 ):
@@ -262,7 +262,7 @@ def test_large_payment_list_preserves_all_summaries_and_reports_exact_omissions(
     assert "&lt;&amp;" in markup and "<&" in text
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_huge_escaped_ledger_can_be_omitted_without_claiming_empty_month(language):
     from app.services.weekly_overview_rendering import render_weekly_overview
     from weekly_fixtures import weekly_context
