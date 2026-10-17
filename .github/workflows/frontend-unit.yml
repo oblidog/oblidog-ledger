@@ -18,12 +18,13 @@ jobs:
   test-frontend-unit:
     permissions:
       contents: read
-      id-token: write
+      id-token: write # Authenticate Codecov uploads with OIDC.
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Determine test scope
         id: scope
@@ -34,7 +35,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           SAME_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: python3 scripts/ci_test_scope.py
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         if: steps.scope.outputs.run_heavy == 'true'
       - run: bun ci
         if: steps.scope.outputs.run_heavy == 'true'

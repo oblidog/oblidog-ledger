@@ -6,8 +6,7 @@ on:
       - main
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: prepare-release-main
@@ -15,21 +14,26 @@ concurrency:
 
 jobs:
   prepare-release:
+    timeout-minutes: 15
+    permissions:
+      contents: write # Push the release branch.
+      pull-requests: write # Open the release PR.
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout complete history
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
 
       - name: Sync dependencies
         run: uv sync --frozen
@@ -97,16 +101,19 @@ jobs:
 
       - name: Prepare release commit
         if: steps.version.outputs.should_release == 'true' && steps.branch.outputs.exists == 'false'
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
           uv run cz bump --yes --check-consistency
-          git tag -d "v${{ steps.version.outputs.version }}"
+          git tag -d "v${RELEASE_VERSION}"
 
       - name: Push release branch
         if: steps.version.outputs.should_release == 'true' && steps.branch.outputs.exists == 'false'
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_BRANCH: release/v${{ steps.version.outputs.version }}
         run: |
-          git push origin HEAD:"refs/heads/${RELEASE_BRANCH}"
+          git -c 'credential.helper=!gh auth git-credential' push origin HEAD:"refs/heads/${RELEASE_BRANCH}"
 
       - name: Ensure release pull request
         if: steps.version.outputs.should_release == 'true'
