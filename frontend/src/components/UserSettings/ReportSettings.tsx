@@ -141,7 +141,7 @@ function ReportSettingsForm({
 export default function ReportSettings() {
   useTranslation()
 
-  const { data: appConfig, isPending: configPending } = usePublicAppConfig()
+  const { isPending: configPending } = usePublicAppConfig()
   const query = useQuery({
     queryKey,
     queryFn: () => UsersService.readReportPreferences(),
@@ -152,11 +152,7 @@ export default function ReportSettings() {
       <h3 className="text-lg font-semibold py-4">
         {i18n.t("app:usersettings.email_reports")}
       </h3>
-      {appConfig?.is_demo ? (
-        <p className="text-sm text-muted-foreground">
-          {i18n.t("app:usersettings.email_reports_are_disabled_in_the_demo")}
-        </p>
-      ) : query.isPending || configPending ? (
+      {query.isPending || configPending ? (
         <p role="status">
           {i18n.t("app:usersettings.loading_report_preferences")}
         </p>

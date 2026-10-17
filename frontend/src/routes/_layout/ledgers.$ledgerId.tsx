@@ -3,7 +3,6 @@ import {
   createFileRoute,
   Link,
   Outlet,
-  redirect,
   useLocation,
 } from "@tanstack/react-router"
 import { Play, Settings, Tags } from "lucide-react"
@@ -19,23 +18,7 @@ import useAuth from "@/hooks/useAuth"
 import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId")({
-  beforeLoad: async ({ location, params }) => {
-    const appConfig = await fetchPublicAppConfig()
-    const restrictedDemoRoute =
-      location.pathname === `/ledgers/${params.ledgerId}/settings` ||
-      location.pathname === `/ledgers/${params.ledgerId}/system-run` ||
-      location.pathname === `/ledgers/${params.ledgerId}/integrations` ||
-      location.pathname.startsWith(`/ledgers/${params.ledgerId}/integrations/`)
-
-    if (appConfig.is_demo && restrictedDemoRoute) {
-      throw redirect({
-        to: "/ledgers/$ledgerId",
-        params: { ledgerId: params.ledgerId },
-      })
-    }
-
-    return { appConfig }
-  },
+  beforeLoad: async () => ({ appConfig: await fetchPublicAppConfig() }),
   component: LedgerDetails,
   head: () => ({ meta: [{ title: i18n.t("app:ledgers.ledger_oblidog") }] }),
 })
@@ -83,7 +66,7 @@ function LedgerDetails() {
             </p>
           </div>
           <div className="hidden gap-2 md:flex">
-            {ledger.owner_user_id === currentUser?.id && !appConfig.is_demo && (
+            {ledger.owner_user_id === currentUser?.id && (
               <Button variant="outline" asChild>
                 <Link to="/ledgers/$ledgerId/system-run" params={{ ledgerId }}>
                   <Play />
@@ -100,17 +83,15 @@ function LedgerDetails() {
                 {i18n.t("app:ledgers.categories")}
               </Link>
             </Button>
-            {!appConfig.is_demo && (
-              <Button variant="outline" size="icon" asChild>
-                <Link
-                  to="/ledgers/$ledgerId/settings"
-                  params={{ ledgerId }}
-                  aria-label={i18n.t("app:ledgers.ledger_settings")}
-                >
-                  <Settings />
-                </Link>
-              </Button>
-            )}
+            <Button variant="outline" size="icon" asChild>
+              <Link
+                to="/ledgers/$ledgerId/settings"
+                params={{ ledgerId }}
+                aria-label={i18n.t("app:ledgers.ledger_settings")}
+              >
+                <Settings />
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

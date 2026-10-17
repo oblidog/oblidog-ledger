@@ -11,11 +11,13 @@ import {
   IntegrationsService,
   LedgersService,
 } from "@/client"
+import { DemoPreviewNotice } from "@/components/Common/DemoRestrictedSection"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiUrl } from "@/config"
 import useAuth from "@/hooks/useAuth"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { i18n } from "@/i18n"
 import { getLocale } from "@/i18n/format"
 import { IntegrationForm } from "./IntegrationForm"
@@ -71,6 +73,8 @@ export function IntegrationDetails({
 }) {
   useTranslation()
 
+  const { data: config } = usePublicAppConfig()
+  const demo = config?.is_demo === true
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<IntegrationPublic | null>(null)
@@ -134,6 +138,7 @@ export function IntegrationDetails({
           <ArrowLeft /> {i18n.t("app:integrations.back_to_integrations")}
         </Link>
       </Button>
+      {demo && <DemoPreviewNotice />}
       {notFound ? (
         <Alert>
           <AlertTitle>
@@ -428,7 +433,7 @@ export function IntegrationDetails({
                   <Button
                     variant="outline"
                     onClick={() => rotate.mutate()}
-                    disabled={rotate.isPending}
+                    disabled={!config || demo || rotate.isPending}
                   >
                     {i18n.t("app:integrations.generate_new_key")}
                   </Button>
@@ -452,6 +457,7 @@ export function IntegrationDetails({
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={!config || demo || revoke.isPending}
                       onClick={() => revoke.mutate(credential.id)}
                     >
                       {i18n.t("app:integrations.revoke_key")}

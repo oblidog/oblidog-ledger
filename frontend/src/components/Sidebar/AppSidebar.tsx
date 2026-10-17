@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/sidebar"
 import { useActiveLedger } from "@/hooks/useActiveLedger"
 import useAuth from "@/hooks/useAuth"
-import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { type Item, Main } from "./Main"
 import { primaryNavigation } from "./navigation"
 import { User } from "./User"
@@ -21,11 +20,9 @@ export function AppSidebar() {
   const { user: currentUser } = useAuth()
   const { activeLedgerId } = useActiveLedger()
 
-  const { data: appConfig } = usePublicAppConfig()
-
   const items: Item[] = [
     ...primaryNavigation(activeLedgerId),
-    ...(activeLedgerId && appConfig && !appConfig.is_demo
+    ...(activeLedgerId
       ? [
           {
             icon: Plug,

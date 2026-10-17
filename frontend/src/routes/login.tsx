@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
+import { DemoBanner } from "@/components/Common/DemoBanner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Form,
@@ -147,6 +148,7 @@ function Login() {
             </Alert>
           )}
 
+          <DemoBanner />
           <div className="grid gap-4">
             <FormField
               control={form.control}

@@ -8,6 +8,7 @@ class Capability(StrEnum):
     INTEGRATIONS = "integrations"
     ACCOUNT_SECURITY = "account_security"
     EMAIL = "email"
+    LEDGER_SETTINGS = "ledger_settings"
 
 
 DEMO_DISABLED_CAPABILITIES = frozenset(
@@ -16,6 +17,7 @@ DEMO_DISABLED_CAPABILITIES = frozenset(
         Capability.INTEGRATIONS,
         Capability.ACCOUNT_SECURITY,
         Capability.EMAIL,
+        Capability.LEDGER_SETTINGS,
     }
 )
 
@@ -42,6 +44,25 @@ def capability_for_request(*, method: str, path: str) -> Capability | None:
 
     normalized_path = path.rstrip("/")
     normalized_method = method.upper()
+
+    parts = normalized_path.split("/")
+    if "ledgers" in parts:
+        ledger_path = parts[parts.index("ledgers") + 1 :]
+        if (
+            normalized_method in {"GET", "HEAD"}
+            and len(ledger_path) in {2, 3, 4}
+            and ledger_path[1] == "integrations"
+            and (len(ledger_path) < 4 or ledger_path[3] == "runs")
+        ):
+            # Management reads still require access to this specific ledger.
+            # Runner endpoints and all credential/configuration writes stay blocked.
+            return None
+        if (len(ledger_path) == 1 and normalized_method == "PATCH") or (
+            len(ledger_path) == 2
+            and ledger_path[1] in {"categories", "obligations"}
+            and normalized_method == "DELETE"
+        ):
+            return Capability.LEDGER_SETTINGS
 
     if "/api-keys" in normalized_path:
         return Capability.API_KEYS

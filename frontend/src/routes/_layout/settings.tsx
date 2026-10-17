@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
+import { DemoRestrictedSection } from "@/components/Common/DemoRestrictedSection"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
 import ReportSettings from "@/components/UserSettings/ReportSettings"
@@ -80,7 +81,9 @@ function UserSettings() {
         </TabsList>
         {tabsConfig.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
-            <tab.component />
+            <DemoRestrictedSection>
+              <tab.component />
+            </DemoRestrictedSection>
           </TabsContent>
         ))}
       </Tabs>

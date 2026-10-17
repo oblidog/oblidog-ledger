@@ -10,12 +10,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import (
     CurrentUser,
     SessionDep,
-    require_capability,
+    enforce_demo_request_capabilities,
     require_ledger_owner_access,
     require_ledger_view_access,
 )
 from app.core.api_errors import ApplicationError as HTTPException
-from app.core.capabilities import Capability
 from app.models import IntegrationCredential, Ledger
 from app.schemas.integrations import (
     IntegrationConflictDetail,
@@ -35,7 +34,7 @@ from app.use_cases import integrations as use_cases
 
 router = APIRouter(
     tags=["integrations"],
-    dependencies=[Depends(require_capability(Capability.INTEGRATIONS))],
+    dependencies=[Depends(enforce_demo_request_capabilities)],
 )
 
 

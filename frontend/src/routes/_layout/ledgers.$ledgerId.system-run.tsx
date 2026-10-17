@@ -8,6 +8,7 @@ import {
   type SystemRunStepPublic,
   SystemRunsService,
 } from "@/client"
+import { DemoPreviewNotice } from "@/components/Common/DemoRestrictedSection"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -31,7 +32,9 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { demoSystemRuns, demoSystemTasks } from "@/demoPreview"
 import useCustomToast from "@/hooks/useCustomToast"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { i18n } from "@/i18n"
 import { domainLabel } from "@/i18n/domainLabels"
 import { getLocale } from "@/i18n/format"
@@ -171,18 +174,28 @@ function StepSummary({ step }: { step: SystemRunStepPublic }) {
 function SystemRun() {
   useTranslation()
 
+  const { data: config } = usePublicAppConfig()
+  const demo = config?.is_demo === true
   const { ledgerId } = Route.useParams()
   const queryClient = useQueryClient()
   const { showErrorToast, showSuccessToast } = useCustomToast()
   const [confirmationOpen, setConfirmationOpen] = useState(false)
   const [manualTaskNames, setManualTaskNames] = useState<string[]>([])
   const tasks = useQuery({
-    queryKey: ["system-run-tasks"],
-    queryFn: () => SystemRunsService.readSystemRunTasks(),
+    queryKey: ["system-run-tasks", demo],
+    enabled: !!config,
+    queryFn: () =>
+      demo
+        ? Promise.resolve(demoSystemTasks)
+        : SystemRunsService.readSystemRunTasks(),
   })
   const history = useQuery({
-    queryKey: ["system-runs"],
-    queryFn: () => SystemRunsService.readSystemRuns(),
+    queryKey: ["system-runs", demo, demo ? ledgerId : null],
+    enabled: !!config,
+    queryFn: () =>
+      demo
+        ? Promise.resolve(demoSystemRuns(ledgerId))
+        : SystemRunsService.readSystemRuns(),
     refetchInterval: (query) =>
       query.state.data?.data.some((run) => run.status === "running")
         ? 1_000
@@ -199,7 +212,7 @@ function SystemRun() {
     onError: handleError.bind(showErrorToast),
     onSuccess: (run) => {
       queryClient.setQueryData(
-        ["system-runs"],
+        ["system-runs", demo, demo ? ledgerId : null],
         (previous: typeof history.data) =>
           previous
             ? { ...previous, data: [run, ...previous.data] }
@@ -247,6 +260,7 @@ function SystemRun() {
         </div>
       </div>
 
+      {demo && <DemoPreviewNotice />}
       <Card>
         <CardHeader>
           <CardTitle>{i18n.t("app:system.start_manual_run")}</CardTitle>
@@ -282,6 +296,7 @@ function SystemRun() {
                         <>
                           <Checkbox
                             id={`system-run-task-${task.name}`}
+                            disabled={!config || demo}
                             checked={manualTaskNames.includes(task.name)}
                             onCheckedChange={(checked) =>
                               toggleManualTask(task.name, checked === true)
@@ -312,7 +327,11 @@ function SystemRun() {
                 onOpenChange={setConfirmationOpen}
               >
                 <DialogTrigger asChild>
-                  <Button disabled={tasks.isLoading || startRun.isPending}>
+                  <Button
+                    disabled={
+                      !config || demo || tasks.isLoading || startRun.isPending
+                    }
+                  >
                     <Play /> {i18n.t("app:system.start_system_run")}
                   </Button>
                 </DialogTrigger>
