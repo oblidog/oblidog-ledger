@@ -84,6 +84,30 @@ def test_demo_blocks_sensitive_api_operations_before_endpoint_execution(
         == "account_security is disabled in demo environment"
     )
 
+    for method, path, body, capability in (
+        ("PATCH", f"/ledgers/{ledger.id}", {"name": "Changed"}, "ledger_settings"),
+        ("DELETE", f"/ledgers/{ledger.id}/categories", None, "ledger_settings"),
+        ("DELETE", f"/ledgers/{ledger.id}/obligations", None, "ledger_settings"),
+        ("POST", "/system-runs/", {}, "integrations"),
+        ("POST", f"/ledgers/{ledger.id}/integrations", {}, "integrations"),
+        (
+            "PATCH",
+            "/users/me/report-preferences",
+            {"daily_report_enabled": True},
+            "account_security",
+        ),
+    ):
+        response = client.request(
+            method, f"{settings.API_V1_STR}{path}", headers=headers, json=body
+        )
+        assert response.status_code == 403
+        assert (
+            response.json()["detail"] == f"{capability} is disabled in demo environment"
+        )
+
+    db.refresh(ledger)
+    assert ledger.name == "Demo restriction test"
+
     recovery_response = client.post(
         f"{settings.API_V1_STR}/password-recovery/{user.email}"
     )
@@ -192,7 +216,12 @@ def test_read_only_demo_keeps_login_and_reads_but_blocks_all_write_methods(
             method, f"{settings.API_V1_STR}{path}", headers=headers
         )
         assert response.status_code == 403
-        assert response.json()["detail"] == "Demo is temporarily read-only"
+        expected = (
+            "ledger_settings is disabled in demo environment"
+            if method in {"PATCH", "DELETE"}
+            else "Demo is temporarily read-only"
+        )
+        assert response.json()["detail"] == expected
 
 
 @pytest.mark.usefixtures("demo_environment")
@@ -279,3 +308,41 @@ def test_ensure_rolls_back_all_new_obligations_when_demo_quota_is_exceeded(
         )
         == 0
     )
+
+
+@pytest.mark.usefixtures("demo_environment")
+def test_demo_integration_management_reads_keep_ledger_access_checks(
+    client: TestClient, db: Session
+) -> None:
+    user = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=user.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=user.id, name="Demo integration preview"
+    )
+    paths = (
+        f"/ledgers/{ledger.id}/integrations",
+        f"/ledgers/{ledger.id}/integrations/{user.id}",
+        f"/ledgers/{ledger.id}/integrations/{user.id}/runs",
+    )
+    assert (
+        client.get(f"{settings.API_V1_STR}{paths[0]}", headers=headers).status_code
+        == 200
+    )
+    for path in paths[1:]:
+        assert (
+            client.get(f"{settings.API_V1_STR}{path}", headers=headers).status_code
+            == 404
+        )
+    stranger = create_random_user(db)
+    stranger_headers = authentication_token_from_email(
+        client=client, email=stranger.email, db=db
+    )
+    for path in paths:
+        assert (
+            client.get(
+                f"{settings.API_V1_STR}{path}", headers=stranger_headers
+            ).status_code
+            == 404
+        )
+        assert client.get(f"{settings.API_V1_STR}{path}").status_code in {401, 403}
+    assert client.get(f"{settings.API_V1_STR}/integration/context").status_code == 403

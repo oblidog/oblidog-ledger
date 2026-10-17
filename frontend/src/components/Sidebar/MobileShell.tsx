@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router"
 import { Menu } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { DemoIndicator } from "@/components/Common/DemoIndicator"
 import { Logo } from "@/components/Common/Logo"
 import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/ui/sidebar"
@@ -30,6 +31,7 @@ export function MobileShell() {
               ? t("navigation.loadingLedger")
               : t("navigation.noLedger"))}
         </span>
+        <DemoIndicator />
         <Button
           variant="ghost"
           size="icon"

@@ -12,6 +12,7 @@ const mockDemoConfig = async (page: Page) => {
       body: JSON.stringify({
         environment: "demo",
         is_demo: true,
+        demo_writes_enabled: true,
         demo_credentials: {
           email: "demo@oblidog.com",
           password: demoPassword,
@@ -51,7 +52,9 @@ test.describe("demo screenshots", () => {
     await page.getByRole("button", { name: "Log In" }).click()
     await page.waitForURL(/\/ledgers\/[^/?]+/)
 
-    await expect(page.getByTestId("demo-banner")).toBeVisible()
+    await expect(
+      page.getByTestId("demo-indicator").filter({ visible: true }),
+    ).toBeVisible()
     await expect(page.getByLabel("Lifecycle")).toHaveValue("")
     await expect(page.getByText(/\bEUR\b/).first()).toBeVisible()
 
@@ -73,6 +76,7 @@ test.describe("demo screenshots", () => {
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.screenshot({
       path: "test-results/demo-screenshots/desktop-light.png",
+      style: '[data-testid="demo-indicator"] { display: none !important; }',
       animations: "disabled",
       caret: "hide",
     })
@@ -80,6 +84,7 @@ test.describe("demo screenshots", () => {
     await setTheme(page, "dark")
     await page.screenshot({
       path: "test-results/demo-screenshots/desktop-dark.png",
+      style: '[data-testid="demo-indicator"] { display: none !important; }',
       animations: "disabled",
       caret: "hide",
     })
@@ -88,6 +93,7 @@ test.describe("demo screenshots", () => {
     await setTheme(page, "light")
     await page.screenshot({
       path: "test-results/demo-screenshots/mobile-light.png",
+      style: '[data-testid="demo-indicator"] { display: none !important; }',
       animations: "disabled",
       caret: "hide",
     })

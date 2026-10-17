@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test"
 // Intercepted API responses: no developer database or Compose services.
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "i18n.spec.ts",
+  testMatch: ["i18n.spec.ts", "demo-preview.spec.ts"],
   fullyParallel: true,
   use: {
     baseURL: "http://localhost:5173",

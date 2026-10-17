@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { i18n } from "@/i18n"
 import { getApiErrorMessage } from "@/i18n/apiErrors"
 
@@ -34,6 +35,7 @@ export function IntegrationForm({
 }) {
   useTranslation()
 
+  const { data: config } = usePublicAppConfig()
   const queryClient = useQueryClient()
   const [name, setName] = useState(initial?.name ?? "")
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? "")
@@ -110,7 +112,15 @@ export function IntegrationForm({
             save.mutate()
           }}
         >
-          <fieldset className="space-y-4" disabled={save.isPending}>
+          {config?.is_demo && (
+            <p className="text-sm text-muted-foreground">
+              {i18n.t("app:common.demo_restricted_description")}
+            </p>
+          )}
+          <fieldset
+            className="space-y-4"
+            disabled={!config || config.is_demo || save.isPending}
+          >
             <div className="space-y-2">
               <Label htmlFor="integration-name">
                 {i18n.t("app:integrations.name")}
@@ -162,7 +172,7 @@ export function IntegrationForm({
             <LoadingButton
               type="submit"
               loading={save.isPending}
-              disabled={!categories.isSuccess}
+              disabled={!config || config.is_demo || !categories.isSuccess}
             >
               {initial
                 ? i18n.t("app:integrations.save_changes")
