@@ -1,0 +1,58 @@
+name: Bun Dependency Graph
+
+on:
+  pull_request:
+    paths:
+      - bun.lock
+      - package.json
+      - frontend/package.json
+      - emails/package.json
+      - .github/workflows/bun-dependency-graph.yml
+  push:
+    branches: [dev, main]
+    paths:
+      - bun.lock
+      - package.json
+      - frontend/package.json
+      - emails/package.json
+      - .github/workflows/bun-dependency-graph.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bun-dependency-graph-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Validate resolved dependency snapshot without publishing
+        uses: pippinmole/bun-dependency-submission@6dca2c0818f5e295145e90ca20e2aeac84a076ae # v1.0.0
+        with:
+          dry-run: 'true'
+          output-file: ${{ runner.temp }}/bun-dependency-snapshot.json
+
+  submit:
+    needs: validate
+    # Only trusted default-branch snapshots feed Dependabot alerts. PRs and dev
+    # validate the parser without publishing unreleased dependencies to main.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # Required by the Dependency Submission API.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Submit exact Bun dependency versions to GitHub
+        uses: pippinmole/bun-dependency-submission@6dca2c0818f5e295145e90ca20e2aeac84a076ae # v1.0.0

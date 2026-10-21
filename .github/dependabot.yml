@@ -1,7 +1,7 @@
 version: 2
 
 multi-ecosystem-groups:
-  playwright:
+  web-stack:
     schedule:
       interval: weekly
     target-branch: dev
@@ -44,9 +44,10 @@ updates:
     groups:
       non-major:
         update-types: [minor, patch]
-  # bun
-  # Keep the Playwright package and browser image eligible together; Docker
-  # registries may omit publication dates and bypass cooldown.
+  # One Bun entry covers both workspaces through the root bun.lock.
+  # Batch the web stack together: Playwright and its browser image must stay
+  # synchronized. Separate entries for the same directory would overlap.
+  # No cooldown here: Docker may lack publication dates and bypass cooldown.
   - package-ecosystem: bun
     directory: /
     schedule:
@@ -58,11 +59,9 @@ updates:
         update-types: [minor, patch]
     ignore:
       - dependency-name: "@hey-api/openapi-ts"
-    patterns: ["@playwright/test"]
-    multi-ecosystem-group: playwright
-  # Docker
-  # Keep the Playwright package and browser image eligible together; Docker
-  # registries may omit publication dates and bypass cooldown.
+    patterns: ["*"]
+    multi-ecosystem-group: web-stack
+  # Include all base images, while keeping Playwright in the same batch.
   - package-ecosystem: docker
     directories:
       - /backend
@@ -74,8 +73,8 @@ updates:
     groups:
       non-major:
         update-types: [minor, patch]
-    patterns: ["playwright"]
-    multi-ecosystem-group: playwright
+    patterns: ["*"]
+    multi-ecosystem-group: web-stack
   # Docker Compose
   - package-ecosystem: docker-compose
     cooldown:
