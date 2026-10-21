@@ -1,3 +1,9 @@
+## v0.20.3 (2026-10-21)
+
+### Fix
+
+- **deps**: update vulnerable Python dependencies (#543)
+
 ## v0.20.2 (2026-10-17)
 
 ### Refactor
