@@ -16,7 +16,7 @@ services:
       - e2e
 
   mailpit:
-    image: axllent/mailpit:v1.31.4
+    image: axllent/mailpit:v1.31.5
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 5s

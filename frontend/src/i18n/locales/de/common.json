@@ -1,0 +1,41 @@
+{
+  "navigation": {
+    "dashboard": "Übersicht",
+    "obligations": "Zahlungsverpflichtungen",
+    "categories": "Kategorien",
+    "analytics": "Auswertungen",
+    "integrations": "Integrationen",
+    "admin": "Administration",
+    "more": "Mehr",
+    "settings": "Benutzereinstellungen",
+    "logout": "Abmelden",
+    "loadingLedger": "Zahlungsbuch wird geladen…",
+    "noLedger": "Kein Zahlungsbuch ausgewählt",
+    "selectLedger": "Zahlungsbuch auswählen",
+    "workspace": "Aktueller Arbeitsbereich",
+    "switchLedger": "Zahlungsbuch wechseln",
+    "ledgerSettings": "Zahlungsbucheinstellungen",
+    "systemRun": "Systemlauf",
+    "manageLedgers": "Zahlungsbücher verwalten"
+  },
+  "appearance": {
+    "title": "Darstellung",
+    "toggle": "Design umschalten",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System"
+  },
+  "language": {
+    "title": "Sprache",
+    "saveError": "Die Sprache konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    "saving": "Sprache wird gespeichert…"
+  },
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen"
+  },
+  "footer": {
+    "version": "Anwendungsversion"
+  }
+}

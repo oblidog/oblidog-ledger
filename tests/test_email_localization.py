@@ -1,4 +1,4 @@
-"""EN/PL email contracts using production rendering and synthetic data only."""
+"""EN/PL/DE email contracts using production rendering and synthetic data only."""
 
 import importlib
 import json
@@ -16,9 +16,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "emails/scripts"))
-from app.email_i18n import EmailLocale, recipient_language  # noqa: E402
-from app.email_rendering import render_email_template  # noqa: E402
-from localized_fixtures import render_localized_fixture  # noqa: E402
+from app.email_i18n import EmailLocale, recipient_language
+from app.email_rendering import render_email_template
+from localized_fixtures import render_localized_fixture
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_catalog_keys_and_interpolation_contract_match():
         language: json.loads(
             (ROOT / f"backend/app/email-locales/{language}.json").read_text()
         )
-        for language in ("en", "pl")
+        for language in ("en", "pl", "de")
     }
 
     def normalize(catalog):
@@ -47,7 +47,12 @@ def test_catalog_keys_and_interpolation_contract_match():
             result[base] = placeholders
         return result
 
-    assert normalize(catalogs["en"]) == normalize(catalogs["pl"])
+    for catalog in catalogs.values():
+        assert normalize(catalogs["en"]) == normalize(catalog)
+    for key in catalogs["en"]:
+        if key.endswith("_one"):
+            assert key in catalogs["de"]
+            assert f"{key[:-4]}_other" in catalogs["de"]
     for key in catalogs["en"]:
         if key.endswith("_one"):
             base = key[:-4]
@@ -62,7 +67,8 @@ def test_catalog_keys_and_interpolation_contract_match():
     [
         (None, "en"),
         ("", "en"),
-        ("de", "en"),
+        ("de", "de"),
+        ("fr", "en"),
         ("pl-PL", "en"),
         ("en", "en"),
         ("pl", "pl"),
@@ -91,10 +97,10 @@ def test_plural_dates_and_decimal_precision():
         == "123456789012345678901234,1234"
     )
     assert en.amount(Decimal("-0.00100")) == "-0.00100"
-    assert pl.amount(Decimal("0")) == "0,00"
+    assert pl.amount(Decimal(0)) == "0,00"
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 @pytest.mark.parametrize(
     "name", ["normal", "empty", "unknown", "multi-currency", "long-content"]
 )
@@ -133,18 +139,22 @@ def test_localized_preview_matrix_renders_both_parts_with_size_and_escaping(
         assert (
             "This email was shortened"
             if language == "en"
+            else "Diese E-Mail wurde gekürzt"
+            if language == "de"
             else "Wiadomość została skrócona"
         ) in text
-        shown = html.count(
-            "View obligation →" if language == "en" else "Zobacz zobowiązanie →"
-        )
+        shown = html.count(locale.tr("view_obligation") + " →")
         assert 0 < shown < 180
         assert (
-            f"Showing {shown} of 180" if language == "en" else f"Pokazano {shown} z 180"
+            f"Showing {shown} of 180"
+            if language == "en"
+            else f"{shown} von 180"
+            if language == "de"
+            else f"Pokazano {shown} z 180"
         ) in text
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_transactional_subjects_parts_links_and_escaping(mail_modules, language):
     locale = EmailLocale(language)
     malicious = "<img src=x> & {{ 7*7 }}"
@@ -211,7 +221,7 @@ def test_same_report_instance_does_not_mix_recipients_or_threads(monkeypatch):
             weekly_report.delivery_key(user=user, context=context),
         )
 
-    languages = ["pl", "en", None, "pl", "en"] * 4
+    languages = ["pl", "en", "de", None, "pl", "de"] * 4
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(render, languages))
     for language, (daily, week, daily_key, weekly_key) in zip(
@@ -227,7 +237,7 @@ def test_same_report_instance_does_not_mix_recipients_or_threads(monkeypatch):
         assert weekly_key == "weekly:same-user:2026-W43"
 
 
-@pytest.mark.parametrize("language", ["en", "pl"])
+@pytest.mark.parametrize("language", ["en", "pl", "de"])
 def test_weekly_multipart_uses_localized_amounts_and_preserves_currencies(language):
     locale = EmailLocale(language)
     item = SimpleNamespace(
@@ -243,7 +253,7 @@ def test_weekly_multipart_uses_localized_amounts_and_preserves_currencies(langua
         overdue_known_amount=Decimal("12.00"),
         incomplete_count=1,
         total_is_complete=False,
-        previous_total_known_amount=Decimal("100"),
+        previous_total_known_amount=Decimal(100),
         previous_total_is_complete=True,
         total_change=None,
         upcoming=[
@@ -274,7 +284,7 @@ def test_weekly_multipart_uses_localized_amounts_and_preserves_currencies(langua
 
 
 @pytest.mark.usefixtures("mail_modules")
-@pytest.mark.parametrize("language", [None, "en", "pl"])
+@pytest.mark.parametrize("language", [None, "en", "pl", "de"])
 @pytest.mark.parametrize(
     "recipient_email", ["recipient@example.com", "r" * 64 + "@example.com"]
 )
@@ -370,10 +380,25 @@ def test_activity_and_health_translate_system_values_but_keep_external_content()
         language="pl",
     )
     assert "19.10.2026 10:00 +0200" in timeout
-    for language in ("en", "pl"):
+    for language in ("en", "pl", "de"):
         assert (
             _integration_health_detail(
                 integration, IntegrationHealth.ERROR, UTC, language=language
             )
             == "EXTERNAL_CODE: Original external diagnostic <>&"
         )
+
+
+def test_german_plural_forms_and_formats():
+    from datetime import UTC, datetime
+
+    de = EmailLocale("de")
+    for count in (0, 2, 5, 12, 22):
+        assert de.tr("more_changes", count=count) == f"Und {count} weitere Änderungen"
+    assert de.tr("more_changes", count=1) == "Und 1 weitere Änderung"
+    assert de.date("2026-10-17") == "17.10.2026"
+    assert de.period(date(2026, 10, 1)) == "10.2026"
+    assert (
+        de.datetime(datetime(2026, 10, 17, 8, tzinfo=UTC)) == "17.10.2026 08:00 +0000"
+    )
+    assert de.amount(Decimal("9007199254740993.1234")) == "9007199254740993,1234"

@@ -43,3 +43,13 @@ test("isolates shared demo and anonymous local choices from account preferences"
   expect(resolveLanguage({ ...base, localLanguage: "en" })).toBe("en")
   expect(resolveLanguage({ ...base, localLanguage: "broken" })).toBe("pl")
 })
+
+test("resolves German regional variants and persisted choices", () => {
+  for (const language of ["de-DE", "de-AT", "de_CH", "DE"]) {
+    expect(browserLanguage([language, "pl"])).toBe("de")
+  }
+  expect(resolveLanguage({ ...base, localLanguage: "de" })).toBe("de")
+  expect(
+    resolveLanguage({ ...base, authenticated: true, accountLanguage: "de" }),
+  ).toBe("de")
+})

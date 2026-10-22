@@ -47,3 +47,16 @@ test("English message behavior remains available after switching back", async ()
   expect(i18n.t("app:messages.months", { count: 2 })).toBe("Every 2 months")
   expect(domainLabel("lifecycle", "ready")).toBe("Ready")
 })
+
+test("German screen labels, validation and plural forms use German resources", async () => {
+  await i18n.changeLanguage("de")
+  expect(i18n.t("app:auth.login_to_your_account")).toBe(
+    "Bei deinem Konto anmelden",
+  )
+  expect(domainLabel("lifecycle", "ready")).toBe("Bereit")
+  for (const count of [0, 1, 2, 5, 12, 22]) {
+    expect(i18n.t("app:messages.unknown_amounts", { count })).toBe(
+      count === 1 ? "1 Betrag unbekannt" : `${count} Beträge unbekannt`,
+    )
+  }
+})

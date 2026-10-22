@@ -15,7 +15,7 @@ class User(Base):
             "session_version >= 1", name="ck_user_session_version_positive"
         ),
         CheckConstraint(
-            "language IS NULL OR language IN ('en', 'pl')",
+            "language IS NULL OR language IN ('en', 'pl', 'de')",
             name="ck_user_language_supported",
         ),
     )

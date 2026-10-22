@@ -1,7 +1,8 @@
+import de from "../../backend/app/email-locales/de.json"
 import en from "../../backend/app/email-locales/en.json"
 import pl from "../../backend/app/email-locales/pl.json"
 
-export type EmailLanguage = "en" | "pl"
+export type EmailLanguage = "en" | "pl" | "de"
 /** Build-time previews share the exact runtime catalog; no translations live in TS. */
 export function emailCopy(
   key: string,
@@ -9,11 +10,11 @@ export function emailCopy(
   params: Record<string, string | number> = {},
 ): string {
   let resolvedKey = key
-  const catalog = (language === "pl" ? pl : en) as Record<string, string>
+  const catalog = { en, pl, de }[language] as Record<string, string>
   if (!(key in catalog) && typeof params.count === "number") {
     const count = params.count
     const form =
-      language === "en"
+      language !== "pl"
         ? count === 1
           ? "one"
           : "other"

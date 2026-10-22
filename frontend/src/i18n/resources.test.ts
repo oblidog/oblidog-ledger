@@ -53,9 +53,11 @@ export function normalizeResources(
 
 describe("translation resources", () => {
   test("all namespaces have matching keys and interpolation parameters", () => {
-    expect(normalizeResources(resources.pl, "pl")).toEqual(
-      normalizeResources(resources.en, "en"),
-    )
+    for (const [language, namespaces] of Object.entries(resources)) {
+      expect(normalizeResources(namespaces, language)).toEqual(
+        normalizeResources(resources.en, "en"),
+      )
+    }
   })
   test("allows Polish plural categories and detects missing forms/parameters", () => {
     const en = { items_one: "{{count}} item", items_other: "{{count}} items" }
@@ -77,6 +79,8 @@ describe("translation resources", () => {
     await i18n.changeLanguage("pl")
     expect(i18n.t("navigation.obligations")).toBe("Zobowiązania")
     await i18n.changeLanguage("de")
+    expect(i18n.t("navigation.obligations")).toBe("Zahlungsverpflichtungen")
+    await i18n.changeLanguage("fr")
     expect(i18n.t("navigation.obligations")).toBe("Obligations")
     await i18n.changeLanguage("en")
   })

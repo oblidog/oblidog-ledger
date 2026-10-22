@@ -136,31 +136,31 @@ point. Small digests retain all their data without size-truncation notices.
 ## Localization
 
 Daily digests, weekly monthly overviews, password recovery, invitations, new
-account and test emails render EN/PL subjects and HTML/text bodies. Each render
+account and test emails render EN/PL/DE subjects and HTML/text bodies. Each render
 receives an explicit recipient language; null, unsupported values and recipients
 without an account fall back to English. Inviter and browser preferences do not
 select the recipient language. The cached Jinja environment has no mutable locale.
 
-`backend/app/email-locales/{en,pl}.json` is shared by Python runtime rendering
+`backend/app/email-locales/{en,pl,de}.json` is shared by Python runtime rendering
 and React Email previews. Use semantic keys, complete sentences and named
-placeholders. Tests enforce matching keys and placeholders. English plurals use
+placeholders. Tests enforce matching keys and placeholders. English and German plurals use
 one/other; Polish uses one/few/many/other, including 12 versus 22. Runtime
 `EmailLocale` is immutable and passed into presentation and template rendering.
 
 Amounts use Decimal throughout, retain sub-cent precision and at least two
-fraction digits, and use a decimal point in English or comma in Polish. Dates
-are ISO in English and DD.MM.YYYY in Polish; timestamps retain the report
+fraction digits, and use a decimal point in English or comma in Polish and German. Dates
+are ISO in English and DD.MM.YYYY in Polish and German; timestamps retain the report
 timezone. Currency codes and grouping, selection, scheduling, delivery keys,
 user content and external diagnostics keep their original meaning.
 
 `email:export` and `email:check` cover all committed HTML/text artifacts. They
 contain locale-neutral Jinja translation calls; the backend supplies the locale
 without Node at runtime. The preview command additionally renders
-`daily-{normal,empty,unknown,multi-currency,long-content}-{en,pl}`, the weekly matrix described below, and every transactional email in both languages.
+`daily-{normal,empty,unknown,multi-currency,long-content}-{en,pl,de}`, the weekly matrix described below, and every transactional email in all supported languages.
 The localized fixtures use the production presentation and size-budget renderer.
 Tests cover interleaved recipients, multipart output, escaping, pluralization,
 precision, omitted counts and the 90 KiB limit. Scheduled delivery regression
-tests verify both languages in one run and retry deduplication.
+tests verify all supported languages in one run and retry deduplication.
 
 ## Weekly monthly overview
 
