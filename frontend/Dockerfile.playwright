@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y unzip \
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
 
-COPY package.json bun.lock /app/
+COPY package.json bun.lock bunfig.toml /app/
 
 COPY frontend/package.json /app/frontend/
 COPY emails/package.json /app/emails/
