@@ -1,3 +1,9 @@
+## v0.21.0 (2026-10-22)
+
+### Feat
+
+- **i18n**: add German UI and email localization (#540)
+
 ## v0.20.3 (2026-10-21)
 
 ### Fix
