@@ -40,6 +40,10 @@ jobs:
       - run: bun ci
         if: steps.scope.outputs.run_heavy == 'true'
         working-directory: frontend
+      - name: Check frontend types with TypeScript 7
+        if: steps.scope.outputs.run_heavy == 'true'
+        run: bun run typecheck
+        working-directory: frontend
       - name: Run fast frontend tests
         if: steps.scope.outputs.run_heavy == 'true'
         run: bun run test:unit --coverage --coverage-reporter=lcov
