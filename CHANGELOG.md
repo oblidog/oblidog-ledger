@@ -1,3 +1,9 @@
+## v0.21.1 (2026-10-22)
+
+### Fix
+
+- **deps**: resolve reported Bun and Python security alerts (#558)
+
 ## v0.21.0 (2026-10-22)
 
 ### Feat
