@@ -15,6 +15,26 @@ bun run --filter frontend dev
 
 Open <http://localhost:5173>. The local dev server is the recommended frontend workflow; Docker Compose is useful for testing the full stack.
 
+## TypeScript compiler and generator API
+
+Type checking uses TypeScript 7.0.2 through the `@typescript/native` npm alias:
+
+```bash
+bun run --filter frontend typecheck
+```
+
+The `typescript` dependency is an alias for Microsoft's
+`@typescript/typescript6` compatibility package. `@hey-api/openapi-ts` still
+uses the legacy compiler API (including `SyntaxKind`), which TypeScript 7.0
+no longer exposes. Keep the compatibility package until the generator supports
+the new API. It does not select the compiler used by `typecheck` or `build`.
+
+The typecheck script invokes the native alias explicitly because Bun's isolated
+workspace installation does not reliably link an aliased compiler's `tsc` binary.
+Do not replace it with an unqualified `tsc` or `tsc6`: that can choose the wrong
+compiler or fail to find the executable. Both TypeScript versions are development
+tools and are not included in the frontend runtime image.
+
 ## Application Version
 
 The frontend exposes the build version through `VITE_APP_VERSION` and renders it in the page footer. The value is compiled into the Vite bundle, so displaying it does not require an API request.

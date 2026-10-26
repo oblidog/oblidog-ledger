@@ -1,0 +1,11 @@
+# Compose builds use the repository root as their context. Nested .dockerignore
+# files are not applied: never overwrite image dependencies with host installs.
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+.git
+frontend/dist
+frontend/playwright-report
+frontend/blob-report
+frontend/test-results
