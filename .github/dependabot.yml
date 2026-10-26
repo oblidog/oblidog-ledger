@@ -8,7 +8,7 @@ multi-ecosystem-groups:
     open-pull-requests-limit: 3
     assignees: [wini83]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "build(deps)"
     labels: [dependencies, internal]
 
 updates:
@@ -23,7 +23,7 @@ updates:
     open-pull-requests-limit: 3
     assignees: [wini83]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "ci(deps)"
     labels: [dependencies, internal]
     groups:
       non-major:
@@ -39,7 +39,7 @@ updates:
     open-pull-requests-limit: 3
     assignees: [wini83]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "build(deps)"
     labels: [dependencies, internal]
     groups:
       non-major:
@@ -86,7 +86,7 @@ updates:
     open-pull-requests-limit: 3
     assignees: [wini83]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "build(deps)"
     labels: [dependencies, internal]
     groups:
       non-major:
