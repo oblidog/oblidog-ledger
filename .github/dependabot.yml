@@ -73,6 +73,10 @@ updates:
     groups:
       non-major:
         update-types: [minor, patch]
+    # Python minor/major upgrades require dependency and CI validation together.
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     patterns: ["*"]
     multi-ecosystem-group: web-stack
   # Docker Compose
