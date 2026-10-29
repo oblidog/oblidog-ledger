@@ -49,6 +49,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run --filter @oblidog/emails typecheck
       - run: bun run --filter @oblidog/emails lint
+      - run: bun run --filter @oblidog/emails test
       - name: Verify committed HTML and text are fresh
         run: bun run email:check
       - name: Verify runtime data, conditions, escaping and text delivery

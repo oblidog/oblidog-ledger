@@ -6,7 +6,9 @@
     "emails"
   ],
   "overrides": {
-    "js-yaml": "4.3.2"
+    "js-yaml": "4.3.2",
+    "fast-uri": "3.1.9",
+    "html-to-text": "10.0.1"
   },
   "scripts": {
     "dev": "bun run --filter frontend dev",
