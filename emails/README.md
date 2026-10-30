@@ -30,6 +30,21 @@ the actual exported Jinja template and production renderer. Fixture files cover
 empty, normal, long-name (including unbroken text), long-list, multi-ledger and
 multi-currency cases. All names, amounts and links are synthetic.
 
+## Dependency security overrides
+
+The root manifest pins `fast-uri` to 3.1.9 (fixes the four URI advisories)
+and `html-to-text` to 10.0.1. The latter removes the unpatched `deepmerge`
+dependency (GHSA-gcqx-w48m-w2h4) for both React Email renderer versions,
+including the preview CLI. Version 10.0.1 uses `deepmerge-ts` >=8.0.1;
+10.0.0 has a separate vulnerable dependency and must not be used.
+
+This overrides React Email's declared html-to-text 9 range. The upstream v10
+API retains the conversion functions and options; CI tests both renderers'
+HTML/plain-text output and custom selectors, and checks all exported templates
+for byte-for-byte stability. Use the documented Bun runtime (Node consumers
+of html-to-text 10 require Node >=20.19). Remove the html-to-text override
+when all React Email dependency paths require the safe release themselves.
+
 ## Shared components
 
 `components/design-system.tsx` provides `EmailLayout`, `EmailHeading`,
