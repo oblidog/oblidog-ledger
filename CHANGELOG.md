@@ -1,3 +1,9 @@
+## v0.21.3 (2026-10-30)
+
+### Fix
+
+- **deps**: remove vulnerable deepmerge and update fast-uri (#583)
+
 ## v0.21.2 (2026-10-29)
 
 ### Fix
