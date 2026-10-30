@@ -1016,3 +1016,132 @@ def test_component_history_matches_by_external_id_across_label_changes(
         "added",
         "changed",
     ]
+
+
+def test_available_history_keeps_gaps_zero_unknown_and_original_currencies(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="available-history"
+    )
+    category = _create_history_category(db, ledger_id=ledger.id, code="AVAL")
+    for year, month, amount, currency in [
+        (2024, 12, Decimal("196.40"), "PLN"),
+        (2026, 7, Decimal("0.00"), "EUR"),
+        (2026, 10, None, None),
+    ]:
+        obligation = _create_history_obligation(
+            db,
+            ledger_id=ledger.id,
+            category_code=category.code,
+            period=BillingPeriod(year, month),
+            amount=amount,
+        )
+        obligation.currency = currency
+        db.add(
+            ObligationComponent(
+                obligation_id=obligation.id, type="fee", label="Energy", amount=amount
+            )
+        )
+    db.commit()
+    base_url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/analytics"
+    catalog = client.get(f"{base_url}/history-periods", headers=headers)
+    assert catalog.status_code == 200
+    assert catalog.json() == [
+        {
+            "category_id": str(category.id),
+            "period": {"year": y, "month": m},
+            "has_components": True,
+        }
+        for y, m in [(2024, 12), (2026, 7), (2026, 10)]
+    ]
+    history_url = f"{base_url}/component-history?category_id={category.id}&end_year=2026&end_month=10&periods=6&available_only=true"
+    response = client.get(history_url, headers=headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["periods"] == [
+        {"year": y, "month": m} for y, m in [(2024, 12), (2026, 7), (2026, 10)]
+    ]
+    assert [total["obligation_amount"] for total in body["totals"]] == [
+        "196.40",
+        "0.00",
+        None,
+    ]
+    assert [total["currency"] for total in body["totals"]] == ["PLN", "EUR", None]
+    assert [total["unknown_amount_count"] for total in body["totals"]] == [0, 0, 1]
+    assert [value["state"] for value in body["components"][0]["values"]] == [
+        "added",
+        "changed",
+        "changed",
+    ]
+    older = client.get(
+        history_url.replace("end_month=10&periods=6", "end_month=7&periods=1"),
+        headers=headers,
+    )
+    assert older.status_code == 200
+    assert older.json()["periods"] == [{"year": 2026, "month": 7}]
+
+
+def test_available_history_retains_empty_components_and_scopes_ledger(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="empty-components"
+    )
+    other = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="other-history"
+    )
+    category = _create_history_category(db, ledger_id=ledger.id, code="EMPT")
+    other_category = _create_history_category(db, ledger_id=other.id, code="OTHR")
+    for ledger_id, code in [
+        (ledger.id, category.code),
+        (other.id, other_category.code),
+    ]:
+        _create_history_obligation(
+            db,
+            ledger_id=ledger_id,
+            category_code=code,
+            period=BillingPeriod(2026, 10),
+            amount=None,
+        )
+    base_url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/analytics"
+    catalog = client.get(f"{base_url}/history-periods", headers=headers)
+    assert catalog.status_code == 200
+    assert catalog.json() == [
+        {
+            "category_id": str(category.id),
+            "period": {"year": 2026, "month": 10},
+            "has_components": False,
+        }
+    ]
+    history_url = f"{base_url}/component-history?category_id={category.id}&end_year=2026&end_month=10&available_only=true"
+    response = client.get(history_url, headers=headers)
+    assert response.status_code == 200
+    assert response.json()["periods"] == [{"year": 2026, "month": 10}]
+    assert response.json()["components"] == []
+    no_records = client.get(
+        history_url.replace("end_year=2026", "end_year=2025"), headers=headers
+    )
+    assert no_records.status_code == 200
+    assert no_records.json()["periods"] == []
+    assert no_records.json()["totals"] == []
+    assert (
+        client.get(
+            history_url.replace(str(category.id), str(other_category.id)),
+            headers=headers,
+        ).status_code
+        == 404
+    )
+    stranger = create_random_user(db)
+    stranger_headers = authentication_token_from_email(
+        client=client, email=stranger.email, db=db
+    )
+    for url in [f"{base_url}/history-periods", history_url]:
+        assert client.get(url, headers=stranger_headers).status_code == 404
+    client.cookies.clear()
+    for url in [f"{base_url}/history-periods", history_url]:
+        assert client.get(url).status_code == 401

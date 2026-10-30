@@ -440,6 +440,9 @@ class ComponentHistoryGroup:
 class ComponentHistoryTotal:
     period: BillingPeriod
     amount: Decimal | None
+    currency: str | None
+    obligation_amount: Decimal | None
+    unknown_amount_count: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -448,6 +451,39 @@ class ComponentHistory:
     periods: list[BillingPeriod]
     components: list[ComponentHistoryGroup]
     totals: list[ComponentHistoryTotal]
+
+
+@dataclass(frozen=True, slots=True)
+class AvailableHistoryPeriod:
+    category_id: uuid.UUID
+    period: BillingPeriod
+    has_components: bool
+
+
+def get_available_history_periods(
+    *, session: Session, ledger_id: uuid.UUID
+) -> list[AvailableHistoryPeriod]:
+    """Discover recorded periods in one query, without loading components."""
+    rows = session.execute(
+        select(
+            Obligation.category_id,
+            Obligation.period_year,
+            Obligation.period_month,
+            Obligation.components.any(),
+        )
+        .where(Obligation.ledger_id == ledger_id)
+        .order_by(
+            Obligation.period_year, Obligation.period_month, Obligation.category_id
+        )
+    )
+    return [
+        AvailableHistoryPeriod(
+            category_id=category_id,
+            period=BillingPeriod(year=year, month=month),
+            has_components=has_components,
+        )
+        for category_id, year, month, has_components in rows
+    ]
 
 
 def _normalize_component_label(value: str) -> str:
@@ -477,8 +513,9 @@ def get_component_history(
     end_period: BillingPeriod,
     periods: int,
     match_by: ComponentHistoryMatchBy,
+    available_only: bool = False,
 ) -> ComponentHistory:
-    """Compare obligation components across a bounded continuous period range."""
+    """Compare components across calendar months or the last recorded periods."""
     if periods < 1 or periods > 24:
         raise ValueError("periods must be between 1 and 24")
 
@@ -490,35 +527,54 @@ def get_component_history(
     if category is None:
         raise CategoryNotFoundError
 
-    requested_periods = [end_period]
-    for _ in range(periods - 1):
-        latest_period = requested_periods[-1]
-        previous_month = latest_period.month - 1
-        requested_periods.append(
-            BillingPeriod(
-                year=latest_period.year - 1
-                if previous_month == 0
-                else latest_period.year,
-                month=12 if previous_month == 0 else previous_month,
-            )
-        )
-    requested_periods.reverse()
-    start_period = requested_periods[0]
-
-    obligations = list(
-        session.scalars(
-            select(Obligation)
-            .options(selectinload(Obligation.components))
-            .where(
-                Obligation.ledger_id == ledger_id,
-                Obligation.category_id == category_id,
-                tuple_(Obligation.period_year, Obligation.period_month).between(
-                    (start_period.year, start_period.month),
-                    (end_period.year, end_period.month),
-                ),
-            )
+    query = (
+        select(Obligation)
+        .options(selectinload(Obligation.components))
+        .where(
+            Obligation.ledger_id == ledger_id,
+            Obligation.category_id == category_id,
+            tuple_(Obligation.period_year, Obligation.period_month)
+            <= (end_period.year, end_period.month),
         )
     )
+    if available_only:
+        # Count records rather than calendar months. A gap never creates a row.
+        obligations = list(
+            session.scalars(
+                query.order_by(
+                    Obligation.period_year.desc(), Obligation.period_month.desc()
+                ).limit(periods)
+            )
+        )
+        obligations.reverse()
+        requested_periods = [
+            BillingPeriod(year=item.period_year, month=item.period_month)
+            for item in obligations
+        ]
+    else:
+        # Preserve the existing continuous API for other consumers.
+        requested_periods = [end_period]
+        for _ in range(periods - 1):
+            latest_period = requested_periods[-1]
+            previous_month = latest_period.month - 1
+            requested_periods.append(
+                BillingPeriod(
+                    year=latest_period.year - 1
+                    if previous_month == 0
+                    else latest_period.year,
+                    month=12 if previous_month == 0 else previous_month,
+                )
+            )
+        requested_periods.reverse()
+        start_period = requested_periods[0]
+        obligations = list(
+            session.scalars(
+                query.where(
+                    tuple_(Obligation.period_year, Obligation.period_month)
+                    >= (start_period.year, start_period.month)
+                )
+            )
+        )
     obligations_by_period = {
         (item.period_year, item.period_month): item for item in obligations
     }
@@ -607,10 +663,16 @@ def get_component_history(
             for component in component_map.values()
             if component.amount is not None
         ]
+        obligation = obligations_by_period.get((period.year, period.month))
         totals.append(
             ComponentHistoryTotal(
                 period=period,
                 amount=sum(amounts, Decimal("0.00")) if amounts else None,
+                currency=obligation.currency if obligation else None,
+                obligation_amount=obligation.current_amount if obligation else None,
+                unknown_amount_count=sum(
+                    component.amount is None for component in component_map.values()
+                ),
             )
         )
 

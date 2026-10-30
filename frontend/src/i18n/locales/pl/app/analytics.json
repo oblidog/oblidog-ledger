@@ -90,5 +90,16 @@
   "no_currency_ed3595": "brak waluty",
   "amount_unknown": "Nieznana kwota",
   "no_obligation": "Brak zobowiązania",
-  "other": "Inne"
+  "other": "Inne",
+  "comparison_options": "Opcje porównania",
+  "recorded_periods_only": "Do sześciu zapisanych okresów. Pomijamy miesiące bez wpisów.",
+  "no_recorded_periods": "Brak zapisanych okresów. Dodaj zobowiązanie, aby rozpocząć historię tej kategorii.",
+  "component_details": "Szczegóły",
+  "partial_component_total": "Część kwot jest nieznana",
+  "known_component_total": "Suma znanych składników",
+  "known_component_total_explanation": "Suma znanych kwot składników, a nie pełna kwota rachunku. Składniki bez kwoty są pomijane.",
+  "show_older_periods": "Pokaż starsze okresy",
+  "period_comparison": "{{current}} względem {{previous}}",
+  "comparison_unavailable": "Nie można obliczyć zmiany: oba okresy muszą mieć znane kwoty w tej samej określonej walucie.",
+  "only_one_period": "Jeden zapisany okres — brak wcześniejszego okresu do porównania."
 }

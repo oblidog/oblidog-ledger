@@ -90,5 +90,16 @@
   "no_currency_ed3595": "keine Währung",
   "amount_unknown": "Betrag unbekannt",
   "no_obligation": "Keine Zahlungsverpflichtung",
-  "other": "Sonstige"
+  "other": "Sonstige",
+  "comparison_options": "Vergleichsoptionen",
+  "recorded_periods_only": "Bis zu sechs erfasste Zeiträume. Monate ohne Einträge werden ausgelassen.",
+  "no_recorded_periods": "Keine erfassten Zeiträume. Füge eine Zahlungsverpflichtung hinzu, um den Verlauf dieser Kategorie zu beginnen.",
+  "component_details": "Details",
+  "partial_component_total": "Einige Beträge sind unbekannt",
+  "known_component_total": "Summe bekannter Bestandteile",
+  "known_component_total_explanation": "Summe der bekannten Einzelbeträge, nicht der gesamte Rechnungsbetrag. Bestandteile ohne Betrag werden ausgelassen.",
+  "show_older_periods": "Ältere Zeiträume anzeigen",
+  "period_comparison": "{{current}} im Vergleich zu {{previous}}",
+  "comparison_unavailable": "Änderung nicht verfügbar: Beide Zeiträume benötigen bekannte Beträge in derselben angegebenen Währung.",
+  "only_one_period": "Ein erfasster Zeitraum — kein früherer Zeitraum zum Vergleich."
 }
