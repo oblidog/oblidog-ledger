@@ -196,7 +196,7 @@ test("keeps explicit empty selections across refetches and pages through older r
   await page.evaluate(() => {
     window.dispatchEvent(new Event("blur"))
     window.dispatchEvent(new Event("focus"))
-    document.dispatchEvent(new Event("visibilitychange"))
+    window.dispatchEvent(new Event("visibilitychange"))
   })
   await expect(
     page.getByRole("combobox", { name: "Category", exact: true }),
@@ -256,7 +256,7 @@ test("prefers visible history over older hidden components, while preserving del
     .toBe(emptyId)
   const previousRequests = catalogRequests
   await page.evaluate(() =>
-    document.dispatchEvent(new Event("visibilitychange")),
+    window.dispatchEvent(new Event("visibilitychange")),
   )
   await expect.poll(() => catalogRequests).toBeGreaterThan(previousRequests)
   await expect(
