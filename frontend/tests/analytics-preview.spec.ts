@@ -91,7 +91,7 @@ async function api(
         amount: index === shown.length - 1 ? "8.00" : "7.00",
         obligation_amount: index === shown.length - 1 ? amounts[1] : amounts[0],
         currency: index === shown.length - 1 ? currencies[1] : currencies[0],
-        unknown_amount_count: 0,
+        unpriced_component_count: 0,
       }))
       return send({
         match_by: "label",
@@ -223,3 +223,102 @@ for (const [label, amounts, currencies] of [
     }
   })
 }
+
+test("prefers visible history over older hidden components, while preserving deliberate selection", async ({
+  page,
+}) => {
+  const requests = await api(page)
+  let catalogRequests = 0
+  await page.route("**/analytics/history-periods", (route) => {
+    catalogRequests++
+    return route.fulfill({
+      json: [
+        ...Array.from({ length: 7 }, (_, i) => ({
+          category_id: emptyId,
+          period: { year: 2026, month: i + 1 },
+          has_components: i === 0,
+        })),
+        ...periods.map((period) => ({
+          category_id: categoryId,
+          period,
+          has_components: true,
+        })),
+      ],
+    })
+  })
+  await page.goto(`/ledgers/${ledgerId}/analytics`)
+  await expect(page.getByTestId("component-history-table")).toBeVisible()
+  expect(requests[0].searchParams.get("category_id")).toBe(categoryId)
+  await page.getByRole("combobox", { name: "Category", exact: true }).click()
+  await page.getByRole("option", { name: "Car insurance" }).click()
+  await expect
+    .poll(() => requests[requests.length - 1].searchParams.get("category_id"))
+    .toBe(emptyId)
+  const previousRequests = catalogRequests
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  )
+  await expect.poll(() => catalogRequests).toBeGreaterThan(previousRequests)
+  await expect(
+    page.getByRole("combobox", { name: "Category", exact: true }),
+  ).toContainText("Car insurance")
+})
+
+test("informational components have no unknown-amount warning while unknown bill amounts remain explicit", async ({
+  page,
+}) => {
+  await api(page)
+  await page.route("**/analytics/component-history?**", (route) =>
+    route.fulfill({
+      json: {
+        match_by: "label",
+        periods: [{ year: 2026, month: 10 }],
+        totals: [
+          {
+            period: { year: 2026, month: 10 },
+            amount: null,
+            obligation_amount: null,
+            currency: "EUR",
+            unpriced_component_count: 1,
+          },
+        ],
+        components: [
+          {
+            identity: "lease:apartment",
+            label: "Apartment 3B",
+            type: "lease",
+            source: "demo-seed",
+            external_id: "RENT:0",
+            values: [
+              {
+                period: { year: 2026, month: 10 },
+                amount: null,
+                state: "present",
+                label: "Apartment 3B",
+                source: "demo-seed",
+                external_id: "RENT:0",
+              },
+            ],
+          },
+        ],
+      },
+    }),
+  )
+  await page.goto(`/ledgers/${ledgerId}/analytics`)
+  const table = page.getByTestId("component-history-table")
+  await expect(table).toBeVisible()
+  await expect(table.getByText("No amount", { exact: true })).toBeVisible()
+  await expect(
+    table.getByText("Components without an amount are omitted", {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(table.getByText("Amount unknown", { exact: true })).toHaveCount(
+    0,
+  )
+  await expect(
+    page
+      .getByTestId("cost-comparison")
+      .getByText("Amount unknown", { exact: true }),
+  ).toBeVisible()
+})

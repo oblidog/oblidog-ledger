@@ -95,11 +95,12 @@
   "recorded_periods_only": "Up to six recorded periods. Months without records are omitted.",
   "no_recorded_periods": "No recorded periods. Add an obligation to start building this category’s history.",
   "component_details": "Details",
-  "partial_component_total": "Some amounts are unknown",
   "known_component_total": "Known component total",
   "known_component_total_explanation": "Sum of known component amounts, not the full bill amount. Components without an amount are excluded.",
   "show_older_periods": "Show older periods",
   "period_comparison": "{{current}} compared with {{previous}}",
   "comparison_unavailable": "Change is unavailable: both periods need known amounts in the same specified currency.",
-  "only_one_period": "One recorded period — no earlier period to compare."
+  "only_one_period": "One recorded period — no earlier period to compare.",
+  "component_without_amount": "No amount",
+  "unpriced_components_omitted": "Components without an amount are omitted"
 }

@@ -341,7 +341,7 @@ test("compares stable, added, removed and renamed components across recorded per
     .getByRole("row")
     .filter({ hasText: periodLabel(current) })
   await expect(currentRow).toContainText("0.00 PLN")
-  await expect(currentRow).toContainText("Amount unknown")
+  await expect(currentRow).toContainText("No amount")
   await expect(currentRow.getByText("Removed", { exact: true })).toBeVisible()
   await expect(currentRow).toContainText("0.00 PLN")
 

@@ -95,11 +95,12 @@
   "recorded_periods_only": "Bis zu sechs erfasste Zeiträume. Monate ohne Einträge werden ausgelassen.",
   "no_recorded_periods": "Keine erfassten Zeiträume. Füge eine Zahlungsverpflichtung hinzu, um den Verlauf dieser Kategorie zu beginnen.",
   "component_details": "Details",
-  "partial_component_total": "Einige Beträge sind unbekannt",
   "known_component_total": "Summe bekannter Bestandteile",
   "known_component_total_explanation": "Summe der bekannten Einzelbeträge, nicht der gesamte Rechnungsbetrag. Bestandteile ohne Betrag werden ausgelassen.",
   "show_older_periods": "Ältere Zeiträume anzeigen",
   "period_comparison": "{{current}} im Vergleich zu {{previous}}",
   "comparison_unavailable": "Änderung nicht verfügbar: Beide Zeiträume benötigen bekannte Beträge in derselben angegebenen Währung.",
-  "only_one_period": "Ein erfasster Zeitraum — kein früherer Zeitraum zum Vergleich."
+  "only_one_period": "Ein erfasster Zeitraum — kein früherer Zeitraum zum Vergleich.",
+  "component_without_amount": "Ohne Betrag",
+  "unpriced_components_omitted": "Bestandteile ohne Betrag werden ausgelassen"
 }

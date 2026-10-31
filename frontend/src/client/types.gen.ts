@@ -558,9 +558,9 @@ export type ComponentHistoryTotalPublic = {
      */
     obligation_amount?: string | null;
     /**
-     * Unknown Amount Count
+     * Unpriced Component Count
      */
-    unknown_amount_count?: number;
+    unpriced_component_count?: number;
 };
 
 /**

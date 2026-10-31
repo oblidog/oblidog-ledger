@@ -1187,9 +1187,9 @@ export const ComponentHistoryTotalPublicSchema = {
             ],
             title: 'Obligation Amount'
         },
-        unknown_amount_count: {
+        unpriced_component_count: {
             type: 'integer',
-            title: 'Unknown Amount Count',
+            title: 'Unpriced Component Count',
             default: 0
         }
     },

@@ -35,7 +35,7 @@ export type ComponentHistoryResponse = {
     amount: string | null
     currency: string | null
     obligation_amount: string | null
-    unknown_amount_count: number
+    unpriced_component_count: number
   }[]
 }
 

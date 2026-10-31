@@ -119,7 +119,8 @@ class ComponentHistoryTotalPublic(BaseModel):
     amount: Decimal | None
     currency: str | None = None
     obligation_amount: Decimal | None = None
-    unknown_amount_count: int = 0
+    # Optional amounts may belong to informational components, not missing prices.
+    unpriced_component_count: int = 0
 
 
 class ComponentHistoryPublic(BaseModel):

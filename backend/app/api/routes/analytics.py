@@ -229,7 +229,7 @@ def read_component_history(
                 amount=total.amount,
                 currency=total.currency,
                 obligation_amount=total.obligation_amount,
-                unknown_amount_count=total.unknown_amount_count,
+                unpriced_component_count=total.unpriced_component_count,
             )
             for total in history.totals
         ],

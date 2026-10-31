@@ -10,7 +10,7 @@ function total(
     amount: "1.00",
     obligation_amount,
     currency,
-    unknown_amount_count: 0,
+    unpriced_component_count: 0,
   }
 }
 test("compares bill amounts exactly, separately from component sums", () => {

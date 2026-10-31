@@ -442,7 +442,7 @@ class ComponentHistoryTotal:
     amount: Decimal | None
     currency: str | None
     obligation_amount: Decimal | None
-    unknown_amount_count: int
+    unpriced_component_count: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -670,7 +670,7 @@ def get_component_history(
                 amount=sum(amounts, Decimal("0.00")) if amounts else None,
                 currency=obligation.currency if obligation else None,
                 obligation_amount=obligation.current_amount if obligation else None,
-                unknown_amount_count=sum(
+                unpriced_component_count=sum(
                     component.amount is None for component in component_map.values()
                 ),
             )

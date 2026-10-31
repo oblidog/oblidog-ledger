@@ -36,6 +36,10 @@ import {
   readComponentHistory,
   readHistoryPeriods,
 } from "@/features/analytics/componentHistoryApi"
+import {
+  defaultHistoryCategoryId,
+  HISTORY_PAGE_SIZE,
+} from "@/features/analytics/historySelection"
 import { i18n } from "@/i18n"
 import { getApiErrorMessage } from "@/i18n/apiErrors"
 import { domainLabel } from "@/i18n/domainLabels"
@@ -83,11 +87,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
     (item) => item.id === selection.categoryId,
   )
     ? selection.categoryId
-    : (availableCategories.find((item) =>
-        availability.data?.some(
-          (period) => period.category_id === item.id && period.has_components,
-        ),
-      )?.id ?? availableCategories[0]?.id)
+    : defaultHistoryCategoryId(availableCategories, availability.data ?? [])
   const selectedCategory = availableCategories.find(
     (item) => item.id === selectedCategoryId,
   )
@@ -267,7 +267,7 @@ export function ComponentHistoryTable({
         categoryId: categoryId!,
         endYear: selectedPeriod!.year,
         endMonth: selectedPeriod!.month,
-        periods: 6,
+        periods: HISTORY_PAGE_SIZE,
         availableOnly: true,
         matchBy,
       }),
@@ -431,7 +431,9 @@ export function ComponentHistoryTable({
                                   value?.state === "present" ? (
                                   <div className="space-y-1">
                                     <span className="font-medium">
-                                      {i18n.t("app:analytics.amount_unknown")}
+                                      {i18n.t(
+                                        "app:analytics.component_without_amount",
+                                      )}
                                     </span>
                                     {value.state !== "present" ? (
                                       <Badge variant="outline">
@@ -452,10 +454,10 @@ export function ComponentHistoryTable({
                             total?.amount === undefined
                               ? "—"
                               : formatAmount(total.amount, total.currency)}
-                            {Boolean(total?.unknown_amount_count) && (
+                            {Boolean(total?.unpriced_component_count) && (
                               <p className="text-xs font-normal text-muted-foreground">
                                 {i18n.t(
-                                  "app:analytics.partial_component_total",
+                                  "app:analytics.unpriced_components_omitted",
                                 )}
                               </p>
                             )}

@@ -1070,7 +1070,7 @@ def test_available_history_keeps_gaps_zero_unknown_and_original_currencies(
         None,
     ]
     assert [total["currency"] for total in body["totals"]] == ["PLN", "EUR", None]
-    assert [total["unknown_amount_count"] for total in body["totals"]] == [0, 0, 1]
+    assert [total["unpriced_component_count"] for total in body["totals"]] == [0, 0, 1]
     assert [value["state"] for value in body["components"][0]["values"]] == [
         "added",
         "changed",
@@ -1145,3 +1145,43 @@ def test_available_history_retains_empty_components_and_scopes_ledger(
     client.cookies.clear()
     for url in [f"{base_url}/history-periods", history_url]:
         assert client.get(url).status_code == 401
+
+
+def test_component_history_keeps_informational_components_separate_from_bill_amount(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="informational-components"
+    )
+    category = _create_history_category(db, ledger_id=ledger.id, code="INFO")
+    obligation = _create_history_obligation(
+        db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 10),
+        amount=Decimal("500.00"),
+    )
+    db.add(
+        ObligationComponent(
+            obligation_id=obligation.id,
+            type="lease",
+            label="Apartment 3B",
+            amount=None,
+            component_metadata={"area_m2": 68.4},
+        )
+    )
+    db.commit()
+    response = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/analytics/component-history"
+        f"?category_id={category.id}&end_year=2026&end_month=10&available_only=true",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    total = response.json()["totals"][0]
+    assert total["obligation_amount"] == "500.00"
+    assert total["amount"] is None
+    assert total["unpriced_component_count"] == 1
+    assert "unknown_amount_count" not in total
+    assert response.json()["components"][0]["values"][0]["amount"] is None
