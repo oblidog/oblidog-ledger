@@ -128,3 +128,27 @@ export function visibleObligationRows(
       return first.due_date.localeCompare(second.due_date)
     })
 }
+
+export function isObligationOverdue(
+  obligation: ObligationPublic,
+  now = new Date(),
+) {
+  if (
+    obligation.lifecycle === "paid" ||
+    obligation.lifecycle === "canceled" ||
+    !obligation.due_date
+  )
+    return false
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  return obligation.due_date < today
+}
+
+export function obligationSurfaceClasses(
+  obligation: ObligationPublic,
+  now = new Date(),
+) {
+  return obligation.lifecycle === "error" ||
+    isObligationOverdue(obligation, now)
+    ? "border-destructive/50 bg-destructive/5 hover:bg-destructive/10"
+    : "bg-card hover:bg-muted/50"
+}
