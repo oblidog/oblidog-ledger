@@ -206,7 +206,7 @@ test("shows amount progress as the primary payment metric", async ({
   ).toBeVisible()
 })
 
-test("compares stable, added, removed and renamed components across six periods", async ({
+test("compares stable, added, removed and renamed components across recorded periods", async ({
   page,
 }) => {
   const ledger = await createCategoryHistoryFixture()
@@ -303,9 +303,10 @@ test("compares stable, added, removed and renamed components across six periods"
   await expect(page.getByRole("link", { name: "Analytics" })).toBeVisible()
   await expect(
     page.getByRole("heading", { name: "More insights are on the way" }),
-  ).toBeVisible()
-  await expect(page.getByText("Planned", { exact: true })).toHaveCount(3)
+  ).toHaveCount(0)
+  await expect(page.getByText("Planned", { exact: true })).toHaveCount(0)
 
+  await page.getByText("Comparison options", { exact: true }).click()
   await page.getByRole("combobox", { name: "Compare by" }).click()
   await page.getByRole("option", { name: "External ID" }).click()
 
@@ -314,6 +315,11 @@ test("compares stable, added, removed and renamed components across six periods"
   await expect(
     table.getByText("Base charge renamed", { exact: true }),
   ).toBeVisible()
+  await table
+    .getByRole("columnheader")
+    .filter({ hasText: "Base charge renamed" })
+    .locator("summary")
+    .click()
   await expect(
     table.getByText("Previously: Base charge", { exact: true }),
   ).toBeVisible()
@@ -335,11 +341,11 @@ test("compares stable, added, removed and renamed components across six periods"
     .getByRole("row")
     .filter({ hasText: periodLabel(current) })
   await expect(currentRow).toContainText("0.00 PLN")
-  await expect(currentRow).toContainText("Present")
+  await expect(currentRow).toContainText("No amount")
   await expect(currentRow.getByText("Removed", { exact: true })).toBeVisible()
   await expect(currentRow).toContainText("0.00 PLN")
 
-  await expect(table.getByRole("row")).toHaveCount(7)
+  await expect(table.getByRole("row")).toHaveCount(4)
 })
 
 test("shows component history endpoint errors and allows changing criterion", async ({
@@ -368,6 +374,7 @@ test("shows component history endpoint errors and allows changing criterion", as
     page.getByText("Component history is unavailable", { exact: true }),
   ).toBeVisible()
 
+  await page.getByText("Comparison options", { exact: true }).click()
   await page.getByRole("combobox", { name: "Compare by" }).click()
   await page.getByRole("option", { name: "External ID" }).click()
 

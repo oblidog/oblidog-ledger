@@ -33,6 +33,9 @@ export type ComponentHistoryResponse = {
   totals: {
     period: { year: number; month: number }
     amount: string | null
+    currency: string | null
+    obligation_amount: string | null
+    unpriced_component_count: number
   }[]
 }
 
@@ -43,6 +46,7 @@ export async function readComponentHistory(args: {
   endMonth: number
   periods?: number
   matchBy: ComponentHistoryMatchBy
+  availableOnly?: boolean
 }) {
   const response = await client.get({
     responseType: "json",
@@ -56,7 +60,25 @@ export async function readComponentHistory(args: {
       end_month: args.endMonth,
       periods: args.periods ?? 6,
       match_by: args.matchBy,
+      available_only: args.availableOnly ?? false,
     },
   })
   return response.data as ComponentHistoryResponse
+}
+
+export type AvailableHistoryPeriod = {
+  category_id: string
+  period: { year: number; month: number }
+  has_components: boolean
+}
+
+export async function readHistoryPeriods(ledgerId: string) {
+  const response = await client.get({
+    responseType: "json",
+    security: oauthSecurity,
+    throwOnError: true,
+    url: "/api/v1/ledgers/{ledger_id}/analytics/history-periods",
+    path: { ledger_id: ledgerId },
+  })
+  return response.data as AvailableHistoryPeriod[]
 }

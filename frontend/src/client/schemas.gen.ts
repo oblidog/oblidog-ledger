@@ -111,6 +111,30 @@ export const ApiErrorResponseSchema = {
     title: 'ApiErrorResponse'
 } as const;
 
+export const AvailableHistoryPeriodPublicSchema = {
+    properties: {
+        category_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Category Id'
+        },
+        period: {
+            $ref: '#/components/schemas/ObligationPeriodPublic'
+        },
+        has_components: {
+            type: 'boolean',
+            title: 'Has Components'
+        }
+    },
+    type: 'object',
+    required: [
+        'category_id',
+        'period',
+        'has_components'
+    ],
+    title: 'AvailableHistoryPeriodPublic'
+} as const;
+
 export const BillingPeriodInputSchema = {
     properties: {
         year: {
@@ -1140,6 +1164,33 @@ export const ComponentHistoryTotalPublicSchema = {
                 }
             ],
             title: 'Amount'
+        },
+        currency: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Currency'
+        },
+        obligation_amount: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Obligation Amount'
+        },
+        unpriced_component_count: {
+            type: 'integer',
+            title: 'Unpriced Component Count',
+            default: 0
         }
     },
     type: 'object',

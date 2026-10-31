@@ -24,6 +24,7 @@ from app.schemas import (
     PeriodCashflowPublic,
     PeriodPaymentSummaryPublic,
 )
+from app.schemas.analytics import AvailableHistoryPeriodPublic
 from app.use_cases import analytics as analytics_use_cases
 from app.use_cases.exceptions import CategoryNotFoundError
 
@@ -169,6 +170,7 @@ def read_component_history(
     end_month: int = Query(ge=1, le=12),
     periods: int = Query(default=6, ge=1, le=24),
     match_by: Literal["label", "external_id"] = Query(default="label"),
+    available_only: bool = Query(default=False),
     ledger: Ledger = Depends(require_ledger_view_access),
 ) -> Any:
     try:
@@ -179,6 +181,7 @@ def read_component_history(
             end_period=BillingPeriod(year=end_year, month=end_month),
             periods=periods,
             match_by=match_by,
+            available_only=available_only,
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(
@@ -224,6 +227,9 @@ def read_component_history(
                     year=total.period.year, month=total.period.month
                 ),
                 amount=total.amount,
+                currency=total.currency,
+                obligation_amount=total.obligation_amount,
+                unpriced_component_count=total.unpriced_component_count,
             )
             for total in history.totals
         ],
@@ -276,3 +282,26 @@ def read_remaining_period_cashflow(
             for summary in cashflow.currency_summaries
         ],
     )
+
+
+@router.get(
+    "/ledgers/{ledger_id}/analytics/history-periods",
+    response_model=list[AvailableHistoryPeriodPublic],
+)
+def read_available_history_periods(
+    *,
+    session: SessionDep,
+    ledger: Ledger = Depends(require_ledger_view_access),
+) -> Any:
+    return [
+        AvailableHistoryPeriodPublic(
+            category_id=item.category_id,
+            period=ObligationPeriodPublic(
+                year=item.period.year, month=item.period.month
+            ),
+            has_components=item.has_components,
+        )
+        for item in analytics_use_cases.get_available_history_periods(
+            session=session, ledger_id=ledger.id
+        )
+    ]
