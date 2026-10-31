@@ -121,5 +121,15 @@
   "choose_a_category": "Choose a category",
   "is_the_data_ready": "Is the data ready?",
   "create_obligation": "Create obligation",
-  "date_unavailable": "Date unavailable"
+  "date_unavailable": "Date unavailable",
+  "category_filter": "Category",
+  "all_categories": "All categories",
+  "clear_category": "Clear category filter",
+  "no_categories_match": "No matching categories",
+  "category_names_unavailable": "Category names could not be loaded. Try again later.",
+  "all_periods": "All periods",
+  "other_period": "Choose another month…",
+  "choose_month": "Choose month",
+  "apply_period": "Apply",
+  "due_or_paid_date": "Due / paid date"
 }

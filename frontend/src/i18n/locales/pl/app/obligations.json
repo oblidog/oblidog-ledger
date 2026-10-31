@@ -121,5 +121,15 @@
   "choose_a_category": "Wybierz kategorię",
   "is_the_data_ready": "Dane gotowe?",
   "create_obligation": "Utwórz zobowiązanie",
-  "date_unavailable": "Data niedostępna"
+  "date_unavailable": "Data niedostępna",
+  "category_filter": "Kategoria",
+  "all_categories": "Wszystkie kategorie",
+  "clear_category": "Wyczyść filtr kategorii",
+  "no_categories_match": "Brak pasujących kategorii",
+  "category_names_unavailable": "Nie udało się wczytać nazw kategorii. Spróbuj ponownie później.",
+  "all_periods": "Wszystkie okresy",
+  "other_period": "Wybierz inny miesiąc…",
+  "choose_month": "Wybierz miesiąc",
+  "apply_period": "Zastosuj",
+  "due_or_paid_date": "Termin / data zapłaty"
 }

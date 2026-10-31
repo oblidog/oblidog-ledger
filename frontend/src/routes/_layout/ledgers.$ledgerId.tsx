@@ -97,6 +97,7 @@ function LedgerDetails() {
       </div>
       <Suspense fallback={<ObligationWorkspaceSkeleton />}>
         <ObligationWorkspace
+          key={ledgerId}
           ledgerId={ledgerId}
           canEdit={
             canManageComponents &&

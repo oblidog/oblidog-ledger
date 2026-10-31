@@ -1,18 +1,17 @@
-import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { ObligationPublic } from "@/client"
-import {
-  type ActiveFilter,
-  ActiveFilterBadges,
-} from "@/components/ActiveFilterBadges"
+import { CategoriesService, type ObligationPublic } from "@/client"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useIsMobile } from "@/hooks/useMobile"
 import { i18n } from "@/i18n"
 import { CreateObligationDialog } from "./CreateObligationDialog"
 import { EditObligationDialog } from "./EditObligationDialog"
+import type { ObligationItemProps } from "./ObligationActions"
 import { ObligationDetailsDialog } from "./ObligationDetailsDialog"
+import { CategoryFilter, PeriodFilter } from "./ObligationFilters"
+import { ObligationList } from "./ObligationList"
 import { ObligationPaymentDialog } from "./ObligationPaymentDialog"
 import { ObligationTile } from "./ObligationTile"
 import {
@@ -22,8 +21,6 @@ import {
   lifecycleOptions,
   monthInputValue,
   parseMonthInput,
-  parseObligationFilters,
-  serializeObligationFilters,
 } from "./obligationLogic"
 import {
   periodFromSearch,
@@ -31,6 +28,7 @@ import {
 } from "./obligationPresentation"
 import { useObligationList } from "./obligationQueries"
 import { useObligationActions } from "./useObligationActions"
+import { useObligationFilters } from "./useObligationFilters"
 
 export function ObligationWorkspace({
   ledgerId,
@@ -44,20 +42,14 @@ export function ObligationWorkspace({
   useTranslation()
 
   const period = periodFromSearch()
-  const initialFilters = parseObligationFilters(
-    typeof window === "undefined" ? "" : window.location.search,
-    defaultLifecycle,
-    period,
-  )
-  const [year, setYear] = useState(initialFilters.year)
-  const [month, setMonth] = useState(initialFilters.month)
-  const [filterByPeriod, setFilterByPeriod] = useState(
-    initialFilters.filterByPeriod,
-  )
-  const [categoryCode, setCategoryCode] = useState(initialFilters.categoryCode)
-  const [lifecycle, setLifecycle] = useState<LifecycleFilter>(
-    initialFilters.lifecycle,
-  )
+  const { filters, update } = useObligationFilters(defaultLifecycle)
+  const { year, month, filterByPeriod, categoryCode, lifecycle } = filters
+  const isMobile = useIsMobile()
+  const categories = useQuery({
+    queryKey: ["categories", ledgerId, "obligation-filters"],
+    queryFn: () =>
+      CategoriesService.readCategories({ ledgerId, includeArchived: true }),
+  })
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
@@ -83,20 +75,6 @@ export function ObligationWorkspace({
   const hasValidPeriodFilter =
     !filterByPeriod || isValidPeriod(filterYear, filterMonth)
 
-  useEffect(() => {
-    if (typeof window === "undefined") return
-
-    const search = serializeObligationFilters(window.location.search, {
-      year,
-      month,
-      filterByPeriod,
-      categoryCode,
-      lifecycle,
-    })
-    const nextUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`
-    window.history.replaceState(window.history.state, "", nextUrl)
-  }, [categoryCode, filterByPeriod, month, year, lifecycle])
-
   const obligations = useObligationList(
     ledgerId,
     filterByPeriod,
@@ -109,37 +87,23 @@ export function ObligationWorkspace({
     obligations.data?.data,
     lifecycle,
   )
-  const activeFilters: ActiveFilter[] = []
-  if (filterByPeriod && hasValidPeriodFilter) {
-    activeFilters.push({
-      key: "period",
-      label: i18n.t("app:messages.filter_period", {
-        value: monthInputValue(year, month),
-      }),
-      onRemove: () => setFilterByPeriod(false),
-    })
-  }
-  if (categoryCode) {
-    activeFilters.push({
-      key: "category",
-      label: i18n.t("app:messages.filter_category", { value: categoryCode }),
-      onRemove: () => setCategoryCode(""),
-    })
-  }
-  if (lifecycle) {
-    activeFilters.push({
-      key: "lifecycle",
-      label: i18n.t("app:messages.filter_status", {
-        value: lifecycleFilterLabel(lifecycle),
-      }),
-      onRemove: () => setLifecycle(""),
-    })
-  }
-  const clearFilters = () => {
-    setFilterByPeriod(false)
-    setCategoryCode("")
-    setLifecycle("")
-  }
+  const clearFilters = () =>
+    update({ filterByPeriod: false, categoryCode: "", lifecycle: "" })
+  const items: ObligationItemProps[] = !obligations.isError
+    ? (visibleObligations?.map((obligation) => ({
+        ledgerId,
+        obligation,
+        canWrite: canEdit,
+        disabled: actionPending,
+        loading: pendingActionKey === obligation.key,
+        onEdit: () => setEditingObligation(obligation),
+        onCancel: () => void runAction(cancel, obligation),
+        onMarkPaid: () => setPaymentConfirmation(obligation),
+        onMarkReady: () => void runAction(markReady, obligation),
+        onReopen: () => void runAction(reopen, obligation),
+        onSelect: () => setSelectedKey(obligation.key),
+      })) ?? [])
+    : []
 
   return (
     <section className="min-w-0">
@@ -169,60 +133,69 @@ export function ObligationWorkspace({
       </div>
       <div className="mt-4 space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          <Input
-            aria-label={i18n.t("app:obligations.billing_period")}
-            type="month"
-            disabled={!filterByPeriod}
-            value={monthInputValue(year, month)}
-            onChange={(event) => {
-              const selectedPeriod = parseMonthInput(event.target.value)
-              setYear(selectedPeriod?.year ?? "")
-              setMonth(selectedPeriod?.month ?? "")
-            }}
-          />
-          <Input
-            aria-label={i18n.t("app:obligations.category_code")}
-            placeholder={i18n.t("app:obligations.category_code")}
-            value={categoryCode}
-            maxLength={4}
-            onChange={(event) =>
-              setCategoryCode(event.target.value.toUpperCase())
-            }
-          />
-          <select
-            aria-label={i18n.t("app:obligations.lifecycle")}
-            className="border-input bg-background text-foreground h-9 rounded-md border px-3 text-sm"
-            value={lifecycle}
-            onChange={(event) =>
-              setLifecycle(event.target.value as LifecycleFilter)
-            }
+          <div className="min-w-0 space-y-1.5">
+            <Label>{i18n.t("app:obligations.billing_period")}</Label>
+            <PeriodFilter
+              key={filterByPeriod ? monthInputValue(year, month) : "all"}
+              value={filterByPeriod ? monthInputValue(year, month) : ""}
+              onChange={(value) => {
+                const selected = parseMonthInput(value)
+                update(
+                  selected
+                    ? {
+                        year: selected.year,
+                        month: selected.month,
+                        filterByPeriod: true,
+                      }
+                    : { filterByPeriod: false },
+                )
+              }}
+            />
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <Label>{i18n.t("app:obligations.category_filter")}</Label>
+            <CategoryFilter
+              categories={categories.data?.data ?? []}
+              value={categoryCode}
+              onChange={(code) => update({ categoryCode: code })}
+              unavailable={categories.isError}
+            />
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <Label htmlFor="obligation-lifecycle-filter">
+              {i18n.t("app:obligations.status")}
+            </Label>
+            <select
+              id="obligation-lifecycle-filter"
+              aria-label={i18n.t("app:obligations.lifecycle")}
+              className="border-input bg-background text-foreground h-9 w-full rounded-md border px-3 text-sm"
+              value={lifecycle}
+              onChange={(event) =>
+                update({ lifecycle: event.target.value as LifecycleFilter })
+              }
+            >
+              {lifecycleOptions.map((option) => (
+                <option key={option || "all"} value={option}>
+                  {option === ""
+                    ? i18n.t("app:obligations.all_lifecycles")
+                    : option === "unpaid"
+                      ? i18n.t("app:obligations.unpaid")
+                      : lifecycleFilterLabel(option)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            disabled={!filterByPeriod && !categoryCode && !lifecycle}
           >
-            {lifecycleOptions.map((option) => (
-              <option
-                key={option || "all"}
-                value={option}
-                className="bg-background text-foreground"
-              >
-                {option === ""
-                  ? i18n.t("app:obligations.all_lifecycles")
-                  : option === "unpaid"
-                    ? i18n.t("app:obligations.unpaid")
-                    : option}
-              </option>
-            ))}
-          </select>
+            {i18n.t("app:filters.clear_all")}
+          </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="obligation-filter-by-period"
-            checked={filterByPeriod}
-            onCheckedChange={(checked) => setFilterByPeriod(checked === true)}
-          />
-          <Label htmlFor="obligation-filter-by-period">
-            {i18n.t("app:obligations.filter_by_period")}
-          </Label>
-        </div>
-        <ActiveFilterBadges filters={activeFilters} onClearAll={clearFilters} />
         {filterByPeriod && !hasValidPeriodFilter ? (
           <p className="text-sm text-muted-foreground">
             {i18n.t(
@@ -254,26 +227,16 @@ export function ObligationWorkspace({
             {i18n.t("app:obligations.no_obligations_match_these_filters")}
           </p>
         ) : null}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {!obligations.isError
-            ? visibleObligations?.map((obligation) => (
-                <ObligationTile
-                  key={obligation.key}
-                  ledgerId={ledgerId}
-                  obligation={obligation}
-                  canWrite={canEdit}
-                  disabled={actionPending}
-                  loading={pendingActionKey === obligation.key}
-                  onEdit={() => setEditingObligation(obligation)}
-                  onCancel={() => void runAction(cancel, obligation)}
-                  onMarkPaid={() => setPaymentConfirmation(obligation)}
-                  onMarkReady={() => void runAction(markReady, obligation)}
-                  onReopen={() => void runAction(reopen, obligation)}
-                  onSelect={() => setSelectedKey(obligation.key)}
-                />
-              ))
-            : null}
-        </div>
+        {items.length > 0 &&
+          (isMobile ? (
+            <div className="grid grid-cols-1 gap-3">
+              {items.map((item) => (
+                <ObligationTile key={item.obligation.key} {...item} />
+              ))}
+            </div>
+          ) : (
+            <ObligationList items={items} />
+          ))}
         <ObligationDetailsDialog
           ledgerId={ledgerId}
           selectedKey={selectedKey}

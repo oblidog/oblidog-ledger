@@ -6,6 +6,7 @@ export default defineConfig({
     "i18n.spec.ts",
     "demo-preview.spec.ts",
     "analytics-preview.spec.ts",
+    "obligations-preview.spec.ts",
   ],
   fullyParallel: true,
   use: {
