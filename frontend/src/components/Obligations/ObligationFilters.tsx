@@ -67,6 +67,7 @@ export function CategoryFilter({
             setQuery("")
             setActive(0)
           }}
+          onClick={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           onChange={(event) => {
             setQuery(event.target.value)

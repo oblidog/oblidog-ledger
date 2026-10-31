@@ -296,3 +296,29 @@ test("owner menus preserve lifecycle-specific payment and reopen actions", async
   ).toHaveCount(0)
   expect(writes).toEqual([])
 })
+
+test("category picker reopens while focused after selection and Escape", async ({
+  page,
+}) => {
+  const { requests } = await api(page)
+  await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
+  const field = page.getByRole("combobox", { name: "Category", exact: true })
+  await field.fill("Electric")
+  await page.getByRole("option", { name: /Electricity/ }).click()
+  await expect(field).toHaveValue("Electricity")
+  await expect(field).toBeFocused()
+  await expect(field).toHaveAttribute("aria-expanded", "false")
+  await field.click()
+  await expect(field).toHaveAttribute("aria-expanded", "true")
+  await page.getByRole("option", { name: /Water/ }).click()
+  await expect(field).toHaveValue("Water")
+  await expect
+    .poll(() => requests[requests.length - 1].searchParams.get("category_code"))
+    .toBe("WATR")
+  await field.click()
+  await field.press("Escape")
+  await expect(field).toHaveAttribute("aria-expanded", "false")
+  await expect(field).toBeFocused()
+  await field.click()
+  await expect(page.getByRole("option", { name: /Electricity/ })).toBeVisible()
+})
