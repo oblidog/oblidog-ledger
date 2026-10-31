@@ -121,5 +121,15 @@
   "choose_a_category": "Kategorie auswählen",
   "is_the_data_ready": "Sind die Daten vollständig?",
   "create_obligation": "Zahlungsverpflichtung erstellen",
-  "date_unavailable": "Datum nicht verfügbar"
+  "date_unavailable": "Datum nicht verfügbar",
+  "category_filter": "Kategorie",
+  "all_categories": "Alle Kategorien",
+  "clear_category": "Kategoriefilter löschen",
+  "no_categories_match": "Keine passenden Kategorien",
+  "category_names_unavailable": "Kategorienamen konnten nicht geladen werden. Versuche es später erneut.",
+  "all_periods": "Alle Zeiträume",
+  "other_period": "Anderen Monat wählen…",
+  "choose_month": "Monat wählen",
+  "apply_period": "Anwenden",
+  "due_or_paid_date": "Fälligkeit / Zahlung"
 }

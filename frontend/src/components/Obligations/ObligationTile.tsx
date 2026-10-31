@@ -1,68 +1,37 @@
-import {
-  Ban,
-  Building2,
-  CircleCheck,
-  CreditCard,
-  EllipsisVertical,
-  Pencil,
-  RotateCcw,
-} from "lucide-react"
+import { CircleCheck, CreditCard, Pencil } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { ObligationPublic } from "@/client"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { CounterpartyLogo } from "@/features/counterparties/CounterpartyLogo"
-import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import { i18n } from "@/i18n"
-import { domainLabel } from "@/i18n/domainLabels"
 import { formatAmount, formatDate } from "@/i18n/format"
 import {
-  canCancelObligation,
+  ObligationActions,
+  type ObligationItemProps,
+} from "./ObligationActions"
+import { ObligationStatus } from "./ObligationStatus"
+import {
   canEditObligation,
   canMarkObligationPaid,
   canMarkObligationReady,
-  canReopenObligation,
 } from "./obligationLogic"
-
 import {
   businessDaysUntil,
   counterpartyFor,
-  lifecycleBadgeClasses,
+  obligationSurfaceClasses,
   paidDateLabel,
 } from "./obligationPresentation"
 
-export function ObligationTile({
-  ledgerId,
-  obligation,
-  canWrite,
-  disabled,
-  loading,
-  onEdit,
-  onCancel,
-  onMarkPaid,
-  onMarkReady,
-  onReopen,
-  onSelect,
-}: {
-  ledgerId: string
-  obligation: ObligationPublic
-  canWrite: boolean
-  disabled: boolean
-  loading: boolean
-  onEdit: () => void
-  onCancel: () => void
-  onMarkPaid: () => void
-  onMarkReady: () => void
-  onReopen: () => void
-  onSelect: () => void
-}) {
+export function ObligationTile(props: ObligationItemProps) {
+  const {
+    obligation,
+    canWrite,
+    disabled,
+    loading,
+    onEdit,
+    onMarkPaid,
+    onMarkReady,
+    onSelect,
+  } = props
   useTranslation()
 
   const amount =
@@ -71,22 +40,15 @@ export function ObligationTile({
       : i18n.t("app:obligations.amount_unknown")
   const dueDateStatus = businessDaysUntil(obligation.due_date)
   const isPaid = obligation.lifecycle === "paid"
-  const canCancel = canWrite && canCancelObligation(obligation)
   const canMarkPaid = canWrite && canMarkObligationPaid(obligation)
   const canMarkReady = canWrite && canMarkObligationReady(obligation)
   const canEdit = canWrite && canEditObligation(obligation)
-  const canReopen = canWrite && canReopenObligation(obligation)
   const counterparty = counterpartyFor(obligation) ?? null
 
   return (
     <div
-      className={`group min-w-0 rounded-xl border p-4 text-card-foreground shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring ${
-        isPaid
-          ? "border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/15"
-          : dueDateStatus.isUrgent
-            ? "border-destructive/70 bg-destructive/10 hover:bg-destructive/15"
-            : "bg-card hover:bg-muted/50"
-      }`}
+      data-testid="obligation-card"
+      className={`group min-w-0 rounded-xl border p-3 text-card-foreground shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring ${obligationSurfaceClasses(obligation)}`}
     >
       <div className="flex items-start justify-between gap-3">
         <button
@@ -102,92 +64,17 @@ export function ObligationTile({
             </p>
           </div>
         </button>
-        {canWrite ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="size-11"
-                disabled={disabled}
-                aria-label={i18n.t("app:obligations.actions_for", {
-                  value1: obligation.name,
-                })}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <EllipsisVertical />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="[&_[role=menuitem]]:min-h-11"
-            >
-              {canWrite ? (
-                <ObligationCounterpartyDialog
-                  ledgerId={ledgerId}
-                  obligation={obligation}
-                  trigger={
-                    <DropdownMenuItem
-                      onSelect={(event) => event.preventDefault()}
-                    >
-                      <Building2 />
-                      {i18n.t("app:obligations.counterparty")}
-                    </DropdownMenuItem>
-                  }
-                />
-              ) : null}
-              {canMarkReady ? (
-                <DropdownMenuItem disabled={disabled} onSelect={onMarkReady}>
-                  <CircleCheck />
-                  {i18n.t("app:obligations.mark_as_ready")}
-                </DropdownMenuItem>
-              ) : null}
-              {canCancel ? (
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={disabled}
-                  onSelect={onCancel}
-                >
-                  <Ban />
-                  {i18n.t("app:obligations.cancel")}
-                </DropdownMenuItem>
-              ) : null}
-              {canMarkPaid ? (
-                <DropdownMenuItem disabled={disabled} onSelect={onMarkPaid}>
-                  <CreditCard />
-                  {i18n.t("app:obligations.mark_as_paid")}
-                </DropdownMenuItem>
-              ) : null}
-              {canReopen ? (
-                <DropdownMenuItem disabled={disabled} onSelect={onReopen}>
-                  <RotateCcw />
-                  {i18n.t("app:obligations.reopen")}
-                </DropdownMenuItem>
-              ) : null}
-              {canEdit ? (
-                <DropdownMenuItem disabled={disabled} onSelect={onEdit}>
-                  <Pencil />
-                  {i18n.t("app:obligations.edit_530164")}
-                </DropdownMenuItem>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+        <ObligationActions {...props} />
       </div>
       <button type="button" className="w-full text-left" onClick={onSelect}>
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <p className="break-all text-xl font-semibold tabular-nums">
             {amount}
           </p>
-          <Badge
-            variant="outline"
-            className={lifecycleBadgeClasses[obligation.lifecycle]}
-          >
-            {domainLabel("lifecycle", obligation.lifecycle)}
-          </Badge>
+          <ObligationStatus obligation={obligation} />
         </div>
         {isPaid ? (
-          <div className="mt-4 border-t pt-3">
+          <div className="mt-3 border-t pt-2">
             <p className="text-muted-foreground text-xs font-medium uppercase">
               {i18n.t("app:obligations.paid_on")}
             </p>
@@ -196,7 +83,7 @@ export function ObligationTile({
             </p>
           </div>
         ) : (
-          <div className="mt-4 border-t pt-3">
+          <div className="mt-3 border-t pt-2">
             <p className="text-muted-foreground text-xs font-medium uppercase">
               {i18n.t("app:obligations.due_date")}
             </p>
@@ -206,11 +93,13 @@ export function ObligationTile({
                   ? formatDate(obligation.due_date)
                   : i18n.t("app:obligations.unknown")}
               </p>
-              <p
-                className={`text-xs whitespace-nowrap ${dueDateStatus.className}`}
-              >
-                {dueDateStatus.label}
-              </p>
+              {obligation.lifecycle !== "canceled" && (
+                <p
+                  className={`text-xs whitespace-nowrap ${dueDateStatus.className}`}
+                >
+                  {dueDateStatus.label}
+                </p>
+              )}
             </div>
           </div>
         )}

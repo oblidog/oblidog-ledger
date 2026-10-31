@@ -7,6 +7,7 @@ import {
   canMarkObligationReady,
   canReopenObligation,
   dueDateRange,
+  matchingCategories,
   monthInputValue,
   parseMonthInput,
   parseObligationFilters,
@@ -89,17 +90,20 @@ describe("obligation filter query", () => {
   })
 
   test("serializes the all-period state without stale year and month", () => {
-    const serialized = serializeObligationFilters(
-      "?year=2025&month=12",
-      {
-        year: "2026",
-        month: "10",
-        filterByPeriod: false,
-        categoryCode: "",
-        lifecycle: "",
-      },
-    )
-    expect(serialized).toBe("period=all")
+    const serialized = serializeObligationFilters("?year=2025&month=12", {
+      year: "2026",
+      month: "10",
+      filterByPeriod: false,
+      categoryCode: "",
+      lifecycle: "",
+    })
+    expect(serialized).toBe("period=all&lifecycle=")
+    expect(
+      parseObligationFilters(`?${serialized}`, "unpaid", {
+        year: 2026,
+        month: 10,
+      }).lifecycle,
+    ).toBe("")
   })
 })
 
@@ -133,7 +137,9 @@ describe("obligation action availability", () => {
       { due_date_state: "unknown" as const },
     ]) {
       expect(
-        canMarkObligationReady(obligation({ lifecycle: "draft", ...overrides })),
+        canMarkObligationReady(
+          obligation({ lifecycle: "draft", ...overrides }),
+        ),
       ).toBeFalse()
     }
     for (const lifecycle of ["ready", "paid", "canceled", "error"] as const) {
@@ -144,10 +150,20 @@ describe("obligation action availability", () => {
   test("lifecycle gates edit, cancel, paid and reopen actions", () => {
     expect(canEditObligation(obligation({ lifecycle: "draft" }))).toBeTrue()
     expect(canCancelObligation(obligation())).toBeTrue()
-    expect(
-      canMarkObligationPaid(obligation({ lifecycle: "ready" })),
-    ).toBeTrue()
+    expect(canMarkObligationPaid(obligation({ lifecycle: "ready" }))).toBeTrue()
     expect(canReopenObligation(obligation({ lifecycle: "paid" }))).toBeTrue()
     expect(canReopenObligation(obligation({ lifecycle: "draft" }))).toBeFalse()
   })
+})
+
+test("category search matches human names and optional codes without mutating the source", () => {
+  const categories = [
+    { name: "Prąd — opłata stała", code: "ELEC" },
+    { name: "Wasser", code: "WATR" },
+  ]
+  expect(matchingCategories(categories, "oplata")).toEqual([categories[0]])
+  expect(matchingCategories(categories, "elec")).toEqual([categories[0]])
+  expect(matchingCategories(categories, " wasser ")).toEqual([categories[1]])
+  expect(matchingCategories(categories, "missing")).toEqual([])
+  expect(matchingCategories(categories, "")).toEqual(categories)
 })

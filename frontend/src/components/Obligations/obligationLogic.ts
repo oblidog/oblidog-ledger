@@ -112,7 +112,7 @@ export function serializeObligationFilters(
     params.set("period", "all")
   }
   if (filters.categoryCode) params.set("category", filters.categoryCode)
-  if (filters.lifecycle) params.set("lifecycle", filters.lifecycle)
+  params.set("lifecycle", filters.lifecycle)
 
   return params.toString()
 }
@@ -149,4 +149,21 @@ export function canMarkObligationPaid(obligation: ObligationPublic) {
 
 export function canReopenObligation(obligation: ObligationPublic) {
   return ["ready", "paid", "canceled", "error"].includes(obligation.lifecycle)
+}
+
+export type FilterCategory = { code: string; name: string }
+export function matchingCategories(
+  categories: FilterCategory[],
+  query: string,
+) {
+  const normalize = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .toLocaleLowerCase()
+      .replace(/ł/g, "l")
+  const text = normalize(query.trim())
+  return categories.filter((category) =>
+    normalize(`${category.name} ${category.code}`).includes(text),
+  )
 }
