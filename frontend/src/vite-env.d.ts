@@ -15,3 +15,9 @@ interface Window {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/** Public build metadata embedded by Vite; never fetched from a branch head. */
+declare const __APP_BUILD__: {
+  readonly label: string
+  readonly commit: string | null
+}

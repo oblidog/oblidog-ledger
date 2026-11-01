@@ -238,3 +238,27 @@ request, **not** that the deployment passed. A deployment-ready check and
 smoke test are separate follow-ups. The existing workflow's path filters mean
 frontend-only merges do not redeploy the backend. The current auto-deploy
 configuration remains in place until the operator completes the cutover.
+
+## Frontend artifact version
+
+The footer's former `dev` value was a fallback for an absent
+`VITE_APP_VERSION`, not the Git branch name. Published Docker images receive
+that variable from the release tag in `publish-images.yml`; Vercel does not
+run that workflow. The backend's OpenAPI version comes from its installed
+package (or `backend/pyproject.toml`) and is independent of the footer.
+
+Vite now embeds the version from `frontend/package.json` (already synchronized
+by Commitizen) and the full `VERCEL_GIT_COMMIT_SHA` supplied to the build by
+Vercel. Enable Vercel's automatically exposed System Environment Variables
+if they have been disabled. No additional version variable is needed. Both
+Preview and Production Vercel artifacts display `v<version>-dev.<short SHA>`;
+this demo is not a published release. Version details reveal the full SHA.
+Only the label and SHA are serialized; no deployment credentials or URLs are
+included. Values belong to the built frontend and never follow a later branch
+head or release lookup.
+
+Release Docker builds retain the existing `VITE_APP_VERSION` tag display.
+Local builds need neither Git nor deployment metadata: their explicit fallback
+is `v<package version>-dev.unknown` and unavailable commit details. A full
+40-character `VITE_APP_COMMIT_SHA` can optionally identify a non-Vercel build.
+Invalid or missing SHAs are never presented as real commits.

@@ -37,6 +37,9 @@
     "close": "Zamknij"
   },
   "footer": {
-    "version": "Wersja aplikacji"
+    "version": "Wersja aplikacji",
+    "versionDetails": "Szczegóły wersji",
+    "commit": "Commit",
+    "commitUnavailable": "Informacja o commicie niedostępna"
   }
 }
