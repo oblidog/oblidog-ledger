@@ -115,5 +115,11 @@
   "no_runs_on_this_page_use_newer_runs_to_return_to_recent_history": "Brak uruchomień na tej stronie. Wybierz „Nowsze uruchomienia”, aby wrócić do aktualnej historii.",
   "integration_runs": "Uruchomienia integracji",
   "of_runs": "{{value1}}–{{value2}} z {{value3}} uruchomień",
-  "enter_a_name_and_select_a_category": "Podaj nazwę i wybierz kategorię."
+  "enter_a_name_and_select_a_category": "Podaj nazwę i wybierz kategorię.",
+  "demo_preview": "Przykładowe połączenia i historia — bez rzeczywistych połączeń i uruchomień.",
+  "demo_actions": "Dodawanie połączeń jest niedostępne w demo.",
+  "demo_credentials": "W demo nie można generować ani unieważniać kluczy połączeń.",
+  "review_run_history": "Sprawdź historię uruchomień",
+  "reporting": "Raportowanie",
+  "last_completed_run": "Ostatnie zakończone uruchomienie"
 }

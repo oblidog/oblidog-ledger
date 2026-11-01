@@ -115,5 +115,11 @@
   "no_runs_on_this_page_use_newer_runs_to_return_to_recent_history": "Keine Ausführungen auf dieser Seite. Wähle „Neuere Ausführungen“, um zum aktuellen Verlauf zurückzukehren.",
   "integration_runs": "Integrationsausführungen",
   "of_runs": "{{value1}}–{{value2}} von {{value3}} Ausführungen",
-  "enter_a_name_and_select_a_category": "Gib einen Namen ein und wähle eine Kategorie."
+  "enter_a_name_and_select_a_category": "Gib einen Namen ein und wähle eine Kategorie.",
+  "demo_preview": "Beispielverbindungen und Verlauf — keine aktiven Verbindungen oder echten Ausführungen.",
+  "demo_actions": "Das Hinzufügen von Verbindungen ist in der Demo nicht verfügbar.",
+  "demo_credentials": "Verbindungsschlüssel können in der Demo weder erstellt noch widerrufen werden.",
+  "review_run_history": "Ausführungsverlauf prüfen",
+  "reporting": "Berichterstattung",
+  "last_completed_run": "Letzte abgeschlossene Ausführung"
 }
