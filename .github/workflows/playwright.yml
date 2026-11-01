@@ -87,6 +87,10 @@ jobs:
     if: ${{ needs.changes.outputs.changed == 'true' && needs.changes.outputs.run_heavy == 'true' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
@@ -125,17 +129,60 @@ jobs:
     - run: docker compose -p findog-e2e -f compose.e2e.yml build
     - run: docker compose -p findog-e2e -f compose.e2e.yml down -v --remove-orphans
     - name: Run Playwright tests
-      run: docker compose -p findog-e2e -f compose.e2e.yml run --rm playwright bunx playwright test --fail-on-flaky-tests --trace=retain-on-failure --reporter=html
+      run: docker compose -p findog-e2e -f compose.e2e.yml run --rm playwright bunx playwright test --fail-on-flaky-tests --trace=retain-on-failure --reporter=blob --shard=${{ matrix.shard }}/2
     - run: docker compose -p findog-e2e -f compose.e2e.yml down -v --remove-orphans
       if: ${{ always() }}
-    - name: Upload HTML report
+    - name: Upload blob report
       if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        # Replace only this shard on retries; keep the other shard's report.
+        name: blob-report-shard-${{ matrix.shard }}
+        path: frontend/blob-report
+        retention-days: 1
+        overwrite: true
+        if-no-files-found: error
+
+  merge-reports:
+    needs:
+      - changes
+      - test-playwright
+    if: ${{ !cancelled() && needs.changes.outputs.changed == 'true' && needs.changes.outputs.run_heavy == 'true' }}
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        persist-credentials: false
+    - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+    - run: bun ci
+      working-directory: frontend
+    - name: Download shard reports
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        pattern: blob-report-shard-*
+        path: frontend/all-blob-reports
+        merge-multiple: true
+    - name: Verify both shard reports are present
+      run: |
+        shopt -s nullglob
+        reports=(all-blob-reports/*.zip)
+        if [ "${#reports[@]}" -ne 2 ]; then
+          echo "::error::Expected 2 shard reports, found ${#reports[@]}"
+          exit 1
+        fi
+      working-directory: frontend
+    - name: Merge HTML report
+      run: bunx playwright merge-reports --reporter=html ./all-blob-reports
+      working-directory: frontend
+    - name: Upload HTML report
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       with:
         name: html-report--attempt-${{ github.run_attempt }}
         path: frontend/playwright-report
         retention-days: 30
         include-hidden-files: true
+        if-no-files-found: error
 
   # https://github.com/marketplace/actions/alls-green#why
   alls-green-playwright:  # This job does nothing and is only used for the branch protection
@@ -143,10 +190,11 @@ jobs:
     needs:
       - changes
       - test-playwright
+      - merge-reports
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # release/v1
         with:
           jobs: ${{ toJSON(needs) }}
-          allowed-skips: test-playwright
+          allowed-skips: test-playwright,merge-reports
