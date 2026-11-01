@@ -12,12 +12,9 @@ export function DemoBanner() {
   if (!appConfig?.is_demo) return null
 
   return (
-    <Alert
-      className="rounded-none border-x-0 border-t-0"
-      data-testid="demo-banner"
-    >
+    <Alert data-testid="demo-banner">
       <Info />
-      <AlertTitle>
+      <AlertTitle className="line-clamp-none">
         {appConfig.demo_writes_enabled === false
           ? i18n.t("app:common.public_demo_read_only")
           : i18n.t("app:common.public_demo")}
@@ -27,9 +24,7 @@ export function DemoBanner() {
           ? i18n.t(
               "app:common.the_demo_is_temporarily_read_only_you_can_sign_in_and_explore_the_existing_data_chang",
             )
-          : i18n.t(
-              "app:common.this_is_a_shared_demo_environment_changes_are_visible_to_other_visitors_and_the_demo_",
-            )}
+          : i18n.t("app:auth.demo_shared_account_notice")}
       </AlertDescription>
     </Alert>
   )
