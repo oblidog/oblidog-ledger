@@ -67,7 +67,7 @@ def capability_for_request(*, method: str, path: str) -> Capability | None:
     if "/api-keys" in normalized_path:
         return Capability.API_KEYS
 
-    if "/integration" in normalized_path or "/legacy-import" in normalized_path:
+    if "/integration" in normalized_path:
         return Capability.INTEGRATIONS
 
     if "/system-runs" in normalized_path and normalized_method not in {"GET", "HEAD"}:

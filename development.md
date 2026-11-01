@@ -181,8 +181,7 @@ with Ruff. The check fails on errors and does not require a database or apply fi
 Ruff also checks timezone-aware date/time usage, logging, and explicit exception
 chaining. FastAPI parameter markers and the integration dependency factory are
 allowed in default arguments; other calls remain checked. Alembic migrations
-are excluded. Naive datetime fixtures are allowed only in the legacy importer
-test module that deliberately covers old workbook values.
+are excluded.
 
 Run the same checks locally from `backend/`:
 

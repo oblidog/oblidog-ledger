@@ -41,7 +41,7 @@ test("confirms a manual-only System Run before sending its selected tasks", asyn
       contentType: "application/json",
       body: JSON.stringify([
         { name: "ensure_obligations", mode: "scheduled" },
-        { name: "legacy_import", mode: "manual_only" },
+        { name: "manual_fixture", mode: "manual_only" },
       ]),
     }),
   )
@@ -59,7 +59,7 @@ test("confirms a manual-only System Run before sending its selected tasks", asyn
   })
 
   await page.goto(`/ledgers/${ledger.id}/system-run`)
-  await page.getByLabel("legacy import").check()
+  await page.getByLabel("manual_fixture", { exact: true }).check()
   await page.getByRole("button", { name: "Start System Run" }).click()
   await expect(page.getByRole("dialog")).toContainText("Start System Run?")
 
@@ -71,7 +71,7 @@ test("confirms a manual-only System Run before sending its selected tasks", asyn
   await page.getByRole("button", { name: "Start run" }).click()
   await expect(page.getByText("Run history")).toBeVisible()
   expect((await request).postDataJSON()).toEqual({
-    manual_task_names: ["legacy_import"],
+    manual_task_names: ["manual_fixture"],
   })
 })
 
@@ -79,6 +79,7 @@ test("shows System Run step summaries and execution details", async ({
   page,
 }) => {
   const ledger = await createLedgerFixture()
+  // Historical importer steps remain readable through the generic history UI.
   const history = {
     data: [
       {
@@ -137,7 +138,7 @@ test("shows System Run step summaries and execution details", async ({
             ledger_id: ledger.id,
             status: "failed",
             skip_reason: null,
-            error: "Import source is unavailable",
+            error: "Task source is unavailable",
             summary: null,
             started_at: "2026-09-01T00:30:05Z",
             finished_at: "2026-09-01T00:30:06Z",
@@ -162,6 +163,7 @@ test("shows System Run step summaries and execution details", async ({
 
   await page.goto(`/ledgers/${ledger.id}/system-run`)
 
+  await expect(page.getByText("legacy_import", { exact: true })).toHaveCount(2)
   await expect(page.getByText("Created obligations")).toBeVisible()
   await expect(page.getByText("3", { exact: true })).toBeVisible()
   await expect(page.getByText("Reports sent")).toBeVisible()
@@ -169,7 +171,7 @@ test("shows System Run step summaries and execution details", async ({
   await expect(page.getByText("Reports failed")).toBeVisible()
   await expect(page.getByText("Succeeded · 2s", { exact: true })).toBeVisible()
   await expect(page.getByText("Skip reason: Not configured")).toBeVisible()
-  await expect(page.getByText("Import source is unavailable")).toBeVisible()
+  await expect(page.getByText("Task source is unavailable")).toBeVisible()
   await page.getByText("Additional details").click()
   await expect(page.getByText("future_value", { exact: true })).toBeVisible()
   await expect(page.getByText("visible", { exact: true })).toBeVisible()

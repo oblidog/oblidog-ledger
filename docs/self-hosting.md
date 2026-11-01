@@ -84,19 +84,6 @@ Check `docker compose ps scheduler` and `docker compose logs scheduler` for
 scheduler status and output. In the app, open a ledger's **System Run** entry to
 inspect run and step history, including skipped or failed tasks.
 
-### Optional legacy import
-
-Legacy import is disabled by default. Set `LEGACY_IMPORT_MODE` to `manual_only`
-or `scheduled` to enable it. The import needs `DROPBOX_API_KEY` and a protected
-configuration file at `LEGACY_IMPORT_CONFIG_PATH`. System Run also needs
-`LEGACY_IMPORT_LEDGER_ID` to select the receiving ledger; the manual endpoint
-uses the ledger ID in its URL. Start from
-[`backend/config/legacy-import.example.yaml`](../backend/config/legacy-import.example.yaml)
-and mount the real file read-only in both the `backend` and `scheduler` services.
-See the [backend guide](../backend/README.md#temporary-legacy-workbook-import)
-for the import workflow. This migration path and the retained `findog` database
-identifiers are compatibility details, not Oblidog branding.
-
 ## Upgrade
 
 Change `TAG` to a published immutable release, then run:
