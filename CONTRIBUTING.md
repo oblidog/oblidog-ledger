@@ -59,6 +59,26 @@ bash ./scripts/cz.sh bump --dry-run --yes --get-next
 
 ## Automated releases
 
+### Issue links for development PRs
+
+For a same-repository PR targeting `dev`, put a closing reference in the PR
+description, with one keyword for each issue:
+
+```text
+Closes #588
+Fixes #589
+```
+
+The `Link PR issues` workflow adds the issues to the Development sidebar when
+the PR is opened, edited, or reopened. Merging into `dev` leaves the issues open;
+the release PR to the default branch `main` carries the closing references.
+Only local `#number` references are supported (up to ten); ordinary mentions,
+code examples, and HTML comments are ignored. Existing links are preserved,
+including manually added links. Removing a reference from the description does
+not remove its Development link; unlink it manually if necessary.
+
+### Release generation
+
 After an eligible Conventional Commit is squash-merged to `main`, the Release
 workflow uses Commitizen to determine the next version. It updates the
 canonical version files and changelog, runs `uv lock`, commits the release,

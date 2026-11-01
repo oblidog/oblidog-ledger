@@ -11,6 +11,8 @@ on:
       - '**/zizmor.yml'
       - '**/zizmor.yaml'
       - '.github/zizmor*'
+      - 'scripts/link_pr_issues.py'
+      - 'tests/test_link_pr_issues.py'
   push:
     branches: [dev, main]
     paths:
@@ -22,6 +24,8 @@ on:
       - '**/zizmor.yml'
       - '**/zizmor.yaml'
       - '.github/zizmor*'
+      - 'scripts/link_pr_issues.py'
+      - 'tests/test_link_pr_issues.py'
   workflow_dispatch:
 
 permissions:
@@ -47,3 +51,5 @@ jobs:
       - name: Audit workflows, actions, and Dependabot
         # No repository secrets or GitHub API token are needed for local audits.
         run: uvx zizmor==1.31.1 --offline --strict-collection --format github .
+      - name: Test issue-linking automation
+        run: python3 -m unittest discover -s tests -p 'test_link_pr_issues.py'
