@@ -11,7 +11,6 @@ import {
   IntegrationsService,
   LedgersService,
 } from "@/client"
-import { DemoPreviewNotice } from "@/components/Common/DemoRestrictedSection"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -138,7 +137,14 @@ export function IntegrationDetails({
           <ArrowLeft /> {i18n.t("app:integrations.back_to_integrations")}
         </Link>
       </Button>
-      {demo && <DemoPreviewNotice />}
+      {demo && (
+        <p
+          data-testid="demo-preview-notice"
+          className="text-sm text-muted-foreground"
+        >
+          {i18n.t("app:integrations.demo_preview")}
+        </p>
+      )}
       {notFound ? (
         <Alert>
           <AlertTitle>
@@ -368,6 +374,14 @@ export function IntegrationDetails({
               <CardTitle>{i18n.t("app:integrations.connection")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {demo && (
+                <p
+                  id="integration-credentials-demo"
+                  className="text-sm text-muted-foreground"
+                >
+                  {i18n.t("app:integrations.demo_credentials")}
+                </p>
+              )}
               {newKey && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 sm:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -434,6 +448,9 @@ export function IntegrationDetails({
                     variant="outline"
                     onClick={() => rotate.mutate()}
                     disabled={!config || demo || rotate.isPending}
+                    aria-describedby={
+                      demo ? "integration-credentials-demo" : undefined
+                    }
                   >
                     {i18n.t("app:integrations.generate_new_key")}
                   </Button>
@@ -458,6 +475,9 @@ export function IntegrationDetails({
                       variant="outline"
                       size="sm"
                       disabled={!config || demo || revoke.isPending}
+                      aria-describedby={
+                        demo ? "integration-credentials-demo" : undefined
+                      }
                       onClick={() => revoke.mutate(credential.id)}
                     >
                       {i18n.t("app:integrations.revoke_key")}

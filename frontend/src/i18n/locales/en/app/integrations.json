@@ -115,5 +115,11 @@
   "no_runs_on_this_page_use_newer_runs_to_return_to_recent_history": "No runs on this page. Use Newer runs to return to recent history.",
   "integration_runs": "Integration runs",
   "of_runs": "{{value1}}–{{value2}} of {{value3}} runs",
-  "enter_a_name_and_select_a_category": "Enter a name and select a category."
+  "enter_a_name_and_select_a_category": "Enter a name and select a category.",
+  "demo_preview": "Sample connections and run history — no live connections or real runs.",
+  "demo_actions": "Adding connections is unavailable in the demo.",
+  "demo_credentials": "Connection keys cannot be generated or revoked in the demo.",
+  "review_run_history": "Review run history",
+  "reporting": "Reporting",
+  "last_completed_run": "Last completed run"
 }

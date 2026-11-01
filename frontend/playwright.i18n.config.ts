@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: [
     "i18n.spec.ts",
+    "integrations.spec.ts",
     "demo-login.spec.ts",
     "page-hierarchy.spec.ts",
     "demo-preview.spec.ts",
