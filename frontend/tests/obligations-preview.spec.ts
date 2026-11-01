@@ -88,7 +88,7 @@ async function api(
         full_name: "Demo",
         is_active: true,
         is_superuser: false,
-        language: "en",
+        language,
       })
     const ledger = {
       id: ledgerId,
@@ -541,3 +541,59 @@ test("unknown amount and paid date remain explicit without a confirmed summary",
   await expect(summary.getByText("Confirmed", { exact: true })).toHaveCount(0)
   await expect(summary.getByText("Overdue", { exact: true })).toHaveCount(0)
 })
+
+for (const height of [480, 568]) {
+  test(`maximum category name keeps details and actions usable at 320x${height}`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 320, height })
+    const title = "A".repeat(255)
+    const { writes } = await api(page, "pl", "dark", false, false, {
+      name: title,
+    })
+    await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
+    await page.getByText("Electricity", { exact: true }).click()
+    const dialog = page.getByRole("dialog", { name: title, exact: true })
+    const header = dialog.locator('[data-slot="dialog-header"]')
+    await expect(dialog).toBeVisible()
+    await header.focus()
+    await page.keyboard.press("End")
+    await expect
+      .poll(() => header.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0)
+    await expect(
+      header.getByText("październik 2026", { exact: true }),
+    ).toBeInViewport()
+    const panel = dialog.getByRole("tabpanel")
+    const tabs = dialog.getByRole("tablist")
+    const footer = dialog.locator('[data-slot="dialog-footer"]')
+    const bounds = await Promise.all(
+      [dialog, tabs, panel, footer].map((locator) => locator.boundingBox()),
+    )
+    const [modalBox, tabsBox, panelBox, footerBox] = bounds.map((box) => box!)
+    expect(panelBox.height).toBeGreaterThanOrEqual(80)
+    expect(panelBox.y).toBeGreaterThanOrEqual(tabsBox.y + tabsBox.height - 1)
+    expect(footerBox.y).toBeGreaterThanOrEqual(panelBox.y + panelBox.height - 1)
+    expect(footerBox.y + footerBox.height).toBeLessThanOrEqual(
+      modalBox.y + modalBox.height + 1,
+    )
+    expect(
+      await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true)
+    await expect(
+      dialog.getByRole("region", { name: "Podsumowanie płatności" }),
+    ).toBeInViewport()
+    await page.screenshot({
+      path: info.outputPath("long-title-short-screen.png"),
+    })
+    await dialog
+      .getByRole("button", { name: "Oznacz jako opłacone", exact: true })
+      .click()
+    await expect(
+      page.getByRole("dialog", {
+        name: "Oznaczyć zobowiązanie jako opłacone?",
+      }),
+    ).toBeVisible()
+    expect(writes).toEqual([])
+  })
+}

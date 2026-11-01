@@ -69,7 +69,10 @@ export function ObligationDetailsDialog({
       <DialogContent
         className={`flex max-h-[min(90dvh,calc(100vh-2rem))] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl ${touchDialogClasses}`}
       >
-        <DialogHeader className="shrink-0 border-b px-4 py-4 pr-12 text-left sm:px-6 sm:pr-14">
+        <DialogHeader
+          tabIndex={0}
+          className="max-h-[25dvh] shrink-0 overflow-y-auto border-b px-4 py-4 pr-12 text-left focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6 sm:pr-14"
+        >
           <DialogTitle className="break-words [overflow-wrap:anywhere]">
             {selected.data?.name ||
               selected.data?.category_code ||
