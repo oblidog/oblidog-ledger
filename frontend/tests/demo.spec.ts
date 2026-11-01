@@ -23,11 +23,11 @@ const mockDemoConfig = async (page: Page) => {
 test.describe("demo login", () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  test("shows and prefills the public demo credentials", async ({ page }) => {
+  test("prefills the public demo credentials", async ({ page }) => {
     await mockDemoConfig(page)
     await page.goto("/login")
 
-    await expect(page.getByTestId("demo-credentials")).toBeVisible()
+    await expect(page.getByTestId("demo-banner")).toBeVisible()
     await expect(page.getByTestId("email-input")).toHaveValue(
       demoConfig.demo_credentials.email,
     )
@@ -68,9 +68,9 @@ test("opens restricted ledger pages as read-only previews", async ({
   ).toBeVisible()
   await expect(page.getByRole("menuitem", { name: "System Run" })).toBeVisible()
   const href = await page
-    .getByRole("menuitem", { name: "Categories" })
+    .getByRole("menuitem", { name: "Ledger settings", exact: true })
     .getAttribute("href")
-  const match = href?.match(/^\/ledgers\/([^/]+)\/categories$/)
+  const match = href?.match(/^\/ledgers\/([^/]+)\/settings$/)
   expect(match).not.toBeNull()
   const ledgerId = match![1]
   await page.goto(`/ledgers/${ledgerId}/settings`)

@@ -57,7 +57,50 @@ next version without changing files or prompting for input, run:
 bash ./scripts/cz.sh bump --dry-run --yes --get-next
 ```
 
+### Versioning before 1.0
+
+While the project is on `0.x`, `major_version_zero = true` in the root
+`pyproject.toml` keeps breaking changes within the `0.x` series. Mark breaking
+changes explicitly with `!` in the Conventional Commit title or a
+`BREAKING CHANGE:` footer, including in squash commits and release PRs that
+carry them to `main`. For example:
+
+```text
+refactor(legacy)!: remove legacy import
+```
+
+A breaking change increments the minor version (for example, `0.21.3` to
+`0.22.0`), as does a `feat` commit. A `fix` commit still increments the patch
+version (`0.21.3` to `0.21.4`). Describe breaking changes and required upgrade
+steps in the PR so they remain visible in release notes.
+
+The release workflow reads this configuration for both the version preview
+and the actual bump; no extra CLI flag is needed. Ensure the setting reaches
+`main` before releasing a breaking change. For an intentional `1.0.0` release,
+remove the setting in a breaking-change commit and preserve its breaking-change
+marker in the commit merged into `main`.
+
 ## Automated releases
+
+### Issue links for development PRs
+
+For a same-repository PR targeting `dev`, put a closing reference in the PR
+description, with one keyword for each issue:
+
+```text
+Closes #588
+Fixes #589
+```
+
+The `Link PR issues` workflow adds the issues to the Development sidebar when
+the PR is opened, edited, or reopened. Merging into `dev` leaves the issues open;
+the release PR to the default branch `main` carries the closing references.
+Only local `#number` references are supported (up to ten); ordinary mentions,
+code examples, and HTML comments are ignored. Existing links are preserved,
+including manually added links. Removing a reference from the description does
+not remove its Development link; unlink it manually if necessary.
+
+### Release generation
 
 After an eligible Conventional Commit is squash-merged to `main`, the Release
 workflow uses Commitizen to determine the next version. It updates the

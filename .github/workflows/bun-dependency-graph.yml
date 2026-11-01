@@ -9,7 +9,7 @@ on:
       - emails/package.json
       - .github/workflows/bun-dependency-graph.yml
   push:
-    branches: [dev, main]
+    branches: [main]
     paths:
       - bun.lock
       - package.json

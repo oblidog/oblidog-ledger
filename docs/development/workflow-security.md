@@ -30,9 +30,11 @@ The scanner version is intentionally fixed in the workflow. Upgrade it explicitl
 and run the local audit before merging. Offline mode audits local configuration
 without a GitHub token. It does not run online checks such as known-vulnerable
 or ref-confusion lookups; release verification and Dependabot remain necessary.
-There are no project-wide disabled audit rules or current finding suppressions.
-Any future exception must be limited to the affected finding and documented
-beside the relevant configuration with a concrete reason.
+There are no project-wide disabled audit rules. The issue-linking workflow has
+one local `dangerous-triggers` exception for its metadata-only
+`pull_request_target` trigger, documented beside the trigger. Any future
+exception must be limited to the affected finding and documented beside the
+relevant configuration with a concrete reason.
 
 ## Credentials and trusted execution
 
@@ -52,6 +54,11 @@ beside the relevant configuration with a concrete reason.
   existing `demo-preview` environment. The deploy hook is scoped to its own step.
 - Pass expression-derived script inputs through environment variables and quote
   their shell expansions instead of interpolating expressions into shell source.
+- Issue linking uses `pull_request_target` only for same-repository PR metadata.
+  It checks out the immutable trusted base commit with credentials disabled,
+  never the PR head. Its job-scoped write permission is limited to issues.
+  The helper reads current PR metadata through the API and sends issue links
+  as GraphQL variables; it never executes PR text or changes issue state.
 
 The audit does not change `scripts/ci_test_scope.py` or its consumers' skip
 conditions: metadata-only release PRs and clean back-sync PRs keep their fast

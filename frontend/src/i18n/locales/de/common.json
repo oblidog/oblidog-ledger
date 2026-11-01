@@ -14,6 +14,7 @@
     "selectLedger": "Zahlungsbuch auswählen",
     "workspace": "Aktueller Arbeitsbereich",
     "switchLedger": "Zahlungsbuch wechseln",
+    "ledgerTools": "Ledger-Werkzeuge",
     "ledgerSettings": "Zahlungsbucheinstellungen",
     "systemRun": "Systemlauf",
     "manageLedgers": "Zahlungsbücher verwalten"
@@ -36,6 +37,9 @@
     "close": "Schließen"
   },
   "footer": {
-    "version": "Anwendungsversion"
+    "version": "Anwendungsversion",
+    "versionDetails": "Versionsdetails",
+    "commit": "Commit",
+    "commitUnavailable": "Commit-Informationen nicht verfügbar"
   }
 }

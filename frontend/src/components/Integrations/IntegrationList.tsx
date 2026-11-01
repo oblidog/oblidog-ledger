@@ -9,6 +9,7 @@ import {
   LedgersService,
 } from "@/client"
 import { DemoPreviewNotice } from "@/components/Common/DemoRestrictedSection"
+import { PageHeader } from "@/components/Common/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -74,41 +75,37 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
 
   return (
     <div className="min-w-0 space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {i18n.t("app:integrations.integrations")}
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            {i18n.t("app:integrations.monitor_external_integrations_for")}{" "}
-            {ledger.data?.name ?? i18n.t("app:integrations.this_ledger")}.
-          </p>
-          {!isOwner && (
+      <PageHeader
+        title={i18n.t("app:integrations.integrations")}
+        description={
+          !isOwner && (
             <p className="mt-1 text-sm text-muted-foreground">
               {i18n.t(
                 "app:integrations.only_the_ledger_owner_can_change_configuration",
               )}
             </p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => void integrations.refetch()}
-            disabled={integrations.isFetching}
-          >
-            <RefreshCw /> {i18n.t("app:integrations.refresh")}
-          </Button>
-          {isOwner && (
+          )
+        }
+        actions={
+          <>
             <Button
-              disabled={!config || demo}
-              onClick={() => setCreating(true)}
+              variant="outline"
+              onClick={() => void integrations.refetch()}
+              disabled={integrations.isFetching}
             >
-              <Plus /> {i18n.t("app:integrations.add_integration")}
+              <RefreshCw /> {i18n.t("app:integrations.refresh")}
             </Button>
-          )}
-        </div>
-      </div>
+            {isOwner && (
+              <Button
+                disabled={!config || demo}
+                onClick={() => setCreating(true)}
+              >
+                <Plus /> {i18n.t("app:integrations.add_integration")}
+              </Button>
+            )}
+          </>
+        }
+      />
       {demo && <DemoPreviewNotice />}
       {integrations.isError && (
         <LoadError

@@ -11,7 +11,7 @@
     "generate-client": "openapi-ts",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:unit": "bun test src",
+    "test:unit": "bun test src build",
     "test:e2e": "playwright test",
     "test:i18n": "playwright test --config playwright.i18n.config.ts",
     "typecheck": "bun ./node_modules/@typescript/native/bin/tsc -p tsconfig.build.json"

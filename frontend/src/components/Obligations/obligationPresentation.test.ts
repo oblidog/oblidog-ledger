@@ -4,6 +4,8 @@ import { i18n } from "@/i18n"
 import {
   businessDaysUntil,
   dueDateStatusClasses,
+  isObligationOverdue,
+  obligationSurfaceClasses,
   visibleObligationRows,
 } from "./obligationPresentation"
 
@@ -62,4 +64,27 @@ describe("obligation presentation", () => {
       dueDateStatusClasses.safe,
     )
   })
+})
+
+test("settled obligations remain neutral despite old due dates; overdue and error items retain emphasis", () => {
+  const now = new Date(2026, 9, 31, 12)
+  for (const lifecycle of ["paid", "canceled"] as const) {
+    const item = row(lifecycle, lifecycle, "2026-10-01")
+    expect(isObligationOverdue(item, now)).toBe(false)
+    expect(obligationSurfaceClasses(item, now)).toBe(
+      "bg-card hover:bg-muted/50",
+    )
+  }
+  expect(isObligationOverdue(row("late", "ready", "2026-10-30"), now)).toBe(
+    true,
+  )
+  expect(
+    obligationSurfaceClasses(row("late", "ready", "2026-10-30"), now),
+  ).toContain("destructive")
+  expect(obligationSurfaceClasses(row("error", "error", null), now)).toContain(
+    "destructive",
+  )
+  expect(
+    obligationSurfaceClasses(row("soon", "ready", "2026-11-01"), now),
+  ).not.toContain("destructive")
 })

@@ -22,7 +22,10 @@ test("manages category and obligation counterparties in contextual dialogs", asy
 
   await page.goto("/ledgers")
   await page.getByRole("button", { name: "New ledger" }).click()
-  await page.getByLabel("Name").fill(ledgerName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(ledgerName)
   await page.getByRole("button", { name: "Create ledger" }).click()
   await page.getByRole("link", { name: ledgerName }).click()
 
@@ -68,14 +71,23 @@ test("manages category and obligation counterparties in contextual dialogs", asy
     .click()
 
   await page.getByRole("button", { name: "New group" }).click()
-  await page.getByLabel("Name").fill(groupName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(groupName)
   await page.getByRole("button", { name: "Create group" }).click()
 
   await page.getByRole("button", { name: "New category" }).click()
-  await page.getByLabel("Group").click()
+  await page.getByRole("dialog").getByLabel("Group", { exact: true }).click()
   await page.getByRole("option", { name: groupName }).click()
-  await page.getByLabel("Name").fill(categoryName)
-  await page.getByLabel("Code").fill("CPUI")
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(categoryName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Code", { exact: true })
+    .fill("CPUI")
 
   const createCategoryDialog = page.getByRole("dialog")
   await createCategoryDialog

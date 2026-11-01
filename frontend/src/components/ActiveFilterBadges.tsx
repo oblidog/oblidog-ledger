@@ -15,7 +15,7 @@ export function ActiveFilterBadges({
   onClearAll,
 }: {
   filters: ActiveFilter[]
-  onClearAll: () => void
+  onClearAll?: () => void
 }) {
   useTranslation()
 
@@ -47,7 +47,7 @@ export function ActiveFilterBadges({
           </button>
         </Badge>
       ))}
-      {filters.length > 1 ? (
+      {filters.length > 1 && onClearAll ? (
         <Button
           type="button"
           variant="ghost"

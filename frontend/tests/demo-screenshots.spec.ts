@@ -48,7 +48,7 @@ test.describe("demo screenshots", () => {
     await mockDemoConfig(page)
 
     await page.goto("/login")
-    await expect(page.getByTestId("demo-credentials")).toBeVisible()
+    await expect(page.getByTestId("demo-banner")).toBeVisible()
     await page.getByRole("button", { name: "Log In" }).click()
     await page.waitForURL(/\/ledgers\/[^/?]+/)
 

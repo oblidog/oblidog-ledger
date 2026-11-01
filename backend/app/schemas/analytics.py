@@ -117,6 +117,10 @@ class ComponentHistoryGroupPublic(BaseModel):
 class ComponentHistoryTotalPublic(BaseModel):
     period: ObligationPeriodPublic
     amount: Decimal | None
+    currency: str | None = None
+    obligation_amount: Decimal | None = None
+    # Optional amounts may belong to informational components, not missing prices.
+    unpriced_component_count: int = 0
 
 
 class ComponentHistoryPublic(BaseModel):
@@ -124,3 +128,9 @@ class ComponentHistoryPublic(BaseModel):
     periods: list[ObligationPeriodPublic]
     components: list[ComponentHistoryGroupPublic]
     totals: list[ComponentHistoryTotalPublic]
+
+
+class AvailableHistoryPeriodPublic(BaseModel):
+    category_id: uuid.UUID
+    period: ObligationPeriodPublic
+    has_components: bool

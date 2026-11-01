@@ -1,0 +1,36 @@
+name: Link PR issues
+
+on:
+  # Metadata-only operation; immutable base checkout, same-repository guard,
+  # no execution of PR head code. Issue write access is required for links.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    branches: [dev]
+    types: [opened, edited, reopened]
+
+permissions: {}
+
+concurrency:
+  group: link-pr-issues-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  link-issues:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # Check out the trusted base commit only.
+      pull-requests: read # Read the latest PR metadata.
+      issues: write # Add Development links without changing issue state.
+    steps:
+      # pull_request_target supplies write access. Never check out or execute
+      # the PR head; the body is read only as data by the trusted base script.
+      - name: Checkout trusted base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Link referenced issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/link_pr_issues.py

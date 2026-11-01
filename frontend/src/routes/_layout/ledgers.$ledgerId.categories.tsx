@@ -1,9 +1,6 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router"
-import { Tags } from "lucide-react"
 import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
-import { LedgersService } from "@/client"
 import CategoryWorkspace from "@/components/Categories/CategoryWorkspace"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -21,10 +18,6 @@ function LedgerCategories() {
 
   const { ledgerId } = Route.useParams()
   const location = useLocation()
-  const { data: ledger } = useSuspenseQuery({
-    queryFn: () => LedgersService.readLedger({ ledgerId }),
-    queryKey: ["ledger", ledgerId],
-  })
 
   if (location.pathname !== `/ledgers/${ledgerId}/categories`) {
     return <Outlet />
@@ -32,19 +25,6 @@ function LedgerCategories() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Tags className="size-5 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">{ledger.name}</h1>
-          <p className="mt-1 text-muted-foreground">
-            {i18n.t(
-              "app:categories.manage_category_groups_and_categories_for_this_ledger",
-            )}
-          </p>
-        </div>
-      </div>
       <Suspense fallback={<CategoryWorkspaceSkeleton />}>
         <CategoryWorkspace ledgerId={ledgerId} />
       </Suspense>

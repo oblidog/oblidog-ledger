@@ -25,6 +25,21 @@ export type ApiErrorResponse = {
 };
 
 /**
+ * AvailableHistoryPeriodPublic
+ */
+export type AvailableHistoryPeriodPublic = {
+    /**
+     * Category Id
+     */
+    category_id: string;
+    period: ObligationPeriodPublic;
+    /**
+     * Has Components
+     */
+    has_components: boolean;
+};
+
+/**
  * BillingPeriodInput
  */
 export type BillingPeriodInput = {
@@ -534,6 +549,18 @@ export type ComponentHistoryTotalPublic = {
      * Amount
      */
     amount: string | null;
+    /**
+     * Currency
+     */
+    currency?: string | null;
+    /**
+     * Obligation Amount
+     */
+    obligation_amount?: string | null;
+    /**
+     * Unpriced Component Count
+     */
+    unpriced_component_count?: number;
 };
 
 /**
@@ -4120,6 +4147,10 @@ export type AnalyticsReadComponentHistoryData = {
          * Match By
          */
         match_by?: 'label' | 'external_id';
+        /**
+         * Available Only
+         */
+        available_only?: boolean;
     };
     url: '/api/v1/ledgers/{ledger_id}/analytics/component-history';
 };
@@ -4244,6 +4275,70 @@ export type AnalyticsReadRemainingPeriodCashflowResponses = {
 };
 
 export type AnalyticsReadRemainingPeriodCashflowResponse = AnalyticsReadRemainingPeriodCashflowResponses[keyof AnalyticsReadRemainingPeriodCashflowResponses];
+
+export type AnalyticsReadAvailableHistoryPeriodsData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/analytics/history-periods';
+};
+
+export type AnalyticsReadAvailableHistoryPeriodsErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type AnalyticsReadAvailableHistoryPeriodsError = AnalyticsReadAvailableHistoryPeriodsErrors[keyof AnalyticsReadAvailableHistoryPeriodsErrors];
+
+export type AnalyticsReadAvailableHistoryPeriodsResponses = {
+    /**
+     * Response Analytics-Read Available History Periods
+     *
+     * Successful Response
+     */
+    200: Array<AvailableHistoryPeriodPublic>;
+};
+
+export type AnalyticsReadAvailableHistoryPeriodsResponse = AnalyticsReadAvailableHistoryPeriodsResponses[keyof AnalyticsReadAvailableHistoryPeriodsResponses];
 
 export type CategoriesPreviewPaymentScheduleData = {
     body: SchedulePreviewRequest;

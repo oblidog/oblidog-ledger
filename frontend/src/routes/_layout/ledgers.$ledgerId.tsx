@@ -1,16 +1,9 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useLocation,
-} from "@tanstack/react-router"
-import { Play, Settings, Tags } from "lucide-react"
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router"
 import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import { LedgersService } from "@/client"
 import { ObligationWorkspace } from "@/components/Obligations/ObligationWorkspace"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchPublicAppConfig } from "@/config"
@@ -54,49 +47,9 @@ function LedgerDetails() {
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div className="hidden md:block">
-            <h1 className="text-2xl font-bold tracking-tight">{ledger.name}</h1>
-            <p className="mt-1 text-muted-foreground">
-              {ledger.description ||
-                i18n.t(
-                  "app:ledgers.review_and_manage_obligations_for_this_ledger",
-                )}
-            </p>
-          </div>
-          <div className="hidden gap-2 md:flex">
-            {ledger.owner_user_id === currentUser?.id && (
-              <Button variant="outline" asChild>
-                <Link to="/ledgers/$ledgerId/system-run" params={{ ledgerId }}>
-                  <Play />
-                  {i18n.t("app:ledgers.system_run")}
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" asChild>
-              <Link to="/">{i18n.t("app:ledgers.dashboard")}</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
-                <Tags />
-                {i18n.t("app:ledgers.categories")}
-              </Link>
-            </Button>
-            <Button variant="outline" size="icon" asChild>
-              <Link
-                to="/ledgers/$ledgerId/settings"
-                params={{ ledgerId }}
-                aria-label={i18n.t("app:ledgers.ledger_settings")}
-              >
-                <Settings />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
       <Suspense fallback={<ObligationWorkspaceSkeleton />}>
         <ObligationWorkspace
+          key={ledgerId}
           ledgerId={ledgerId}
           canEdit={
             canManageComponents &&
