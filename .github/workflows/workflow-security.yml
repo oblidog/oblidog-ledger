@@ -11,17 +11,6 @@ on:
       - '**/zizmor.yml'
       - '**/zizmor.yaml'
       - '.github/zizmor*'
-  push:
-    branches: [dev, main]
-    paths:
-      - '.github/workflows/**'
-      - '.github/actions/**'
-      - '.github/dependabot.yml'
-      - '**/action.yml'
-      - '**/action.yaml'
-      - '**/zizmor.yml'
-      - '**/zizmor.yaml'
-      - '.github/zizmor*'
   workflow_dispatch:
 
 permissions:

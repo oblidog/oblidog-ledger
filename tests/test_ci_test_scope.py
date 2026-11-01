@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.ci_test_scope import determine_scope, main
+from scripts.ci_test_scope import component_scope, determine_scope, main
 
 
 class ScopeTests(unittest.TestCase):
@@ -73,6 +73,96 @@ class ScopeTests(unittest.TestCase):
 
     def test_normal_branch_runs(self) -> None:
         self.assertTrue(determine_scope({"HEAD_REF": "feature/test"})[0])
+
+    def normal_env(self, changes: dict[str, str]) -> dict[str, str]:
+        return {**self.merge_env(changes), "HEAD_REF": "feature/test"}
+
+    def test_frontend_only_skips_backend(self) -> None:
+        env = self.normal_env({"frontend/src/page.tsx": "export default 1\n"})
+        self.assertEqual(
+            component_scope(env),
+            {
+                "backend": False,
+                "frontend": True,
+                "quality": False,
+            },
+        )
+
+    def test_backend_only_skips_frontend(self) -> None:
+        env = self.normal_env({"backend/app.py": "value = 2\n"})
+        self.assertEqual(
+            component_scope(env),
+            {
+                "backend": True,
+                "frontend": False,
+                "quality": True,
+            },
+        )
+
+    def test_docs_only_skips_component_checks(self) -> None:
+        env = self.normal_env({"docs/guide.md": "Guide\n"})
+        self.assertFalse(any(component_scope(env).values()))
+
+    def test_shared_dependency_change_runs_all(self) -> None:
+        env = self.normal_env({"bun.lock": "changed dependencies\n"})
+        self.assertTrue(all(component_scope(env).values()))
+
+    def test_scope_policy_change_runs_all(self) -> None:
+        env = self.normal_env({"tests/test_ci_test_scope.py": "changed policy\n"})
+        self.assertTrue(all(component_scope(env).values()))
+
+    def test_unknown_path_runs_all(self) -> None:
+        env = self.normal_env({"new-tool/config.json": "{}\n"})
+        self.assertTrue(all(component_scope(env).values()))
+
+    def test_email_change_runs_backend(self) -> None:
+        env = self.normal_env({"emails/src/template.tsx": "changed template\n"})
+        self.assertEqual(
+            component_scope(env),
+            {
+                "backend": True,
+                "frontend": False,
+                "quality": False,
+            },
+        )
+
+    def test_rename_across_components_runs_both(self) -> None:
+        (self.root / "backend/app.py").rename(self.root / "frontend/moved.py")
+        env = self.normal_env({})
+        self.assertTrue(all(component_scope(env).values()))
+
+    def test_deleted_backend_file_still_runs_backend(self) -> None:
+        (self.root / "backend/app.py").unlink()
+        env = self.normal_env({})
+        self.assertTrue(component_scope(env)["backend"])
+
+    def test_untrusted_or_stale_component_diff_runs_all(self) -> None:
+        env = self.normal_env({"docs/guide.md": "Guide\n"})
+        for overrides in ({"SAME_REPOSITORY": "false"}, {"BASE_SHA": env["HEAD_SHA"]}):
+            self.assertTrue(all(component_scope({**env, **overrides}).values()))
+
+    def test_manual_run_runs_all(self) -> None:
+        self.assertTrue(all(component_scope({}).values()))
+
+    def test_main_emits_frontend_only_scope(self) -> None:
+        env = self.normal_env({"frontend/src/page.tsx": "export default 1\n"})
+        output = self.root / "output"
+        with patch.dict(os.environ, {**env, "GITHUB_OUTPUT": str(output)}, clear=True):
+            main()
+        self.assertEqual(
+            output.read_text(),
+            "run_heavy=true\nrun_backend=false\nrun_frontend=true\nrun_quality=false\n",
+        )
+
+    def test_main_preserves_release_metadata_skip(self) -> None:
+        env = self.merge_env({"CHANGELOG.md": "Release notes\n"})
+        output = self.root / "output"
+        with patch.dict(os.environ, {**env, "GITHUB_OUTPUT": str(output)}, clear=True):
+            main()
+        self.assertEqual(
+            output.read_text(),
+            "run_heavy=false\nrun_backend=false\nrun_frontend=false\nrun_quality=false\n",
+        )
 
     def test_release_versions_and_changelog_skip(self) -> None:
         changes = {
@@ -175,14 +265,20 @@ class ScopeTests(unittest.TestCase):
             ),
         ):
             main()
-        self.assertEqual(output.read_text(), "run_heavy=true\n")
+        self.assertEqual(
+            output.read_text(),
+            "run_heavy=true\nrun_backend=true\nrun_frontend=true\nrun_quality=true\n",
+        )
 
     def test_malformed_metadata_outputs_run_not_skip(self) -> None:
         env = self.merge_env({"frontend/package.json": "broken json"})
         output = self.root / "output"
         with patch.dict(os.environ, {**env, "GITHUB_OUTPUT": str(output)}, clear=True):
             main()
-        self.assertEqual(output.read_text(), "run_heavy=true\n")
+        self.assertEqual(
+            output.read_text(),
+            "run_heavy=true\nrun_backend=true\nrun_frontend=true\nrun_quality=true\n",
+        )
 
     def test_unavailable_git_commit_outputs_run_not_skip(self) -> None:
         env = self.merge_env({"CHANGELOG.md": "New release\n"})
@@ -191,7 +287,10 @@ class ScopeTests(unittest.TestCase):
             os.environ, {**env, "GITHUB_SHA": "missing", "GITHUB_OUTPUT": str(output)}
         ):
             main()
-        self.assertEqual(output.read_text(), "run_heavy=true\n")
+        self.assertEqual(
+            output.read_text(),
+            "run_heavy=true\nrun_backend=true\nrun_frontend=true\nrun_quality=true\n",
+        )
 
 
 if __name__ == "__main__":

@@ -1,13 +1,12 @@
-"""Keep release/back-sync test skips limited to changes in release metadata."""
+"""Select CI checks from a verified merge result, running all on uncertainty."""
 
 from __future__ import annotations
 
 import json
 import os
 import subprocess
-from pathlib import Path
-
 import tomllib
+from pathlib import Path
 
 
 def git(*args: str) -> str:
@@ -81,9 +80,57 @@ def determine_scope(env: dict[str, str]) -> tuple[bool, str]:
     return False, "Merge result changes only allowed release metadata (or no files)"
 
 
+def component_scope(env: dict[str, str]) -> dict[str, bool]:
+    """Skip unrelated checks only for a trusted, current PR merge result.
+
+    Unknown paths are deliberately shared. New tooling must not silently lose
+    coverage just because it is missing from a component's allowlist.
+    """
+    all_checks = dict.fromkeys(("backend", "frontend", "quality"), True)
+    if env.get("SAME_REPOSITORY") != "true":
+        return all_checks
+    base, head, merge = (env[key] for key in ("BASE_SHA", "HEAD_SHA", "GITHUB_SHA"))
+    parents = git("rev-list", "--parents", "-n", "1", merge).split()[1:]
+    if parents != [base, head]:
+        return all_checks
+
+    checks = dict.fromkeys(all_checks, False)
+    # Include both sides of renames and deleted paths when deciding coverage.
+    paths = git("diff", "--name-only", "--no-renames", "-z", base, merge).split("\0")
+    for path in filter(None, paths):
+        if path.startswith("backend/"):
+            checks["backend"] = checks["quality"] = True
+        elif path.startswith("frontend/"):
+            checks["frontend"] = True
+        elif (
+            path.startswith(("emails/", "tests/"))
+            and path != "tests/test_ci_test_scope.py"
+        ):
+            checks["backend"] = True
+        elif path.startswith("docs/") or path in {
+            "README.md",
+            "CHANGELOG.md",
+            "CONTRIBUTING.md",
+            "CODE_OF_CONDUCT.md",
+            "SECURITY.md",
+            "AGENTS.md",
+            "development.md",
+            "LICENSE",
+        }:
+            continue
+        else:
+            return all_checks
+    return checks
+
+
 def main() -> None:
     try:
         run_heavy, reason = determine_scope(dict(os.environ))
+        checks = (
+            component_scope(dict(os.environ))
+            if run_heavy
+            else dict.fromkeys(("backend", "frontend", "quality"), False)
+        )
     except (
         KeyError,
         ValueError,
@@ -92,9 +139,15 @@ def main() -> None:
         OSError,
     ) as exc:
         run_heavy, reason = True, f"Scope detection failed: {exc}; run tests"
+        checks = dict.fromkeys(("backend", "frontend", "quality"), True)
     print(reason)
+    print(f"Component checks: {checks}")
     with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
         output.write(f"run_heavy={str(run_heavy).lower()}\n")
+        output.writelines(
+            f"run_{component}={str(enabled).lower()}\n"
+            for component, enabled in checks.items()
+        )
 
 
 if __name__ == "__main__":
