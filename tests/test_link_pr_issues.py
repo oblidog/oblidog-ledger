@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -51,7 +52,50 @@ class LinkIssuesTests(unittest.TestCase):
         Closes #596
         ~~~
         """
-        self.assertEqual(linker.issue_numbers(body), [588, 589])
+        self.assertEqual(linker.issue_numbers(textwrap.dedent(body)), [588, 589])
+
+    def test_indented_code_is_ignored(self) -> None:
+        for indentation in ("    ", "\t", "  \t"):
+            with self.subTest(indentation=indentation):
+                body = f"Example:\n\n{indentation}Closes #588\n\nCloses #589"
+                self.assertEqual(linker.issue_numbers(body), [589])
+
+    def test_fences_require_matching_character_and_length(self) -> None:
+        examples = [
+            "````markdown\n```text\nCloses #588\n```\n````",
+            "~~~~markdown\n~~~\nCloses #588\n~~~\n~~~~~",
+            "```text\n~~~\nCloses #588\n```",
+            "   ````text\n```\nCloses #588\n   ````",
+            "```text\n``` not a closing fence\nCloses #588\n```",
+        ]
+        for example in examples:
+            with self.subTest(example=example):
+                self.assertEqual(
+                    linker.issue_numbers(f"{example}\n\nCloses #589"), [589]
+                )
+
+    def test_unclosed_fence_hides_remaining_examples(self) -> None:
+        self.assertEqual(
+            linker.issue_numbers("Closes #589\n\n````text\n```\nCloses #588"),
+            [589],
+        )
+
+    def test_inline_code_uses_matching_backtick_runs(self) -> None:
+        for example in (
+            "``example ` Closes #588 ` end``",
+            "`example\nCloses #588`",
+            "``example ``` Closes #588 ``` end``",
+        ):
+            with self.subTest(example=example):
+                self.assertEqual(
+                    linker.issue_numbers(f"{example}\n\nCloses #589"), [589]
+                )
+
+    def test_prose_and_list_references_are_preserved(self) -> None:
+        self.assertEqual(
+            linker.issue_numbers("Closes #588\n\n- Fixes #589\n  - Resolves #590"),
+            [588, 589, 590],
+        )
 
     def run_linker(self, issue: dict | None) -> list:
         with patch.object(

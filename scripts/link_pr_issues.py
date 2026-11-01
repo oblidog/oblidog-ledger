@@ -9,11 +9,47 @@ import subprocess
 from pathlib import Path
 
 
+def prose_only(body: str) -> str:
+    """Conservatively discard code examples before recognizing issue references."""
+    body = re.sub(r"<!--.*?(?:-->|\Z)", " ", body, flags=re.DOTALL)
+    lines = []
+    fence_character = ""
+    fence_length = 0
+    for line in body.expandtabs(4).splitlines():
+        if fence_character:
+            # A shorter run, another fence character, or trailing text cannot
+            # close the block. An unclosed fence hides the remaining body.
+            if re.fullmatch(
+                rf" {{0,3}}{re.escape(fence_character)}{{{fence_length},}}[ \t]*",
+                line,
+            ):
+                fence_character = ""
+            lines.append("")
+            continue
+        if line.startswith("    "):
+            lines.append("")
+            continue
+        opening = re.match(r" {0,3}(`{3,}|~{3,})(.*)$", line)
+        if opening and not (opening[1][0] == "`" and "`" in opening[2]):
+            fence_character = opening[1][0]
+            fence_length = len(opening[1])
+            lines.append("")
+            continue
+        lines.append(line)
+
+    # Inline spans may use multiple backticks and span line boundaries. Their
+    # closing delimiter must have exactly the same length as the opening run.
+    return re.sub(
+        r"(?<!`)(`+)(?!`)(.*?)(?<!`)\1(?!`)",
+        " ",
+        "\n".join(lines),
+        flags=re.DOTALL,
+    )
+
+
 def issue_numbers(body: str) -> list[int]:
     # Examples and hidden template instructions must not create links.
-    body = re.sub(
-        r"<!--.*?-->|```.*?```|~~~.*?~~~|`[^`\n]*`", "", body, flags=re.DOTALL
-    )
+    body = prose_only(body)
     return sorted(
         {
             int(number)
