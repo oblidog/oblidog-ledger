@@ -57,6 +57,29 @@ next version without changing files or prompting for input, run:
 bash ./scripts/cz.sh bump --dry-run --yes --get-next
 ```
 
+### Versioning before 1.0
+
+While the project is on `0.x`, `major_version_zero = true` in the root
+`pyproject.toml` keeps breaking changes within the `0.x` series. Mark breaking
+changes explicitly with `!` in the Conventional Commit title or a
+`BREAKING CHANGE:` footer, including in squash commits and release PRs that
+carry them to `main`. For example:
+
+```text
+refactor(legacy)!: remove legacy import
+```
+
+A breaking change increments the minor version (for example, `0.21.3` to
+`0.22.0`), as does a `feat` commit. A `fix` commit still increments the patch
+version (`0.21.3` to `0.21.4`). Describe breaking changes and required upgrade
+steps in the PR so they remain visible in release notes.
+
+The release workflow reads this configuration for both the version preview
+and the actual bump; no extra CLI flag is needed. Ensure the setting reaches
+`main` before releasing a breaking change. For an intentional `1.0.0` release,
+remove the setting in a breaking-change commit and preserve its breaking-change
+marker in the commit merged into `main`.
+
 ## Automated releases
 
 ### Issue links for development PRs
