@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 import tomllib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 
 def git(*args: str) -> str:
@@ -102,6 +102,9 @@ def component_scope(env: dict[str, str]) -> dict[str, bool]:
             checks["backend"] = checks["quality"] = True
         elif path.startswith("frontend/"):
             checks["frontend"] = True
+            # The backend contract suite verifies these catalogs against ErrorCode.
+            if PurePosixPath(path).match("frontend/src/i18n/locales/*/errors.json"):
+                checks["backend"] = True
         elif (
             path.startswith(("emails/", "tests/"))
             and path != "tests/test_ci_test_scope.py"

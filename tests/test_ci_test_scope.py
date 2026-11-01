@@ -99,6 +99,36 @@ class ScopeTests(unittest.TestCase):
             },
         )
 
+    def test_error_catalogs_run_backend_contract_checks(self) -> None:
+        for language in ("en", "pl", "de", "future-language"):
+            with self.subTest(language=language):
+                self.git("switch", "-q", "main")
+                self.git("reset", "--hard", self.base)
+                self.git("switch", "-q", "candidate")
+                self.git("reset", "--hard", self.base)
+                env = self.normal_env(
+                    {f"frontend/src/i18n/locales/{language}/errors.json": "{}\n"}
+                )
+                self.assertEqual(
+                    component_scope(env),
+                    {
+                        "backend": True,
+                        "frontend": True,
+                        "quality": False,
+                    },
+                )
+
+    def test_other_frontend_catalogs_still_skip_backend(self) -> None:
+        env = self.normal_env({"frontend/src/i18n/locales/en/common.json": "{}\n"})
+        self.assertEqual(
+            component_scope(env),
+            {
+                "backend": False,
+                "frontend": True,
+                "quality": False,
+            },
+        )
+
     def test_docs_only_skips_component_checks(self) -> None:
         env = self.normal_env({"docs/guide.md": "Guide\n"})
         self.assertFalse(any(component_scope(env).values()))
