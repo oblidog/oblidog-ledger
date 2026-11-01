@@ -18,7 +18,9 @@
     "unknown": "Unbekannt",
     "automatic": "Automatisch",
     "manual": "Manuell",
-    "mixed": "Gemischt"
+    "mixed": "Gemischt",
+    "integration": "Integration",
+    "legacy": "Altimport"
   },
   "categoryMode": {
     "manual": "Manuell",

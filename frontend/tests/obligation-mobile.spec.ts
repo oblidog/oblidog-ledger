@@ -154,15 +154,21 @@ for (const width of [320, 375, 414]) {
       1,
     )
     await page.getByText(name, { exact: true }).click()
-    const details = page.getByRole("dialog", { name: key })
-    await expect(details.getByText("125.00 PLN", { exact: true })).toBeVisible()
+    const details = page.getByRole("dialog", { name, exact: true })
     await expect(
-      details.getByText("20 Oct 2026", { exact: true }),
+      details
+        .getByRole("region", { name: "Payment summary" })
+        .getByText("125.00 PLN", { exact: true }),
+    ).toBeVisible()
+    await expect(
+      details
+        .getByRole("region", { name: "Payment summary" })
+        .getByText("20 Oct 2026", { exact: true }),
     ).toBeVisible()
     await expectNoOverflow(page)
     expect(
       await details
-        .locator("table")
+        .getByRole("region", { name: "Payment summary" })
         .evaluate((el) => el.scrollWidth <= el.clientWidth),
     ).toBe(true)
     await details.getByRole("tab", { name: "Activity" }).click()
@@ -282,7 +288,7 @@ for (const options of [{ viewer: true }, { readOnly: true }]) {
       page.getByRole("button", { name: "Mark as paid", exact: true }),
     ).toHaveCount(0)
     await page.getByText(name, { exact: true }).click()
-    const details = page.getByRole("dialog", { name: key })
+    const details = page.getByRole("dialog", { name, exact: true })
     await expect(
       details.getByRole("button", { name: "Mark as paid", exact: true }),
     ).toHaveCount(0)
@@ -306,7 +312,7 @@ for (const lifecycle of [
     await mockWorkspace(page, { lifecycle })
     await page.goto(`/ledgers/${ledgerId}?year=2026&month=10&lifecycle=`)
     await page.getByText(name, { exact: true }).click()
-    const details = page.getByRole("dialog", { name: key })
+    const details = page.getByRole("dialog", { name, exact: true })
     await expect(
       details.getByRole("button", { name: "Mark as ready", exact: true }),
     ).toHaveCount(lifecycle === "collecting_data" ? 1 : 0)

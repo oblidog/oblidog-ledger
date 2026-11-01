@@ -18,7 +18,9 @@
     "unknown": "Nieznane",
     "automatic": "Automatyczne",
     "manual": "Ręczne",
-    "mixed": "Mieszane"
+    "mixed": "Mieszane",
+    "integration": "Integracja",
+    "legacy": "Import historyczny"
   },
   "categoryMode": {
     "manual": "Ręczny",
