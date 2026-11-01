@@ -110,6 +110,9 @@ const request =
   }
 
 export const AnalyticsService = {
+  readAttentionOverview: request(
+    generated.AnalyticsService.readAttentionOverview<true>,
+  ),
   readCategoryAmountHistory: request(
     generated.AnalyticsService.readCategoryAmountHistory<true>,
   ),

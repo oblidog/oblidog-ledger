@@ -45,6 +45,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { i18n } from "@/i18n"
 import { formatAmount as exactAmount, getLocale } from "@/i18n/format"
+import { unpaidObligationsHref } from "./attentionNavigation"
+import { NeedsAttention } from "./NeedsAttention"
 
 type Period = { year: number; month: number }
 
@@ -272,7 +274,12 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
         </div>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <NeedsAttention key={ledgerId} ledgerId={ledgerId} />
+
+      <h2 className="text-lg font-semibold">
+        {i18n.t("app:analytics.period_summary")} · {periodLabel(selectedPeriod)}
+      </h2>
+      <section className="grid items-start gap-4 lg:grid-cols-3">
         <PaymentProgressCard
           data={summary.data}
           isError={summary.isError}
@@ -281,6 +288,8 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
           period={selectedPeriod}
         />
         <CashflowOverviewCards
+          obligations={obligations.data}
+          obligationsUnavailable={obligations.isError || obligations.isLoading}
           data={cashflow.data}
           isError={cashflow.isError}
           isLoading={cashflow.isLoading}
@@ -446,10 +455,16 @@ function PaymentProgressCard({
 }
 
 function CashflowOverviewCards({
+  obligations,
+  obligationsUnavailable,
   data,
   isError,
   isLoading,
 }: {
+  obligations:
+    | Awaited<ReturnType<typeof ObligationsService.readObligations>>
+    | undefined
+  obligationsUnavailable: boolean
   data:
     | Awaited<ReturnType<typeof AnalyticsService.readRemainingPeriodCashflow>>
     | undefined
@@ -459,7 +474,7 @@ function CashflowOverviewCards({
   useTranslation()
 
   if (isLoading) {
-    return Array.from({ length: 3 }, (_, index) => (
+    return Array.from({ length: 2 }, (_, index) => (
       <Card className="gap-3 py-4" key={index}>
         <CardHeader className="gap-1">
           <Skeleton className="h-5 w-28" />
@@ -473,7 +488,7 @@ function CashflowOverviewCards({
 
   if (isError || !data) {
     return (
-      <Card className="gap-3 py-4 sm:col-span-2 xl:col-span-3">
+      <Card className="gap-3 py-4 lg:col-span-2">
         <CardContent className="pt-6">
           <QueryState
             message={i18n.t(
@@ -485,10 +500,17 @@ function CashflowOverviewCards({
     )
   }
 
-  const nextDueDate = data.currency_summaries
-    .flatMap((summary) => summary.daily)
-    .filter((point) => !point.is_overdue)
-    .sort((a, b) => a.due_date.localeCompare(b.due_date))[0]?.due_date
+  const nextDueDate = obligations?.data
+    .filter(
+      (item) =>
+        item.lifecycle !== "paid" &&
+        item.lifecycle !== "canceled" &&
+        item.due_date !== null &&
+        item.due_date >= data.as_of_date,
+    )
+    .map((item) => item.due_date!)
+    .sort()[0]
+  const scheduleComplete = data.is_complete && !obligationsUnavailable
 
   return (
     <>
@@ -498,41 +520,33 @@ function CashflowOverviewCards({
           amount: summary.total_known_amount,
           currency: summary.currency,
         }))}
-        emptyLabel="0"
-        emptyDescription={i18n.t("app:analytics.no_known_unpaid_amounts")}
-      />
-      <CashflowMetricCard
-        label={i18n.t("app:analytics.overdue")}
-        values={data.currency_summaries
-          .filter((summary) => Number(summary.overdue_known_amount) > 0)
-          .map((summary) => ({
-            amount: summary.overdue_known_amount,
-            currency: summary.currency,
-          }))}
-        emptyLabel="0"
-        emptyDescription={i18n.t("app:analytics.no_overdue_obligations")}
-        tone={
-          data.currency_summaries.some(
-            (summary) => Number(summary.overdue_known_amount) > 0,
-          )
-            ? "destructive"
-            : undefined
-        }
+        emptyLabel={data.unknown_amount_count > 0 ? "—" : "0"}
+        emptyDescription={i18n.t(
+          data.unknown_amount_count > 0
+            ? "app:analytics.attention_schedule_incomplete"
+            : "app:analytics.no_known_unpaid_amounts",
+        )}
       />
       <Card className="gap-3 py-4">
         <CardHeader className="gap-1">
           <CardDescription>
             {i18n.t("app:analytics.next_payment_due")}
           </CardDescription>
-          <CardTitle className="text-[28px] font-bold">
-            {nextDueDate ? formatDueDate(nextDueDate) : "0"}
+          <CardTitle className="text-lg font-semibold">
+            {nextDueDate
+              ? formatDueDate(nextDueDate)
+              : scheduleComplete
+                ? i18n.t("app:analytics.attention_no_upcoming")
+                : i18n.t("app:analytics.attention_schedule_incomplete")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
             {nextDueDate
               ? i18n.t("app:analytics.earliest_upcoming_unpaid_obligation")
-              : i18n.t("app:analytics.no_scheduled_payment")}
+              : scheduleComplete
+                ? i18n.t("app:analytics.no_scheduled_payment")
+                : i18n.t("app:analytics.attention_schedule_incomplete")}
           </p>
         </CardContent>
       </Card>
@@ -545,13 +559,11 @@ function CashflowMetricCard({
   values,
   emptyLabel,
   emptyDescription,
-  tone,
 }: {
   label: string
   values: { amount: string; currency: string | null }[]
   emptyLabel: string
   emptyDescription?: string
-  tone?: "destructive"
 }) {
   useTranslation()
 
@@ -559,9 +571,7 @@ function CashflowMetricCard({
     <Card className="gap-3 py-4">
       <CardHeader className="gap-1">
         <CardDescription>{label}</CardDescription>
-        <CardTitle
-          className={`text-[28px] font-bold ${tone === "destructive" && values.length > 0 ? "text-destructive" : ""}`}
-        >
+        <CardTitle className="text-[28px] font-bold">
           {values.length === 0
             ? emptyLabel
             : values.map((value) => (
@@ -572,7 +582,7 @@ function CashflowMetricCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {values.length > 0 ? (
+        {values.length > 1 ? (
           <p className="text-sm text-muted-foreground">
             {i18n.t("app:messages.currencies", { count: values.length })}
           </p>
@@ -643,7 +653,7 @@ function CashflowChart({
               ))}
             </div>
             <Button className="px-0" variant="link" size="sm" asChild>
-              <a href={obligationsHref(ledgerId, period)}>
+              <a href={unpaidObligationsHref(ledgerId, period)}>
                 {i18n.t("app:analytics.review_unpaid_obligations")}
                 <ArrowRight />
               </a>

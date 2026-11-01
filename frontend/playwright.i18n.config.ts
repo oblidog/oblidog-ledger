@@ -8,6 +8,7 @@ export default defineConfig({
     "page-hierarchy.spec.ts",
     "demo-preview.spec.ts",
     "analytics-preview.spec.ts",
+    "attention-preview.spec.ts",
     "obligations-preview.spec.ts",
   ],
   fullyParallel: true,
