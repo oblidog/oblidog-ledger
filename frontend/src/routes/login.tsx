@@ -101,15 +101,13 @@ function Login() {
             <h1 className="text-2xl font-bold">
               {i18n.t("app:auth.login_to_your_account")}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {appConfig?.is_demo
-                ? i18n.t(
-                    "app:auth.explore_oblidog_using_the_shared_public_demo_account",
-                  )
-                : i18n.t(
-                    "app:auth.access_is_limited_to_users_invited_by_an_administrator",
-                  )}
-            </p>
+            {!appConfig?.is_demo && (
+              <p className="text-sm text-muted-foreground">
+                {i18n.t(
+                  "app:auth.access_is_limited_to_users_invited_by_an_administrator",
+                )}
+              </p>
+            )}
           </div>
 
           {passwordChanged && (
@@ -120,30 +118,6 @@ function Login() {
                 {i18n.t(
                   "app:auth.your_sessions_were_signed_out_log_in_with_your_new_password",
                 )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {appConfig?.is_demo && demoCredentials && (
-            <Alert data-testid="demo-credentials">
-              <Info />
-              <AlertTitle>
-                {i18n.t("app:auth.public_demo_credentials")}
-              </AlertTitle>
-              <AlertDescription className="space-y-1">
-                <p>
-                  {i18n.t("app:auth.email_4c4e6b")}{" "}
-                  <strong>{demoCredentials.email}</strong>
-                </p>
-                <p>
-                  {i18n.t("app:auth.password_be81ab")}{" "}
-                  <strong>{demoCredentials.password}</strong>
-                </p>
-                <p className="pt-1">
-                  {i18n.t(
-                    "app:auth.the_fields_below_are_prefilled_demo_data_is_periodically_reset",
-                  )}
-                </p>
               </AlertDescription>
             </Alert>
           )}
@@ -198,7 +172,9 @@ function Login() {
             />
 
             <LoadingButton type="submit" loading={loginMutation.isPending}>
-              {i18n.t("app:auth.log_in")}
+              {appConfig?.is_demo
+                ? i18n.t("app:auth.enter_demo")
+                : i18n.t("app:auth.log_in")}
             </LoadingButton>
           </div>
         </form>

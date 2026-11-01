@@ -23,11 +23,11 @@ const mockDemoConfig = async (page: Page) => {
 test.describe("demo login", () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  test("shows and prefills the public demo credentials", async ({ page }) => {
+  test("prefills the public demo credentials", async ({ page }) => {
     await mockDemoConfig(page)
     await page.goto("/login")
 
-    await expect(page.getByTestId("demo-credentials")).toBeVisible()
+    await expect(page.getByTestId("demo-banner")).toBeVisible()
     await expect(page.getByTestId("email-input")).toHaveValue(
       demoConfig.demo_credentials.email,
     )
