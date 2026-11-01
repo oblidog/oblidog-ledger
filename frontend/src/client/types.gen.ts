@@ -15,7 +15,7 @@ export type ApiErrorResponse = {
     /**
      * Code
      */
-    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'legacy_import_running' | 'legacy_import_disabled' | 'legacy_import_not_found' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
     /**
      * Params
      */
@@ -986,7 +986,7 @@ export type IntegrationConflictResponse = {
     /**
      * Code
      */
-    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'legacy_import_running' | 'legacy_import_disabled' | 'legacy_import_not_found' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
     /**
      * Params
      */
@@ -1567,66 +1567,6 @@ export type LedgersPublic = {
      */
     count: number;
 };
-
-/**
- * LegacyImportJobPublic
- */
-export type LegacyImportJobPublic = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Ledger Id
-     */
-    ledger_id: string;
-    status: LegacyImportJobStatus;
-    /**
-     * Processed Obligations
-     */
-    processed_obligations: number;
-    /**
-     * Total Obligations
-     */
-    total_obligations: number;
-    /**
-     * Created Category Groups
-     */
-    created_category_groups: number | null;
-    /**
-     * Created Categories
-     */
-    created_categories: number | null;
-    /**
-     * Replaced Categories
-     */
-    replaced_categories: number | null;
-    /**
-     * Imported Obligations
-     */
-    imported_obligations: number | null;
-    /**
-     * Error
-     */
-    error: string | null;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Started At
-     */
-    started_at: string | null;
-    /**
-     * Finished At
-     */
-    finished_at: string | null;
-};
-
-/**
- * LegacyImportJobStatus
- */
-export type LegacyImportJobStatus = 'pending' | 'running' | 'succeeded' | 'failed';
 
 /**
  * Message
@@ -7828,130 +7768,6 @@ export type IntegrationsListIntegrationRunsResponses = {
 };
 
 export type IntegrationsListIntegrationRunsResponse = IntegrationsListIntegrationRunsResponses[keyof IntegrationsListIntegrationRunsResponses];
-
-export type LegacyImportReadLegacyImportJobData = {
-    body?: never;
-    path: {
-        /**
-         * Ledger Id
-         */
-        ledger_id: string;
-    };
-    query?: never;
-    url: '/api/v1/ledgers/{ledger_id}/legacy-import';
-};
-
-export type LegacyImportReadLegacyImportJobErrors = {
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    400: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    401: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    403: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    404: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    409: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    413: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    422: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    500: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    503: ApiErrorResponse;
-};
-
-export type LegacyImportReadLegacyImportJobError = LegacyImportReadLegacyImportJobErrors[keyof LegacyImportReadLegacyImportJobErrors];
-
-export type LegacyImportReadLegacyImportJobResponses = {
-    /**
-     * Successful Response
-     */
-    200: LegacyImportJobPublic;
-};
-
-export type LegacyImportReadLegacyImportJobResponse = LegacyImportReadLegacyImportJobResponses[keyof LegacyImportReadLegacyImportJobResponses];
-
-export type LegacyImportStartLegacyImportData = {
-    body?: never;
-    path: {
-        /**
-         * Ledger Id
-         */
-        ledger_id: string;
-    };
-    query?: never;
-    url: '/api/v1/ledgers/{ledger_id}/legacy-import';
-};
-
-export type LegacyImportStartLegacyImportErrors = {
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    400: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    401: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    403: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    404: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    409: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    413: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    422: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    500: ApiErrorResponse;
-    /**
-     * Application error with stable code; legacy detail is unchanged
-     */
-    503: ApiErrorResponse;
-};
-
-export type LegacyImportStartLegacyImportError = LegacyImportStartLegacyImportErrors[keyof LegacyImportStartLegacyImportErrors];
-
-export type LegacyImportStartLegacyImportResponses = {
-    /**
-     * Successful Response
-     */
-    202: LegacyImportJobPublic;
-};
-
-export type LegacyImportStartLegacyImportResponse = LegacyImportStartLegacyImportResponses[keyof LegacyImportStartLegacyImportResponses];
 
 export type ObligationsEnsureObligationsData = {
     body?: never;

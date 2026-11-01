@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Protocol, cast
 from zoneinfo import ZoneInfo
@@ -21,10 +21,8 @@ from app.domain.system_run import (
 )
 from app.models import Ledger, SystemRun, SystemRunStep
 from app.services.daily_obligation_report import DailyObligationReport
-from app.services.legacy_import import load_legacy_import_config
 from app.services.scheduled_reports import ScheduledReport, deliver_scheduled_report
 from app.services.weekly_monthly_overview_report import WeeklyMonthlyOverviewReport
-from app.use_cases import legacy_import as legacy_import_use_cases
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.integration_run_maintenance import maintain_run_history
 
@@ -121,55 +119,6 @@ class EstimateObligationAmountsTask(EnsureObligationsTask):
         return TaskResult({"estimated_obligations": len(updated)})
 
 
-class LegacyImportTask:
-    name = "legacy_import"
-    order = 100
-    dependencies: tuple[str, ...] = ()
-    is_global = False
-
-    @property
-    def mode(self) -> TaskRunMode:
-        return settings.LEGACY_IMPORT_MODE
-
-    def should_run(self, context: SystemRunContext) -> SystemRunSkipReason | None:
-        if (
-            not settings.DROPBOX_API_KEY
-            or not settings.LEGACY_IMPORT_CONFIG_PATH.is_file()
-        ):
-            return SystemRunSkipReason.NOT_CONFIGURED
-        if settings.LEGACY_IMPORT_LEDGER_ID is None:
-            return SystemRunSkipReason.NOT_CONFIGURED
-        return None
-
-    def eligible_ledgers(
-        self, *, session: Session, context: SystemRunContext
-    ) -> Sequence[Ledger]:
-        ledger = session.get(Ledger, settings.LEGACY_IMPORT_LEDGER_ID)
-        return [ledger] if ledger is not None and ledger.is_active else []
-
-    def execute(
-        self, *, session: Session, ledger: Ledger, context: SystemRunContext
-    ) -> TaskResult:
-        from findog_legacy_adapter import (  # type: ignore[import-untyped]
-            load_payment_book_from_dropbox,
-        )
-
-        config = load_legacy_import_config(settings.LEGACY_IMPORT_CONFIG_PATH)
-        payment_book = load_payment_book_from_dropbox(
-            settings.DROPBOX_API_KEY,
-            config.excel_dropbox_path,
-            config.monitored_sheets,
-            interpret_codes=True,
-        )
-        result = legacy_import_use_cases.import_legacy_payment_book(
-            session=session,
-            ledger_id=ledger.id,
-            payment_book=payment_book,
-            current_period=BillingPeriod.from_date(context.business_date),
-        )
-        return TaskResult(asdict(result))
-
-
 class ScheduledReportsTask:
     name = "scheduled_reports"
     order = 300
@@ -235,7 +184,6 @@ class MaintenanceCleanupTask:
 
 
 SYSTEM_RUN_TASK_REGISTRY: tuple[SystemRunTask, ...] = (
-    cast(SystemRunTask, LegacyImportTask()),
     cast(SystemRunTask, EnsureObligationsTask()),
     cast(SystemRunTask, EstimateObligationAmountsTask()),
     cast(SystemRunTask, MaintenanceCleanupTask()),
@@ -513,8 +461,6 @@ class SystemRunOrchestrator:
 
 def _safe_error(exc: Exception) -> str:
     message = " ".join(str(exc).split())
-    if settings.DROPBOX_API_KEY:
-        message = message.replace(settings.DROPBOX_API_KEY, "[redacted]")
     return message[:1000] or exc.__class__.__name__
 
 

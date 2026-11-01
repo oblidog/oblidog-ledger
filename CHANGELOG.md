@@ -1,3 +1,20 @@
+## Unreleased
+
+### BREAKING CHANGE
+
+- Removed the legacy workbook importer, including the ledger `GET`/`POST
+  `/api/v1/ledgers/{ledger_id}/legacy-import` endpoints, the `legacy_import`
+  System Run task, and the dedicated adapter/Dropbox dependencies.
+- Remove `DROPBOX_API_KEY`, `LEGACY_IMPORT_MODE`, `LEGACY_IMPORT_LEDGER_ID`,
+  `LEGACY_IMPORT_CONFIG_PATH`, and any importer YAML bind mounts from deployment
+  configuration. They are no longer used. No Dropbox credentials are required.
+- The database upgrade drops only `legacy_import_job` and its job history.
+  Imported obligations, categories, payment history, persisted `legacy` source
+  values, and historical System Runs remain available. Downgrading recreates
+  the empty job table; it cannot restore discarded import job history.
+- The project remains on 0.x (`major_version_zero = true`); this breaking
+  removal requires a minor release.
+
 ## v0.21.4 (2026-11-01)
 
 ### Fix

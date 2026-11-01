@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.domain import TaskRunMode
 from app.services.system_run_runner import SYSTEM_RUN_ADVISORY_LOCK_KEY
+from app.use_cases.system_runs import SYSTEM_RUN_TASK_REGISTRY
 from tests.conftest import TestingSessionLocal
 from tests.utils.user import authentication_token_from_email, create_random_user
 
@@ -24,7 +25,6 @@ def test_administrator_can_start_manual_run_and_inspect_history(
     superuser_token_headers: dict[str, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "LEGACY_IMPORT_MODE", TaskRunMode.MANUAL_ONLY)
     monkeypatch.setattr(settings, "SYSTEM_RUN_TIMEZONE", "Europe/Warsaw")
     monkeypatch.setattr(settings, "SMTP_HOST", None)
     started = client.post(
@@ -65,53 +65,6 @@ def test_administrator_can_start_manual_run_and_inspect_history(
     assert details.json()["steps"] == run["steps"]
 
 
-def test_manual_only_task_requires_explicit_selection(
-    client: TestClient,
-    superuser_token_headers: dict[str, str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "LEGACY_IMPORT_MODE", TaskRunMode.MANUAL_ONLY)
-    monkeypatch.setattr(settings, "SMTP_HOST", None)
-
-    response = client.post(
-        f"{settings.API_V1_STR}/system-runs/",
-        headers=superuser_token_headers,
-        json={"manual_task_names": ["legacy_import"]},
-    )
-
-    assert response.status_code == 200
-    steps = response.json()["steps"]
-    assert steps[0]["task_name"] == "legacy_import"
-    assert steps[0]["skip_reason"] == "not_configured"
-    assert {step["task_name"] for step in steps} >= {
-        "scheduled_reports",
-        "maintenance_cleanup",
-    }
-    assert {step["task_name"] for step in steps} >= {
-        "ensure_obligations",
-        "estimate_obligation_amounts",
-    }
-
-
-def test_disabled_tasks_cannot_be_started_manually(
-    client: TestClient,
-    superuser_token_headers: dict[str, str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "LEGACY_IMPORT_MODE", TaskRunMode.DISABLED)
-
-    response = client.post(
-        f"{settings.API_V1_STR}/system-runs/",
-        headers=superuser_token_headers,
-        json={"manual_task_names": ["legacy_import"]},
-    )
-
-    assert response.status_code == 409
-    assert (
-        response.json()["detail"] == "Disabled tasks cannot be started: legacy_import"
-    )
-
-
 def test_start_reports_an_already_running_execution(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
@@ -131,3 +84,47 @@ def test_start_reports_an_already_running_execution(
 
     assert response.status_code == 409
     assert response.json()["detail"] == "A System Run is already running"
+
+
+def test_removed_importer_is_not_available(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    from app.main import app
+
+    assert not any("legacy-import" in path for path in app.openapi()["paths"])
+    tasks = client.get(
+        f"{settings.API_V1_STR}/system-runs/tasks", headers=superuser_token_headers
+    )
+    assert tasks.status_code == 200
+    assert "legacy_import" not in {task["name"] for task in tasks.json()}
+    response = client.post(
+        f"{settings.API_V1_STR}/system-runs/",
+        headers=superuser_token_headers,
+        json={"manual_task_names": ["legacy_import"]},
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "system_run_unknown_tasks"
+
+
+@pytest.mark.parametrize("mode", [TaskRunMode.MANUAL_ONLY, TaskRunMode.DISABLED])
+def test_manual_task_modes_remain_supported(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+    mode: TaskRunMode,
+) -> None:
+    task = next(
+        task for task in SYSTEM_RUN_TASK_REGISTRY if task.name == "ensure_obligations"
+    )
+    monkeypatch.setattr(task, "mode", mode)
+    response = client.post(
+        f"{settings.API_V1_STR}/system-runs/",
+        headers=superuser_token_headers,
+        json={"manual_task_names": [task.name]},
+    )
+    if mode is TaskRunMode.DISABLED:
+        assert response.status_code == 409
+        assert response.json()["code"] == "system_run_disabled_tasks"
+    else:
+        assert response.status_code == 200
+        assert task.name in {step["task_name"] for step in response.json()["steps"]}

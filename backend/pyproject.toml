@@ -19,8 +19,6 @@ dependencies = [
     "sentry-sdk[fastapi]>=2.73.0,<3.0.0",
     "pyjwt<3.0.0,>=2.8.0",
     "pwdlib[argon2,bcrypt]>=0.3.1",
-    "findog-legacy-adapter @ git+https://github.com/oblidog/findog-legacy-core.git@v1.0.0a0",
-    "pyyaml>=6.0.3,<7.0.0",
     "jsonschema>=4.26.0,<5.0.0",
     "holidays>=0.99,<1.0",
 ]
@@ -36,6 +34,7 @@ dev = [
     "prek>=0.4.13,<1.0.0",
     "coverage>=7.15.4,<8.0.0",
     "openapi-python-client==0.29.1",
+    "pyyaml>=6.0.3,<7.0.0",
     "types-pyyaml>=6.0.12.20260906,<7.0.0",
     "types-jsonschema>=4.26.0.20261006",
 ]
@@ -84,10 +83,6 @@ extend-immutable-calls = [
     "fastapi.Security",
     "app.api.deps.require_scope",
 ]
-
-[tool.ruff.lint.per-file-ignores]
-# Fixtures deliberately exercise the legacy importer's naive datetime support.
-"tests/use_cases/test_legacy_import.py" = ["DTZ001"]
 
 [tool.ruff.lint.pyupgrade]
 # Preserve types, even if a file imports `from __future__ import annotations`.

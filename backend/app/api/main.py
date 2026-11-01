@@ -11,7 +11,6 @@ from app.api.routes import (
     integration,
     integrations,
     ledgers,
-    legacy_import,
     login,
     obligations,
     system_runs,
@@ -44,7 +43,6 @@ api_router.include_router(counterparties.router)
 api_router.include_router(demo_reset.router)
 api_router.include_router(integration.router)
 api_router.include_router(integrations.router)
-api_router.include_router(legacy_import.router)
 api_router.include_router(obligations.router)
 api_router.include_router(system_runs.router)
 api_router.include_router(user_invitations.admin_router)

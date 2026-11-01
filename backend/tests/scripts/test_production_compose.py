@@ -52,7 +52,3 @@ def test_production_environment_template_documents_system_run_settings() -> None
     assert variables["SYSTEM_RUN_TIMEZONE"] == "Europe/Warsaw"
     assert variables["SYSTEM_RUN_TIMEOUT_SECONDS"] == "3600"
     assert variables["SYSTEM_RUN_STALE_AFTER_MINUTES"] == "120"
-    assert (
-        "LEGACY_IMPORT_MODE=disabled"
-        in (REPOSITORY_ROOT / ".env.production.example").read_text()
-    )

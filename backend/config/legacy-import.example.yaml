@@ -1,6 +1,0 @@
-# Copy this file to a protected location and set LEGACY_IMPORT_CONFIG_PATH to it.
-# Keep DROPBOX_API_KEY only in the environment; never add it to this file.
-excel_dropbox_path: "/Oplaty.xlsm"
-
-monitored_sheets:
-  Home: ["C", "I", "O"]
