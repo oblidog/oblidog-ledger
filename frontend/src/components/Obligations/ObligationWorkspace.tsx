@@ -6,6 +6,7 @@ import {
   type ActiveFilter,
   ActiveFilterBadges,
 } from "@/components/ActiveFilterBadges"
+import { PageHeader } from "@/components/Common/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/useMobile"
@@ -131,31 +132,24 @@ export function ObligationWorkspace({
 
   return (
     <section className="min-w-0">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold md:text-2xl">
-            {i18n.t("app:obligations.obligations")}
-          </h1>
-          <p className="mt-1 hidden text-sm text-muted-foreground md:block">
-            {i18n.t(
-              "app:obligations.review_and_add_manual_obligations_for_this_ledger",
-            )}
-          </p>
-        </div>
-        {canEdit ? (
-          <CreateObligationDialog
-            ledgerId={ledgerId}
-            defaultPeriod={
-              filterByPeriod && hasValidPeriodFilter
-                ? { year: filterYear, month: filterMonth }
-                : period
-            }
-            onError={showErrorToast}
-            onSuccess={showSuccessToast}
-          />
-        ) : null}
-      </div>
-      <div className="mt-4 space-y-4">
+      <PageHeader
+        title={i18n.t("app:obligations.obligations")}
+        actions={
+          canEdit ? (
+            <CreateObligationDialog
+              ledgerId={ledgerId}
+              defaultPeriod={
+                filterByPeriod && hasValidPeriodFilter
+                  ? { year: filterYear, month: filterMonth }
+                  : period
+              }
+              onError={showErrorToast}
+              onSuccess={showSuccessToast}
+            />
+          ) : null
+        }
+      />
+      <div className="mt-6 space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="min-w-0 space-y-1.5">
             <Label>{i18n.t("app:obligations.billing_period")}</Label>
