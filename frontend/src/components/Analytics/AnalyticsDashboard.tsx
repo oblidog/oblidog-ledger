@@ -586,7 +586,7 @@ function CashflowMetricCard({
           <p className="text-sm text-muted-foreground">
             {i18n.t("app:messages.currencies", { count: values.length })}
           </p>
-        ) : emptyDescription ? (
+        ) : values.length === 0 && emptyDescription ? (
           <p className="text-sm text-muted-foreground">{emptyDescription}</p>
         ) : null}
       </CardContent>

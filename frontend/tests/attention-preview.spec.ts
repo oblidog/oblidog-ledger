@@ -307,3 +307,45 @@ test("a known next due date is retained when its amount is unknown", async ({
     page.getByText("No upcoming payments", { exact: true }),
   ).toHaveCount(0)
 })
+
+test("one currency with a known outstanding amount does not show an empty-state message", async ({
+  page,
+}) => {
+  await api(page)
+  await page.route("**/analytics/cashflow?**", (route) =>
+    route.fulfill({
+      json: {
+        period: { year: 2026, month: 11 },
+        as_of_date: "2026-11-01",
+        unknown_amount_count: 0,
+        without_due_date_count: 0,
+        is_complete: true,
+        currency_summaries: [
+          {
+            currency: "EUR",
+            total_known_amount: "1189.02",
+            scheduled_known_amount: "1189.02",
+            unscheduled_known_amount: "0.00",
+            overdue_known_amount: "0.00",
+            daily: [
+              {
+                due_date: "2026-11-09",
+                amount: "1189.02",
+                cumulative_amount: "1189.02",
+                is_overdue: false,
+              },
+            ],
+          },
+        ],
+      },
+    }),
+  )
+  await page.goto("/")
+  const card = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("Remaining to pay", { exact: true }) })
+  await expect(card.getByText("1,189.02 EUR", { exact: true })).toBeVisible()
+  await expect(
+    card.getByText("No known unpaid amounts", { exact: true }),
+  ).toHaveCount(0)
+})
