@@ -186,6 +186,24 @@ test("category filters and primary action survive the simpler table", async ({
     page.getByRole("cell", { name: "ELEC", exact: true }),
   ).toHaveCount(0)
   await expect(page).toHaveURL(/status=archived/)
+  await page.getByRole("button", { name: "New group", exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByLabel("Name", { exact: true }).fill("Another group")
+  await expect(dialog.getByLabel("Name", { exact: true })).toHaveValue(
+    "Another group",
+  )
+  await dialog.getByRole("button", { name: "Close", exact: true }).click()
   await page.getByRole("button", { name: "New category", exact: true }).click()
-  await expect(page.getByRole("dialog")).toBeVisible()
+  await expect(dialog).toBeVisible()
+  await dialog.getByLabel("Name", { exact: true }).fill("Another category")
+  await dialog.getByLabel("Code", { exact: true }).fill("OTHR")
+  await dialog.getByLabel("Group", { exact: true }).click()
+  await page.getByRole("option", { name: "Household", exact: true }).click()
+  await expect(dialog.getByLabel("Name", { exact: true })).toHaveValue(
+    "Another category",
+  )
+  await expect(dialog.getByLabel("Code", { exact: true })).toHaveValue("OTHR")
+  await expect(dialog.getByLabel("Group", { exact: true })).toContainText(
+    "Household",
+  )
 })
