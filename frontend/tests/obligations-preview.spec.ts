@@ -322,3 +322,110 @@ test("category picker reopens while focused after selection and Escape", async (
   await field.click()
   await expect(page.getByRole("option", { name: /Electricity/ })).toBeVisible()
 })
+
+test("active category and status badges clear individual filters without losing period or navigation context", async ({
+  page,
+}) => {
+  const { requests, writes } = await api(page, "en", "light", false, false)
+  await page.goto(
+    `/ledgers/${ledgerId}?year=2026&month=10&category=ELEC&lifecycle=unpaid&source=dashboard#invoices`,
+  )
+  const badges = page.getByRole("group", {
+    name: "Active filters",
+    exact: true,
+  })
+  await expect(
+    badges.getByText("Category: Electricity", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    badges.getByText("Status: Unpaid", { exact: true }),
+  ).toBeVisible()
+  await expect(badges.getByText(/^Period:/)).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Clear all", exact: true }),
+  ).toHaveCount(1)
+  await badges
+    .getByRole("button", {
+      name: "Remove filter: Category: Electricity",
+      exact: true,
+    })
+    .click()
+  await expect(
+    page.getByRole("combobox", { name: "Category", exact: true }),
+  ).toHaveValue("")
+  await expect(
+    badges.getByText("Status: Unpaid", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("combobox", { name: "Billing period", exact: true }),
+  ).toHaveValue("2026-10")
+  await expect
+    .poll(() => requests[requests.length - 1].searchParams.has("category_code"))
+    .toBe(false)
+  await badges
+    .getByRole("button", { name: "Remove filter: Status: Unpaid", exact: true })
+    .click()
+  await expect(badges).toHaveCount(0)
+  await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("")
+  const url = new URL(page.url())
+  expect(url.searchParams.get("year")).toBe("2026")
+  expect(url.searchParams.get("month")).toBe("10")
+  expect(url.searchParams.get("source")).toBe("dashboard")
+  expect(url.hash).toBe("#invoices")
+  await expect(page.getByRole("checkbox")).toHaveCount(0)
+  await page.reload()
+  await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("")
+  await expect(
+    page.getByRole("group", { name: "Active filters", exact: true }),
+  ).toHaveCount(0)
+  expect(writes).toEqual([])
+})
+
+test("one clear-all action resets restored badges and the period selector", async ({
+  page,
+}) => {
+  const { requests } = await api(page)
+  await page.goto(
+    `/ledgers/${ledgerId}?year=2026&month=10&category=ELEC&lifecycle=ready`,
+  )
+  await expect(
+    page.getByRole("group", { name: "Active filters", exact: true }),
+  ).toBeVisible()
+  await page.getByRole("button", { name: "Clear all", exact: true }).click()
+  await expect(
+    page.getByRole("group", { name: "Active filters", exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole("combobox", { name: "Billing period", exact: true }),
+  ).toHaveValue("all")
+  await expect(
+    page.getByRole("combobox", { name: "Category", exact: true }),
+  ).toHaveValue("")
+  await expect
+    .poll(() => requests[requests.length - 1].searchParams.has("year"))
+    .toBe(false)
+  await expect(
+    page.getByRole("button", { name: "Clear all", exact: true }),
+  ).toBeDisabled()
+})
+
+test("category badge falls back to its stored code when names are unavailable", async ({
+  page,
+}) => {
+  await api(page)
+  await page.route("**/categories?**", (route) =>
+    route.fulfill({ json: { data: [], count: 0 } }),
+  )
+  await page.goto(`/ledgers/${ledgerId}?period=all&category=ELEC&lifecycle=`)
+  const badges = page.getByRole("group", {
+    name: "Active filters",
+    exact: true,
+  })
+  await expect(
+    badges.getByText("Category: ELEC", { exact: true }),
+  ).toBeVisible()
+  await badges
+    .getByRole("button", { name: "Remove filter: Category: ELEC", exact: true })
+    .click()
+  await expect(badges).toHaveCount(0)
+})

@@ -2,6 +2,10 @@ import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CategoriesService, type ObligationPublic } from "@/client"
+import {
+  type ActiveFilter,
+  ActiveFilterBadges,
+} from "@/components/ActiveFilterBadges"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/useMobile"
@@ -89,6 +93,26 @@ export function ObligationWorkspace({
   )
   const clearFilters = () =>
     update({ filterByPeriod: false, categoryCode: "", lifecycle: "" })
+  const activeFilters: ActiveFilter[] = []
+  if (categoryCode) {
+    const categoryName =
+      categories.data?.data.find((category) => category.code === categoryCode)
+        ?.name ?? categoryCode
+    activeFilters.push({
+      key: "category",
+      label: i18n.t("app:messages.filter_category", { value: categoryName }),
+      onRemove: () => update({ categoryCode: "" }),
+    })
+  }
+  if (lifecycle) {
+    activeFilters.push({
+      key: "lifecycle",
+      label: i18n.t("app:messages.filter_status", {
+        value: lifecycleFilterLabel(lifecycle),
+      }),
+      onRemove: () => update({ lifecycle: "" }),
+    })
+  }
   const items: ObligationItemProps[] = !obligations.isError
     ? (visibleObligations?.map((obligation) => ({
         ledgerId,
@@ -186,10 +210,12 @@ export function ObligationWorkspace({
             </select>
           </div>
         </div>
-        <div className="flex justify-end">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <ActiveFilterBadges filters={activeFilters} />
           <Button
             variant="ghost"
             size="sm"
+            className="ml-auto"
             onClick={clearFilters}
             disabled={!filterByPeriod && !categoryCode && !lifecycle}
           >
