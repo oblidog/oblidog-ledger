@@ -36,22 +36,34 @@ test("manages category custom fields with the builder", async ({ page }) => {
 
   await page.goto("/ledgers")
   await page.getByRole("button", { name: "New ledger" }).click()
-  await page.getByLabel("Name").fill(ledgerName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(ledgerName)
   await page.getByRole("button", { name: "Create ledger" }).click()
   await expect(page.getByText("Ledger created successfully")).toBeVisible()
   await page.getByRole("link", { name: ledgerName }).click()
 
   await openCategories(page)
   await page.getByRole("button", { name: "New group" }).click()
-  await page.getByLabel("Name").fill(groupName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(groupName)
   await page.getByRole("button", { name: "Create group" }).click()
   await expect(page.getByText("Category group created")).toBeVisible()
 
   await page.getByRole("button", { name: "New category" }).click()
-  await page.getByLabel("Group").click()
+  await page.getByRole("dialog").getByLabel("Group", { exact: true }).click()
   await page.getByRole("option", { name: groupName }).click()
-  await page.getByLabel("Name").fill(categoryName)
-  await page.getByLabel("Code").fill("ELEC")
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(categoryName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Code", { exact: true })
+    .fill("ELEC")
   const createCategoryButton = page.getByRole("button", {
     name: "Create category",
   })
@@ -142,18 +154,30 @@ test("shows the empty category custom-data history", async ({ page }) => {
 
   await page.goto("/ledgers")
   await page.getByRole("button", { name: "New ledger" }).click()
-  await page.getByLabel("Name").fill(ledgerName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(ledgerName)
   await page.getByRole("button", { name: "Create ledger" }).click()
   await page.getByRole("link", { name: ledgerName }).click()
   await openCategories(page)
   await page.getByRole("button", { name: "New group" }).click()
-  await page.getByLabel("Name").fill(groupName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(groupName)
   await page.getByRole("button", { name: "Create group" }).click()
   await page.getByRole("button", { name: "New category" }).click()
-  await page.getByLabel("Group").click()
+  await page.getByRole("dialog").getByLabel("Group", { exact: true }).click()
   await page.getByRole("option", { name: groupName }).click()
-  await page.getByLabel("Name").fill(categoryName)
-  await page.getByLabel("Code").fill("DATA")
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(categoryName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Code", { exact: true })
+    .fill("DATA")
   const createCategoryButton = page.getByRole("button", {
     name: "Create category",
   })
@@ -203,22 +227,34 @@ test("filters the category table and moves a category between groups", async ({
 
   await page.goto("/ledgers")
   await page.getByRole("button", { name: "New ledger" }).click()
-  await page.getByLabel("Name").fill(ledgerName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(ledgerName)
   await page.getByRole("button", { name: "Create ledger" }).click()
   await page.getByRole("link", { name: ledgerName }).click()
   await openCategories(page)
 
   for (const groupName of [firstGroup, secondGroup]) {
     await page.getByRole("button", { name: "New group" }).click()
-    await page.getByLabel("Name").fill(groupName)
+    await page
+      .getByRole("dialog")
+      .getByLabel("Name", { exact: true })
+      .fill(groupName)
     await page.getByRole("button", { name: "Create group" }).click()
   }
 
   await page.getByRole("button", { name: "New category" }).click()
-  await page.getByLabel("Group").click()
+  await page.getByRole("dialog").getByLabel("Group", { exact: true }).click()
   await page.getByRole("option", { name: firstGroup }).click()
-  await page.getByLabel("Name").fill(categoryName)
-  await page.getByLabel("Code").fill("RENT")
+  await page
+    .getByRole("dialog")
+    .getByLabel("Name", { exact: true })
+    .fill(categoryName)
+  await page
+    .getByRole("dialog")
+    .getByLabel("Code", { exact: true })
+    .fill("RENT")
   await page.getByRole("button", { name: "Create category" }).click()
 
   await page.getByPlaceholder("Search name or code").fill("RENT")
@@ -229,7 +265,7 @@ test("filters the category table and moves a category between groups", async ({
   await expect(categoryRow.getByText(firstGroup, { exact: true })).toBeVisible()
 
   await openCategoryAction(page, categoryName, "Edit category")
-  await page.getByLabel("Group").click()
+  await page.getByRole("dialog").getByLabel("Group", { exact: true }).click()
   await page.getByRole("option", { name: secondGroup }).click()
   await page.getByRole("button", { name: "Save changes" }).click()
   await expect(page.getByText("Category updated")).toBeVisible()

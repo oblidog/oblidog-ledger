@@ -107,11 +107,6 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
           <h2 id="component-history-heading" className="text-xl font-semibold">
             {i18n.t("app:analytics.component_comparison")}
           </h2>
-          <p className="text-sm text-muted-foreground">
-            {i18n.t(
-              "app:analytics.track_how_recurring_bill_components_change_across_recent_periods",
-            )}
-          </p>
         </div>
         <div className="grid min-w-0 gap-2 sm:grid-cols-2">
           <div className="grid gap-1 text-sm font-medium">

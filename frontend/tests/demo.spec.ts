@@ -68,9 +68,9 @@ test("opens restricted ledger pages as read-only previews", async ({
   ).toBeVisible()
   await expect(page.getByRole("menuitem", { name: "System Run" })).toBeVisible()
   const href = await page
-    .getByRole("menuitem", { name: "Categories" })
+    .getByRole("menuitem", { name: "Ledger settings", exact: true })
     .getAttribute("href")
-  const match = href?.match(/^\/ledgers\/([^/]+)\/categories$/)
+  const match = href?.match(/^\/ledgers\/([^/]+)\/settings$/)
   expect(match).not.toBeNull()
   const ledgerId = match![1]
   await page.goto(`/ledgers/${ledgerId}/settings`)

@@ -154,7 +154,9 @@ test("category dialog and navigation update without changing user content", asyn
       .getByRole("dialog", { name: "Panel boczny" })
       .getByRole("link", { name: "Kategorie", exact: true })
       .click()
-  await expect(page.getByRole("heading", { name: "Home_ledger" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Kategorie", exact: true }),
+  ).toBeVisible()
   await expect(page.getByText("Custom_category", { exact: true })).toBeVisible()
   await page
     .getByRole("button", { name: "Nowa kategoria", exact: true })

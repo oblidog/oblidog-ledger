@@ -7,15 +7,8 @@ import {
   DataTable,
   type DataTableFeatures,
 } from "@/components/Common/DataTable"
-import { Badge } from "@/components/ui/badge"
+import { PageHeader } from "@/components/Common/PageHeader"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -184,14 +177,18 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
           </Button>
         ),
         cell: ({ row }) => (
-          <Badge variant="outline">{row.original.groupName}</Badge>
+          <span className="text-muted-foreground">
+            {row.original.groupName}
+          </span>
         ),
       },
       {
         accessorKey: "code",
         header: t("app:categories.code"),
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.code}</Badge>
+          <span className="font-mono text-xs text-muted-foreground">
+            {row.original.code}
+          </span>
         ),
       },
       {
@@ -218,11 +215,11 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         id: "status",
         header: t("app:categories.status"),
         cell: ({ row }) => (
-          <Badge variant={row.original.is_active ? "outline" : "secondary"}>
+          <span className="text-muted-foreground">
             {row.original.is_active
               ? t("app:categories.active_a733b8")
               : t("app:categories.archived")}
-          </Badge>
+          </span>
         ),
       },
       {
@@ -244,17 +241,10 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex-row items-start justify-between gap-4">
-          <div>
-            <CardTitle>{t("app:categories.categories")}</CardTitle>
-            <CardDescription>
-              {t(
-                "app:categories.search_filter_and_manage_categories_without_leaving_this_page",
-              )}
-            </CardDescription>
-          </div>
-          <div className="flex flex-wrap justify-end gap-2">
+      <PageHeader
+        title={t("app:categories.categories")}
+        actions={
+          <>
             <CreateGroupDialog ledgerId={ledgerId} />
             <ManageGroupsDialog
               ledgerId={ledgerId}
@@ -263,54 +253,57 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
               onArchive={(groupId) => archiveGroup.mutate(groupId)}
             />
             <CreateCategoryDialog ledgerId={ledgerId} groups={groups} />
+          </>
+        }
+      />
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_160px]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="pl-9"
+              placeholder={t("app:categories.search_name_or_code")}
+              aria-label={t("app:categories.search_name_or_code")}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_160px]">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="pl-9"
-                placeholder={t("app:categories.search_name_or_code")}
-              />
-            </div>
-            <Select value={groupFilter} onValueChange={setGroupFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("app:categories.all_groups")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={FILTER_ALL}>
-                  {t("app:categories.all_groups")}
+          <Select value={groupFilter} onValueChange={setGroupFilter}>
+            <SelectTrigger aria-label={t("app:categories.group")}>
+              <SelectValue placeholder={t("app:categories.all_groups")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={FILTER_ALL}>
+                {t("app:categories.all_groups")}
+              </SelectItem>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
                 </SelectItem>
-                {groups.map((group) => (
-                  <SelectItem key={group.id} value={group.id}>
-                    {group.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">
-                  {t("app:categories.active_a733b8")}
-                </SelectItem>
-                <SelectItem value="archived">
-                  {t("app:categories.archived")}
-                </SelectItem>
-                <SelectItem value={FILTER_ALL}>
-                  {t("app:categories.all_statuses")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger aria-label={t("app:categories.status")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">
+                {t("app:categories.active_a733b8")}
+              </SelectItem>
+              <SelectItem value="archived">
+                {t("app:categories.archived")}
+              </SelectItem>
+              <SelectItem value={FILTER_ALL}>
+                {t("app:categories.all_statuses")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="overflow-hidden rounded-lg border">
           <DataTable columns={columns} data={rows} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

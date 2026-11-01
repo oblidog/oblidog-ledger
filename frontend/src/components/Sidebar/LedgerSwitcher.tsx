@@ -6,7 +6,6 @@ import {
   List,
   Play,
   Settings,
-  Tags,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Badge } from "@/components/ui/badge"
@@ -92,8 +91,12 @@ export function LedgerSwitcher() {
             <DropdownMenuSeparator />
             {activeLedgerId && (
               <>
+                <DropdownMenuLabel>
+                  {t("navigation.ledgerTools")}
+                </DropdownMenuLabel>
                 <DropdownMenuItem asChild>
                   <Link
+                    onClick={() => isMobile && setOpenMobile(false)}
                     to="/ledgers/$ledgerId/settings"
                     params={{ ledgerId: activeLedgerId }}
                   >
@@ -101,18 +104,10 @@ export function LedgerSwitcher() {
                     {t("navigation.ledgerSettings")}
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/ledgers/$ledgerId/categories"
-                    params={{ ledgerId: activeLedgerId }}
-                  >
-                    <Tags />
-                    {t("navigation.categories")}
-                  </Link>
-                </DropdownMenuItem>
                 {activeLedger?.owner_user_id === currentUser?.id ? (
                   <DropdownMenuItem asChild>
                     <Link
+                      onClick={() => isMobile && setOpenMobile(false)}
                       to="/ledgers/$ledgerId/system-run"
                       params={{ ledgerId: activeLedgerId }}
                     >
