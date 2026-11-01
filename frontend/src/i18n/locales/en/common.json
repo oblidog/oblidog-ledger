@@ -37,6 +37,9 @@
     "close": "Close"
   },
   "footer": {
-    "version": "Application version"
+    "version": "Application version",
+    "versionDetails": "Version details",
+    "commit": "Commit",
+    "commitUnavailable": "Commit information unavailable"
   }
 }

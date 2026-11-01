@@ -37,6 +37,9 @@
     "close": "Schließen"
   },
   "footer": {
-    "version": "Anwendungsversion"
+    "version": "Anwendungsversion",
+    "versionDetails": "Versionsdetails",
+    "commit": "Commit",
+    "commitUnavailable": "Commit-Informationen nicht verfügbar"
   }
 }
