@@ -1,3 +1,17 @@
+## v0.21.4 (2026-11-01)
+
+### Fix
+
+- **version**: identify Vercel builds in the footer (#603)
+- **obligations**: restore active category and status badges (#596)
+
+### Refactor
+
+- **demo**: simplify login messaging and entry action (#602)
+- **ui**: unify ledger page headings and tools (#597)
+- **obligations**: simplify filters and emphasize unpaid items (#595)
+- **analytics**: compare costs across recorded periods (#594)
+
 ## v0.21.3 (2026-10-30)
 
 ### Fix
