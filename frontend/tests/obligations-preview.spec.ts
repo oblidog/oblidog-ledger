@@ -56,6 +56,7 @@ async function api(
   theme = "light",
   viewer = false,
   demo = true,
+  detailOverride: Partial<ObligationPublic> = {},
 ) {
   const requests: URL[] = []
   const writes: string[] = []
@@ -87,7 +88,7 @@ async function api(
         full_name: "Demo",
         is_active: true,
         is_superuser: false,
-        language: "en",
+        language,
       })
     const ledger = {
       id: ledgerId,
@@ -130,7 +131,7 @@ async function api(
     if (path.endsWith("/actions") || path.endsWith("/components"))
       return send({ data: [], count: 0 })
     const row = rows.find((item) => path.endsWith(`/obligations/${item.key}`))
-    if (row) return send(row)
+    if (row) return send({ ...row, ...detailOverride })
     return send({ data: [], count: 0 })
   })
   return { requests, writes }
@@ -265,7 +266,7 @@ test("viewers retain read-only access to obligation details", async ({
   await expect(page.getByRole("button", { name: /Actions for/ })).toHaveCount(0)
   await page.getByText("Electricity", { exact: true }).click()
   await expect(
-    page.getByRole("dialog", { name: "ELEC-2026-10", exact: true }),
+    page.getByRole("dialog", { name: "Electricity", exact: true }),
   ).toBeVisible()
   expect(writes).toEqual([])
 })
@@ -429,3 +430,170 @@ test("category badge falls back to its stored code when names are unavailable", 
     .click()
   await expect(badges).toHaveCount(0)
 })
+
+for (const language of ["en", "pl", "de"] as const) {
+  for (const theme of ["light", "dark"]) {
+    test(`${language} ${theme}: payment details and keyboard-accessible provenance`, async ({
+      page,
+    }, info) => {
+      const labels = {
+        en: [
+          "Payment summary",
+          "Data origin",
+          "Overridden",
+          "Estimated",
+          "Unknown",
+          "Activity",
+          "Components",
+        ],
+        pl: [
+          "Podsumowanie płatności",
+          "Pochodzenie danych",
+          "Nadpisane ręcznie",
+          "Szacowane",
+          "Nieznane",
+          "Aktywność",
+          "Składniki",
+        ],
+        de: [
+          "Zahlungsübersicht",
+          "Datenherkunft",
+          "Überschrieben",
+          "Geschätzt",
+          "Unbekannt",
+          "Aktivität",
+          "Posten",
+        ],
+      }[language]
+      const title = `Electricity ${"longcategory".repeat(8)}`
+      const { writes } = await api(page, language, theme, true, true, {
+        name: title,
+        amount_state: "overridden",
+        amount_source: "manual",
+        issue_date: null,
+        issue_date_state: "unknown",
+        due_date_state: "estimated",
+        due_date_source: "integration",
+        effective_value_source: "mixed",
+        counterparty: {
+          id: "provider",
+          name: "Provider".repeat(30),
+          short_name: null,
+          logo_url: null,
+        },
+      })
+      await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
+      await page.getByText("Electricity", { exact: true }).click()
+      const dialog = page.getByRole("dialog", { name: title, exact: true })
+      await expect(dialog).toBeVisible()
+      const summary = dialog.getByRole("region", { name: labels[0] })
+      await expect(summary).toContainText("208")
+      await expect(summary).toContainText("EUR")
+      await expect(summary.getByText(labels[2], { exact: true })).toBeVisible()
+      await expect(summary.getByText(labels[3], { exact: true })).toBeVisible()
+      await expect(summary.getByText(labels[4], { exact: true })).toBeVisible()
+      await expect(
+        summary.getByText("ELEC-2026-10", { exact: true }),
+      ).toBeVisible()
+      await expect(dialog.locator("table")).toBeHidden()
+      const origin = dialog.locator("summary", { hasText: labels[1] })
+      await origin.focus()
+      await page.keyboard.press("Enter")
+      await expect(dialog.locator("table")).toBeVisible()
+      await expect(dialog.locator("table")).toContainText(labels[2])
+      await expect(dialog.locator("table")).toContainText(labels[3])
+      expect(
+        await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true)
+      expect(
+        await summary.evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true)
+      await page.screenshot({ path: info.outputPath("payment-details.png") })
+      await page.keyboard.press("Space")
+      await expect(dialog.locator("table")).toBeHidden()
+      await dialog.getByRole("tab", { name: labels[5], exact: true }).click()
+      await dialog.getByRole("tab", { name: labels[6], exact: true }).click()
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeHidden()
+      expect(writes).toEqual([])
+    })
+  }
+}
+
+test("unknown amount and paid date remain explicit without a confirmed summary", async ({
+  page,
+}) => {
+  await api(page, "en", "light", true, true, {
+    current_amount: null,
+    amount_state: "unknown",
+    lifecycle: "paid",
+    paid_at: null,
+  })
+  await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
+  await page.getByText("Electricity", { exact: true }).click()
+  const summary = page.getByRole("region", { name: "Payment summary" })
+  await expect(
+    summary.getByText("Amount unknown", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    summary.getByText("Date unavailable", { exact: true }),
+  ).toBeVisible()
+  await expect(summary.getByText("Confirmed", { exact: true })).toHaveCount(0)
+  await expect(summary.getByText("Overdue", { exact: true })).toHaveCount(0)
+})
+
+for (const height of [480, 568]) {
+  test(`maximum category name keeps details and actions usable at 320x${height}`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 320, height })
+    const title = "A".repeat(255)
+    const { writes } = await api(page, "pl", "dark", false, false, {
+      name: title,
+    })
+    await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
+    await page.getByText("Electricity", { exact: true }).click()
+    const dialog = page.getByRole("dialog", { name: title, exact: true })
+    const header = dialog.locator('[data-slot="dialog-header"]')
+    await expect(dialog).toBeVisible()
+    await header.focus()
+    await page.keyboard.press("End")
+    await expect
+      .poll(() => header.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0)
+    await expect(
+      header.getByText("październik 2026", { exact: true }),
+    ).toBeInViewport()
+    const panel = dialog.getByRole("tabpanel")
+    const tabs = dialog.getByRole("tablist")
+    const footer = dialog.locator('[data-slot="dialog-footer"]')
+    const bounds = await Promise.all(
+      [dialog, tabs, panel, footer].map((locator) => locator.boundingBox()),
+    )
+    const [modalBox, tabsBox, panelBox, footerBox] = bounds.map((box) => box!)
+    expect(panelBox.height).toBeGreaterThanOrEqual(80)
+    expect(panelBox.y).toBeGreaterThanOrEqual(tabsBox.y + tabsBox.height - 1)
+    expect(footerBox.y).toBeGreaterThanOrEqual(panelBox.y + panelBox.height - 1)
+    expect(footerBox.y + footerBox.height).toBeLessThanOrEqual(
+      modalBox.y + modalBox.height + 1,
+    )
+    expect(
+      await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true)
+    await expect(
+      dialog.getByRole("region", { name: "Podsumowanie płatności" }),
+    ).toBeInViewport()
+    await page.screenshot({
+      path: info.outputPath("long-title-short-screen.png"),
+    })
+    await dialog
+      .getByRole("button", { name: "Oznacz jako opłacone", exact: true })
+      .click()
+    await expect(
+      page.getByRole("dialog", {
+        name: "Oznaczyć zobowiązanie jako opłacone?",
+      }),
+    ).toBeVisible()
+    expect(writes).toEqual([])
+  })
+}

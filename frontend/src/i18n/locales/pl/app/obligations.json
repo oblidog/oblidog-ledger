@@ -131,5 +131,9 @@
   "other_period": "Wybierz inny miesiąc…",
   "choose_month": "Wybierz miesiąc",
   "apply_period": "Zastosuj",
-  "due_or_paid_date": "Termin / data zapłaty"
+  "due_or_paid_date": "Termin / data zapłaty",
+  "payment_summary": "Podsumowanie płatności",
+  "obligation_code": "Kod zobowiązania",
+  "data_origin": "Pochodzenie danych",
+  "data_origin_help": "Źródła i stany potwierdzenia poszczególnych pól. Zmiany i różnice znajdziesz w zakładce Aktywność."
 }

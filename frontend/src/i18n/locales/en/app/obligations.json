@@ -131,5 +131,9 @@
   "other_period": "Choose another month…",
   "choose_month": "Choose month",
   "apply_period": "Apply",
-  "due_or_paid_date": "Due / paid date"
+  "due_or_paid_date": "Due / paid date",
+  "payment_summary": "Payment summary",
+  "obligation_code": "Obligation code",
+  "data_origin": "Data origin",
+  "data_origin_help": "Field-level sources and confirmation states. See Activity for changes and differences."
 }

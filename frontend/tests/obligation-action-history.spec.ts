@@ -167,7 +167,7 @@ for (const entryPoint of ["tile", "details"] as const) {
         }).click()
         await page.getByRole("menuitem", { name: "Mark as paid" }).click()
       } else {
-        const details = page.getByRole("dialog", { name: fixture.key })
+        const details = page.getByRole("dialog", { name: fixture.categoryName, exact: true })
         if (!(await details.isVisible())) {
           await page.getByText(fixture.categoryName, { exact: true }).click()
         }

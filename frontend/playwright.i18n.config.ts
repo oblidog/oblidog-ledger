@@ -9,6 +9,7 @@ export default defineConfig({
     "demo-preview.spec.ts",
     "analytics-preview.spec.ts",
     "obligations-preview.spec.ts",
+    "obligation-mobile.spec.ts",
   ],
   fullyParallel: true,
   use: {
