@@ -111,6 +111,188 @@ export const ApiErrorResponseSchema = {
     title: 'ApiErrorResponse'
 } as const;
 
+export const AttentionIntegrationPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        health: {
+            type: 'string',
+            enum: [
+                'error',
+                'timed_out',
+                'stale'
+            ],
+            title: 'Health'
+        }
+    },
+    type: 'object',
+    required: [
+        'id',
+        'name',
+        'health'
+    ],
+    title: 'AttentionIntegrationPublic'
+} as const;
+
+export const AttentionItemPublicSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        category_code: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Code'
+        },
+        year: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Year'
+        },
+        month: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Month'
+        },
+        due_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Due Date'
+        },
+        due_date_state: {
+            $ref: '#/components/schemas/ValueState',
+            default: 'unknown'
+        },
+        amount: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Amount'
+        },
+        amount_state: {
+            $ref: '#/components/schemas/ValueState',
+            default: 'unknown'
+        },
+        currency: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Currency'
+        },
+        reasons: {
+            items: {
+                type: 'string',
+                enum: [
+                    'overdue',
+                    'error',
+                    'incomplete',
+                    'upcoming'
+                ]
+            },
+            type: 'array',
+            title: 'Reasons'
+        },
+        integrations: {
+            items: {
+                $ref: '#/components/schemas/AttentionIntegrationPublic'
+            },
+            type: 'array',
+            title: 'Integrations'
+        }
+    },
+    type: 'object',
+    required: [
+        'key',
+        'name'
+    ],
+    title: 'AttentionItemPublic'
+} as const;
+
+export const AttentionOverviewPublicSchema = {
+    properties: {
+        as_of_date: {
+            type: 'string',
+            format: 'date',
+            title: 'As Of Date'
+        },
+        items: {
+            items: {
+                $ref: '#/components/schemas/AttentionItemPublic'
+            },
+            type: 'array',
+            title: 'Items'
+        },
+        total: {
+            type: 'integer',
+            title: 'Total'
+        },
+        offset: {
+            type: 'integer',
+            title: 'Offset'
+        },
+        limit: {
+            type: 'integer',
+            title: 'Limit'
+        }
+    },
+    type: 'object',
+    required: [
+        'as_of_date',
+        'items',
+        'total',
+        'offset',
+        'limit'
+    ],
+    title: 'AttentionOverviewPublic'
+} as const;
+
 export const AvailableHistoryPeriodPublicSchema = {
     properties: {
         category_id: {

@@ -25,6 +25,98 @@ export type ApiErrorResponse = {
 };
 
 /**
+ * AttentionIntegrationPublic
+ */
+export type AttentionIntegrationPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Health
+     */
+    health: 'error' | 'timed_out' | 'stale';
+};
+
+/**
+ * AttentionItemPublic
+ */
+export type AttentionItemPublic = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category Code
+     */
+    category_code?: string | null;
+    /**
+     * Year
+     */
+    year?: number | null;
+    /**
+     * Month
+     */
+    month?: number | null;
+    /**
+     * Due Date
+     */
+    due_date?: string | null;
+    due_date_state?: ValueState;
+    /**
+     * Amount
+     */
+    amount?: string | null;
+    amount_state?: ValueState;
+    /**
+     * Currency
+     */
+    currency?: string | null;
+    /**
+     * Reasons
+     */
+    reasons?: Array<'overdue' | 'error' | 'incomplete' | 'upcoming'>;
+    /**
+     * Integrations
+     */
+    integrations?: Array<AttentionIntegrationPublic>;
+};
+
+/**
+ * AttentionOverviewPublic
+ */
+export type AttentionOverviewPublic = {
+    /**
+     * As Of Date
+     */
+    as_of_date: string;
+    /**
+     * Items
+     */
+    items: Array<AttentionItemPublic>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Limit
+     */
+    limit: number;
+};
+
+/**
  * AvailableHistoryPeriodPublic
  */
 export type AvailableHistoryPeriodPublic = {
@@ -4339,6 +4431,77 @@ export type AnalyticsReadAvailableHistoryPeriodsResponses = {
 };
 
 export type AnalyticsReadAvailableHistoryPeriodsResponse = AnalyticsReadAvailableHistoryPeriodsResponses[keyof AnalyticsReadAvailableHistoryPeriodsResponses];
+
+export type AnalyticsReadAttentionOverviewData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: {
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/ledgers/{ledger_id}/analytics/attention';
+};
+
+export type AnalyticsReadAttentionOverviewErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type AnalyticsReadAttentionOverviewError = AnalyticsReadAttentionOverviewErrors[keyof AnalyticsReadAttentionOverviewErrors];
+
+export type AnalyticsReadAttentionOverviewResponses = {
+    /**
+     * Successful Response
+     */
+    200: AttentionOverviewPublic;
+};
+
+export type AnalyticsReadAttentionOverviewResponse = AnalyticsReadAttentionOverviewResponses[keyof AnalyticsReadAttentionOverviewResponses];
 
 export type CategoriesPreviewPaymentScheduleData = {
     body: SchedulePreviewRequest;

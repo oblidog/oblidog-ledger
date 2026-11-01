@@ -25,7 +25,9 @@ from app.schemas import (
     PeriodPaymentSummaryPublic,
 )
 from app.schemas.analytics import AvailableHistoryPeriodPublic
+from app.schemas.attention import AttentionOverviewPublic
 from app.use_cases import analytics as analytics_use_cases
+from app.use_cases.attention import get_attention_overview
 from app.use_cases.exceptions import CategoryNotFoundError
 
 router = APIRouter(tags=["analytics"])
@@ -305,3 +307,18 @@ def read_available_history_periods(
             session=session, ledger_id=ledger.id
         )
     ]
+
+
+@router.get(
+    "/ledgers/{ledger_id}/analytics/attention", response_model=AttentionOverviewPublic
+)
+def read_attention_overview(
+    *,
+    session: SessionDep,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=8, ge=1, le=50),
+    ledger: Ledger = Depends(require_ledger_view_access),
+) -> AttentionOverviewPublic:
+    return get_attention_overview(
+        session=session, ledger=ledger, offset=offset, limit=limit
+    )
