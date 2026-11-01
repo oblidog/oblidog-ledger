@@ -13,19 +13,6 @@ on:
       - '.github/zizmor*'
       - 'scripts/link_pr_issues.py'
       - 'tests/test_link_pr_issues.py'
-  push:
-    branches: [dev, main]
-    paths:
-      - '.github/workflows/**'
-      - '.github/actions/**'
-      - '.github/dependabot.yml'
-      - '**/action.yml'
-      - '**/action.yaml'
-      - '**/zizmor.yml'
-      - '**/zizmor.yaml'
-      - '.github/zizmor*'
-      - 'scripts/link_pr_issues.py'
-      - 'tests/test_link_pr_issues.py'
   workflow_dispatch:
 
 permissions:

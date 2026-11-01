@@ -9,6 +9,8 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
+      - ready_for_review
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -36,20 +38,20 @@ jobs:
           SAME_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: python3 scripts/ci_test_scope.py
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_frontend == 'true'
       - run: bun ci
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_frontend == 'true'
         working-directory: frontend
       - name: Check frontend types with TypeScript 7
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_frontend == 'true'
         run: bun run typecheck
         working-directory: frontend
       - name: Run fast frontend tests
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_frontend == 'true'
         run: bun run test:unit --coverage --coverage-reporter=lcov
         working-directory: frontend
       - name: Upload frontend coverage to Codecov
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_frontend == 'true'
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true

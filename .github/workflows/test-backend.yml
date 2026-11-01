@@ -6,6 +6,8 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
+      - ready_for_review
 
 permissions:
   contents: read
@@ -132,46 +134,46 @@ jobs:
           SAME_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: python3 scripts/ci_test_scope.py
       - name: Create CI environment file
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: cp .github/ci.env .env
       - name: Set up Python
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.14"
       - name: Install uv
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       - name: Test release tooling
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: uv run --frozen pytest -q tests/test_extract_release_notes.py
       - name: Test demo lifecycle guard without database access
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         working-directory: backend
         run: uv run --locked pytest -q scripts/tests
       - run: docker compose down -v --remove-orphans
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
       - run: docker compose up -d --wait db mailpit
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
       - name: Create test database
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: docker compose exec -T db createdb -U "$POSTGRES_USER" findog_test
       - name: Migrate DB
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: uv run bash scripts/prestart.sh
         working-directory: backend
       - name: Run tests
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         env:
           COVERAGE_COMMIT: ${{ github.sha }}
         run: uv run bash scripts/tests-start.sh "Coverage for ${COVERAGE_COMMIT}"
         working-directory: backend
       - name: Export XML coverage report
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: uv run coverage xml -o coverage.xml
         working-directory: backend
       - name: Upload backend coverage to Codecov
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
@@ -180,11 +182,11 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
       - name: Export integration OpenAPI schema
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: uv run python scripts/export_integration_openapi.py
         working-directory: backend
       - name: Validate integration OpenAPI schema
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         shell: bash
         run: |
           python -m json.tool openapi/integration.json >/dev/null
@@ -202,19 +204,19 @@ jobs:
           assert not unexpected, f"Unexpected non-integration paths: {unexpected}"
           PY
       - name: Validate integration OpenAPI client generation
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: uv run bash scripts/validate_integration_openapi_client.sh
         working-directory: backend
       - run: docker compose down -v --remove-orphans
-        if: ${{ always() && steps.scope.outputs.run_heavy == 'true' }}
+        if: ${{ always() && steps.scope.outputs.run_backend == 'true' }}
       - name: Store coverage files
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-html
           path: backend/htmlcov
           include-hidden-files: true
       - name: Coverage report
-        if: steps.scope.outputs.run_heavy == 'true'
+        if: steps.scope.outputs.run_backend == 'true'
         run: uv run coverage report --fail-under=85
         working-directory: backend
