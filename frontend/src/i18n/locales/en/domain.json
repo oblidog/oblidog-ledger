@@ -77,7 +77,6 @@
   "task": {
     "ensure_obligations": "Ensure obligations",
     "estimate_obligation_amounts": "Estimate obligation amounts",
-    "legacy_import": "Legacy import",
     "scheduled_reports": "Scheduled reports",
     "maintenance_cleanup": "Maintenance cleanup"
   },

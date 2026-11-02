@@ -18,7 +18,6 @@ frontend/.env
 frontend/.env.*
 
 zzz.patch
-backend/config/legacy-import.yaml
 
 # React Email preview app and Python-rendered fixture snapshots
 emails/.react-email/

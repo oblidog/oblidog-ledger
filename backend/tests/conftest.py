@@ -22,7 +22,6 @@ from app.models import (
     IntegrationRun,
     Ledger,
     LedgerMembership,
-    LegacyImportJob,
     Obligation,
     PasswordResetToken,
     SystemRun,
@@ -77,7 +76,6 @@ def db() -> Generator[Session]:
         session.execute(delete(Integration))
         session.execute(delete(SystemRunStep))
         session.execute(delete(SystemRun))
-        session.execute(delete(LegacyImportJob))
         session.execute(delete(Obligation))
         session.execute(delete(CategoryDataRecord))
         session.execute(delete(CategoryDataSchema))
@@ -96,7 +94,6 @@ def db() -> Generator[Session]:
         session.execute(delete(Integration))
         session.execute(delete(SystemRunStep))
         session.execute(delete(SystemRun))
-        session.execute(delete(LegacyImportJob))
         session.execute(delete(Obligation))
         session.execute(delete(CategoryDataRecord))
         session.execute(delete(CategoryDataSchema))

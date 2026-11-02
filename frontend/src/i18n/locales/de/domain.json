@@ -77,7 +77,6 @@
   "task": {
     "ensure_obligations": "Zahlungsverpflichtungen sicherstellen",
     "estimate_obligation_amounts": "Beträge der Zahlungsverpflichtungen schätzen",
-    "legacy_import": "Legacy-Import",
     "scheduled_reports": "Geplante Berichte",
     "maintenance_cleanup": "Wartungsbereinigung"
   },

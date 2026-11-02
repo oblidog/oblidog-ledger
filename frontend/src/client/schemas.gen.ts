@@ -86,9 +86,6 @@ export const ApiErrorResponseSchema = {
                 'system_run_unknown_tasks',
                 'system_run_disabled_tasks',
                 'system_run_non_manual_tasks',
-                'legacy_import_running',
-                'legacy_import_disabled',
-                'legacy_import_not_found',
                 'analytics_invalid_range',
                 'service_unavailable',
                 'request_invalid',
@@ -2101,9 +2098,6 @@ export const IntegrationConflictResponseSchema = {
                 'system_run_unknown_tasks',
                 'system_run_disabled_tasks',
                 'system_run_non_manual_tasks',
-                'legacy_import_running',
-                'legacy_import_disabled',
-                'legacy_import_not_found',
                 'analytics_invalid_range',
                 'service_unavailable',
                 'request_invalid',
@@ -3275,144 +3269,6 @@ export const LedgersPublicSchema = {
         'count'
     ],
     title: 'LedgersPublic'
-} as const;
-
-export const LegacyImportJobPublicSchema = {
-    properties: {
-        id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Id'
-        },
-        ledger_id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Ledger Id'
-        },
-        status: {
-            $ref: '#/components/schemas/LegacyImportJobStatus'
-        },
-        processed_obligations: {
-            type: 'integer',
-            title: 'Processed Obligations'
-        },
-        total_obligations: {
-            type: 'integer',
-            title: 'Total Obligations'
-        },
-        created_category_groups: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Created Category Groups'
-        },
-        created_categories: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Created Categories'
-        },
-        replaced_categories: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Replaced Categories'
-        },
-        imported_obligations: {
-            anyOf: [
-                {
-                    type: 'integer'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Imported Obligations'
-        },
-        error: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Error'
-        },
-        created_at: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Created At'
-        },
-        started_at: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Started At'
-        },
-        finished_at: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Finished At'
-        }
-    },
-    type: 'object',
-    required: [
-        'id',
-        'ledger_id',
-        'status',
-        'processed_obligations',
-        'total_obligations',
-        'created_category_groups',
-        'created_categories',
-        'replaced_categories',
-        'imported_obligations',
-        'error',
-        'created_at',
-        'started_at',
-        'finished_at'
-    ],
-    title: 'LegacyImportJobPublic'
-} as const;
-
-export const LegacyImportJobStatusSchema = {
-    type: 'string',
-    enum: [
-        'pending',
-        'running',
-        'succeeded',
-        'failed'
-    ],
-    title: 'LegacyImportJobStatus'
 } as const;
 
 export const MessageSchema = {
