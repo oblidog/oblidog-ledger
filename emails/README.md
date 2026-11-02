@@ -181,17 +181,27 @@ tests verify all supported languages in one run and retry deduplication.
 
 `emails/weekly-overview.tsx` and `weekly-overview.txt.jinja` export the live weekly
 HTML/text artifacts using the same shell, typography, summaries and footer as
-the daily digest. Python retains the existing calculations, recipient selection,
-Monday cadence, reporting timezone, comparison eligibility and ISO-week delivery
-key. The only new context value is a configured application link to the ledgers.
+the daily digest. Python owns the calculations, recipient selection,
+Monday cadence, reporting timezone and ISO-week delivery
+key. The configured application link opens the ledgers.
 
 Each ledger has separate currency cards. Known total, paid and remaining amounts
 are prominent; incomplete totals keep a visible notice. All status counts,
 unknown/unconfirmed counts, overdue count/known amount, previous-month total and
-eligible change remain available. The percentage is explicitly **by obligation
-count**, never monetary progress. The original selection and row order are
-preserved; large messages show a bounded prefix as described below. No totals
-across currencies or new ratios are calculated.
+eligible change remain available. The primary percentage is **paid known amount / total known amount**, rounded
+to two decimal places; a non-positive denominator shows no ratio. The notice
+explains that estimates are included and unknown amounts excluded. Counts remain
+secondary. Missing amounts/dates and existing but unconfirmed values have separate
+counts. Comparisons require nonempty sets of confirmed/overridden amounts in both
+months; an unavailable comparison never implies savings.
+
+Currency cards start with overdue status (neutral when zero), then upcoming
+payments and their full-selection known subtotal, before the monthly summary and
+comparison. Upcoming rows show relative days as well as the date and mark items
+requiring preparation or confirmation. Every monetary metric includes its own
+currency label, including unspecified currencies. The original selection and row
+order are preserved; large messages show a bounded prefix as described below.
+Subtotals are computed before truncation and never combine currencies.
 
 `fixtures/weekly/*.json` contains decimal strings and ISO dates, shared with the
 React preview. `scripts/weekly_fixtures.py` converts them to Decimal/date inputs

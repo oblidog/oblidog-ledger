@@ -42,6 +42,8 @@ const blankPayment: WeeklyPayment = {
   category_name: "",
   due_date: "",
   amount: null,
+  days_until_due: 0,
+  needs_preparation: true,
 }
 
 /** Preview formatting only; production amounts/dates use Python EmailLocale. */
@@ -129,9 +131,10 @@ export default function WeeklyOverviewEmail({
       | "paid_known_amount"
       | "remaining_known_amount"
       | "overdue_known_amount"
-      | "previous_total_known_amount",
+      | "previous_total_known_amount"
+      | "upcoming_known_amount",
     item: WeeklyCurrency,
-  ) => money(`item.${field}`, item[field])
+  ) => `${money(`item.${field}`, item[field])} ${currencyName(item)}`
   return (
     <EmailLayout
       projectName={projectName}
@@ -151,9 +154,6 @@ export default function WeeklyOverviewEmail({
       >
         {t("weekly_subject")}
       </EmailHeading>
-      <Text style={{ ...detailStyle, fontSize: "15px", lineHeight: "24px" }}>
-        {t("weekly_intro")}
-      </Text>
       <TemplateIf
         tokens={tokens}
         expression="weekly_size_notice"
@@ -202,9 +202,8 @@ export default function WeeklyOverviewEmail({
               {(item) => (
                 <Section
                   style={{
-                    border: "1px solid #e1e8e3",
-                    borderRadius: "8px",
-                    padding: "16px",
+                    borderTop: "1px solid #e1e8e3",
+                    padding: "12px 0",
                     marginTop: "16px",
                   }}
                 >
@@ -220,9 +219,118 @@ export default function WeeklyOverviewEmail({
                   >
                     {currencyName(item)}
                   </Heading>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.overdue_count > 0"
+                    show={item.overdue_count > 0}
+                  >
+                    <Text
+                      style={{
+                        ...detailStyle,
+                        color: "#8a3b26",
+                        borderTop: "1px solid #e1e8e3",
+                        paddingTop: "12px",
+                        marginTop: "12px",
+                      }}
+                    >
+                      <strong>
+                        {t("section_overdue")}:{" "}
+                        {v("item.overdue_count", item.overdue_count)}
+                      </strong>{" "}
+                      · {amount("overdue_known_amount", item)}
+                    </Text>
+                  </TemplateIf>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.overdue_count == 0"
+                    show={item.overdue_count === 0}
+                  >
+                    <Text style={detailStyle}>{t("weekly_no_overdue")}</Text>
+                  </TemplateIf>
+                  <MinorHeading>{t("upcoming")}</MinorHeading>
+                  <Text style={detailStyle}>
+                    <strong>
+                      {t("weekly_upcoming_total")}:{" "}
+                      {amount("upcoming_known_amount", item)}
+                    </strong>
+                  </Text>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="not item.upcoming and not item.upcoming_omitted"
+                    show={!item.upcoming.length && !item.upcoming_omitted}
+                  >
+                    <Text style={detailStyle}>{t("none")}</Text>
+                  </TemplateIf>
+                  <TemplateLoop
+                    tokens={tokens}
+                    expression="obligation in item.upcoming"
+                    items={item.upcoming}
+                    placeholder={blankPayment}
+                  >
+                    {(obligation) => (
+                      <Text
+                        style={{
+                          ...detailStyle,
+                          borderTop: "1px solid #e1e8e3",
+                          paddingTop: "10px",
+                          marginTop: "10px",
+                        }}
+                      >
+                        <strong>
+                          {v(
+                            "obligation.category_name",
+                            obligation.category_name,
+                          )}
+                        </strong>
+                        <br />
+                        {v(
+                          "fmt_date(obligation.due_date)",
+                          previewDate(obligation.due_date, language),
+                        )}{" "}
+                        · {money("obligation.amount", obligation.amount)}{" "}
+                        {currencyName(item)}
+                        <br />
+                        {v(
+                          "tr('weekly_due_today') if obligation.days_until_due == 0 else tr('weekly_due_tomorrow') if obligation.days_until_due == 1 else tr('weekly_due_in', days=obligation.days_until_due)",
+                          obligation.days_until_due === 0
+                            ? emailCopy("weekly_due_today", language)
+                            : obligation.days_until_due === 1
+                              ? emailCopy("weekly_due_tomorrow", language)
+                              : emailCopy("weekly_due_in", language, {
+                                  days: obligation.days_until_due,
+                                }),
+                        )}
+                        <TemplateIf
+                          tokens={tokens}
+                          expression="obligation.needs_preparation"
+                          show={obligation.needs_preparation}
+                        >
+                          {" · "}
+                          {t("weekly_needs_preparation")}
+                        </TemplateIf>
+                      </Text>
+                    )}
+                  </TemplateLoop>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.upcoming_omitted"
+                    show={Boolean(item.upcoming_omitted)}
+                  >
+                    <Text style={detailStyle}>
+                      {v(
+                        "tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted)",
+                        emailCopy("weekly_upcoming_omitted", language, {
+                          shown: item.upcoming.length,
+                          total:
+                            item.upcoming.length + (item.upcoming_omitted ?? 0),
+                        }),
+                      )}
+                    </Text>
+                  </TemplateIf>
+                  <MinorHeading>{t("weekly_month_summary")}</MinorHeading>
                   <EmailSummary
                     label={t("total_known")}
-                    value={`${amount("total_known_amount", item)} ${v("item.currency or ''", item.currency)}`}
+                    value={amount("total_known_amount", item)}
                   />
                   <TemplateIf
                     tokens={tokens}
@@ -258,7 +366,7 @@ export default function WeeklyOverviewEmail({
                     {v("item.not_ready_count", item.not_ready_count)}
                   </Text>
                   <Text style={detailStyle}>
-                    {t("weekly_count_progress")}:{" "}
+                    {t("weekly_amount_progress")}:{" "}
                     <strong>
                       {v(
                         "fmt_amount(item.paid_percentage) ~ '%' if item.paid_percentage is not none else tr('na')",
@@ -268,26 +376,48 @@ export default function WeeklyOverviewEmail({
                       )}
                     </strong>
                   </Text>
-                  <Text
-                    style={{
-                      ...detailStyle,
-                      color: "#8a3b26",
-                      borderTop: "1px solid #e1e8e3",
-                      paddingTop: "12px",
-                      marginTop: "12px",
-                    }}
+                  <Text style={detailStyle}>{t("weekly_progress_notice")}</Text>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.incomplete_count > 0"
+                    show={item.incomplete_count > 0}
                   >
-                    <strong>
-                      {t("section_overdue")}:{" "}
-                      {v("item.overdue_count", item.overdue_count)}
-                    </strong>{" "}
-                    · {amount("overdue_known_amount", item)}{" "}
-                    {v("item.currency or ''", item.currency)}
-                  </Text>
-                  <Text style={detailStyle}>
-                    {t("unknown_values")}:{" "}
-                    {v("item.incomplete_count", item.incomplete_count)}
-                  </Text>
+                    <Text style={detailStyle}>
+                      {t("weekly_attention")}:{" "}
+                      {v("item.incomplete_count", item.incomplete_count)}
+                    </Text>
+                    <Text style={detailStyle}>
+                      {t("weekly_missing_amounts")}:{" "}
+                      {v(
+                        "item.missing_amount_count",
+                        item.missing_amount_count,
+                      )}{" "}
+                      · {t("weekly_unconfirmed_amounts")}:{" "}
+                      {v(
+                        "item.unconfirmed_amount_count",
+                        item.unconfirmed_amount_count,
+                      )}
+                    </Text>
+                    <Text style={detailStyle}>
+                      {t("weekly_missing_dates")}:{" "}
+                      {v(
+                        "item.missing_due_date_count",
+                        item.missing_due_date_count,
+                      )}{" "}
+                      · {t("weekly_unconfirmed_dates")}:{" "}
+                      {v(
+                        "item.unconfirmed_due_date_count",
+                        item.unconfirmed_due_date_count,
+                      )}
+                    </Text>
+                  </TemplateIf>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.incomplete_count == 0"
+                    show={item.incomplete_count === 0}
+                  >
+                    <Text style={detailStyle}>{t("weekly_data_complete")}</Text>
+                  </TemplateIf>
                   <MinorHeading>{t("weekly_comparison")}</MinorHeading>
                   <Text style={detailStyle}>
                     {t("previous_total")}:{" "}
@@ -304,67 +434,12 @@ export default function WeeklyOverviewEmail({
                   <Text style={detailStyle}>
                     {t("change_previous")}:{" "}
                     {v(
-                      "fmt_amount(item.total_change) if item.total_change is not none else tr('na_incomplete')",
+                      "(fmt_amount(item.total_change) ~ ' ' ~ (item.currency or tr('currency_unspecified'))) if item.total_change is not none else tr('weekly_comparison_unavailable')",
                       item.total_change === null
-                        ? emailCopy("na_incomplete", language)
-                        : previewAmount(item.total_change, language),
+                        ? emailCopy("weekly_comparison_unavailable", language)
+                        : `${previewAmount(item.total_change, language)} ${item.currency ?? emailCopy("currency_unspecified", language)}`,
                     )}
                   </Text>
-                  <MinorHeading>{t("upcoming")}</MinorHeading>
-                  <TemplateIf
-                    tokens={tokens}
-                    expression="not item.upcoming and not item.upcoming_omitted"
-                    show={!item.upcoming.length && !item.upcoming_omitted}
-                  >
-                    <Text style={detailStyle}>{t("none")}</Text>
-                  </TemplateIf>
-                  <TemplateLoop
-                    tokens={tokens}
-                    expression="obligation in item.upcoming"
-                    items={item.upcoming}
-                    placeholder={blankPayment}
-                  >
-                    {(obligation) => (
-                      <Text
-                        style={{
-                          ...detailStyle,
-                          borderTop: "1px solid #e1e8e3",
-                          paddingTop: "10px",
-                          marginTop: "10px",
-                        }}
-                      >
-                        <strong>
-                          {v(
-                            "obligation.category_name",
-                            obligation.category_name,
-                          )}
-                        </strong>
-                        <br />
-                        {v(
-                          "fmt_date(obligation.due_date)",
-                          previewDate(obligation.due_date, language),
-                        )}{" "}
-                        · {money("obligation.amount", obligation.amount)}{" "}
-                        {v("item.currency or ''", item.currency)}
-                      </Text>
-                    )}
-                  </TemplateLoop>
-                  <TemplateIf
-                    tokens={tokens}
-                    expression="item.upcoming_omitted"
-                    show={Boolean(item.upcoming_omitted)}
-                  >
-                    <Text style={detailStyle}>
-                      {v(
-                        "tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted)",
-                        emailCopy("weekly_upcoming_omitted", language, {
-                          shown: item.upcoming.length,
-                          total:
-                            item.upcoming.length + (item.upcoming_omitted ?? 0),
-                        }),
-                      )}
-                    </Text>
-                  </TemplateIf>
                 </Section>
               )}
             </TemplateLoop>

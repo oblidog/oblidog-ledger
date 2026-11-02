@@ -32,6 +32,8 @@ class UpcomingObligation:
     category_name: str
     due_date: date
     amount: Decimal | None
+    days_until_due: int
+    needs_preparation: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +49,11 @@ class CurrencyOverview:
     overdue_known_amount: Decimal
     paid_percentage: Decimal | None
     incomplete_count: int
+    missing_amount_count: int
+    unconfirmed_amount_count: int
+    missing_due_date_count: int
+    unconfirmed_due_date_count: int
+    upcoming_known_amount: Decimal
     total_is_complete: bool
     previous_total_known_amount: Decimal
     previous_total_is_complete: bool
@@ -197,18 +204,23 @@ def _build_user_overviews(
                     current_total=current_totals.get(currency, Decimal("0.00")),
                     paid_total=paid_totals.get(currency, Decimal("0.00")),
                     previous_total=previous_totals.get(currency, Decimal("0.00")),
-                    current_complete=all(
-                        item.current_amount is not None
-                        for item in current_currency_obligations
+                    current_complete=_amounts_are_confirmed(
+                        current_currency_obligations
                     ),
-                    previous_complete=all(
-                        item.current_amount is not None
-                        for item in previous_currency_obligations
+                    previous_complete=_amounts_are_confirmed(
+                        previous_currency_obligations
                     ),
                 )
             )
         result.append(LedgerOverview(ledger_name=ledger.name, currencies=overviews))
     return result
+
+
+def _amounts_are_confirmed(obligations: list[Obligation]) -> bool:
+    return bool(obligations) and all(
+        item.current_amount is not None and item.amount_state in CONFIRMED_STATES
+        for item in obligations
+    )
 
 
 def _summarize_currency(
@@ -247,6 +259,13 @@ def _summarize_currency(
             category_name=item.category.name,
             due_date=item.due_date,
             amount=item.current_amount,
+            days_until_due=(item.due_date - report_date).days,
+            needs_preparation=(
+                item.lifecycle is not ObligationLifecycle.READY
+                or item.current_amount is None
+                or item.amount_state not in CONFIRMED_STATES
+                or item.due_date_state not in CONFIRMED_STATES
+            ),
         )
         for item in obligations
         if item.lifecycle is not ObligationLifecycle.PAID
@@ -262,10 +281,8 @@ def _summarize_currency(
         for item in obligations
     )
     paid_percentage = (
-        (Decimal(paid_count) * Decimal("100") / Decimal(len(obligations))).quantize(
-            Decimal("0.01")
-        )
-        if obligations
+        (paid_total * Decimal("100") / current_total).quantize(Decimal("0.01"))
+        if current_total > 0
         else None
     )
     return CurrencyOverview(
@@ -280,6 +297,21 @@ def _summarize_currency(
         overdue_known_amount=overdue_known_amount,
         paid_percentage=paid_percentage,
         incomplete_count=incomplete_count,
+        missing_amount_count=sum(item.current_amount is None for item in obligations),
+        unconfirmed_amount_count=sum(
+            item.current_amount is not None
+            and item.amount_state not in CONFIRMED_STATES
+            for item in obligations
+        ),
+        missing_due_date_count=sum(item.due_date is None for item in obligations),
+        unconfirmed_due_date_count=sum(
+            item.due_date is not None and item.due_date_state not in CONFIRMED_STATES
+            for item in obligations
+        ),
+        upcoming_known_amount=sum(
+            (item.amount for item in upcoming if item.amount is not None),
+            Decimal("0.00"),
+        ),
         total_is_complete=current_complete,
         previous_total_known_amount=previous_total,
         previous_total_is_complete=previous_complete,
