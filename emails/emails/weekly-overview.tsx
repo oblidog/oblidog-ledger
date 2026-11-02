@@ -328,6 +328,18 @@ export default function WeeklyOverviewEmail({
                     </Text>
                   </TemplateIf>
                   <MinorHeading>{t("weekly_month_summary")}</MinorHeading>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="(item.ready_count + item.paid_count + item.not_ready_count) == 0"
+                    show={
+                      item.ready_count +
+                        item.paid_count +
+                        item.not_ready_count ===
+                      0
+                    }
+                  >
+                    <Text style={detailStyle}>{t("no_obligations")}</Text>
+                  </TemplateIf>
                   <EmailSummary
                     label={t("total_known")}
                     value={amount("total_known_amount", item)}
@@ -413,8 +425,14 @@ export default function WeeklyOverviewEmail({
                   </TemplateIf>
                   <TemplateIf
                     tokens={tokens}
-                    expression="item.incomplete_count == 0"
-                    show={item.incomplete_count === 0}
+                    expression="item.incomplete_count == 0 and (item.ready_count + item.paid_count + item.not_ready_count) > 0"
+                    show={
+                      item.incomplete_count === 0 &&
+                      item.ready_count +
+                        item.paid_count +
+                        item.not_ready_count >
+                        0
+                    }
                   >
                     <Text style={detailStyle}>{t("weekly_data_complete")}</Text>
                   </TemplateIf>

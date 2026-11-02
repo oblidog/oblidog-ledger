@@ -22,7 +22,7 @@
           "total_is_complete": true,
           "previous_total_known_amount": "380.00",
           "previous_total_is_complete": true,
-          "total_change": "-380.00",
+          "total_change": null,
           "upcoming": [],
           "missing_amount_count": 0,
           "unconfirmed_amount_count": 0,

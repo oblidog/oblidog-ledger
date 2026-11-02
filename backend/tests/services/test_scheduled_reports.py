@@ -423,7 +423,7 @@ def test_one_run_delivers_each_recipient_language_without_changing_keys(
             (
                 "Dzienny raport zobowiązań"
                 if report_kind == "daily"
-                else "Tygodniowe podsumowanie miesiąca"
+                else "Miesięczny przegląd płatności"
             )
             if user.language == "pl"
             else (

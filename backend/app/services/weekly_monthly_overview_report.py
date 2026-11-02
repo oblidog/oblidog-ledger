@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import or_, select
@@ -210,6 +210,7 @@ def _build_user_overviews(
                     previous_complete=_amounts_are_confirmed(
                         previous_currency_obligations
                     ),
+                    previous_has_data=bool(previous_currency_obligations),
                 )
             )
         result.append(LedgerOverview(ledger_name=ledger.name, currencies=overviews))
@@ -217,7 +218,8 @@ def _build_user_overviews(
 
 
 def _amounts_are_confirmed(obligations: list[Obligation]) -> bool:
-    return bool(obligations) and all(
+    """Check completeness; empty months separately fail comparison eligibility."""
+    return all(
         item.current_amount is not None and item.amount_state in CONFIRMED_STATES
         for item in obligations
     )
@@ -233,6 +235,7 @@ def _summarize_currency(
     previous_total: Decimal,
     current_complete: bool,
     previous_complete: bool,
+    previous_has_data: bool = True,
 ) -> CurrencyOverview:
     paid_count = sum(item.lifecycle is ObligationLifecycle.PAID for item in obligations)
     ready_count = sum(
@@ -281,7 +284,9 @@ def _summarize_currency(
         for item in obligations
     )
     paid_percentage = (
-        (paid_total * Decimal("100") / current_total).quantize(Decimal("0.01"))
+        (paid_total * Decimal("100") / current_total).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
         if current_total > 0
         else None
     )
@@ -316,7 +321,7 @@ def _summarize_currency(
         previous_total_known_amount=previous_total,
         previous_total_is_complete=previous_complete,
         total_change=(current_total - previous_total)
-        if current_complete and previous_complete
+        if current_complete and previous_complete and obligations and previous_has_data
         else None,
         upcoming=upcoming,
     )

@@ -84,8 +84,11 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
                     )
                 if item["incomplete_count"]:
                     assert locale.tr("weekly_attention") in body
-                else:
+                elif item["ready_count"] + item["paid_count"] + item["not_ready_count"]:
                     assert locale.tr("weekly_data_complete") in body
+                else:
+                    assert locale.tr("no_obligations") in body
+                    assert locale.tr("weekly_data_complete") not in body
                 if item["overdue_count"]:
                     assert locale.tr("section_overdue") in body
                     assert locale.amount(item["overdue_known_amount"]) in body
@@ -435,7 +438,7 @@ def test_unknown_unconfirmed_and_missing_dates_are_distinct(report_module):
 def test_comparison_requires_existing_confirmed_amounts_in_both_months(report_module):
     check = report_module._amounts_are_confirmed
     assert check([obligation(amount="0")])
-    assert not check([])
+    assert check([])  # An empty month has no unconfirmed values.
     assert not check([obligation(amount=None)])
     assert not check([obligation(amount="100", amount_state="estimated")])
     for current, previous in ((False, True), (True, False)):
@@ -450,3 +453,79 @@ def test_comparison_requires_existing_confirmed_amounts_in_both_months(report_mo
             previous_complete=previous,
         )
         assert summary.total_change is None
+
+
+@pytest.mark.parametrize("current_has_data", [False, True])
+def test_empty_month_does_not_claim_unconfirmed_or_confirmed_data(
+    report_module, monkeypatch, current_has_data
+):
+    from uuid import UUID
+
+    class Rows(list):
+        def unique(self):
+            return self
+
+    row = obligation(amount="380")
+    row.currency = "EUR"
+    row.period_year = 2026
+    row.period_month = 11 if current_has_data else 10
+    ledger = SimpleNamespace(id=UUID(int=1), name="EmptyMonthRegression")
+    responses = iter(([ledger], Rows([row])))
+    session = SimpleNamespace(scalars=lambda statement: next(responses))
+    monkeypatch.setattr(
+        report_module,
+        "summarize_period_payment_progress",
+        lambda **kwargs: SimpleNamespace(amount_summaries=[]),
+    )
+    point = SimpleNamespace(
+        currency_summaries=[
+            SimpleNamespace(currency="EUR", total_known_amount=Decimal(380))
+        ]
+    )
+    empty_point = SimpleNamespace(currency_summaries=[])
+    monkeypatch.setattr(
+        report_module,
+        "get_obligation_period_totals",
+        lambda **kwargs: SimpleNamespace(
+            points=[empty_point, point] if current_has_data else [point, empty_point]
+        ),
+    )
+    ledgers = report_module._build_user_overviews(
+        session=session,
+        user=SimpleNamespace(id=UUID(int=2)),
+        report_date=date(2026, 11, 2),
+    )
+    summary = ledgers[0].currencies[0]
+    assert summary.total_is_complete
+    assert summary.previous_total_is_complete
+    assert summary.total_change is None
+    assert summary.incomplete_count == 0
+    from app.services.weekly_overview_rendering import render_weekly_overview
+
+    markup, text = render_weekly_overview(
+        context={
+            "project_name": "Oblidog",
+            "report_date": "02.11.2026",
+            "period": "11.2026",
+            "app_url": "https://example.com/ledgers",
+            "ledgers": ledgers,
+        },
+        language="pl",
+    )
+    locale = EmailLocale("pl")
+    for body in (visible_text(markup), text):
+        assert locale.tr("weekly_incomplete_notice") not in body
+        assert locale.tr("weekly_comparison_unavailable") in body
+        if not current_has_data:
+            assert locale.tr("no_obligations") in body
+            assert locale.tr("weekly_data_complete") not in body
+
+
+@pytest.mark.parametrize("paid,total", [("1.00", "160.00"), ("3.00", "160.00")])
+def test_weekly_progress_rounds_half_up_like_analytics(report_module, paid, total):
+    from app.use_cases.analytics import _percentage
+
+    summary = summarize(report_module, [obligation()], total=total, paid=paid)
+    assert summary.paid_percentage == _percentage(Decimal(paid), Decimal(total))
+    if paid == "1.00":
+        assert summary.paid_percentage == Decimal("0.63")

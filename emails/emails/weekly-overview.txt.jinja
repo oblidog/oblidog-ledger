@@ -17,7 +17,8 @@
 {% endif %}{% endfor %}{% if item.upcoming_omitted %}  {{ tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted) }}
 {% endif %}
   {{ tr('weekly_month_summary') }}
-  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }} {{ currency }}{% if not item.total_is_complete %} {{ tr('incomplete') }}
+{% if (item.ready_count + item.paid_count + item.not_ready_count) == 0 %}  {{ tr('no_obligations') }}
+{% endif %}  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }} {{ currency }}{% if not item.total_is_complete %} {{ tr('incomplete') }}
   {{ tr('weekly_incomplete_notice') }}{% endif %}
   {{ tr('paid_known') }}: {{ fmt_amount(item.paid_known_amount) }} {{ currency }}
   {{ tr('remaining_known') }}: {{ fmt_amount(item.remaining_known_amount) }} {{ currency }}
@@ -27,7 +28,7 @@
 {% if item.incomplete_count %}  {{ tr('weekly_attention') }}: {{ item.incomplete_count }}
   {{ tr('weekly_missing_amounts') }}: {{ item.missing_amount_count }} · {{ tr('weekly_unconfirmed_amounts') }}: {{ item.unconfirmed_amount_count }}
   {{ tr('weekly_missing_dates') }}: {{ item.missing_due_date_count }} · {{ tr('weekly_unconfirmed_dates') }}: {{ item.unconfirmed_due_date_count }}
-{% else %}  {{ tr('weekly_data_complete') }}
+{% elif (item.ready_count + item.paid_count + item.not_ready_count) > 0 %}  {{ tr('weekly_data_complete') }}
 {% endif %}  {{ tr('weekly_comparison') }}
   {{ tr('previous_total') }}: {{ fmt_amount(item.previous_total_known_amount) }} {{ currency }}{% if not item.previous_total_is_complete %} {{ tr('incomplete') }}{% endif %}
   {{ tr('change_previous') }}: {{ (fmt_amount(item.total_change) ~ ' ' ~ currency) if item.total_change is not none else tr('weekly_comparison_unavailable') }}
