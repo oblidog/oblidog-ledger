@@ -77,7 +77,6 @@
   "task": {
     "ensure_obligations": "Tworzenie zobowiązań",
     "estimate_obligation_amounts": "Szacowanie kwot zobowiązań",
-    "legacy_import": "Import danych historycznych",
     "scheduled_reports": "Zaplanowane raporty",
     "maintenance_cleanup": "Czyszczenie danych"
   },

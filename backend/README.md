@@ -5,7 +5,7 @@
 Public backend configuration, generated emails, and full OpenAPI metadata use
 the Oblidog name. Oblidog Ledger is retained for technical repository and
 integration API naming. Existing database names, Docker volumes and network
-aliases, legacy-import packages, and persisted data identifiers are retained
+aliases and persisted data identifiers are retained
 for deployment and data compatibility; they are not public branding.
 
 ## Requirements
@@ -68,35 +68,6 @@ frontend release.
 `POST /api/v1/login/access-token` remains available for non-browser user API
 clients and test tooling. Integration connection keys continue to use their
 independent Bearer flow and are not session cookies.
-
-## Temporary legacy workbook import
-
-For the migration window, a ledger owner can start a legacy import with
-`POST /api/v1/ledgers/{ledger_id}/legacy-import`. It returns `202 Accepted`
-immediately. Read progress and the final counts with
-`GET /api/v1/ledgers/{ledger_id}/legacy-import`, which returns the most recent
-job for that ledger. Only one legacy import can be active at a time; progress
-is logged every 50 obligations. The
-backend downloads the workbook from Dropbox with `DROPBOX_API_KEY`. Configure
-its path and monitored columns in YAML; start from
-[`config/legacy-import.example.yaml`](config/legacy-import.example.yaml), store
-the real file outside the repository, and set `LEGACY_IMPORT_CONFIG_PATH` to it.
-Legacy import is disabled by default. Set the single authoritative switch
-`LEGACY_IMPORT_MODE=manual_only` to allow the manual endpoint, or
-`LEGACY_IMPORT_MODE=scheduled` when a system runner is configured.
-For System Run, both enabled modes also require `LEGACY_IMPORT_LEDGER_ID` to
-identify the one ledger receiving the configured workbook; runner execution is
-never broadcast to all active ledgers. The existing manual endpoint continues
-to use its ledger URL parameter.
-Each monitored category header must have a unique four-letter category code in
-its comment.
-
-The selected ledger is the legacy PaymentBook, worksheets become category
-groups, and payment categories become categories. Existing categories are
-matched by code; their obligations are replaced atomically. The importer keeps
-only the current and earlier periods, marks unpaid entries as `ready` with
-confirmed values, and paid entries as `paid`. Imported values have source
-`legacy`.
 
 ## Database
 

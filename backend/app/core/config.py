@@ -1,6 +1,4 @@
-import uuid
 import warnings
-from pathlib import Path
 from typing import Annotated, Any, Literal, Self
 
 from pydantic import (
@@ -13,8 +11,6 @@ from pydantic import (
     model_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from app.domain.system_run import TaskRunMode
 
 
 def parse_cors(v: Any) -> list[str] | str:
@@ -130,10 +126,6 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
 
-    DROPBOX_API_KEY: str | None = None
-    LEGACY_IMPORT_CONFIG_PATH: Path = Path("config/legacy-import.yaml")
-    LEGACY_IMPORT_MODE: TaskRunMode = TaskRunMode.DISABLED
-    LEGACY_IMPORT_LEDGER_ID: uuid.UUID | None = None
     SYSTEM_RUN_SCHEDULE: str = "5 0 * * *"
     SYSTEM_RUN_TIMEZONE: str = "Europe/Warsaw"
     # Bootstrap country for new ledgers and migration of existing ledgers.
@@ -150,9 +142,6 @@ class Settings(BaseSettings):
         self.SMTP_HOST = None
         self.SMTP_USER = None
         self.SMTP_PASSWORD = None
-        self.DROPBOX_API_KEY = None
-        self.LEGACY_IMPORT_MODE = TaskRunMode.DISABLED
-        self.LEGACY_IMPORT_LEDGER_ID = None
         return self
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:

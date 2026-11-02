@@ -59,13 +59,6 @@ class EffectiveValueSourceMode(StrEnum):
     MIXED = "mixed"
 
 
-class LegacyImportJobStatus(StrEnum):
-    PENDING = "pending"
-    RUNNING = "running"
-    SUCCEEDED = "succeeded"
-    FAILED = "failed"
-
-
 @dataclass(frozen=True, slots=True)
 class BillingPeriod:
     year: int

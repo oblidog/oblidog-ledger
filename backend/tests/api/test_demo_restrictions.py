@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.capabilities import CapabilityDisabledError
 from app.core.config import Settings, settings
 from app.demo_seed import DEMO_EMAIL
-from app.domain import RecurrenceUnit, TaskRunMode
+from app.domain import RecurrenceUnit
 from app.models import Obligation
 from app.services import demo_limits
 from app.services import users as user_service
@@ -41,8 +41,6 @@ def test_demo_settings_disable_external_service_configuration() -> None:
         SMTP_USER="smtp-user",
         SMTP_PASSWORD="smtp-password",
         EMAILS_FROM_EMAIL="noreply@example.com",
-        DROPBOX_API_KEY="dropbox-token",
-        LEGACY_IMPORT_MODE=TaskRunMode.SCHEDULED,
     )
 
     assert demo_settings.ENVIRONMENT == "demo"
@@ -50,8 +48,6 @@ def test_demo_settings_disable_external_service_configuration() -> None:
     assert demo_settings.SMTP_HOST is None
     assert demo_settings.SMTP_USER is None
     assert demo_settings.SMTP_PASSWORD is None
-    assert demo_settings.DROPBOX_API_KEY is None
-    assert demo_settings.LEGACY_IMPORT_MODE is TaskRunMode.DISABLED
 
 
 @pytest.mark.usefixtures("demo_environment")
