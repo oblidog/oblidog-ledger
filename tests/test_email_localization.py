@@ -252,13 +252,22 @@ def test_weekly_multipart_uses_localized_amounts_and_preserves_currencies(langua
         overdue_count=1,
         overdue_known_amount=Decimal("12.00"),
         incomplete_count=1,
+        missing_amount_count=1,
+        unconfirmed_amount_count=0,
+        missing_due_date_count=0,
+        unconfirmed_due_date_count=0,
+        upcoming_known_amount=Decimal("0.00"),
         total_is_complete=False,
         previous_total_known_amount=Decimal(100),
         previous_total_is_complete=True,
         total_change=None,
         upcoming=[
             SimpleNamespace(
-                due_date=date(2026, 10, 20), category_name="Custom_<>&", amount=None
+                due_date=date(2026, 10, 20),
+                category_name="Custom_<>&",
+                amount=None,
+                days_until_due=1,
+                needs_preparation=True,
             )
         ],
     )
@@ -275,7 +284,7 @@ def test_weekly_multipart_uses_localized_amounts_and_preserves_currencies(langua
             language=language,
         )
         assert locale.tr("weekly_subject") in body
-        assert locale.tr("na_incomplete") in body
+        assert locale.tr("weekly_comparison_unavailable") in body
         assert locale.tr("unknown_amount_lower") in body
         assert locale.amount(item.total_known_amount) in body
         assert locale.date(date(2026, 10, 20)) in body

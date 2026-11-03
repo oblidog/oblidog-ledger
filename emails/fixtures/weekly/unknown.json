@@ -17,7 +17,7 @@
           "not_ready_count": 2,
           "overdue_count": 1,
           "overdue_known_amount": "0.00",
-          "paid_percentage": "0.00",
+          "paid_percentage": null,
           "incomplete_count": 2,
           "total_is_complete": false,
           "previous_total_known_amount": "10.00",
@@ -27,9 +27,16 @@
             {
               "category_name": "Unknown_Custom",
               "due_date": "2026-10-20",
-              "amount": null
+              "amount": null,
+              "days_until_due": 1,
+              "needs_preparation": true
             }
-          ]
+          ],
+          "missing_amount_count": 2,
+          "unconfirmed_amount_count": 0,
+          "missing_due_date_count": 0,
+          "unconfirmed_due_date_count": 0,
+          "upcoming_known_amount": "0.00"
         }
       ]
     }

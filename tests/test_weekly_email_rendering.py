@@ -6,6 +6,7 @@ import importlib
 import re
 import sys
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -59,8 +60,13 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
                 ):
                     # Colons differ between authored text and the card layout.
                     assert locale.tr(label) in body
-                    assert locale.amount(item[field]) in body
-                assert locale.tr("weekly_count_progress") in body
+                    assert (
+                        locale.amount(item[field])
+                        + " "
+                        + (item["currency"] or locale.tr("currency_unspecified"))
+                        in body
+                    )
+                assert locale.tr("weekly_amount_progress") in body
                 percentage = item["paid_percentage"]
                 assert (
                     locale.tr("na")
@@ -71,16 +77,25 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
                     ("ready", "ready_count"),
                     ("paid", "paid_count"),
                     ("not_ready", "not_ready_count"),
-                    ("section_overdue", "overdue_count"),
-                    ("unknown_values", "incomplete_count"),
                 ):
                     assert re.search(
                         re.escape(locale.tr(label)) + r"\s*[:=]\s*" + str(item[field]),
                         body,
                     )
-                assert locale.amount(item["overdue_known_amount"]) in body
+                if item["incomplete_count"]:
+                    assert locale.tr("weekly_attention") in body
+                elif item["ready_count"] + item["paid_count"] + item["not_ready_count"]:
+                    assert locale.tr("weekly_data_complete") in body
+                else:
+                    assert locale.tr("no_obligations") in body
+                    assert locale.tr("weekly_data_complete") not in body
+                if item["overdue_count"]:
+                    assert locale.tr("section_overdue") in body
+                    assert locale.amount(item["overdue_known_amount"]) in body
+                else:
+                    assert locale.tr("weekly_no_overdue") in body
                 assert (
-                    locale.tr("na_incomplete")
+                    locale.tr("weekly_comparison_unavailable")
                     if item["total_change"] is None
                     else locale.amount(item["total_change"])
                 ) in body
@@ -104,13 +119,13 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
 
 
 @pytest.mark.parametrize("language", ["en", "pl", "de"])
-def test_count_percentage_is_not_reinterpreted_as_amount_progress(language):
+def test_progress_is_monetary_not_by_obligation_count(language):
     markup, text = render_weekly_fixture(load_weekly_fixture("normal"), language)
     locale = EmailLocale(language)
     # One of four obligations is paid, but 900 of 1200.1234 monetary units are paid.
     for body in (visible_text(markup), " ".join(text.split())):
         assert (
-            locale.tr("weekly_count_progress") + ": " + locale.amount("25.00") + "%"
+            locale.tr("weekly_amount_progress") + ": " + locale.amount("74.99") + "%"
             in body
         )
         assert locale.amount("900.00") in body
@@ -299,3 +314,218 @@ def test_small_weekly_stays_complete_and_impossibly_small_budget_fails():
     assert markup.count("Internet_Custom") == 1
     with pytest.raises(ValueError, match="exceeds HTML budget"):
         render_weekly_overview(context=weekly_context(raw, "en"), html_budget=100)
+
+
+def test_zero_overdue_is_neutral_and_every_summary_amount_has_currency():
+    raw = load_weekly_fixture("zero")
+    markup, text = render_weekly_fixture(raw, "en")
+    assert "#8a3b26" not in markup
+    assert "No overdue payments" in visible_text(markup)
+    for body in (visible_text(markup), " ".join(text.split())):
+        assert "0.00 PLN" in body
+        assert (
+            EmailLocale("en").tr("weekly_amount_progress")
+            + ": "
+            + EmailLocale("en").tr("na")
+            in body
+        )
+
+
+def test_upcoming_preparation_relative_dates_and_subtotal_survive_truncation():
+    from app.services.weekly_overview_rendering import render_weekly_overview
+    from weekly_fixtures import weekly_context
+
+    raw = load_weekly_fixture("normal")
+    item = raw["ledgers"][0]["currencies"][0]
+    item["upcoming"][0].update(due_date=raw["report_date"], needs_preparation=True)
+    context = weekly_context(raw, "pl")
+    large = copy.deepcopy(context)
+    large["ledgers"][0].currencies[0].upcoming *= 60
+    large["ledgers"][0].currencies[0].upcoming_known_amount *= 60
+    for source, budget in ((context, 90000), (large, 20000)):
+        markup, text = render_weekly_overview(
+            context=source, language="pl", html_budget=budget
+        )
+        expected_total = (
+            EmailLocale("pl").amount(
+                source["ledgers"][0].currencies[0].upcoming_known_amount
+            )
+            + " PLN"
+        )
+        for body in (visible_text(markup), " ".join(text.split())):
+            assert expected_total in body
+        if "Internet_Custom" in markup:
+            assert "Dzisiaj" in visible_text(markup)
+            assert "Wymaga przygotowania lub potwierdzenia" in visible_text(markup)
+
+
+@pytest.fixture
+def report_module(monkeypatch):
+    for line in (
+        (Path(__file__).resolve().parents[1] / ".github/ci.env")
+        .read_text()
+        .splitlines()
+    ):
+        if line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            monkeypatch.setenv(key, value)
+    return importlib.import_module("app.services.weekly_monthly_overview_report")
+
+
+def obligation(
+    *,
+    amount="100",
+    lifecycle="ready",
+    amount_state="confirmed",
+    due_state="confirmed",
+    due=date(2026, 11, 2),
+):
+    from app.domain import ObligationLifecycle, ValueState
+
+    return SimpleNamespace(
+        current_amount=Decimal(amount) if amount is not None else None,
+        lifecycle=ObligationLifecycle(lifecycle),
+        amount_state=ValueState(amount_state),
+        due_date_state=ValueState(due_state),
+        due_date=due,
+        category=SimpleNamespace(name="Payment"),
+    )
+
+
+def summarize(module, items, *, total="1000", paid="900", **kwargs):
+    return module._summarize_currency(
+        obligations=items,
+        currency="PLN",
+        report_date=date(2026, 11, 2),
+        current_total=Decimal(total),
+        paid_total=Decimal(paid),
+        previous_total=Decimal(1000),
+        current_complete=True,
+        previous_complete=True,
+        **kwargs,
+    )
+
+
+def test_amount_progress_differs_from_count_and_zero_has_no_ratio(report_module):
+    items = [obligation(amount="900", lifecycle="paid"), obligation(amount="100")]
+    summary = summarize(report_module, items)
+    assert summary.paid_percentage == Decimal("90.00")
+    assert summary.upcoming_known_amount == Decimal(100)
+    assert len(summary.upcoming) == 1
+    assert summarize(report_module, [], total="0", paid="0").paid_percentage is None
+    assert summarize(report_module, items, paid="0").paid_percentage == Decimal("0.00")
+
+
+def test_unknown_unconfirmed_and_missing_dates_are_distinct(report_module):
+    items = [
+        obligation(amount=None, amount_state="unknown"),
+        obligation(amount="50", amount_state="estimated"),
+        obligation(amount="0", due_state="estimated"),
+        obligation(amount="30", due=None),
+        obligation(amount="20", lifecycle="paid"),
+    ]
+    summary = summarize(report_module, items, total="100", paid="20")
+    assert summary.incomplete_count == 4
+    assert summary.missing_amount_count == 1
+    assert summary.unconfirmed_amount_count == 1
+    assert summary.missing_due_date_count == 1
+    assert summary.unconfirmed_due_date_count == 1
+    assert summary.upcoming_known_amount == Decimal(50)
+    assert all(item.needs_preparation for item in summary.upcoming)
+    assert all(item.days_until_due == 0 for item in summary.upcoming)
+
+
+def test_comparison_requires_existing_confirmed_amounts_in_both_months(report_module):
+    check = report_module._amounts_are_confirmed
+    assert check([obligation(amount="0")])
+    assert check([])  # An empty month has no unconfirmed values.
+    assert not check([obligation(amount=None)])
+    assert not check([obligation(amount="100", amount_state="estimated")])
+    for current, previous in ((False, True), (True, False)):
+        summary = report_module._summarize_currency(
+            obligations=[obligation()],
+            currency="PLN",
+            report_date=date(2026, 11, 2),
+            current_total=Decimal(100),
+            paid_total=Decimal(0),
+            previous_total=Decimal(500),
+            current_complete=current,
+            previous_complete=previous,
+        )
+        assert summary.total_change is None
+
+
+@pytest.mark.parametrize("current_has_data", [False, True])
+def test_empty_month_does_not_claim_unconfirmed_or_confirmed_data(
+    report_module, monkeypatch, current_has_data
+):
+    from uuid import UUID
+
+    class Rows(list):
+        def unique(self):
+            return self
+
+    row = obligation(amount="380")
+    row.currency = "EUR"
+    row.period_year = 2026
+    row.period_month = 11 if current_has_data else 10
+    ledger = SimpleNamespace(id=UUID(int=1), name="EmptyMonthRegression")
+    responses = iter(([ledger], Rows([row])))
+    session = SimpleNamespace(scalars=lambda statement: next(responses))
+    monkeypatch.setattr(
+        report_module,
+        "summarize_period_payment_progress",
+        lambda **kwargs: SimpleNamespace(amount_summaries=[]),
+    )
+    point = SimpleNamespace(
+        currency_summaries=[
+            SimpleNamespace(currency="EUR", total_known_amount=Decimal(380))
+        ]
+    )
+    empty_point = SimpleNamespace(currency_summaries=[])
+    monkeypatch.setattr(
+        report_module,
+        "get_obligation_period_totals",
+        lambda **kwargs: SimpleNamespace(
+            points=[empty_point, point] if current_has_data else [point, empty_point]
+        ),
+    )
+    ledgers = report_module._build_user_overviews(
+        session=session,
+        user=SimpleNamespace(id=UUID(int=2)),
+        report_date=date(2026, 11, 2),
+    )
+    summary = ledgers[0].currencies[0]
+    assert summary.total_is_complete
+    assert summary.previous_total_is_complete
+    assert summary.total_change is None
+    assert summary.incomplete_count == 0
+    from app.services.weekly_overview_rendering import render_weekly_overview
+
+    markup, text = render_weekly_overview(
+        context={
+            "project_name": "Oblidog",
+            "report_date": "02.11.2026",
+            "period": "11.2026",
+            "app_url": "https://example.com/ledgers",
+            "ledgers": ledgers,
+        },
+        language="pl",
+    )
+    locale = EmailLocale("pl")
+    for body in (visible_text(markup), text):
+        assert locale.tr("weekly_incomplete_notice") not in body
+        assert locale.tr("weekly_comparison_unavailable") in body
+        if not current_has_data:
+            assert locale.tr("no_obligations") in body
+            assert locale.tr("weekly_data_complete") not in body
+
+
+@pytest.mark.parametrize("paid,total", [("1.00", "160.00"), ("3.00", "160.00")])
+def test_weekly_progress_rounds_half_up_like_analytics(report_module, paid, total):
+    from app.use_cases.analytics import _percentage
+
+    summary = summarize(report_module, [obligation()], total=total, paid=paid)
+    assert summary.paid_percentage == _percentage(Decimal(paid), Decimal(total))
+    if paid == "1.00":
+        assert summary.paid_percentage == Decimal("0.63")

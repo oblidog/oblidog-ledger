@@ -3,6 +3,8 @@ export type WeeklyPayment = {
   category_name: string
   due_date: string
   amount: string | null
+  days_until_due: number
+  needs_preparation: boolean
 }
 export type WeeklyCurrency = {
   currency: string | null
@@ -16,6 +18,11 @@ export type WeeklyCurrency = {
   overdue_known_amount: string
   paid_percentage: string | null
   incomplete_count: number
+  missing_amount_count: number
+  unconfirmed_amount_count: number
+  missing_due_date_count: number
+  unconfirmed_due_date_count: number
+  upcoming_known_amount: string
   total_is_complete: boolean
   previous_total_known_amount: string
   previous_total_is_complete: boolean

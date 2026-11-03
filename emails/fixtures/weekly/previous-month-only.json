@@ -22,8 +22,13 @@
           "total_is_complete": true,
           "previous_total_known_amount": "380.00",
           "previous_total_is_complete": true,
-          "total_change": "-380.00",
-          "upcoming": []
+          "total_change": null,
+          "upcoming": [],
+          "missing_amount_count": 0,
+          "unconfirmed_amount_count": 0,
+          "missing_due_date_count": 0,
+          "unconfirmed_due_date_count": 0,
+          "upcoming_known_amount": "0.00"
         }
       ]
     }

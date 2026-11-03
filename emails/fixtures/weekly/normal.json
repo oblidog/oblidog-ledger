@@ -17,7 +17,7 @@
           "not_ready_count": 1,
           "overdue_count": 1,
           "overdue_known_amount": "80.00",
-          "paid_percentage": "25.00",
+          "paid_percentage": "74.99",
           "incomplete_count": 0,
           "total_is_complete": true,
           "previous_total_known_amount": "1180.00",
@@ -27,14 +27,23 @@
             {
               "category_name": "Internet_Custom",
               "due_date": "2026-10-20",
-              "amount": "120.1234"
+              "amount": "120.1234",
+              "days_until_due": 1,
+              "needs_preparation": false
             },
             {
               "category_name": "Insurance_Custom",
               "due_date": "2026-10-23",
-              "amount": "100.00"
+              "amount": "100.00",
+              "days_until_due": 4,
+              "needs_preparation": false
             }
-          ]
+          ],
+          "missing_amount_count": 0,
+          "unconfirmed_amount_count": 0,
+          "missing_due_date_count": 0,
+          "unconfirmed_due_date_count": 0,
+          "upcoming_known_amount": "220.1234"
         }
       ]
     }
