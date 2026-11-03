@@ -1,3 +1,23 @@
+## v0.22.0 (2026-11-03)
+
+### BREAKING CHANGE
+
+- Remove the legacy workbook importer, including the ledger GET/POST /api/v1/ledgers/{ledger_id}/legacy-import endpoints and the legacy_import System Run task. Remove DROPBOX_API_KEY, LEGACY_IMPORT_MODE, LEGACY_IMPORT_LEDGER_ID, LEGACY_IMPORT_CONFIG_PATH, and importer YAML bind mounts from deployment configuration. Dropbox credentials are no longer required. The database migration drops only legacy_import_job and its job execution history. Previously imported obligations, categories, payment history, persisted legacy source values, and historical System Runs remain available. Downgrade recreates an empty job table and cannot restore discarded job history. See docs/self-hosting.md#upgrading-from-the-legacy-workbook-importer for upgrade instructions.
+
+### Feat
+
+- **dashboard**: surface cross-period needs-attention overview (#614)
+
+### Fix
+
+- **reports**: clarify weekly payment amounts and progress (#617)
+
+### Refactor
+
+- **legacy**: remove legacy import (#616)
+- **integrations**: emphasize failures and simplify status list (#615)
+- **obligations**: lead bill details with payment context (#612)
+
 ## v0.21.4 (2026-11-01)
 
 ### Fix
