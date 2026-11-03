@@ -4,11 +4,14 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: [
     "i18n.spec.ts",
+    "integrations.spec.ts",
     "demo-login.spec.ts",
     "page-hierarchy.spec.ts",
     "demo-preview.spec.ts",
     "analytics-preview.spec.ts",
+    "attention-preview.spec.ts",
     "obligations-preview.spec.ts",
+    "obligation-mobile.spec.ts",
   ],
   fullyParallel: true,
   use: {

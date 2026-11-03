@@ -177,7 +177,7 @@ test("integration and System Run previews never call restricted APIs", async ({
   const { restrictedRequests, writes } = await mockApi(page)
   await page.goto(`/ledgers/${ledgerId}/integrations`)
   await expect(page.getByTestId("demo-preview-notice")).toContainText(
-    "illustrative records",
+    "no live connections or real runs",
   )
   await expect(
     page.getByRole("button", { name: "Add integration", exact: true }),

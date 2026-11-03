@@ -74,6 +74,11 @@ A breaking change increments the minor version (for example, `0.21.3` to
 version (`0.21.3` to `0.21.4`). Describe breaking changes and required upgrade
 steps in the PR so they remain visible in release notes.
 
+Commitizen replaces the `Unreleased` section when generating a release changelog.
+Keep upgrade instructions in permanent documentation and include their details
+in a `BREAKING CHANGE:` commit footer. Preserve that footer in the squash commit;
+`!` alone selects the version bump but does not supply detailed release notes.
+
 The release workflow reads this configuration for both the version preview
 and the actual bump; no extra CLI flag is needed. Ensure the setting reaches
 `main` before releasing a breaking change. For an intentional `1.0.0` release,

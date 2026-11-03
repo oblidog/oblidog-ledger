@@ -1185,3 +1185,61 @@ def test_component_history_keeps_informational_components_separate_from_bill_amo
     assert total["unpriced_component_count"] == 1
     assert "unknown_amount_count" not in total
     assert response.json()["components"][0]["values"][0]["amount"] is None
+
+
+@pytest.mark.parametrize("role", ["owner", "editor", "viewer"])
+def test_attention_is_cross_period_scoped_and_respects_archives(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch, role: str
+) -> None:
+    from app.domain import LedgerAccessRole
+    from app.use_cases import attention
+
+    monkeypatch.setattr(attention, "business_today", lambda: date(2026, 9, 1))
+    owner = create_random_user(db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="attention"
+    )
+    other = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name="other-attention"
+    )
+    visible = _create_obligation(
+        db, ledger_id=ledger.id, code="OVRD", amount=Decimal("89.99")
+    )
+    archived = _create_obligation(db, ledger_id=ledger.id, code="ARCH", amount=None)
+    paid = _create_obligation(
+        db, ledger_id=ledger.id, code="PAID", amount=Decimal("20.00")
+    )
+    canceled = _create_obligation(db, ledger_id=ledger.id, code="CNCL", amount=None)
+    _create_obligation(db, ledger_id=other.id, code="OTHR", amount=Decimal("99.00"))
+    archived.category.is_active = False
+    paid.lifecycle = ObligationLifecycle.PAID
+    canceled.lifecycle = ObligationLifecycle.CANCELED
+    db.commit()
+    user = owner
+    if role != "owner":
+        user = create_random_user(db)
+        ledger_use_cases.share_ledger(
+            session=db,
+            ledger_id=ledger.id,
+            target_user_id=user.id,
+            role=LedgerAccessRole(role),
+        )
+    headers = authentication_token_from_email(client=client, email=user.email, db=db)
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/analytics/attention"
+    response = client.get(url, headers=headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["as_of_date"] == "2026-09-01"
+    assert body["total"] == 1
+    assert body["items"][0]["key"] == visible.business_key
+    assert body["items"][0]["reasons"] == ["overdue"]
+    assert body["items"][0]["amount"] == "89.99"
+    assert client.get(url + "?offset=1&limit=1", headers=headers).json()["items"] == []
+    assert client.get(url + "?limit=0", headers=headers).status_code == 422
+    stranger = create_random_user(db)
+    stranger_headers = authentication_token_from_email(
+        client=client, email=stranger.email, db=db
+    )
+    assert client.get(url, headers=stranger_headers).status_code == 404
+    client.cookies.clear()
+    assert client.get(url).status_code == 401

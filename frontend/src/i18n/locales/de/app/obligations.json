@@ -131,5 +131,9 @@
   "other_period": "Anderen Monat wählen…",
   "choose_month": "Monat wählen",
   "apply_period": "Anwenden",
-  "due_or_paid_date": "Fälligkeit / Zahlung"
+  "due_or_paid_date": "Fälligkeit / Zahlung",
+  "payment_summary": "Zahlungsübersicht",
+  "obligation_code": "Verbindlichkeitscode",
+  "data_origin": "Datenherkunft",
+  "data_origin_help": "Quellen und Bestätigungsstatus der einzelnen Felder. Änderungen und Unterschiede stehen unter Aktivität."
 }

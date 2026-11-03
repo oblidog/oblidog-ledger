@@ -30,18 +30,17 @@ const healthLabels: Record<IntegrationHealth, string> = {
   },
 }
 
+export function needsAttention(health: IntegrationHealth) {
+  return health === "error" || health === "timed_out" || health === "stale"
+}
+
 export function HealthBadge({ health }: { health: IntegrationHealth }) {
   useTranslation()
 
   return (
     <Badge
-      variant={
-        health === "error" || health === "timed_out" || health === "stale"
-          ? "destructive"
-          : health === "healthy"
-            ? "default"
-            : "secondary"
-      }
+      className="max-w-full whitespace-normal text-left"
+      variant={needsAttention(health) ? "destructive" : "secondary"}
     >
       {healthLabels[health]}
     </Badge>

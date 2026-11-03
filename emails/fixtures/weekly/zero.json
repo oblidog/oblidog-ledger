@@ -15,15 +15,20 @@
           "ready_count": 2,
           "paid_count": 1,
           "not_ready_count": 1,
-          "overdue_count": 1,
-          "overdue_known_amount": "80.00",
-          "paid_percentage": "25.00",
+          "overdue_count": 0,
+          "overdue_known_amount": "0.00",
+          "paid_percentage": null,
           "incomplete_count": 0,
           "total_is_complete": true,
           "previous_total_known_amount": "380.00",
           "previous_total_is_complete": true,
           "total_change": "-380.00",
-          "upcoming": []
+          "upcoming": [],
+          "missing_amount_count": 0,
+          "unconfirmed_amount_count": 0,
+          "missing_due_date_count": 0,
+          "unconfirmed_due_date_count": 0,
+          "upcoming_known_amount": "0.00"
         }
       ]
     }

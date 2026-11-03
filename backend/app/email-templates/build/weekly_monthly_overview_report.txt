@@ -7,23 +7,32 @@
 {% endif %}{% if not ledgers and not weekly_size_notice %}{{ tr('weekly_empty') }}
 {% endif %}{% for ledger in ledgers %}{{ ledger.ledger_name }}
 {% if not ledger.currencies %}  {{ tr('no_obligations') }}
-{% endif %}{% for item in ledger.currencies %}  {{ tr('currency') }}: {{ item.currency or tr('currency_unspecified') }}
-  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }}{% if not item.total_is_complete %} {{ tr('incomplete') }}
-  {{ tr('weekly_incomplete_notice') }}{% endif %}
-  {{ tr('paid_known') }}: {{ fmt_amount(item.paid_known_amount) }}
-  {{ tr('remaining_known') }}: {{ fmt_amount(item.remaining_known_amount) }}
-  {{ tr('obligations') }}: {{ tr('ready') }}={{ item.ready_count }}, {{ tr('paid') }}={{ item.paid_count }}, {{ tr('not_ready') }}={{ item.not_ready_count }}
-  {{ tr('weekly_count_progress') }}: {{ fmt_amount(item.paid_percentage) ~ '%' if item.paid_percentage is not none else tr('na') }}
-  {{ tr('section_overdue') }}: {{ item.overdue_count }} / {{ fmt_amount(item.overdue_known_amount) }}
-  {{ tr('unknown_values') }}: {{ item.incomplete_count }}
-  {{ tr('previous_total') }}: {{ fmt_amount(item.previous_total_known_amount) }}{% if not item.previous_total_is_complete %} {{ tr('incomplete') }}{% endif %}
-  {{ tr('change_previous') }}: {{ fmt_amount(item.total_change) if item.total_change is not none else tr('na_incomplete') }}
-{% if item.upcoming %}  {{ tr('upcoming') }}:
-{% for obligation in item.upcoming %}    - {{ fmt_date(obligation.due_date) }}: {{ obligation.category_name }} — {{ fmt_amount(obligation.amount) }} {{ item.currency or '' }}
-{% endfor %}{% elif not item.upcoming_omitted %}  {{ tr('upcoming') }}: {{ tr('none') }}
+{% endif %}{% for item in ledger.currencies %}{% set currency = item.currency or tr('currency_unspecified') %}  {{ tr('currency') }}: {{ currency }}
+{% if item.overdue_count %}  {{ tr('section_overdue') }}: {{ item.overdue_count }} / {{ fmt_amount(item.overdue_known_amount) }} {{ currency }}
+{% else %}  {{ tr('weekly_no_overdue') }}
+{% endif %}  {{ tr('upcoming') }}:
+  {{ tr('weekly_upcoming_total') }}: {{ fmt_amount(item.upcoming_known_amount) }} {{ currency }}
+{% for obligation in item.upcoming %}    - {{ fmt_date(obligation.due_date) }}: {{ obligation.category_name }} — {{ fmt_amount(obligation.amount) }} {{ currency }} · {{ tr('weekly_due_today') if obligation.days_until_due == 0 else tr('weekly_due_tomorrow') if obligation.days_until_due == 1 else tr('weekly_due_in', days=obligation.days_until_due) }}{% if obligation.needs_preparation %} · {{ tr('weekly_needs_preparation') }}{% endif %}
+{% else %}{% if not item.upcoming_omitted %}  {{ tr('none') }}
+{% endif %}{% endfor %}{% if item.upcoming_omitted %}  {{ tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted) }}
 {% endif %}
-{% if item.upcoming_omitted %}  {{ tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted) }}
-{% endif %}{% endfor %}
+  {{ tr('weekly_month_summary') }}
+{% if (item.ready_count + item.paid_count + item.not_ready_count) == 0 %}  {{ tr('no_obligations') }}
+{% endif %}  {{ tr('total_known') }}: {{ fmt_amount(item.total_known_amount) }} {{ currency }}{% if not item.total_is_complete %} {{ tr('incomplete') }}
+  {{ tr('weekly_incomplete_notice') }}{% endif %}
+  {{ tr('paid_known') }}: {{ fmt_amount(item.paid_known_amount) }} {{ currency }}
+  {{ tr('remaining_known') }}: {{ fmt_amount(item.remaining_known_amount) }} {{ currency }}
+  {{ tr('obligations') }}: {{ tr('ready') }}={{ item.ready_count }}, {{ tr('paid') }}={{ item.paid_count }}, {{ tr('not_ready') }}={{ item.not_ready_count }}
+  {{ tr('weekly_amount_progress') }}: {{ fmt_amount(item.paid_percentage) ~ '%' if item.paid_percentage is not none else tr('na') }}
+  {{ tr('weekly_progress_notice') }}
+{% if item.incomplete_count %}  {{ tr('weekly_attention') }}: {{ item.incomplete_count }}
+  {{ tr('weekly_missing_amounts') }}: {{ item.missing_amount_count }} · {{ tr('weekly_unconfirmed_amounts') }}: {{ item.unconfirmed_amount_count }}
+  {{ tr('weekly_missing_dates') }}: {{ item.missing_due_date_count }} · {{ tr('weekly_unconfirmed_dates') }}: {{ item.unconfirmed_due_date_count }}
+{% elif (item.ready_count + item.paid_count + item.not_ready_count) > 0 %}  {{ tr('weekly_data_complete') }}
+{% endif %}  {{ tr('weekly_comparison') }}
+  {{ tr('previous_total') }}: {{ fmt_amount(item.previous_total_known_amount) }} {{ currency }}{% if not item.previous_total_is_complete %} {{ tr('incomplete') }}{% endif %}
+  {{ tr('change_previous') }}: {{ (fmt_amount(item.total_change) ~ ' ' ~ currency) if item.total_change is not none else tr('weekly_comparison_unavailable') }}
+{% endfor %}
 {% endfor %}
 {% if app_url %}{{ tr('open_oblidog') }}: {{ app_url }}
 {% endif %}{{ tr('weekly_footer') }}

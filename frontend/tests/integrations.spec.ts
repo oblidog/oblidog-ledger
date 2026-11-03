@@ -4,8 +4,16 @@ import type {
   IntegrationCredentialPublic,
   IntegrationPublic,
 } from "../src/client"
-
 import type { IntegrationRun } from "../src/components/Integrations/runHistoryApi"
+import de from "../src/i18n/locales/de/app/integrations.json" with {
+  type: "json",
+}
+import en from "../src/i18n/locales/en/app/integrations.json" with {
+  type: "json",
+}
+import pl from "../src/i18n/locales/pl/app/integrations.json" with {
+  type: "json",
+}
 
 // These UI scenarios intercept every API request and never use a live database.
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -58,6 +66,7 @@ async function mockApi(
   page: Page,
   items: IntegrationPublic[] = [],
   runs: IntegrationRun[] = [],
+  language = "en",
 ) {
   const state = {
     items: structuredClone(items),
@@ -69,6 +78,7 @@ async function mockApi(
     id: "owner",
     email: "owner@example.com",
     full_name: "Owner",
+    language,
     is_active: true,
     is_superuser: false,
   }
@@ -307,3 +317,102 @@ test("run history can retry a failed load and displays its empty state", async (
     history.getByText("Could not load run history"),
   ).not.toBeVisible()
 })
+
+for (const [language, labels] of Object.entries({ en, pl, de })) {
+  for (const theme of ["light", "dark"]) {
+    test(`integration list preserves health and secondary outcomes: ${language}, ${theme}`, async ({
+      page,
+    }) => {
+      await page.addInitScript(
+        ({ language, theme }) => {
+          localStorage.setItem("oblidog-language", language)
+          localStorage.setItem("vite-ui-theme", theme)
+        },
+        { language, theme },
+      )
+      const states = [
+        "error",
+        "stale",
+        "timed_out",
+        "disabled",
+        "never_run",
+        "running",
+        "healthy",
+      ] as const
+      await mockApi(
+        page,
+        states.map((health, index) => ({
+          ...integration(),
+          id: `${integrationId.slice(0, -1)}${index}`,
+          name: `Provider ${health} ${"X".repeat(80)}`,
+          health,
+          enabled: health !== "disabled",
+          // An older success must never override the health supplied by the API.
+          last_result: "success",
+          last_finished_at: now,
+          last_changes_detected: true,
+          current_started_at: "2026-09-09T12:00:00Z",
+        })),
+        [],
+        language,
+      )
+      await page.goto(root)
+      const list = page.getByRole("list", {
+        name: labels.integrations,
+        exact: true,
+      })
+      const rows = list.getByRole("listitem")
+      await expect(rows).toHaveCount(states.length)
+      const healthLabels = [
+        labels.failed,
+        labels.report_overdue,
+        labels.timed_out,
+        labels.disabled,
+        labels.never_run,
+        labels.running,
+        labels.healthy,
+      ]
+      for (let index = 0; index < states.length; index++) {
+        const row = rows.nth(index)
+        await expect(row.locator('[data-slot="badge"]')).toHaveText(
+          healthLabels[index],
+        )
+        await expect(
+          row.getByText(labels.success, { exact: true }),
+        ).not.toBeVisible()
+        await expect(
+          row.getByRole("link", { name: labels.review_run_history }),
+        ).toHaveCount(index < 3 ? 1 : 0)
+      }
+      const details = rows.first().locator("summary")
+      await details.focus()
+      await page.keyboard.press("Enter")
+      await expect(
+        rows.first().getByText(labels.success, { exact: true }),
+      ).toBeVisible()
+      await expect(
+        rows.first().getByText(labels.changes_detected, { exact: true }),
+      ).toBeVisible()
+      await expect(
+        rows.first().getByText(labels.enabled, { exact: true }),
+      ).toBeVisible()
+      await expect(rows.first().locator("details")).toHaveAttribute("open", "")
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true)
+      await page.screenshot({
+        path: test.info().outputPath(`integrations-${language}-${theme}.png`),
+        fullPage: true,
+      })
+      await rows
+        .first()
+        .getByRole("link", { name: labels.review_run_history })
+        .click()
+      await expect(page).toHaveURL(
+        new RegExp(`/integrations/${integrationId.slice(0, -1)}0$`),
+      )
+    })
+  }
+}

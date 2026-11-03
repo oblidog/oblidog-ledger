@@ -21,6 +21,7 @@ _AMOUNT_FIELDS = (
     "paid_percentage",
     "previous_total_known_amount",
     "total_change",
+    "upcoming_known_amount",
 )
 
 
@@ -38,6 +39,8 @@ def weekly_context(raw: dict, language: str) -> dict:
             values["upcoming"] = [
                 SimpleNamespace(
                     category_name=payment["category_name"],
+                    days_until_due=(date.fromisoformat(payment["due_date"]) - date.fromisoformat(raw["report_date"])).days,
+                    needs_preparation=payment.get("needs_preparation", payment["amount"] is None),
                     due_date=date.fromisoformat(payment["due_date"]),
                     amount=Decimal(payment["amount"])
                     if payment["amount"] is not None

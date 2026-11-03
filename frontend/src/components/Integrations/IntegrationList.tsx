@@ -8,7 +8,6 @@ import {
   IntegrationsService,
   LedgersService,
 } from "@/client"
-import { DemoPreviewNotice } from "@/components/Common/DemoRestrictedSection"
 import { PageHeader } from "@/components/Common/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,14 +17,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import useAuth from "@/hooks/useAuth"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { i18n } from "@/i18n"
@@ -35,6 +26,7 @@ import {
   dateTime,
   HealthBadge,
   LoadError,
+  needsAttention,
   resultLabel,
 } from "./shared"
 
@@ -98,6 +90,7 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
             {isOwner && (
               <Button
                 disabled={!config || demo}
+                aria-describedby={demo ? "integration-demo-actions" : undefined}
                 onClick={() => setCreating(true)}
               >
                 <Plus /> {i18n.t("app:integrations.add_integration")}
@@ -106,7 +99,18 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
           </>
         }
       />
-      {demo && <DemoPreviewNotice />}
+      {demo && (
+        <div className="space-y-1 text-sm text-muted-foreground">
+          <p data-testid="demo-preview-notice">
+            {i18n.t("app:integrations.demo_preview")}
+          </p>
+          {isOwner && (
+            <p id="integration-demo-actions">
+              {i18n.t("app:integrations.demo_actions")}
+            </p>
+          )}
+        </div>
+      )}
       {integrations.isError && (
         <LoadError
           hasData={!!integrations.data}
@@ -163,109 +167,123 @@ export function IntegrationList({ ledgerId }: { ledgerId: string }) {
         </Card>
       )}
       {integrations.data && integrations.data.count > 0 && (
-        <div className="overflow-hidden rounded-lg border">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead>
-                    {i18n.t("app:integrations.integration")}
-                  </TableHead>
-                  <TableHead>{i18n.t("app:integrations.category")}</TableHead>
-                  <TableHead>{i18n.t("app:integrations.status")}</TableHead>
-                  <TableHead>{i18n.t("app:integrations.last_run")}</TableHead>
-                  <TableHead>{i18n.t("app:integrations.result")}</TableHead>
-                  <TableHead>{i18n.t("app:integrations.changes")}</TableHead>
-                  <TableHead className="w-16 text-right">
-                    {i18n.t("app:integrations.actions")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {integrations.data.data.map((item) => (
-                  <TableRow key={item.id} className="group">
-                    <TableCell className="min-w-52">
-                      <Link
-                        className="font-medium hover:underline"
-                        to="/ledgers/$ledgerId/integrations/$integrationId"
-                        params={{ ledgerId, integrationId: item.id }}
-                      >
-                        {item.name}
-                      </Link>
-                      <p className="mt-1 text-xs text-muted-foreground">
+        <ul
+          aria-label={i18n.t("app:integrations.integrations")}
+          className="divide-y rounded-lg border"
+        >
+          {integrations.data.data.map((item) => (
+            <li
+              key={item.id}
+              className={`grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 p-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)_auto] md:gap-4 ${needsAttention(item.health) ? "bg-destructive/5" : ""}`}
+            >
+              <div className="min-w-0">
+                <Link
+                  className="break-words font-medium hover:underline"
+                  to="/ledgers/$ledgerId/integrations/$integrationId"
+                  params={{ ledgerId, integrationId: item.id }}
+                >
+                  {item.name}
+                </Link>
+                <p className="mt-1 break-words text-xs text-muted-foreground">
+                  {categoryNames.get(item.category_id) ?? item.category_id}
+                </p>
+              </div>
+              <div className="col-start-1 min-w-0 space-y-2 md:col-auto">
+                <HealthBadge health={item.health} />
+                {needsAttention(item.health) && (
+                  <Link
+                    className="block text-sm font-medium text-destructive underline underline-offset-4"
+                    to="/ledgers/$ledgerId/integrations/$integrationId"
+                    params={{ ledgerId, integrationId: item.id }}
+                  >
+                    {i18n.t("app:integrations.review_run_history")}
+                  </Link>
+                )}
+              </div>
+              <div className="col-start-1 min-w-0 text-sm md:col-auto">
+                <p className="text-xs text-muted-foreground">
+                  {i18n.t("app:integrations.last_run")}
+                </p>
+                <p className="mt-1">
+                  {dateTime(item.current_started_at ?? item.last_finished_at)}
+                </p>
+                <details className="mt-2 text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground">
+                    {i18n.t("app:integrations.run_details")}
+                  </summary>
+                  <dl className="mt-2 space-y-2">
+                    <div>
+                      <dt>{i18n.t("app:integrations.reporting")}</dt>
+                      <dd>
                         {item.enabled
                           ? i18n.t("app:integrations.enabled")
                           : i18n.t("app:integrations.disabled")}
-                      </p>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {categoryNames.get(item.category_id) ?? item.category_id}
-                    </TableCell>
-                    <TableCell>
-                      <HealthBadge health={item.health} />
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                      {dateTime(item.last_finished_at)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {resultLabel(item)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm">
-                      {changesLabel(item)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={i18n.t(
-                              "app:integrations.actions_for_9e1489",
-                              { value1: item.name },
-                            )}
-                          >
-                            <EllipsisVertical />
-                            <span className="sr-only">
-                              {i18n.t("app:integrations.actions_for")}{" "}
-                              {item.name}
-                            </span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to="/ledgers/$ledgerId/integrations/$integrationId"
-                              params={{ ledgerId, integrationId: item.id }}
-                            >
-                              {i18n.t("app:integrations.view_integration")}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to="/ledgers/$ledgerId/categories/$categoryId/data"
-                              params={{
-                                ledgerId,
-                                categoryId: item.category_id,
-                              }}
-                              search={{
-                                schema: undefined,
-                                from: undefined,
-                                to: undefined,
-                                sort: "desc",
-                              }}
-                            >
-                              {i18n.t("app:integrations.view_category_data")}
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{i18n.t("app:integrations.last_completed_run")}</dt>
+                      <dd>{dateTime(item.last_finished_at)}</dd>
+                    </div>
+                    <div>
+                      <dt>{i18n.t("app:integrations.result")}</dt>
+                      <dd>{resultLabel(item)}</dd>
+                    </div>
+                    <div>
+                      <dt>{i18n.t("app:integrations.changes")}</dt>
+                      <dd>{changesLabel(item)}</dd>
+                    </div>
+                  </dl>
+                </details>
+              </div>
+              <div className="col-start-2 row-start-1 md:col-auto md:row-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={i18n.t(
+                        "app:integrations.actions_for_9e1489",
+                        { value1: item.name },
+                      )}
+                    >
+                      <EllipsisVertical />
+                      <span className="sr-only">
+                        {i18n.t("app:integrations.actions_for")} {item.name}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/ledgers/$ledgerId/integrations/$integrationId"
+                        params={{ ledgerId, integrationId: item.id }}
+                      >
+                        {i18n.t("app:integrations.view_integration")}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/ledgers/$ledgerId/categories/$categoryId/data"
+                        params={{
+                          ledgerId,
+                          categoryId: item.category_id,
+                        }}
+                        search={{
+                          schema: undefined,
+                          from: undefined,
+                          to: undefined,
+                          sort: "desc",
+                        }}
+                      >
+                        {i18n.t("app:integrations.view_category_data")}
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
       {((integrations.data?.count ?? 0) > PAGE_SIZE || page > 0) && (
         <nav

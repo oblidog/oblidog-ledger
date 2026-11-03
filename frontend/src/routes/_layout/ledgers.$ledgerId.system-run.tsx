@@ -105,20 +105,6 @@ const summaryLabels: Record<string, Record<string, string>> = {
       return i18n.t("app:system.reports_failed")
     },
   },
-  legacy_import: {
-    get created_category_groups() {
-      return i18n.t("app:system.created_category_groups")
-    },
-    get created_categories() {
-      return i18n.t("app:system.created_categories")
-    },
-    get replaced_categories() {
-      return i18n.t("app:system.replaced_categories")
-    },
-    get imported_obligations() {
-      return i18n.t("app:system.imported_obligations")
-    },
-  },
 }
 
 function StepSummary({ step }: { step: SystemRunStepPublic }) {

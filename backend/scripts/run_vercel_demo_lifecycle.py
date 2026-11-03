@@ -59,7 +59,7 @@ def run_lifecycle(action: str, confirmation: str = "") -> None:
     environment = {
         key: value
         for key, value in os.environ.items()
-        if not key.startswith(("POSTGRES_", "PG", "SMTP_", "DROPBOX_"))
+        if not key.startswith(("POSTGRES_", "PG", "SMTP_"))
         and key not in {"DATABASE_URL", "UV_ENV_FILE", "TEST_SQLALCHEMY_DATABASE_URI"}
     }
     environment.update(
