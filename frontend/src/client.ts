@@ -284,3 +284,11 @@ export const UsersService = {
   updateUser: request(generated.UsersService.updateUser<true>),
   updateUserMe: request(generated.UsersService.updateUserMe<true>),
 }
+
+export const OnboardingService = {
+  previewFirstPayment: request(generated.OnboardingService.previewFirstPayment<true>),
+  readOnboarding: request(generated.OnboardingService.readOnboarding<true>),
+  advanceOnboarding: request(
+    generated.OnboardingService.advanceOnboarding<true>,
+  ),
+}

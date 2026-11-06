@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, get_datetime_utc
@@ -37,6 +38,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     session_version: Mapped[int] = mapped_column(
         Integer, default=1, nullable=False, server_default="1"
+    )
+    onboarding_state: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=get_datetime_utc, nullable=False

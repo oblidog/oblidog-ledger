@@ -3,6 +3,9 @@
 from typing import Literal
 
 ErrorCode = Literal[
+    "onboarding_changed",
+    "onboarding_name_in_use",
+    "onboarding_demo_preview",
     "auth_invalid_credentials",
     "user_inactive",
     "auth_invalid_token",

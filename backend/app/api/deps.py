@@ -110,9 +110,10 @@ def enforce_demo_write_policy(request: Request) -> None:
     }:
         return
     route = request.scope.get("route")
-    if request.method == "POST" and getattr(route, "path", "") == (
-        "/ledgers/{ledger_id}/categories/schedule-preview"
-    ):
+    if request.method == "POST" and getattr(route, "path", "") in {
+        "/ledgers/{ledger_id}/categories/schedule-preview",
+        "/onboarding/schedule-preview",
+    }:
         return
     logger.warning(
         "Demo write blocked method=%s route=%s",

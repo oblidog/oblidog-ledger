@@ -13,6 +13,7 @@ from app.api.routes import (
     ledgers,
     login,
     obligations,
+    onboarding,
     system_runs,
     user_invitations,
     users,
@@ -35,6 +36,7 @@ api_router = APIRouter(
 )
 api_router.include_router(login.router)
 api_router.include_router(ledgers.router)
+api_router.include_router(onboarding.router)
 api_router.include_router(analytics.router)
 api_router.include_router(categories.router)
 api_router.include_router(category_data_csv.router)
