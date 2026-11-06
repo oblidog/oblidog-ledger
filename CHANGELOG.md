@@ -1,3 +1,9 @@
+## v0.22.1 (2026-11-03)
+
+### Fix
+
+- **security**: patch minimatch, glob and follow-redirects (#621)
+
 ## v0.22.0 (2026-11-03)
 
 ### BREAKING CHANGE
