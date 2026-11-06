@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { LedgersService, ObligationsService, OnboardingService } from "@/client"
+import { LedgersService, OnboardingService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { fetchPublicAppConfig } from "@/config"
 import { i18n } from "@/i18n"
@@ -28,15 +28,15 @@ export function OnboardingEntry({ ledgerId }: { ledgerId?: string }) {
     queryFn: () => LedgersService.readLedgers(),
   })
   const payments = useQuery({
-    queryKey: ["onboarding-obligations", ledgerId],
-    queryFn: () => ObligationsService.readObligations({ ledgerId: ledgerId! }),
-    enabled: !!ledgerId && !demo && progress.data?.step !== 4,
+    queryKey: ["onboarding-eligibility", ledgerId],
+    queryFn: () =>
+      OnboardingService.readOnboardingEligibility({ ledgerId: ledgerId! }),
+    enabled:
+      !!ledgerId && !!config.data && !demo && (progress.data?.step ?? 0) === 0,
   })
   const state = progress.data
   const inProgress = (state?.step ?? 0) > 0 && state?.step !== 4
-  const empty = ledgerId
-    ? payments.data?.count === 0
-    : ledgers.data?.count === 0
+  const empty = ledgerId ? payments.data === true : ledgers.data?.count === 0
   if (
     !config.data ||
     (!demo && !state) ||

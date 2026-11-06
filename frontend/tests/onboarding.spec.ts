@@ -52,6 +52,7 @@ async function app(
     else if (path.endsWith("/ledgers/") || path.endsWith("/ledgers"))
       json = { data: [ledger], count: 1 }
     else if (path.endsWith("/ledgers/ledger")) json = ledger
+    else if (path.endsWith("/onboarding/eligibility/ledger")) json = true
     else if (path.endsWith("/members"))
       json = { data: [{ user_id: "owner", role: "owner" }], count: 1 }
     else if (path.endsWith("/category-groups"))
@@ -209,4 +210,20 @@ test("preview fits a narrow screen and can be closed before saving", async ({
   await page.screenshot({ path: "test-results/onboarding-mobile.png" })
   await page.keyboard.press("Escape")
   await expect(dialog).toHaveCount(0)
+})
+
+test("an empty owned workspace offers an optional guide and reuses the ledger", async ({
+  page,
+}) => {
+  const { commands } = await app(page)
+  await page.goto("/ledgers/ledger")
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await page.getByRole("button", { name: "Get started", exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog.getByText("Step 1 of 4", { exact: false })).toBeVisible()
+  await dialog.getByRole("button", { name: "Continue", exact: true }).click()
+  await expect(dialog.getByText("Step 2 of 4", { exact: false })).toBeVisible()
+  expect(commands).toEqual([
+    { action: "ledger", revision: 0, ledger_id: "ledger" },
+  ])
 })

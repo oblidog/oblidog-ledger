@@ -8,6 +8,9 @@ available. The initial guide supports ledgers owned by the current user.
 
 ## Persistence and publication
 
+`GET /api/v1/onboarding/eligibility/{ledger_id}` uses an existence query, so
+showing an empty-state prompt never downloads the ledger's payment history.
+
 `GET /api/v1/onboarding/` reads the user's saved state. Commands to the same
 endpoint carry the last revision. A user-row lock serializes concurrent tabs;
 a stale revision returns `onboarding_changed`, prompting a progress refresh.

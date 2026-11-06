@@ -68,7 +68,7 @@ export function OnboardingWizard({
                 "category-groups",
                 "categories",
                 "obligations",
-                "onboarding-obligations",
+                "onboarding-eligibility",
                 "analytics",
               ].includes(String(query.queryKey[0])),
           })

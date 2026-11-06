@@ -4292,6 +4292,70 @@ export type OnboardingPreviewFirstPaymentResponses = {
 
 export type OnboardingPreviewFirstPaymentResponse = OnboardingPreviewFirstPaymentResponses[keyof OnboardingPreviewFirstPaymentResponses];
 
+export type OnboardingReadOnboardingEligibilityData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/onboarding/eligibility/{ledger_id}';
+};
+
+export type OnboardingReadOnboardingEligibilityErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingReadOnboardingEligibilityError = OnboardingReadOnboardingEligibilityErrors[keyof OnboardingReadOnboardingEligibilityErrors];
+
+export type OnboardingReadOnboardingEligibilityResponses = {
+    /**
+     * Response Onboarding-Read Onboarding Eligibility
+     *
+     * Successful Response
+     */
+    200: boolean;
+};
+
+export type OnboardingReadOnboardingEligibilityResponse = OnboardingReadOnboardingEligibilityResponses[keyof OnboardingReadOnboardingEligibilityResponses];
+
 export type AnalyticsReadPeriodPaymentSummaryData = {
     body?: never;
     path: {

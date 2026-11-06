@@ -99,6 +99,7 @@ def test_first_payment_without_integration(
     assert client.get(URL, headers=headers).json()["step"] == 0
     state = draft(client, headers)
     ledger_id = uuid.UUID(state["ledger_id"])
+    assert client.get(f"{URL}eligibility/{ledger_id}", headers=headers).json() is True
     assert (
         db.scalar(
             select(func.count())
@@ -117,6 +118,7 @@ def test_first_payment_without_integration(
     )
     state = advance(client, headers, 3, "payment", ready=ready, amount=amount)
     assert state["step"] == 4
+    assert client.get(f"{URL}eligibility/{ledger_id}", headers=headers).json() is False
     assert state["obligation_key"] == "INTE-2026-11"
     category = db.scalars(select(Category).where(Category.ledger_id == ledger_id)).one()
     assert category.data_source_policy == DataSourcePolicy.HYBRID
