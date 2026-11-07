@@ -45,8 +45,8 @@ import { getApiErrorMessage } from "@/i18n/apiErrors"
 import { domainLabel } from "@/i18n/domainLabels"
 import {
   formatAmount as exactAmount,
+  formatBillingPeriod,
   formatPercentage,
-  getLocale,
 } from "@/i18n/format"
 
 type Period = { year: number; month: number }
@@ -56,10 +56,7 @@ function periodKey(period: Period) {
 }
 
 function periodLabel(period: Period) {
-  return new Intl.DateTimeFormat(getLocale(), {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(period.year, period.month - 1, 1))
+  return formatBillingPeriod(period, "short")
 }
 
 function formatAmount(amount: string, currency: string | null) {
@@ -150,7 +147,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
               }}
             >
               <SelectTrigger
-                className="w-full sm:w-40"
+                className="w-full"
                 aria-label={i18n.t("app:analytics.range_ending")}
               >
                 <SelectValue
@@ -160,7 +157,7 @@ export function ComponentHistoryExplorer({ ledgerId }: { ledgerId: string }) {
               <SelectContent>
                 {selectablePeriods.map((period) => (
                   <SelectItem key={periodKey(period)} value={periodKey(period)}>
-                    {periodLabel(period)}
+                    {formatBillingPeriod(period)}
                   </SelectItem>
                 ))}
               </SelectContent>

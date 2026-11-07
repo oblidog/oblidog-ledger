@@ -9,5 +9,10 @@ export function domainLabel(group: keyof typeof en, value: string): string {
   const dictionary = { en, pl, de }[
     supportedLanguage(i18n.resolvedLanguage) ?? "en"
   ][group] as Record<string, string>
-  return Object.keys(dictionary).includes(value) ? dictionary[value] : value
+  // Match the known uppercase integration spelling only in the display lookup.
+  const key =
+    group === "componentType" && value === "INVOICE_LINE"
+      ? "invoice_line"
+      : value
+  return Object.keys(dictionary).includes(key) ? dictionary[key] : value
 }

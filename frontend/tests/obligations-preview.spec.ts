@@ -1,5 +1,9 @@
 import { expect, type Page, test } from "@playwright/test"
-import type { ObligationPublic } from "../src/client"
+import type {
+  ObligationActionPublic,
+  ObligationComponentPublic,
+  ObligationPublic,
+} from "../src/client"
 
 test.use({ storageState: { cookies: [], origins: [] } })
 const ledgerId = "obligations-preview"
@@ -594,6 +598,195 @@ for (const height of [480, 568]) {
         name: "Oznaczyć zobowiązanie jako opłacone?",
       }),
     ).toBeVisible()
+    expect(writes).toEqual([])
+  })
+}
+
+for (const theme of ["light", "dark"]) {
+  test(`demo language switching preserves selected filters and data in ${theme} mode`, async ({
+    page,
+  }, info) => {
+    const { requests, writes } = await api(page, "en", theme, false, true, {
+      effective_value_source: "integration",
+      notes: "October invoice",
+    })
+    const component: ObligationComponentPublic = {
+      id: "energy",
+      obligation_id: "ELEC",
+      type: "INVOICE_LINE",
+      label: "Energy",
+      amount: "1234.56",
+      source: "integration",
+      external_id: "energy-10",
+      metadata: null,
+      created_at: "2026-10-01T12:00:00Z",
+      updated_at: "2026-10-01T12:00:00Z",
+    }
+    const custom = {
+      ...component,
+      id: "meter",
+      type: "Custom_Meter",
+      label: "Meter rental",
+      external_id: "meter-10",
+    }
+    const action: ObligationActionPublic = {
+      id: "updated-energy",
+      obligation_id: "ELEC",
+      action: "components_changed",
+      actor_type: "integration",
+      actor_id: "northgrid",
+      actor_display_name: "NorthGrid billing",
+      integration_id: "northgrid",
+      run_id: null,
+      changes: {
+        components: {
+          updated: [
+            {
+              id: component.id,
+              label: component.label,
+              changes: { type: { from: "Custom_Meter", to: "INVOICE_LINE" } },
+            },
+          ],
+        },
+      },
+      metadata: null,
+      created_at: component.created_at,
+    }
+    await page.route(
+      (url) => url.pathname.endsWith("/obligations/ELEC-2026-10/components"),
+      (route) =>
+        route.fulfill({ json: { data: [component, custom], count: 2 } }),
+    )
+    await page.route(
+      (url) => url.pathname.endsWith("/obligations/ELEC-2026-10/actions"),
+      (route) => route.fulfill({ json: { data: [action], count: 1 } }),
+    )
+    await page.goto(
+      `/ledgers/${ledgerId}?year=2026&month=10&category=ELEC&lifecycle=ready`,
+    )
+    const selectedUrl = page.url()
+    const strings = [
+      {
+        language: "en",
+        period: "October 2026",
+        ready: "Ready",
+        origin: "Data origin",
+        components: "Components",
+        activity: "Activity",
+        invoice: "Invoice line",
+        integration: "Integration",
+        amount: "1,234.56 EUR",
+      },
+      {
+        language: "pl",
+        period: "październik 2026",
+        ready: "Gotowe do opłacenia",
+        origin: "Pochodzenie danych",
+        components: "Składniki",
+        activity: "Aktywność",
+        invoice: "Pozycja faktury",
+        integration: "Integracja",
+        amount: "1234,56 EUR",
+      },
+      {
+        language: "de",
+        period: "Oktober 2026",
+        ready: "Bereit",
+        origin: "Datenherkunft",
+        components: "Posten",
+        activity: "Aktivität",
+        invoice: "Rechnungsposition",
+        integration: "Integration",
+        amount: "1.234,56 EUR",
+      },
+    ]
+
+    for (const labels of strings) {
+      if (labels.language !== "en") {
+        if (info.project.name === "mobile") {
+          await page
+            .getByRole("button", { name: /^(More|Więcej)$/ })
+            .first()
+            .click()
+        }
+        await page
+          .getByTestId("language-selector")
+          .filter({ visible: true })
+          .selectOption(labels.language)
+        if (info.project.name === "mobile") {
+          await page.keyboard.press("Escape")
+          await expect(page.getByRole("dialog")).toBeHidden()
+        }
+      }
+      await expect(page.locator("html")).toHaveAttribute(
+        "lang",
+        labels.language,
+      )
+      await expect(page.locator("html")).toHaveClass(new RegExp(theme))
+      await expect(page).toHaveURL(selectedUrl)
+      await expect(page.locator('option[value="2026-10"]')).toHaveText(
+        labels.period,
+      )
+      await expect(page.locator('option[value="ready"]')).toHaveText(
+        labels.ready,
+      )
+
+      const item = page.getByTestId(/obligation-(row|card)/)
+      await expect(item).toHaveCount(1)
+      await item.getByText("Electricity", { exact: true }).click()
+      const dialog = page.getByRole("dialog", { name: "Electricity" })
+      await expect(
+        dialog.getByText(labels.period, { exact: true }),
+      ).toBeVisible()
+      await expect(
+        dialog.getByText("October invoice", { exact: true }),
+      ).toBeVisible()
+      const origin = dialog.locator("summary", { hasText: labels.origin })
+      await origin.press("Enter")
+      await expect(
+        origin.locator("..").getByText(labels.integration, { exact: true }),
+      ).toBeVisible()
+
+      await dialog
+        .getByRole("tab", { name: labels.components, exact: true })
+        .click()
+      const energy = dialog.getByRole("row").filter({ hasText: /^Energy/ })
+      await expect(
+        energy.getByText(labels.invoice, { exact: true }),
+      ).toBeVisible()
+      await expect(
+        energy.getByText("integration", { exact: true }),
+      ).toBeVisible()
+      await expect(energy.getByText("energy-10", { exact: true })).toBeVisible()
+      await expect(
+        energy.getByText(labels.amount, { exact: true }),
+      ).toBeVisible()
+      await expect(
+        dialog.getByText("Custom_Meter", { exact: true }),
+      ).toBeVisible()
+
+      await dialog
+        .getByRole("tab", { name: labels.activity, exact: true })
+        .click()
+      await expect(
+        dialog.getByText(labels.invoice, { exact: true }),
+      ).toBeVisible()
+      await expect(
+        dialog.getByText(`${labels.integration} · NorthGrid billing`, {
+          exact: true,
+        }),
+      ).toBeVisible()
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeHidden()
+    }
+
+    expect(requests.length).toBeGreaterThan(0)
+    for (const request of requests) {
+      expect(request.searchParams.get("year")).toBe("2026")
+      expect(request.searchParams.get("month")).toBe("10")
+      expect(request.searchParams.get("category_code")).toBe("ELEC")
+      expect(request.searchParams.get("lifecycle")).toBe("ready")
+    }
     expect(writes).toEqual([])
   })
 }

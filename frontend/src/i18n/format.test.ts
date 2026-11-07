@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import {
   formatAmount,
+  formatBillingPeriod,
   formatDate,
   formatDateTime,
   formatPercentage,
@@ -53,4 +54,14 @@ test("formats German amounts, calendar dates and country names", () => {
   )
   expect(formatDate("2026-10-17", { month: "long" }, "de")).toBe("Oktober")
   expect(formatRegion("DE", "de")).toBe("Deutschland")
+})
+
+test("formats billing periods in the app language, including years below 100", () => {
+  const october = { year: 2026, month: 10 }
+  expect(formatBillingPeriod(october, "long", "en")).toBe("October 2026")
+  expect(formatBillingPeriod(october, "long", "pl")).toBe("październik 2026")
+  expect(formatBillingPeriod(october, "long", "de")).toBe("Oktober 2026")
+  expect(formatBillingPeriod({ year: 42, month: 1 }, "long", "en")).toBe(
+    "January 42",
+  )
 })
