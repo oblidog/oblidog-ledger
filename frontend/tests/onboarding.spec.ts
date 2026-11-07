@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test"
+import { expect, type Page, type Request, test } from "@playwright/test"
 import type { OnboardingState } from "../src/client"
 
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -329,4 +329,169 @@ test("a changed due date clears the previous confirmation", async ({
     ready: true,
     confirmed_due_date: "2027-01-06",
   })
+})
+
+test("a changed payment category clears another tab's amount and confirmation", async ({
+  page,
+}) => {
+  const saved = {
+    step: 3,
+    revision: 3,
+    ledger_id: "ledger",
+    business_calendar_country: "PL",
+    category: {
+      name: "Internet",
+      group_name: "Bills",
+      currency: "EUR" as const,
+    },
+    schedule: { first_due_date: "2026-11-01" },
+  }
+  await app(page, { saved })
+  let changed = false
+  await page.route("**/api/v1/onboarding/", async (route) => {
+    if (route.request().method() === "GET" && changed) {
+      await route.fulfill({
+        json: {
+          ...saved,
+          revision: 7,
+          category: { ...saved.category, name: "Rent" },
+        },
+      })
+    } else if (route.request().method() === "POST" && !changed) {
+      changed = true
+      await route.fulfill({
+        status: 409,
+        json: {
+          code: "onboarding_changed",
+          detail: "Setup changed",
+          params: {},
+        },
+      })
+    } else await route.fallback()
+  })
+  await page.goto("/ledgers/ledger")
+  await page.getByRole("button", { name: "Continue setup" }).click()
+  const dialog = page.getByRole("dialog")
+  const amount = dialog.getByLabel("Amount for this payment")
+  const confirm = dialog.getByLabel("I confirm the amount and due date.", {
+    exact: false,
+  })
+  await amount.fill("42.50")
+  await confirm.check()
+  await dialog.getByRole("button", { name: "Create recurring payment" }).click()
+  await expect(dialog.getByText("Rent · EUR")).toBeVisible()
+  await expect(amount).toHaveValue("")
+  await expect(confirm).not.toBeChecked()
+})
+
+test("late dismissal cannot restore a draft after switching accounts", async ({
+  page,
+}) => {
+  const draft = {
+    step: 3,
+    revision: 3,
+    ledger_id: "ledger",
+    business_calendar_country: "PL",
+    category: {
+      name: "Previous account draft",
+      group_name: "Bills",
+      currency: "EUR" as const,
+    },
+    schedule: { first_due_date: "2026-11-01" },
+  }
+  await app(page, { saved: draft })
+  let account = "owner"
+  let releaseDismiss!: () => void
+  const held = new Promise<void>((resolve) => {
+    releaseDismiss = resolve
+  })
+  await page.route("**/api/v1/**", async (route) => {
+    const request = route.request()
+    const path = new URL(request.url()).pathname
+    if (path.endsWith("/login/logout")) {
+      account = ""
+      await route.fulfill({ json: {} })
+    } else if (path.endsWith("/login/session")) {
+      account = "other"
+      await route.fulfill({
+        json: {},
+        headers: {
+          "x-csrf-token": "session-b",
+          "access-control-expose-headers": "X-CSRF-Token",
+        },
+      })
+    } else if (path.endsWith("/users/me") && account !== "owner") {
+      if (!account) {
+        await route.fulfill({
+          status: 401,
+          json: { detail: "Not authenticated" },
+        })
+      } else {
+        await route.fulfill({
+          json: {
+            id: account,
+            email: "other@example.com",
+            is_active: true,
+            is_superuser: false,
+            language: "en",
+          },
+        })
+      }
+    } else if (path.endsWith("/onboarding/") && request.method() === "POST") {
+      if (account === "other") {
+        expect(request.headers()["x-csrf-token"]).toBe("session-b")
+        await route.fulfill({
+          json: { step: 1, revision: 1, ledger_id: "other-ledger" },
+        })
+        return
+      }
+      await held
+      await route.fulfill({
+        json: { ...draft, revision: 4, dismissed: true },
+        headers: {
+          "x-csrf-token": "session-a",
+          "access-control-expose-headers": "X-CSRF-Token",
+        },
+      })
+    } else if (path.endsWith("/onboarding/") && account === "other") {
+      await route.fulfill({ json: { step: 0, revision: 0 } })
+    } else if (
+      (path.endsWith("/ledgers/") || path.endsWith("/ledgers")) &&
+      account === "other"
+    ) {
+      await route.fulfill({ json: { data: [], count: 0 } })
+    } else await route.fallback()
+  })
+  await page.goto("/ledgers/ledger")
+  await page.getByRole("button", { name: "Continue setup" }).click()
+  const dialog = page.getByRole("dialog")
+  const isDismissRequest = (request: Request) =>
+    request.url().endsWith("/onboarding/") && request.method() === "POST"
+  await Promise.all([
+    page.waitForRequest(isDismissRequest),
+    dialog.getByRole("button", { name: "Finish later" }).click(),
+  ])
+  if ((page.viewportSize()?.width ?? 1280) < 768) {
+    await page.getByLabel("More", { exact: true }).click()
+  }
+  await page.getByTestId("user-menu").filter({ visible: true }).click()
+  await page.getByRole("menuitem", { name: "Log Out", exact: true }).click()
+  await expect(page).toHaveURL(/\/login$/)
+  await page.getByTestId("email-input").fill("other@example.com")
+  await page.getByTestId("password-input").fill("test-pass-123")
+  await page.getByRole("button", { name: "Log In", exact: true }).click()
+  const start = page.getByRole("button", { name: "Get started", exact: true })
+  await expect(start).toBeVisible()
+  const dismissal = page.waitForResponse((response) =>
+    isDismissRequest(response.request()),
+  )
+  releaseDismiss()
+  await (await dismissal).finished()
+  await page.waitForLoadState("networkidle")
+  await start.click()
+  await expect(dialog.getByText("Step 1 of 4", { exact: false })).toBeVisible()
+  await expect(dialog.getByText("Previous account draft · EUR")).toHaveCount(0)
+  await dialog.getByLabel("Workspace name").fill("New household")
+  await dialog.getByRole("button", { name: "Continue", exact: true }).click()
+  await expect(dialog.getByText("Step 2 of 4", { exact: false })).toBeVisible()
 })

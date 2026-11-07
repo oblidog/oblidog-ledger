@@ -100,8 +100,17 @@ def suggest_code(session: Session, ledger_id: uuid.UUID, name: str) -> str:
     return candidate
 
 
-def read_progress(user: User) -> OnboardingState:
-    return OnboardingState.model_validate(user.onboarding_state or {})
+def read_progress(session: Session, user: User) -> OnboardingState:
+    state = OnboardingState.model_validate(user.onboarding_state or {})
+    if state.ledger_id is not None:
+        country = session.scalar(
+            select(Ledger.business_calendar_country).where(
+                Ledger.id == state.ledger_id, Ledger.owner_user_id == user.id
+            )
+        )
+        if country is not None:
+            state.business_calendar_country = country
+    return state
 
 
 def advance(
@@ -121,7 +130,7 @@ def advance(
         .with_for_update()
         .execution_options(populate_existing=True)
     ).one()
-    state = read_progress(user)
+    state = read_progress(session, user)
     if state.revision != command.revision:
         raise _conflict()
     try:

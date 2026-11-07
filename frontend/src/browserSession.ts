@@ -10,15 +10,25 @@ import { apiUrl } from "@/config"
 const csrfHeader = "X-CSRF-Token"
 const unsafeMethods = new Set(["post", "put", "patch", "delete"])
 let csrfToken: string | null = null
+let sessionGeneration = 0
+const requestGenerations = new WeakMap<InternalAxiosRequestConfig, number>()
 
 function captureCsrfToken(response?: AxiosResponse) {
-  const nextCsrfToken = response?.headers[csrfHeader.toLowerCase()]
+  // In-flight requests from before sign-out must not replace the new token.
+  if (
+    !response ||
+    requestGenerations.get(response.config) !== sessionGeneration
+  ) {
+    return
+  }
+  const nextCsrfToken = response.headers[csrfHeader.toLowerCase()]
   if (typeof nextCsrfToken === "string" && nextCsrfToken) {
     csrfToken = nextCsrfToken
   }
 }
 
 export function clearBrowserSessionState() {
+  sessionGeneration += 1
   csrfToken = null
 }
 
@@ -33,6 +43,7 @@ export function configureBrowserSession() {
 
   client.instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+      requestGenerations.set(config, sessionGeneration)
       const method = config.method?.toLowerCase()
       if (csrfToken && method && unsafeMethods.has(method)) {
         config.headers.set(csrfHeader, csrfToken)

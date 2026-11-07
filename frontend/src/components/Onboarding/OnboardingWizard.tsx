@@ -156,7 +156,16 @@ export function OnboardingWizard({
         )}
         {step === 1 && <CategoryStep {...props} demo={demo} />}
         {step === 2 && <ScheduleStep {...props} />}
-        {step === 3 && <PaymentStep {...props} />}
+        {step === 3 && (
+          <PaymentStep
+            key={JSON.stringify([
+              state.ledger_id,
+              state.category,
+              state.schedule,
+            ])}
+            {...props}
+          />
+        )}
         {step === 4 && (
           <div className="space-y-4">
             <p>

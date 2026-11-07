@@ -5,7 +5,6 @@ import type {
 } from "@/client"
 
 export type OnboardingCommand = OnboardingAdvanceOnboardingData["body"]
-export const onboardingQueryKey = ["onboarding"] as const
 
 export function suggestCategoryCode(name: string) {
   return `${name

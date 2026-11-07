@@ -176,6 +176,40 @@ def test_first_payment_without_integration(
     assert replay.json()["code"] == "onboarding_changed"
 
 
+@pytest.mark.parametrize("change_after_step", [1, 2])
+def test_resumed_steps_keep_the_current_ledger_calendar(
+    client: TestClient,
+    db: Session,
+    visitor: tuple[User, dict[str, str]],
+    change_after_step: int,
+) -> None:
+    _, headers = visitor
+    state = advance(
+        client,
+        headers,
+        0,
+        "ledger",
+        ledger={"name": "Home", "business_calendar_country": "PL"},
+    )
+    ledger_id = uuid.UUID(state["ledger_id"])
+    category = {"name": "Internet", "group_name": "Bills"}
+    if change_after_step == 2:
+        advance(client, headers, 1, "category", category=category)
+
+    ledgers.update_ledger(
+        session=db, ledger_id=ledger_id, name="Home", business_calendar_country="DE"
+    )
+    assert client.get(URL, headers=headers).json()["business_calendar_country"] == "DE"
+
+    if change_after_step == 1:
+        state = advance(client, headers, 1, "category", category=category)
+        assert state["business_calendar_country"] == "DE"
+    state = advance(
+        client, headers, 2, "schedule", schedule={"first_due_date": "2027-01-06"}
+    )
+    assert state["business_calendar_country"] == "DE"
+
+
 def test_calendar_change_requires_confirming_the_new_due_date(
     client: TestClient, db: Session, visitor: tuple[User, dict[str, str]]
 ) -> None:
