@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import { LedgersService } from "@/client"
 import { ObligationWorkspace } from "@/components/Obligations/ObligationWorkspace"
+import { OnboardingEntry } from "@/components/Onboarding/OnboardingEntry"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchPublicAppConfig } from "@/config"
@@ -47,6 +48,7 @@ function LedgerDetails() {
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
+      {canManageComponents && <OnboardingEntry ledgerId={ledgerId} />}
       <Suspense fallback={<ObligationWorkspaceSkeleton />}>
         <ObligationWorkspace
           key={ledgerId}

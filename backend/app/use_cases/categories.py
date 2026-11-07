@@ -226,6 +226,7 @@ def create_category_group(
     ledger_id: uuid.UUID,
     name: str,
     description: str | None = None,
+    commit: bool = True,
 ) -> CategoryGroup:
     _require_ledger(session=session, ledger_id=ledger_id)
     normalized_name = _normalize_name(name)
@@ -246,7 +247,10 @@ def create_category_group(
         is_active=True,
     )
     session.add(category_group)
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(category_group)
     return category_group
 
@@ -319,6 +323,7 @@ def create_category(
     recurrence_unit: RecurrenceUnit | None = None,
     first_due_date: date | None = None,
     currency: Currency | None = None,
+    commit: bool = True,
 ) -> Category:
     ledger = _require_ledger(session=session, ledger_id=ledger_id)
     normalized_name = _normalize_name(name)
@@ -377,7 +382,10 @@ def create_category(
         currency=currency if currency is not None else ledger.default_currency,
     )
     session.add(category)
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(category)
     return category
 

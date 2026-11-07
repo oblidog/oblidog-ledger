@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { AnalyticsDashboard } from "@/components/Analytics/AnalyticsDashboard"
+import { OnboardingEntry } from "@/components/Onboarding/OnboardingEntry"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useActiveLedger } from "@/hooks/useActiveLedger"
@@ -27,11 +28,17 @@ function Dashboard() {
   }
 
   if (activeLedger) {
-    return <AnalyticsDashboard ledgerId={activeLedger.id} />
+    return (
+      <div className="space-y-6">
+        <OnboardingEntry ledgerId={activeLedger.id} />
+        <AnalyticsDashboard ledgerId={activeLedger.id} />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
+      <OnboardingEntry />
       <div>
         <h1 className="max-w-xl truncate text-2xl font-semibold">
           {i18n.t("app:analytics.dashboard")}

@@ -10,6 +10,7 @@ import deLedgers from "./locales/de/app/ledgers.json"
 import deLedgersettings from "./locales/de/app/ledgersettings.json"
 import deMessages from "./locales/de/app/messages.json"
 import deObligations from "./locales/de/app/obligations.json"
+import deOnboarding from "./locales/de/app/onboarding.json"
 import dePending from "./locales/de/app/pending.json"
 import deSettings from "./locales/de/app/settings.json"
 import deSidebar from "./locales/de/app/sidebar.json"
@@ -28,6 +29,7 @@ import enLedgers from "./locales/en/app/ledgers.json"
 import enLedgersettings from "./locales/en/app/ledgersettings.json"
 import enMessages from "./locales/en/app/messages.json"
 import enObligations from "./locales/en/app/obligations.json"
+import enOnboarding from "./locales/en/app/onboarding.json"
 import enPending from "./locales/en/app/pending.json"
 import enSettings from "./locales/en/app/settings.json"
 import enSidebar from "./locales/en/app/sidebar.json"
@@ -46,6 +48,7 @@ import plLedgers from "./locales/pl/app/ledgers.json"
 import plLedgersettings from "./locales/pl/app/ledgersettings.json"
 import plMessages from "./locales/pl/app/messages.json"
 import plObligations from "./locales/pl/app/obligations.json"
+import plOnboarding from "./locales/pl/app/onboarding.json"
 import plPending from "./locales/pl/app/pending.json"
 import plSettings from "./locales/pl/app/settings.json"
 import plSidebar from "./locales/pl/app/sidebar.json"
@@ -55,6 +58,7 @@ import plUsersettings from "./locales/pl/app/usersettings.json"
 
 export const appResources = {
   en: {
+    onboarding: enOnboarding,
     admin: enAdmin,
     analytics: enAnalytics,
     categories: enCategories,
@@ -75,6 +79,7 @@ export const appResources = {
     filters: enFilters,
   },
   de: {
+    onboarding: deOnboarding,
     admin: deAdmin,
     analytics: deAnalytics,
     categories: deCategories,
@@ -95,6 +100,7 @@ export const appResources = {
     filters: deFilters,
   },
   pl: {
+    onboarding: plOnboarding,
     admin: plAdmin,
     analytics: plAnalytics,
     categories: plCategories,

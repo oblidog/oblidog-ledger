@@ -83,5 +83,9 @@
   "request_validation_failed": "Sprawdź przesłane dane",
   "internal_error": "Wystąpił błąd. Spróbuj ponownie później.",
   "network_error": "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.",
-  "generic_error": "Nie udało się wykonać operacji. Spróbuj ponownie."
+  "generic_error": "Nie udało się wykonać operacji. Spróbuj ponownie.",
+  "onboarding_changed": "Konfiguracja zmieniła się w innej karcie. Wczytano ostatni zapisany krok.",
+  "onboarding_due_date_changed": "Termin pierwszej płatności się zmienił. Sprawdź nowy termin i potwierdź go ponownie.",
+  "onboarding_name_in_use": "Nazwa lub kod są już zajęte. Wróć i wybierz inne.",
+  "onboarding_demo_preview": "W demo skorzystaj z osobnego podglądu przewodnika."
 }

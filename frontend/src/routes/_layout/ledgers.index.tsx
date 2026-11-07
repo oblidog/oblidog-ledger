@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import AddLedger from "@/components/Ledgers/AddLedger"
 import LedgerList from "@/components/Ledgers/LedgerList"
 import PendingLedgers from "@/components/Ledgers/PendingLedgers"
+import { OnboardingEntry } from "@/components/Onboarding/OnboardingEntry"
 import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/")({
@@ -28,6 +29,7 @@ function LedgersIndex() {
         </div>
         <AddLedger />
       </div>
+      <OnboardingEntry />
       <Suspense fallback={<PendingLedgers />}>
         <LedgerList />
       </Suspense>

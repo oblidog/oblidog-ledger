@@ -364,6 +364,7 @@ def create_manual_obligation(
     due_date: date | None = None,
     notes: str | None = None,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    commit: bool = True,
 ) -> Obligation:
     if current_amount is not None and current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
@@ -430,7 +431,10 @@ def create_manual_obligation(
         changes=_created_changes(obligation),
     )
 
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(obligation)
     return obligation
 
@@ -634,6 +638,7 @@ def mark_obligation_ready(
     ledger_id: uuid.UUID,
     key: ObligationKey,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    commit: bool = True,
 ) -> Obligation:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
@@ -668,7 +673,10 @@ def mark_obligation_ready(
         actor=actor,
         changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
     )
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(obligation)
     return obligation
 

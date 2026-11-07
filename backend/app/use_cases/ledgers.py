@@ -54,6 +54,7 @@ def create_ledger(
     description: str | None = None,
     business_calendar_country: str | None = None,
     default_currency: Currency = Currency.PLN,
+    commit: bool = True,
 ) -> Ledger:
     _require_user(session=session, user_id=owner_user_id)
 
@@ -78,7 +79,10 @@ def create_ledger(
             role=LedgerAccessRole.OWNER,
         )
     )
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(ledger)
     return ledger
 
