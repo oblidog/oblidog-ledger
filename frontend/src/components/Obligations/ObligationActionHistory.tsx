@@ -101,6 +101,9 @@ const fieldLabels: Record<string, string> = {
   get due_date_source() {
     return i18n.t("app:obligations.due_date_source")
   },
+  get effective_value_source() {
+    return i18n.t("app:obligations.effective_value_source")
+  },
 }
 
 type Change = { from?: unknown; to?: unknown }
