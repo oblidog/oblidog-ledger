@@ -714,7 +714,9 @@ for (const theme of ["light", "dark"]) {
           .filter({ visible: true })
           .selectOption(labels.language)
         if (info.project.name === "mobile") {
-          await page.keyboard.press("Escape")
+          await page.locator('[data-slot="sheet-overlay"]').tap({
+            position: { x: page.viewportSize()!.width - 12, y: 12 },
+          })
           await expect(page.getByRole("dialog")).toBeHidden()
         }
       }
