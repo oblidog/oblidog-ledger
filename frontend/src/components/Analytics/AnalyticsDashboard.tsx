@@ -51,6 +51,7 @@ import {
 } from "@/i18n/format"
 import { unpaidObligationsHref } from "./attentionNavigation"
 import { NeedsAttention } from "./NeedsAttention"
+import { DueCalendar } from "./DueCalendar"
 
 type Period = { year: number; month: number }
 
@@ -279,6 +280,7 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
       </div>
 
       <NeedsAttention key={ledgerId} ledgerId={ledgerId} />
+      <DueCalendar key={ledgerId} ledgerId={ledgerId} />
 
       <h2 className="text-lg font-semibold">
         {i18n.t("app:analytics.period_summary")} · {periodLabel(selectedPeriod)}
