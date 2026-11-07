@@ -19,8 +19,13 @@ router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
 
 @router.get("/", response_model=OnboardingState)
-def read_onboarding(current_user: CurrentUser) -> OnboardingState:
-    return onboarding.read_progress(current_user)
+def read_onboarding(session: SessionDep, current_user: CurrentUser) -> OnboardingState:
+    state = onboarding.read_progress(current_user)
+    if state.ledger_id is not None:
+        ledger = session.get(Ledger, state.ledger_id)
+        if ledger is not None and ledger.owner_user_id == current_user.id:
+            state.business_calendar_country = ledger.business_calendar_country
+    return state
 
 
 @router.post("/", response_model=OnboardingState)

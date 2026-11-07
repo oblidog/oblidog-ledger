@@ -76,10 +76,19 @@ export function OnboardingWizard({
     },
     onError: async (caught) => {
       setError(getApiErrorMessage(caught))
-      if (apiErrorPayload(caught)?.code === "onboarding_changed") {
+      const code = apiErrorPayload(caught)?.code
+      if (
+        code === "onboarding_changed" ||
+        code === "onboarding_due_date_changed"
+      ) {
         const next = await OnboardingService.readOnboarding()
         setState(next)
         onProgress(next)
+        if (code === "onboarding_due_date_changed") {
+          await queryClient.invalidateQueries({
+            queryKey: ["onboarding-first-date"],
+          })
+        }
       }
     },
   })
@@ -95,18 +104,10 @@ export function OnboardingWizard({
   }
   const pause = () => {
     if (mutation.isPending || lock.current) return
-    if (demo || step === 4) {
-      onClose()
-      return
+    onClose()
+    if (!demo && step < 4) {
+      mutation.mutate({ action: "dismiss", revision: state.revision ?? 0 })
     }
-    lock.current = true
-    void mutation
-      .mutateAsync({ action: "dismiss", revision: state.revision ?? 0 })
-      .then(onClose)
-      .catch(() => {})
-      .finally(() => {
-        lock.current = false
-      })
   }
   const props = { state, pending: mutation.isPending, submit: send }
   const titles = [

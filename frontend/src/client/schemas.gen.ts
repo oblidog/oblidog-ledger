@@ -9,6 +9,7 @@ export const ApiErrorResponseSchema = {
             type: 'string',
             enum: [
                 'onboarding_changed',
+                'onboarding_due_date_changed',
                 'onboarding_name_in_use',
                 'onboarding_demo_preview',
                 'auth_invalid_credentials',
@@ -1866,6 +1867,18 @@ export const CreateFirstPaymentSchema = {
             type: 'boolean',
             title: 'Ready',
             default: false
+        },
+        confirmed_due_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Confirmed Due Date'
         }
     },
     additionalProperties: false,
@@ -2230,6 +2243,7 @@ export const IntegrationConflictResponseSchema = {
             type: 'string',
             enum: [
                 'onboarding_changed',
+                'onboarding_due_date_changed',
                 'onboarding_name_in_use',
                 'onboarding_demo_preview',
                 'auth_invalid_credentials',

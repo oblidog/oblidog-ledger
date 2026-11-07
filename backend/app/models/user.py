@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, String
+from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -40,7 +40,7 @@ class User(Base):
         Integer, default=1, nullable=False, server_default="1"
     )
     onboarding_state: Mapped[dict[str, Any] | None] = mapped_column(
-        JSONB, nullable=True
+        JSON().with_variant(JSONB(), "postgresql"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=get_datetime_utc, nullable=False

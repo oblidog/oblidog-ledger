@@ -85,6 +85,7 @@
   "network_error": "Could not connect to the server. Check your connection and try again.",
   "generic_error": "Could not complete this action. Try again.",
   "onboarding_changed": "Setup changed in another tab. The latest saved step has been loaded.",
+  "onboarding_due_date_changed": "The first payment due date changed. Check the updated date and confirm it again.",
   "onboarding_name_in_use": "A name or code is already used. Go back and choose another.",
   "onboarding_demo_preview": "Use the isolated setup preview in demo."
 }

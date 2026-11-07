@@ -47,14 +47,21 @@ def _conflict() -> ApplicationError:
     )
 
 
-def _owned_ledger(session: Session, user: User, ledger_id: uuid.UUID | None) -> Ledger:
-    ledger = session.scalar(
-        select(Ledger).where(
-            Ledger.id == ledger_id,
-            Ledger.owner_user_id == user.id,
-            Ledger.is_active.is_(True),
-        )
+def _owned_ledger(
+    session: Session,
+    user: User,
+    ledger_id: uuid.UUID | None,
+    *,
+    for_update: bool = False,
+) -> Ledger:
+    query = select(Ledger).where(
+        Ledger.id == ledger_id,
+        Ledger.owner_user_id == user.id,
+        Ledger.is_active.is_(True),
     )
+    if for_update:
+        query = query.with_for_update()
+    ledger = session.scalar(query)
     if ledger is None:
         raise ApplicationError(
             status_code=404, code="ledger_not_found", detail="Ledger not found"
@@ -175,12 +182,9 @@ def advance(
         elif isinstance(command, CreateFirstPayment):
             if state.step != 3 or state.category is None or state.schedule is None:
                 raise _conflict()
-            ledger = _owned_ledger(session, user, state.ledger_id)
-            # Serialize code/group selection against other onboarding users of this
-            # workspace. Existing unique constraints also protect ordinary writers.
-            session.scalar(
-                select(Ledger).where(Ledger.id == ledger.id).with_for_update()
-            )
+            # Keep the ledger calendar stable from calculation through confirmation.
+            ledger = _owned_ledger(session, user, state.ledger_id, for_update=True)
+            state.business_calendar_country = ledger.business_calendar_country
             draft = state.category
             group: CategoryGroup | None
             if draft.group_id:
@@ -226,6 +230,13 @@ def advance(
                 commit=False,
             )
             if command.ready:
+                if payment.due_date != command.confirmed_due_date:
+                    session.rollback()
+                    raise ApplicationError(
+                        status_code=409,
+                        code="onboarding_due_date_changed",
+                        detail="The first payment due date changed. Review it and confirm again.",
+                    )
                 payment = obligations.mark_obligation_ready(
                     session=session,
                     ledger_id=ledger.id,

@@ -97,6 +97,8 @@ async function mockWorkspace(
     else if (path.endsWith(`/ledgers/${ledgerId}`)) json = ledger
     else if (path.endsWith("/ledgers/") || path.endsWith("/ledgers"))
       json = { data: [ledger], count: 1 }
+    else if (path.endsWith("/onboarding/")) json = { step: 0, revision: 0 }
+    else if (path.endsWith(`/onboarding/eligibility/${ledgerId}`)) json = false
     else if (path.endsWith("/members"))
       json = { data: [{ user_id: "viewer", role: "viewer" }], count: 1 }
     else if (path.endsWith(`/obligations/${key}`)) json = obligation

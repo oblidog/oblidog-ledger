@@ -45,7 +45,11 @@ def advance(
 
 
 def draft(
-    client: TestClient, headers: dict[str, str], *, code: str | None = None
+    client: TestClient,
+    headers: dict[str, str],
+    *,
+    code: str | None = None,
+    first_due_date: str = "2026-11-01",
 ) -> dict[str, Any]:
     state = advance(
         client,
@@ -77,7 +81,7 @@ def draft(
         2,
         "schedule",
         schedule={
-            "first_due_date": "2026-11-01",
+            "first_due_date": first_due_date,
             "recurrence_interval": 1,
             "recurrence_unit": "month",
         },
@@ -116,7 +120,12 @@ def test_first_payment_without_integration(
         )
         == 0
     )
-    state = advance(client, headers, 3, "payment", ready=ready, amount=amount)
+    payment_data = {
+        "ready": ready,
+        "amount": amount,
+        "confirmed_due_date": "2026-10-30" if ready else None,
+    }
+    state = advance(client, headers, 3, "payment", **payment_data)
     assert state["step"] == 4
     assert client.get(f"{URL}eligibility/{ledger_id}", headers=headers).json() is False
     assert state["obligation_key"] == "INTE-2026-11"
@@ -161,10 +170,55 @@ def test_first_payment_without_integration(
     replay = client.post(
         URL,
         headers=headers,
-        json={"action": "payment", "revision": 3, "ready": ready, "amount": amount},
+        json={"action": "payment", "revision": 3, **payment_data},
     )
     assert replay.status_code == 409
     assert replay.json()["code"] == "onboarding_changed"
+
+
+def test_calendar_change_requires_confirming_the_new_due_date(
+    client: TestClient, db: Session, visitor: tuple[User, dict[str, str]]
+) -> None:
+    _, headers = visitor
+    state = draft(client, headers, first_due_date="2027-01-06")
+    ledger_id = uuid.UUID(state["ledger_id"])
+    ledgers.update_ledger(
+        session=db, ledger_id=ledger_id, name="Home", business_calendar_country="DE"
+    )
+    response = client.post(
+        URL,
+        headers=headers,
+        json={
+            "revision": 3,
+            "action": "payment",
+            "ready": True,
+            "amount": "42.50",
+            "confirmed_due_date": "2027-01-05",
+        },
+    )
+    assert response.status_code == 409
+    assert response.json()["code"] == "onboarding_due_date_changed"
+    for model in (CategoryGroup, Category, Obligation):
+        assert db.scalar(select(model.id).where(model.ledger_id == ledger_id)) is None
+
+    refreshed = client.get(URL, headers=headers).json()
+    assert refreshed["business_calendar_country"] == "DE"
+    assert refreshed["step"] == 3
+    state = advance(
+        client,
+        headers,
+        refreshed["revision"],
+        "payment",
+        ready=True,
+        amount="42.50",
+        confirmed_due_date="2027-01-06",
+    )
+    assert state["step"] == 4
+    payment = db.scalars(
+        select(Obligation).where(Obligation.ledger_id == ledger_id)
+    ).one()
+    assert payment.due_date == date(2027, 1, 6)
+    assert str(payment.lifecycle) == "ready"
 
 
 def test_pause_reload_back_and_reuse_workspace(
@@ -416,6 +470,7 @@ def test_demo_never_persists_shared_onboarding(
             "schedule": {"first_due_date": "2026-12-01", "recurrence_interval": 0},
         },
         {"action": "payment", "ready": True},
+        {"action": "payment", "ready": True, "amount": "42.50"},
         {"action": "payment", "amount": "-1"},
         {"action": "payment", "amount": "1.001"},
     ],

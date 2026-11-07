@@ -391,7 +391,7 @@ export function ScheduleStep({ state, pending, submit }: StepProps) {
 export function PaymentStep({ state, pending, submit }: StepProps) {
   useTranslation()
   const [amount, setAmount] = useState("")
-  const [ready, setReady] = useState(false)
+  const [confirmedDueDate, setConfirmedDueDate] = useState<string | null>(null)
   const preview = useQuery({
     queryKey: [
       "onboarding-first-date",
@@ -410,6 +410,7 @@ export function PaymentStep({ state, pending, submit }: StepProps) {
     enabled: !!state.schedule,
   })
   const dueDate = preview.data?.due_date
+  const ready = !!amount && !!dueDate && confirmedDueDate === dueDate
 
   return (
     <form
@@ -421,6 +422,7 @@ export function PaymentStep({ state, pending, submit }: StepProps) {
           revision: state.revision ?? 0,
           amount: amount || null,
           ready,
+          confirmed_due_date: ready ? confirmedDueDate : null,
         })
       }}
     >
@@ -458,7 +460,7 @@ export function PaymentStep({ state, pending, submit }: StepProps) {
           value={amount}
           onChange={(event) => {
             setAmount(event.target.value)
-            if (!event.target.value) setReady(false)
+            setConfirmedDueDate(null)
           }}
           required={ready}
         />
@@ -473,7 +475,9 @@ export function PaymentStep({ state, pending, submit }: StepProps) {
           className="mt-1 size-4"
           checked={ready}
           disabled={!amount || !dueDate}
-          onChange={(event) => setReady(event.target.checked)}
+          onChange={(event) =>
+            setConfirmedDueDate(event.target.checked ? (dueDate ?? null) : null)
+          }
         />
         <Label htmlFor="onboarding-ready" className="leading-5">
           {i18n.t("app:onboarding.ready")}

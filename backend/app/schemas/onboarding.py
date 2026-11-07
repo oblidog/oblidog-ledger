@@ -84,11 +84,14 @@ class CreateFirstPayment(Command):
     action: Literal["payment"]
     amount: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
     ready: bool = False
+    confirmed_due_date: date | None = None
 
     @model_validator(mode="after")
-    def ready_amount(self) -> Self:
-        if self.ready and self.amount is None:
-            raise ValueError("A confirmed amount is required for a ready payment")
+    def ready_confirmation(self) -> Self:
+        if self.ready and (self.amount is None or self.confirmed_due_date is None):
+            raise ValueError(
+                "A confirmed amount and due date are required for a ready payment"
+            )
         return self
 
 
