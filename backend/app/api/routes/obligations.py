@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 import uuid
 from typing import Any
 
@@ -144,8 +145,17 @@ def read_obligations(
     month: int | None = Query(default=None, ge=1, le=12),
     category_code: str | None = Query(default=None, pattern=r"^[A-Z]{4}$"),
     lifecycle: ObligationLifecycle | None = None,
+    due_from: date | None = Query(default=None),
+    due_to: date | None = Query(default=None),
     ledger: Ledger = Depends(require_ledger_view_access),
 ) -> Any:
+    if due_from is not None and due_to is not None:
+        if due_from > due_to or due_to - due_from > timedelta(days=366):
+            raise HTTPException(
+                code="invalid_due_date_range",
+                status_code=422,
+                detail="due date range must be ordered and at most 366 days",
+            )
     obligations = obligation_use_cases.list_obligations_for_ledger(
         session=session,
         ledger_id=ledger.id,
@@ -153,6 +163,8 @@ def read_obligations(
         month=month,
         category_code=category_code,
         lifecycle=lifecycle,
+        due_from=due_from,
+        due_to=due_to,
     )
     return ObligationsPublic(
         data=[to_obligation_public(obligation) for obligation in obligations],

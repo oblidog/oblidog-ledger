@@ -1215,3 +1215,45 @@ def test_obligation_endpoints_require_authentication(
     response = client.get(f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations")
 
     assert response.status_code == 401
+
+
+def test_obligation_due_date_range_filters_actual_due_dates(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    obligation = _create_ready_obligation(db, ledger_id=ledger.id)
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+
+    included = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-08-20", "due_to": "2026-08-20"},
+    )
+    assert included.status_code == 200
+    assert [item["id"] for item in included.json()["data"]] == [str(obligation.id)]
+
+    excluded = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-09-01", "due_to": "2026-09-30"},
+    )
+    assert excluded.status_code == 200
+    assert excluded.json()["count"] == 0
+
+    invalid = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-09-30", "due_to": "2026-09-01"},
+    )
+    assert invalid.status_code == 422
+
+    oversized = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-01-01", "due_to": "2027-12-31"},
+    )
+    assert oversized.status_code == 422
