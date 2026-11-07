@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { client, type ObligationsPublic } from "@/client"
+import { client, ObligationsService, type ObligationsPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -10,9 +10,9 @@ import { getLocale, formatDate } from "@/i18n/format"
 
 type Obligation = ObligationsPublic["data"][number]
 const labels = {
-  en: { title: "Due Calendar", description: "Dates with scheduled obligations", today: "Today", empty: "No payments on this day", failed: "Calendar could not be loaded", paid: "Paid", overdue: "Overdue", due: "Due", incomplete: "Needs review" },
-  pl: { title: "Kalendarz płatności", description: "Dni z zaplanowanymi zobowiązaniami", today: "Dzisiaj", empty: "Brak płatności w tym dniu", failed: "Nie udało się pobrać kalendarza", paid: "Opłacone", overdue: "Zaległe", due: "Do zapłaty", incomplete: "Do sprawdzenia" },
-  de: { title: "Fälligkeitskalender", description: "Tage mit fälligen Zahlungen", today: "Heute", empty: "Keine Zahlungen an diesem Tag", failed: "Kalender konnte nicht geladen werden", paid: "Bezahlt", overdue: "Überfällig", due: "Fällig", incomplete: "Prüfen" },
+  en: { title: "Due Calendar", description: "Dates with scheduled obligations", today: "Today", empty: "No payments on this day", failed: "Calendar could not be loaded", unknown: "Obligations without a due date in this billing period", previous: "Previous month", next: "Next month", paid: "Paid", overdue: "Overdue", due: "Due", incomplete: "Needs review" },
+  pl: { title: "Kalendarz płatności", description: "Dni z zaplanowanymi zobowiązaniami", today: "Dzisiaj", empty: "Brak płatności w tym dniu", failed: "Nie udało się pobrać kalendarza", unknown: "Zobowiązania bez terminu w tym okresie rozliczeniowym", previous: "Poprzedni miesiąc", next: "Następny miesiąc", paid: "Opłacone", overdue: "Zaległe", due: "Do zapłaty", incomplete: "Do sprawdzenia" },
+  de: { title: "Fälligkeitskalender", description: "Tage mit fälligen Zahlungen", today: "Heute", empty: "Keine Zahlungen an diesem Tag", failed: "Kalender konnte nicht geladen werden", unknown: "Verpflichtungen ohne Fälligkeitsdatum in diesem Abrechnungszeitraum", previous: "Vorheriger Monat", next: "Nächster Monat", paid: "Bezahlt", overdue: "Überfällig", due: "Fällig", incomplete: "Prüfen" },
 }
 const iso = (year: number, month: number, day: number) =>
   `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
@@ -52,6 +52,11 @@ export function DueCalendar({ ledgerId }: { ledgerId: string }) {
       return response.data as ObligationsPublic
     },
   })
+  const missingDates = useQuery({
+    queryKey: ["obligations", "due-calendar-missing", ledgerId, year, month],
+    queryFn: () => ObligationsService.readObligations({ ledgerId, year, month: month + 1 }),
+  })
+  const undated = (missingDates.data?.data ?? []).filter(item => !item.due_date && item.lifecycle !== "canceled" && item.lifecycle !== "paid")
   const byDate = useMemo(() => {
     const grouped = new Map<string, Obligation[]>()
     for (const item of query.data?.data ?? []) {
@@ -81,9 +86,9 @@ export function DueCalendar({ ledgerId }: { ledgerId: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <Button variant="outline" size="icon" aria-label="Previous month" onClick={() => changeMonth(-1)}><ChevronLeft /></Button>
+          <Button variant="outline" size="icon" aria-label={t.previous} onClick={() => changeMonth(-1)}><ChevronLeft /></Button>
           <span className="font-medium">{new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(new Date(year, month, 1))}</span>
-          <Button variant="outline" size="icon" aria-label="Next month" onClick={() => changeMonth(1)}><ChevronRight /></Button>
+          <Button variant="outline" size="icon" aria-label={t.next} onClick={() => changeMonth(1)}><ChevronRight /></Button>
           <Button variant="outline" size="sm" onClick={() => {
             const now = new Date()
             setMonth(now.getMonth())
@@ -120,6 +125,12 @@ export function DueCalendar({ ledgerId }: { ledgerId: string }) {
                 </ul>
               )}
             </div>
+            {missingDates.isError ? <p role="alert" className="text-sm text-destructive">{t.failed}</p> : undated.length > 0 ? (
+              <section className="space-y-2 border-t pt-3" aria-label={t.unknown}>
+                <h3 className="text-sm font-medium">{t.unknown} ({undated.length})</h3>
+                <ul className="space-y-1">{undated.map(item => <li key={item.id} className="text-sm"><a className="underline-offset-4 hover:underline" href={`/ledgers/${ledgerId}?year=${item.period.year}&month=${item.period.month}`}>{item.name}</a></li>)}</ul>
+              </section>
+            ) : null}
           </>
         )}
       </CardContent>
