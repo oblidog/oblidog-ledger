@@ -1,17 +1,20 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { LedgersService, OnboardingService } from "@/client"
+import { LedgersService, OnboardingService, type UserPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import { fetchPublicAppConfig } from "@/config"
+import useAuth from "@/hooks/useAuth"
 import { i18n } from "@/i18n"
 import { OnboardingWizard } from "./OnboardingWizard"
-import { onboardingQueryKey } from "./onboardingLogic"
 
 export function OnboardingEntry({ ledgerId }: { ledgerId?: string }) {
   useTranslation()
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
+  const { user } = useAuth()
+  const userId = user?.id
+  const progressKey = ["onboarding", userId] as const
   const config = useQuery({
     queryKey: ["public-app-config"],
     queryFn: fetchPublicAppConfig,
@@ -19,25 +22,30 @@ export function OnboardingEntry({ ledgerId }: { ledgerId?: string }) {
   })
   const demo = config.data?.is_demo === true
   const progress = useQuery({
-    queryKey: onboardingQueryKey,
+    queryKey: progressKey,
     queryFn: () => OnboardingService.readOnboarding(),
-    enabled: !!config.data && !demo,
+    enabled: !!userId && !!config.data && !demo,
   })
   const ledgers = useQuery({
     queryKey: ["ledgers"],
     queryFn: () => LedgersService.readLedgers(),
   })
   const payments = useQuery({
-    queryKey: ["onboarding-eligibility", ledgerId],
+    queryKey: ["onboarding-eligibility", userId, ledgerId],
     queryFn: () =>
       OnboardingService.readOnboardingEligibility({ ledgerId: ledgerId! }),
     enabled:
-      !!ledgerId && !!config.data && !demo && (progress.data?.step ?? 0) === 0,
+      !!userId &&
+      !!ledgerId &&
+      !!config.data &&
+      !demo &&
+      (progress.data?.step ?? 0) === 0,
   })
   const state = progress.data
   const inProgress = (state?.step ?? 0) > 0 && state?.step !== 4
   const empty = ledgerId ? payments.data === true : ledgers.data?.count === 0
   if (
+    !userId ||
     !config.data ||
     (!demo && !state) ||
     (!demo && state?.step === 4 && !open)
@@ -73,13 +81,23 @@ export function OnboardingEntry({ ledgerId }: { ledgerId?: string }) {
       </Button>
       {open && (
         <OnboardingWizard
+          key={userId}
           initialState={demo ? {} : state!}
           demo={demo}
           defaultLedgerId={ledgerId}
           onClose={() => setOpen(false)}
-          onProgress={(next) =>
-            queryClient.setQueryData(onboardingQueryKey, next)
-          }
+          onProgress={(next) => {
+            // A background dismissal can finish after the user signs out.
+            const currentUser = queryClient.getQueryData<UserPublic | null>([
+              "currentUser",
+            ])
+            if (currentUser?.id !== userId) return
+            queryClient.setQueryData<typeof next>(progressKey, (previous) =>
+              (previous?.revision ?? 0) > (next.revision ?? 0)
+                ? previous
+                : next,
+            )
+          }}
         />
       )}
     </section>
