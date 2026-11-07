@@ -44,7 +44,11 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { i18n } from "@/i18n"
-import { formatAmount as exactAmount, getLocale } from "@/i18n/format"
+import {
+  formatAmount as exactAmount,
+  formatBillingPeriod,
+  getLocale,
+} from "@/i18n/format"
 import { unpaidObligationsHref } from "./attentionNavigation"
 import { NeedsAttention } from "./NeedsAttention"
 
@@ -100,10 +104,7 @@ function addMonths(period: Period, offset: number): Period {
 }
 
 function periodLabel(period: Period) {
-  return new Intl.DateTimeFormat(getLocale(), {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(period.year, period.month - 1, 1))
+  return formatBillingPeriod(period, "short")
 }
 
 function formatAmount(amount: string, currency: string | null) {
@@ -257,7 +258,10 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
               if (period) setSelectedPeriod(period)
             }}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger
+              aria-label={i18n.t("app:analytics.selected_period")}
+              className="w-full min-w-40"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -266,7 +270,7 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
                   key={periodValue(period)}
                   value={periodValue(period)}
                 >
-                  {periodLabel(period)}
+                  {formatBillingPeriod(period)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -21,40 +21,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { i18n } from "@/i18n"
+import { domainLabel } from "@/i18n/domainLabels"
 import { formatAmount } from "@/i18n/format"
 import { handleError } from "@/utils"
 
-const componentTypes = [
-  {
-    value: "invoice",
-    get label() {
-      return i18n.t("app:obligations.invoice")
-    },
-  },
-  {
-    value: "invoice_item",
-    get label() {
-      return i18n.t("app:obligations.invoice_item")
-    },
-  },
-  {
-    value: "adjustment",
-    get label() {
-      return i18n.t("app:obligations.adjustment")
-    },
-  },
-  {
-    value: "consumption",
-    get label() {
-      return i18n.t("app:obligations.consumption")
-    },
-  },
-  {
-    value: "other",
-    get label() {
-      return i18n.t("app:obligations.other")
-    },
-  },
+const componentTypes: readonly string[] = [
+  "invoice",
+  "invoice_item",
+  "adjustment",
+  "consumption",
+  "other",
 ]
 
 type ComponentFormValues = {
@@ -75,10 +51,6 @@ const emptyForm: ComponentFormValues = {
 
 function isIntegrationManaged(component: ObligationComponentPublic) {
   return component.source !== null || component.external_id !== null
-}
-
-function componentTypeLabel(type: string) {
-  return componentTypes.find((option) => option.value === type)?.label ?? type
 }
 
 function amountLabel(amount: string | null, currency: string | null) {
@@ -109,9 +81,9 @@ function FormFields({
             onChange({ ...values, type: event.target.value })
           }
         >
-          {componentTypes.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {componentTypes.map((type) => (
+            <option key={type} value={type}>
+              {domainLabel("componentType", type)}
             </option>
           ))}
         </select>
@@ -194,9 +166,7 @@ function ComponentForm({
       setValues(emptyForm)
       return
     }
-    const knownType = componentTypes.some(
-      ({ value }) => value === component.type,
-    )
+    const knownType = componentTypes.includes(component.type)
     setValues({
       type: knownType ? component.type : "other",
       customType: knownType ? "" : component.type,
@@ -481,7 +451,7 @@ export function ObligationComponentsSection({
                           {component.label}
                         </p>
                         <Badge variant="secondary">
-                          {componentTypeLabel(component.type)}
+                          {domainLabel("componentType", component.type)}
                         </Badge>
                       </div>
                     </TableCell>

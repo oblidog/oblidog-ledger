@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { i18n } from "@/i18n"
 import { domainLabel } from "@/i18n/domainLabels"
-import { formatAmount, formatDate, getLocale } from "@/i18n/format"
+import { formatAmount, formatDate, formatDateTime } from "@/i18n/format"
 
 const PAGE_SIZE = 20
 
@@ -47,6 +47,24 @@ const fieldLabels: Record<string, string> = {
   get current_amount() {
     return i18n.t("app:obligations.amount")
   },
+  get amount() {
+    return i18n.t("app:obligations.amount")
+  },
+  get type() {
+    return i18n.t("app:obligations.type")
+  },
+  get label() {
+    return i18n.t("app:obligations.label")
+  },
+  get source() {
+    return i18n.t("app:obligations.source_6da13a")
+  },
+  get external_id() {
+    return i18n.t("app:obligations.reference")
+  },
+  get metadata() {
+    return i18n.t("app:obligations.metadata")
+  },
   get currency() {
     return i18n.t("app:obligations.currency")
   },
@@ -83,6 +101,9 @@ const fieldLabels: Record<string, string> = {
   get due_date_source() {
     return i18n.t("app:obligations.due_date_source")
   },
+  get effective_value_source() {
+    return i18n.t("app:obligations.effective_value_source")
+  },
 }
 
 type Change = { from?: unknown; to?: unknown }
@@ -103,13 +124,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat(getLocale(), {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value))
-}
-
 function formatValue(value: unknown, field?: string): string {
   if (value === null || value === undefined || value === "") return "—"
   if (typeof value === "boolean")
@@ -124,7 +138,10 @@ function formatValue(value: unknown, field?: string): string {
       /^\d{4}-\d{2}-\d{2}$/.test(value)
     )
       return formatDate(value)
-    if (field === "current_amount" && /^-?\d+(\.\d+)?$/.test(value))
+    if (
+      (field === "current_amount" || field === "amount") &&
+      /^-?\d+(\.\d+)?$/.test(value)
+    )
       return formatAmount(value)
     const date = new Date(value)
     if (
@@ -215,7 +232,7 @@ function ComponentDiffs({ changes }: { changes: ComponentChanges }) {
           {kind !== "updated" && component.amount !== undefined ? (
             <p className="text-muted-foreground mt-1 text-xs">
               {i18n.t("app:obligations.amount_281473")}{" "}
-              {formatValue(component.amount)}
+              {formatValue(component.amount, "amount")}
             </p>
           ) : null}
           {kind === "updated" && component.changes ? (
@@ -290,6 +307,22 @@ function ActionDetails({ action }: { action: ObligationActionPublic }) {
   )
 }
 
+function actorLabel({
+  actor_type,
+  actor_display_name,
+}: ObligationActionPublic) {
+  const type = domainLabel("actor", actor_type)
+  if (
+    !actor_display_name ||
+    (actor_type === "system" && actor_display_name === "System")
+  ) {
+    return type
+  }
+  if (actor_type === "integration")
+    return [type, actor_display_name].join(" · ")
+  return actor_display_name
+}
+
 function ActionEntry({ action }: { action: ObligationActionPublic }) {
   useTranslation()
 
@@ -311,7 +344,7 @@ function ActionEntry({ action }: { action: ObligationActionPublic }) {
           </time>
         </div>
         <p className="text-muted-foreground mt-0.5 text-xs">
-          {action.actor_display_name || domainLabel("actor", action.actor_type)}
+          {actorLabel(action)}
         </p>
         <ActionDetails action={action} />
       </div>

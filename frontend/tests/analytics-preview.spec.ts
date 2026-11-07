@@ -99,9 +99,9 @@ async function api(
         totals,
         components: [
           {
-            identity: "fee:energy",
+            identity: "invoice_line:energy",
             label: "Energy charge",
-            type: "fee",
+            type: "invoice_line",
             source: "provider",
             external_id: "technical-123",
             values: totals.map((t) => ({
@@ -121,7 +121,7 @@ async function api(
   return historyRequests
 }
 
-for (const language of ["en", "pl", "de"]) {
+for (const language of ["en", "pl", "de"] as const) {
   for (const theme of ["light", "dark"]) {
     test(`${language} ${theme}: real periods, bill comparison, keyboard details and mobile layout`, async ({
       page,
@@ -141,6 +141,16 @@ for (const language of ["en", "pl", "de"]) {
       await expect(
         table.getByText("provider · technical-123", { exact: true }),
       ).toBeVisible()
+      await expect(
+        table.getByText(
+          {
+            en: "Invoice line",
+            pl: "Pozycja faktury",
+            de: "Rechnungsposition",
+          }[language],
+          { exact: true },
+        ),
+      ).toBeVisible()
       const comparison = page.getByTestId("cost-comparison")
       await expect(comparison).toContainText(
         language === "en" ? "+12.35 EUR" : "+12,35 EUR",
@@ -158,8 +168,15 @@ for (const language of ["en", "pl", "de"]) {
               : "Bereich endet am",
         exact: true,
       })
+      const month = {
+        en: "October 2026",
+        pl: "październik 2026",
+        de: "Oktober 2026",
+      }[language]
+      await expect(range).toHaveText(month)
       await range.click()
       await expect(page.getByRole("option")).toHaveCount(7)
+      await expect(page.getByRole("option", { name: month })).toBeVisible()
       await page.keyboard.press("Escape")
       await expect(page.locator("html")).toHaveClass(new RegExp(theme))
       expect(
@@ -255,9 +272,7 @@ test("prefers visible history over older hidden components, while preserving del
     .poll(() => requests[requests.length - 1].searchParams.get("category_id"))
     .toBe(emptyId)
   const previousRequests = catalogRequests
-  await page.evaluate(() =>
-    window.dispatchEvent(new Event("visibilitychange")),
-  )
+  await page.evaluate(() => window.dispatchEvent(new Event("visibilitychange")))
   await expect.poll(() => catalogRequests).toBeGreaterThan(previousRequests)
   await expect(
     page.getByRole("combobox", { name: "Category", exact: true }),

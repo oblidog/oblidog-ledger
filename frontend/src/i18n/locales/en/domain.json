@@ -33,6 +33,7 @@
     "integration": "Integration"
   },
   "componentType": {
+    "invoice_line": "Invoice line",
     "invoice": "Invoice",
     "invoice_item": "Invoice item",
     "adjustment": "Adjustment",

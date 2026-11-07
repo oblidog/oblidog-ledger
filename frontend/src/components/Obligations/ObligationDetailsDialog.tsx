@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { i18n } from "@/i18n"
 import { domainLabel } from "@/i18n/domainLabels"
-import { formatAmount, formatDate } from "@/i18n/format"
+import { formatAmount, formatBillingPeriod, formatDate } from "@/i18n/format"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
 import { ObligationFieldDetails } from "./ObligationFieldDetails"
@@ -80,10 +80,7 @@ export function ObligationDetailsDialog({
           </DialogTitle>
           <DialogDescription>
             {selected.data
-              ? formatDate(
-                  `${selected.data.period.year}-${String(selected.data.period.month).padStart(2, "0")}-01`,
-                  { month: "long", year: "numeric" },
-                )
+              ? formatBillingPeriod(selected.data.period)
               : i18n.t("app:obligations.obligation_details")}
           </DialogDescription>
         </DialogHeader>
