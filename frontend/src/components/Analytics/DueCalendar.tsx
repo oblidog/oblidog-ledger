@@ -58,31 +58,38 @@ function obligationHref(ledgerId: string, item: ObligationPublic) {
 export function DueCalendar({
   ledgerId,
   businessDate,
+  refreshBusinessDate,
 }: {
   ledgerId: string
   businessDate?: string
+  refreshBusinessDate: () => void
 }) {
   const { t } = useTranslation("app", { keyPrefix: "analytics" })
-  const [monthOffset, setMonthOffset] = useState(0)
   const [selectedDay, setSelectedDay] = useState<string>()
   const now = new Date()
   const today =
     businessDate ??
     calendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate())
-  const currentMonth = new Date(`${today.slice(0, 7)}-01T00:00:00Z`)
-  currentMonth.setUTCMonth(currentMonth.getUTCMonth() + monthOffset)
+  const selected = selectedDay ?? today
+  const currentMonth = new Date(`${selected.slice(0, 7)}-01T00:00:00Z`)
   const year = currentMonth.getUTCFullYear()
   const month = currentMonth.getUTCMonth() + 1
   const first = (currentMonth.getUTCDay() + 6) % 7
   const days = new Date(Date.UTC(year, month, 0)).getUTCDate()
   const dueFrom = calendarDate(year, month, 1)
   const dueTo = calendarDate(year, month, days)
-  const selected =
-    selectedDay?.slice(0, 7) === dueFrom.slice(0, 7)
-      ? selectedDay
-      : monthOffset === 0
-        ? today
-        : dueFrom
+  function moveMonth(delta: number) {
+    const target = new Date(currentMonth)
+    target.setUTCMonth(target.getUTCMonth() + delta)
+    const firstDay = calendarDate(
+      target.getUTCFullYear(),
+      target.getUTCMonth() + 1,
+      1,
+    )
+    setSelectedDay(
+      firstDay.slice(0, 7) === today.slice(0, 7) ? today : firstDay,
+    )
+  }
   const key = obligationQueryKeys.list(ledgerId)
   const query = useQuery({
     queryKey: [...key, "due-calendar", dueFrom, dueTo],
@@ -131,10 +138,7 @@ export function DueCalendar({
             variant="outline"
             size="icon"
             aria-label={t("due_calendar_previous")}
-            onClick={() => {
-              setMonthOffset((offset) => offset - 1)
-              setSelectedDay(undefined)
-            }}
+            onClick={() => moveMonth(-1)}
           >
             <ChevronLeft />
           </Button>
@@ -145,10 +149,7 @@ export function DueCalendar({
             variant="outline"
             size="icon"
             aria-label={t("due_calendar_next")}
-            onClick={() => {
-              setMonthOffset((offset) => offset + 1)
-              setSelectedDay(undefined)
-            }}
+            onClick={() => moveMonth(1)}
           >
             <ChevronRight />
           </Button>
@@ -156,8 +157,8 @@ export function DueCalendar({
             variant="outline"
             size="sm"
             onClick={() => {
-              setMonthOffset(0)
               setSelectedDay(undefined)
+              refreshBusinessDate()
             }}
           >
             {t("due_calendar_today")}

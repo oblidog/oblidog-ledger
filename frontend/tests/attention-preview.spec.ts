@@ -90,6 +90,7 @@ async function api(
   language = "en",
   theme = "light",
   mode = "normal",
+  calendarDate: () => string | Promise<string> = () => "2026-11-03",
 ) {
   const requests: URL[] = []
   const calendarRequests: URL[] = []
@@ -175,7 +176,7 @@ async function api(
               })),
             ]
       return send({
-        as_of_date: mode === "calendar" ? "2026-11-03" : "2026-11-01",
+        as_of_date: mode === "calendar" ? await calendarDate() : "2026-11-01",
         items: items.slice(offset, offset + 8),
         total: items.length,
         offset,
@@ -483,7 +484,24 @@ for (const [language, month, next, previous, todayLabel] of [
       await expect(page).toHaveURL(
         /year=2026&month=10.*obligation=HOME-2026-10/,
       )
-      await expect(page.getByRole("dialog")).toContainText("October internet")
+      const dialog = page.getByRole("dialog")
+      await expect(dialog).toContainText("October internet")
+      await page.keyboard.press("Escape")
+      await expect(dialog).toHaveCount(0)
+      await expect(page).toHaveURL((url) => {
+        const params = url.searchParams
+        return (
+          params.get("year") === "2026" &&
+          params.get("month") === "10" &&
+          params.get("lifecycle") === "" &&
+          !params.has("obligation")
+        )
+      })
+      await page.reload()
+      await expect(
+        page.getByText("October internet", { exact: true }),
+      ).toBeVisible()
+      await expect(dialog).toHaveCount(0)
     }
   })
 }
@@ -522,4 +540,59 @@ test("due calendar resets its selection and requests when switching ledgers", as
         request.searchParams.get("due_from") === "2026-11-01",
     ),
   ).toBe(true)
+})
+
+test.describe("due calendar with a different business date", () => {
+  test.use({ timezoneId: "UTC" })
+
+  test("keeps the chosen month when the initial business date arrives", async ({
+    page,
+  }) => {
+    const businessDate = Promise.withResolvers<string>()
+    await page.clock.setFixedTime(new Date("2026-10-31T23:30:00Z"))
+    await api(page, "en", "light", "calendar", () => businessDate.promise)
+    await page.goto("/")
+    const calendar = page.locator('[aria-labelledby="due-calendar-title"]')
+    await expect(
+      calendar.getByText("October 2026", { exact: true }),
+    ).toBeVisible()
+    await calendar.getByRole("button", { name: "Next month" }).click()
+    await expect(
+      calendar.getByText("November 2026", { exact: true }),
+    ).toBeVisible()
+
+    businessDate.resolve("2026-11-01")
+    await expect(calendar.locator('[aria-current="date"]')).toHaveText("1")
+    await expect(
+      calendar.getByText("November 2026", { exact: true }),
+    ).toBeVisible()
+  })
+
+  test("Today refreshes the business date and overdue statuses after midnight", async ({
+    page,
+  }) => {
+    let businessDate = "2026-11-02"
+    await page.clock.setFixedTime(new Date("2026-11-02T22:30:00Z"))
+    await api(page, "en", "light", "calendar", () => businessDate)
+    await page.goto("/")
+    const calendar = page.locator('[aria-labelledby="due-calendar-title"]')
+    const today = calendar.locator('[aria-current="date"]')
+    await expect(today).toHaveText("2")
+    const bill = calendar
+      .getByRole("listitem")
+      .filter({ hasText: "October internet" })
+    await expect(bill).toContainText("Due")
+
+    businessDate = "2026-11-03"
+    await page.clock.setFixedTime(new Date("2026-11-02T23:30:00Z"))
+    await calendar.getByRole("button", { name: "Today", exact: true }).click()
+    await expect(today).toHaveText("3")
+    await expect(today).toHaveAttribute("aria-pressed", "true")
+    await calendar
+      .getByRole("group")
+      .getByRole("button")
+      .filter({ hasText: /^2$/ })
+      .click()
+    await expect(bill).toContainText("Overdue")
+  })
 })

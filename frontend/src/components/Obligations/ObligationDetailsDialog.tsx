@@ -36,7 +36,7 @@ import type { useObligationActions } from "./useObligationActions"
 export function ObligationDetailsDialog({
   ledgerId,
   selectedKey,
-  setSelectedKey,
+  onClose,
   canEdit,
   actions,
   setPaymentConfirmation,
@@ -44,7 +44,7 @@ export function ObligationDetailsDialog({
 }: {
   ledgerId: string
   selectedKey: string | null
-  setSelectedKey: (key: string | null) => void
+  onClose: () => void
   canEdit: boolean
   actions: ReturnType<typeof useObligationActions>
   setPaymentConfirmation: (value: ObligationPublic | null) => void
@@ -64,7 +64,7 @@ export function ObligationDetailsDialog({
   return (
     <Dialog
       open={selectedKey !== null}
-      onOpenChange={(open) => !open && setSelectedKey(null)}
+      onOpenChange={(open) => !open && onClose()}
     >
       <DialogContent
         className={`flex max-h-[min(90dvh,calc(100vh-2rem))] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl ${touchDialogClasses}`}

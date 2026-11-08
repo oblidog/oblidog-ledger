@@ -289,6 +289,7 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
         key={`due-calendar-${ledgerId}`}
         ledgerId={ledgerId}
         businessDate={attention.data?.pages[0]?.as_of_date}
+        refreshBusinessDate={() => void attention.refetch()}
       />
 
       <h2 className="text-lg font-semibold">
