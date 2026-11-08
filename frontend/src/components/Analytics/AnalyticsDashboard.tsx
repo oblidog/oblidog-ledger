@@ -11,6 +11,7 @@ import {
   LabelList,
   Pie,
   PieChart,
+  usePlotArea,
   XAxis,
   YAxis,
 } from "recharts"
@@ -479,11 +480,9 @@ function CashflowOverviewCards({
     return (
       <Card className="gap-3 py-4 lg:col-span-2">
         <CardContent className="pt-6">
-          <QueryState
-            message={i18n.t(
-              "app:analytics.payment_metrics_could_not_be_loaded",
-            )}
-          />
+          <p className="text-sm text-muted-foreground">
+            {i18n.t("app:analytics.payment_metrics_could_not_be_loaded")}
+          </p>
         </CardContent>
       </Card>
     )
@@ -746,11 +745,12 @@ function CashflowCurrencyChart({
   const currency = summary.currency
   const chartData = summary.daily.map((point) => ({
     amount: Number(point.amount),
+    amountLabel: formatCompactNumber(Number(point.amount)),
     cumulative: Number(point.cumulative_amount),
     date: point.due_date,
     fill: point.is_overdue ? "var(--destructive)" : "var(--color-amount)",
   }))
-  const showValueLabels = chartData.length <= 8
+  const hasFewBars = chartData.length <= 8
 
   return (
     <section className="min-w-0">
@@ -813,7 +813,7 @@ function CashflowCurrencyChart({
           <BarChart
             accessibilityLayer
             data={chartData}
-            margin={{ top: showValueLabels ? 24 : 8, right: 4, left: 0 }}
+            margin={{ top: hasFewBars ? 24 : 8, right: 4, left: 0 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
@@ -871,13 +871,9 @@ function CashflowCurrencyChart({
               {chartData.map((point) => (
                 <Cell fill={point.fill} key={point.date} />
               ))}
-              {showValueLabels && (
-                <LabelList
-                  className="fill-foreground"
-                  dataKey="amount"
-                  fontSize={11}
-                  formatter={(value) => formatCompactNumber(Number(value))}
-                  position="top"
+              {hasFewBars && (
+                <CashflowValueLabels
+                  labels={chartData.map((point) => point.amountLabel)}
                 />
               )}
             </Bar>
@@ -890,6 +886,23 @@ function CashflowCurrencyChart({
         )}
       </p>
     </section>
+  )
+}
+
+function CashflowValueLabels({ labels }: { labels: string[] }) {
+  const plot = usePlotArea()
+  const longestLabel = Math.max(...labels.map((label) => label.length))
+  // Budget nine pixels per character at the 11px font size, plus a gap.
+  const slotWidth = longestLabel * 9 + 4
+  if (!plot || plot.width < labels.length * slotWidth) return null
+
+  return (
+    <LabelList
+      className="fill-foreground"
+      dataKey="amountLabel"
+      fontSize={11}
+      position="top"
+    />
   )
 }
 
