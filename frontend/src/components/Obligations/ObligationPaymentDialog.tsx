@@ -19,10 +19,12 @@ import type { useObligationActions } from "./useObligationActions"
 export function ObligationPaymentDialog({
   paymentConfirmation,
   setPaymentConfirmation,
+  onCloseAutoFocus,
   actions,
 }: {
   paymentConfirmation: ObligationPublic | null
   setPaymentConfirmation: (value: ObligationPublic | null) => void
+  onCloseAutoFocus: (event: Event) => void
   actions: ReturnType<typeof useObligationActions>
 }) {
   useTranslation()
@@ -36,6 +38,7 @@ export function ObligationPaymentDialog({
     >
       <DialogContent
         className={touchDialogClasses}
+        onCloseAutoFocus={onCloseAutoFocus}
         onEscapeKeyDown={(event) => {
           if (actionPending) event.preventDefault()
         }}

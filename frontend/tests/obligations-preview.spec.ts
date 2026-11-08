@@ -286,17 +286,26 @@ test("owners can open payment from the list and reopen from the menu", async ({
   const electricity = page
     .getByTestId(/obligation-(row|card)/)
     .filter({ hasText: "ELEC-2026-10" })
-  await electricity
-    .getByRole("button", { name: "Mark as paid", exact: true })
-    .click()
+  const paymentAction = electricity.getByRole("button", {
+    name: "Mark as paid",
+    exact: true,
+  })
+  await paymentAction.press("Enter")
   const confirmation = page.getByRole("dialog", {
     name: "Mark obligation as paid?",
   })
+  await expect(confirmation).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(confirmation).toBeHidden()
+  await expect(paymentAction).toBeFocused()
+
+  await paymentAction.press("Enter")
   await expect(confirmation).toBeVisible()
   await confirmation
     .getByRole("button", { name: "Cancel", exact: true })
     .click()
   await expect(confirmation).toBeHidden()
+  await expect(paymentAction).toBeFocused()
   await electricity
     .getByRole("button", { name: "Actions for Electricity", exact: true })
     .click()
@@ -317,6 +326,37 @@ test("owners can open payment from the list and reopen from the menu", async ({
     page.getByRole("menuitem", { name: "Mark as paid", exact: true }),
   ).toHaveCount(0)
   expect(writes).toEqual([])
+})
+
+test("desktop table keeps compact actions visible without horizontal scrolling", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop")
+  await api(page, "pl")
+  await page.setViewportSize({ width: 1000, height: 800 })
+  await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
+  const payment = page.getByRole("button", {
+    name: "Oznacz jako opłacone",
+    exact: true,
+  })
+  const menu = page.getByRole("button", {
+    name: "Akcje dla Electricity",
+    exact: true,
+  })
+  await expect(payment).toBeInViewport({ ratio: 1 })
+  await expect(menu).toBeInViewport({ ratio: 1 })
+  await expect(payment.getByText("Oznacz jako opłacone")).toHaveCSS(
+    "position",
+    "absolute",
+  )
+  await payment.focus()
+  await expect(page.getByRole("tooltip")).toHaveText("Oznacz jako opłacone")
+
+  await page.setViewportSize({ width: 1600, height: 800 })
+  await expect(payment.getByText("Oznacz jako opłacone")).toHaveCSS(
+    "position",
+    "static",
+  )
 })
 
 test("category picker reopens while focused after selection and Escape", async ({

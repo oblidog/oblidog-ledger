@@ -23,8 +23,9 @@ import {
 
 export function ObligationList({ items }: { items: ObligationItemProps[] }) {
   useTranslation()
+  const showActions = items.some((item) => item.canWrite)
   return (
-    <div data-testid="obligation-list" className="min-w-0">
+    <div data-testid="obligation-list" className="@container min-w-0">
       <Table>
         <TableHeader>
           <TableRow hoverable={false}>
@@ -35,11 +36,13 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
               {i18n.t("app:obligations.amount")}
             </TableHead>
             <TableHead>{i18n.t("app:obligations.status")}</TableHead>
-            <TableHead>
-              <span className="sr-only">
-                {i18n.t("app:obligations.actions")}
-              </span>
-            </TableHead>
+            {showActions ? (
+              <TableHead className="sticky right-0 z-10 border-l bg-muted px-2">
+                <span className="sr-only">
+                  {i18n.t("app:obligations.actions")}
+                </span>
+              </TableHead>
+            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -107,11 +110,13 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
                 <TableCell className="min-w-32">
                   <ObligationStatus obligation={obligation} />
                 </TableCell>
-                <TableCell className="w-12">
-                  <div className="flex items-center justify-end gap-1">
-                    <ObligationActions {...item} inlinePayment />
-                  </div>
-                </TableCell>
+                {showActions ? (
+                  <TableCell className="sticky right-0 z-10 w-12 border-l bg-card px-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <ObligationActions {...item} inlinePayment />
+                    </div>
+                  </TableCell>
+                ) : null}
               </TableRow>
             )
           })}

@@ -17,6 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { LoadingButton } from "@/components/ui/loading-button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import { i18n } from "@/i18n"
 import {
@@ -35,7 +40,7 @@ export type ObligationItemProps = {
   loading: boolean
   onEdit: () => void
   onCancel: () => void
-  onMarkPaid: () => void
+  onMarkPaid: (trigger?: HTMLButtonElement) => void
   onMarkReady: () => void
   onReopen: () => void
   onSelect: () => void
@@ -63,17 +68,27 @@ export function ObligationActions({
   return (
     <>
       {inlinePayment && canMarkPaid ? (
-        <LoadingButton
-          type="button"
-          size="sm"
-          variant="outline"
-          loading={loading}
-          disabled={disabled}
-          onClick={onMarkPaid}
-        >
-          <CreditCard />
-          {i18n.t("app:obligations.mark_as_paid")}
-        </LoadingButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <LoadingButton
+              type="button"
+              size="sm"
+              variant="outline"
+              aria-haspopup="dialog"
+              loading={loading}
+              disabled={disabled}
+              onClick={(event) => onMarkPaid(event.currentTarget)}
+            >
+              <CreditCard />
+              <span className="sr-only @min-[68rem]:not-sr-only">
+                {i18n.t("app:obligations.mark_as_paid")}
+              </span>
+            </LoadingButton>
+          </TooltipTrigger>
+          <TooltipContent>
+            {i18n.t("app:obligations.mark_as_paid")}
+          </TooltipContent>
+        </Tooltip>
       ) : null}
       {canWrite ? (
         <DropdownMenu>
@@ -126,7 +141,10 @@ export function ObligationActions({
               </DropdownMenuItem>
             ) : null}
             {canMarkPaid && !inlinePayment ? (
-              <DropdownMenuItem disabled={disabled} onSelect={onMarkPaid}>
+              <DropdownMenuItem
+                disabled={disabled}
+                onSelect={() => onMarkPaid()}
+              >
                 <CreditCard />
                 {i18n.t("app:obligations.mark_as_paid")}
               </DropdownMenuItem>

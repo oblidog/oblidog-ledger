@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "@tanstack/react-router"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CategoriesService, type ObligationPublic } from "@/client"
 import {
@@ -79,6 +79,8 @@ export function ObligationWorkspace({
     useState<ObligationPublic | null>(null)
   const [paymentConfirmation, setPaymentConfirmation] =
     useState<ObligationPublic | null>(null)
+  const workspace = useRef<HTMLElement>(null)
+  const paymentTrigger = useRef<HTMLButtonElement | null>(null)
   const actions = useObligationActions(
     ledgerId,
     canEdit,
@@ -151,7 +153,10 @@ export function ObligationWorkspace({
         loading: pendingActionKey === obligation.key,
         onEdit: () => setEditingObligation(obligation),
         onCancel: () => void runAction(cancel, obligation),
-        onMarkPaid: () => setPaymentConfirmation(obligation),
+        onMarkPaid: (trigger) => {
+          paymentTrigger.current = trigger ?? null
+          setPaymentConfirmation(obligation)
+        },
         onMarkReady: () => void runAction(markReady, obligation),
         onReopen: () => void runAction(reopen, obligation),
         onSelect: () => setSelectedKey(obligation.key),
@@ -159,7 +164,7 @@ export function ObligationWorkspace({
     : []
 
   return (
-    <section className="min-w-0">
+    <section ref={workspace} tabIndex={-1} className="min-w-0">
       <PageHeader
         title={i18n.t("app:obligations.obligations")}
         actions={
@@ -297,6 +302,15 @@ export function ObligationWorkspace({
         <ObligationPaymentDialog
           paymentConfirmation={paymentConfirmation}
           setPaymentConfirmation={setPaymentConfirmation}
+          onCloseAutoFocus={(event) => {
+            const trigger = paymentTrigger.current
+            paymentTrigger.current = null
+            if (!trigger) return
+
+            event.preventDefault()
+            if (trigger.isConnected && !trigger.disabled) trigger.focus()
+            else workspace.current?.focus({ preventScroll: true })
+          }}
           actions={actions}
         />
         {editingObligation ? (
