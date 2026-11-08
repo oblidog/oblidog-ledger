@@ -125,7 +125,11 @@ export function DueCalendar({
   )
 
   return (
-    <Card className="gap-3 py-4" aria-labelledby="due-calendar-title">
+    <Card
+      role="region"
+      className="min-w-0 gap-4 py-4"
+      aria-labelledby="due-calendar-title"
+    >
       <CardHeader>
         <CardTitle>
           <h2 id="due-calendar-title">{t("due_calendar_title")}</h2>
@@ -165,9 +169,12 @@ export function DueCalendar({
           </Button>
         </div>
         {query.isPending ? (
-          <Skeleton className="h-64 w-full" />
+          <div role="status">
+            <span className="sr-only">{t("due_calendar_loading")}</span>
+            <Skeleton aria-hidden="true" className="h-64 w-full" />
+          </div>
         ) : query.isError ? (
-          <p role="alert" className="text-destructive">
+          <p role="alert" className="text-sm text-destructive">
             {t("due_calendar_failed")}
           </p>
         ) : (
@@ -235,7 +242,7 @@ export function DueCalendar({
                 {formatDate(selected)}
               </h3>
               {items.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p role="status" className="text-sm text-muted-foreground">
                   {t("due_calendar_empty")}
                 </p>
               ) : (

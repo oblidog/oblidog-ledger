@@ -596,3 +596,216 @@ test.describe("due calendar with a different business date", () => {
     await expect(bill).toContainText("Overdue")
   })
 })
+
+for (const [language, forecastTitle, calendarTitle, periodLabel] of [
+  ["en", "Payment Forecast", "Due Calendar", "Reporting period"],
+  ["pl", "Prognoza płatności", "Kalendarz płatności", "Okres rozliczeniowy"],
+  ["de", "Zahlungsprognose", "Fälligkeitskalender", "Abrechnungszeitraum"],
+]) {
+  test(`${language}: dashboard payment widgets keep amounts and fit desktop and mobile`, async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date("2026-11-03T12:00:00Z"))
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await api(page, language, "light", "calendar")
+    await page.route("**/analytics/cashflow?**", (route) => {
+      const month = Number(
+        new URL(route.request().url()).searchParams.get("month"),
+      )
+      return route.fulfill({
+        json: {
+          period: { year: 2026, month },
+          as_of_date: "2026-11-03",
+          unknown_amount_count: 0,
+          without_due_date_count: 0,
+          is_complete: true,
+          currency_summaries: [
+            { currency: "EUR", amount: month === 11 ? "45.00" : "32.00" },
+            { currency: "USD", amount: "17.50" },
+          ].map(({ currency, amount }) => ({
+            currency,
+            total_known_amount: amount,
+            scheduled_known_amount: amount,
+            unscheduled_known_amount: "0.00",
+            overdue_known_amount: "0.00",
+            daily: [
+              {
+                due_date: `2026-${month}-09`,
+                amount,
+                cumulative_amount: amount,
+                is_overdue: false,
+              },
+            ],
+          })),
+        },
+      })
+    })
+    await page.goto("/")
+    const widgets = page.getByTestId("dashboard-payment-widgets")
+    const calendar = widgets.getByRole("region", { name: calendarTitle })
+    const forecast = widgets.getByRole("region", { name: forecastTitle })
+    const period = forecast.getByRole("combobox", { name: periodLabel })
+    const charts = forecast.getByTestId("payment-schedule-chart")
+    await expect(
+      calendar.getByRole("group").locator('[aria-current="date"]'),
+    ).toHaveText("3")
+    await expect(period).toBeVisible()
+    await expect(charts).toHaveCount(2)
+    for (const chart of await charts.all()) {
+      await expect(chart.locator(".recharts-bar-rectangle path")).toBeVisible()
+    }
+    await expect(forecast.locator("strong")).toHaveText(
+      language === "en"
+        ? ["45.00 EUR", "17.50 USD"]
+        : ["45,00 EUR", "17,50 USD"],
+    )
+    const desktopCalendar = (await calendar.boundingBox())!
+    const desktopForecast = (await forecast.boundingBox())!
+    expect(desktopCalendar.y).toBeCloseTo(desktopForecast.y, 0)
+    expect(desktopForecast.x).toBeGreaterThan(
+      desktopCalendar.x + desktopCalendar.width,
+    )
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    const mobileCalendar = (await calendar.boundingBox())!
+    const mobileForecast = (await forecast.boundingBox())!
+    expect(mobileForecast.x).toBeCloseTo(mobileCalendar.x, 0)
+    expect(mobileForecast.y).toBeGreaterThan(
+      mobileCalendar.y + mobileCalendar.height,
+    )
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      )
+      .toBe(true)
+
+    if (language === "en") {
+      await period.click()
+      await page.getByRole("option", { name: "October 2026" }).click()
+      await expect(forecast.locator("strong").first()).toHaveText("32.00 EUR")
+      await expect(
+        calendar.getByText("November 2026", { exact: true }),
+      ).toBeVisible()
+    }
+  })
+}
+
+test("dashboard payment widgets announce loading, empty results and errors", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-11-03T12:00:00Z"))
+  await api(page, "en", "light", "calendar")
+  const releaseLoading = Promise.withResolvers<void>()
+  await page.route("**/analytics/cashflow?**", async (route) => {
+    const month = new URL(route.request().url()).searchParams.get("month")
+    if (month === "10")
+      return route.fulfill({ status: 400, json: { detail: "Unavailable" } })
+    await releaseLoading.promise
+    return route.fallback()
+  })
+  await page.route("**/obligations?**", async (route) => {
+    const from = new URL(route.request().url()).searchParams.get("due_from")
+    if (from === "2026-12-01")
+      return route.fulfill({ status: 400, json: { detail: "Unavailable" } })
+    if (from) await releaseLoading.promise
+    return route.fallback()
+  })
+  await page.goto("/")
+  const widgets = page.getByTestId("dashboard-payment-widgets")
+  const calendar = widgets.getByRole("region", { name: "Due Calendar" })
+  const forecast = widgets.getByRole("region", { name: "Payment Forecast" })
+  await expect(calendar.getByRole("status")).toHaveText("Loading due calendar")
+  await expect(forecast.getByRole("status")).toHaveText(
+    "Loading payment forecast",
+  )
+  releaseLoading.resolve()
+  await expect(calendar.getByRole("status")).toHaveText(
+    "No payments on this day",
+  )
+  await expect(forecast.getByRole("status")).toHaveText(
+    "No unpaid known amounts.",
+  )
+
+  await calendar.getByRole("button", { name: "Next month" }).click()
+  await expect(calendar.getByRole("alert")).toHaveText(
+    "Calendar could not be loaded",
+    { timeout: 15_000 },
+  )
+  await forecast.getByRole("combobox", { name: "Reporting period" }).click()
+  await page.getByRole("option", { name: "October 2026" }).click()
+  await expect(forecast.getByRole("alert")).toContainText(
+    "Payment forecast could not be loaded.",
+    { timeout: 15_000 },
+  )
+  await expect(
+    page.getByText("Payment metrics could not be loaded."),
+  ).toBeVisible()
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: /Payment (forecast|metrics) could not be loaded/ }),
+  ).toHaveCount(1)
+})
+
+test("payment forecast only labels dense bars when the plot is wide enough", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-11-03T12:00:00Z"))
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await api(page, "de", "light", "calendar")
+  await page.route("**/analytics/cashflow?**", (route) => {
+    const month = Number(
+      new URL(route.request().url()).searchParams.get("month"),
+    )
+    return route.fulfill({
+      json: {
+        period: { year: 2026, month },
+        as_of_date: "2026-11-03",
+        unknown_amount_count: 0,
+        without_due_date_count: 0,
+        is_complete: true,
+        currency_summaries: (month === 11 ? ["EUR", "USD"] : ["EUR"]).map(
+          (currency) => ({
+            currency,
+            total_known_amount: "98760.00",
+            scheduled_known_amount: "98760.00",
+            unscheduled_known_amount: "0.00",
+            overdue_known_amount: "0.00",
+            daily: Array.from({ length: 8 }, (_, i) => ({
+              due_date: `2026-${month}-${10 + i}`,
+              amount: "12345.00",
+              cumulative_amount: String(12345 * (i + 1)),
+              is_overdue: month === 10,
+            })),
+          }),
+        ),
+      },
+    })
+  })
+  await page.goto("/")
+  const forecast = page.getByRole("region", { name: "Zahlungsprognose" })
+  const charts = forecast.getByTestId("payment-schedule-chart")
+  const chart = charts.first()
+  const bars = chart.locator(".recharts-bar-rectangle path")
+  const labels = chart.locator(".recharts-label-list text")
+  await expect(charts).toHaveCount(2)
+  await expect(bars).toHaveCount(8)
+  await expect(labels).toHaveCount(0)
+  await bars.first().hover()
+  await expect(
+    chart
+      .locator(".recharts-tooltip-wrapper")
+      .getByText("12.345,00 EUR", { exact: true }),
+  ).toBeVisible()
+
+  await forecast.getByRole("combobox", { name: "Abrechnungszeitraum" }).click()
+  await page.getByRole("option", { name: "Oktober 2026" }).click()
+  await expect(charts).toHaveCount(1)
+  await expect(labels).toHaveCount(8)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(labels).toHaveCount(0)
+  await expect(bars).toHaveCount(8)
+})
