@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 
 const ledgerId = "attention-home"
+const otherLedgerId = "attention-other"
 const obligation = {
   id: "one",
   key: "HOME-2026-10",
@@ -51,6 +52,14 @@ const calendarRows = [
     name: "Canceled insurance",
     due_date: "2026-11-02",
     lifecycle: "canceled",
+  },
+  {
+    ...obligation,
+    id: "incomplete",
+    key: "GASS-2026-11",
+    name: "Gas bill",
+    due_date: "2026-11-02",
+    period: { year: 2026, month: 11 },
   },
   {
     ...obligation,
@@ -117,8 +126,13 @@ async function api(
       is_active: true,
       default_currency: "EUR",
     }
-    if (path === "/api/v1/ledgers") return send({ data: [ledger], count: 1 })
+    const otherLedger = { ...ledger, id: otherLedgerId, name: "Second ledger" }
+    if (path === "/api/v1/ledgers") {
+      const data = mode === "calendar" ? [ledger, otherLedger] : [ledger]
+      return send({ data, count: data.length })
+    }
     if (path === `/api/v1/ledgers/${ledgerId}`) return send(ledger)
+    if (path === `/api/v1/ledgers/${otherLedgerId}`) return send(otherLedger)
     if (path.endsWith("/members")) return send({ data: [], count: 0 })
     if (path.endsWith("/categories"))
       return send({
@@ -192,6 +206,8 @@ async function api(
       const from = url.searchParams.get("due_from")
       const to = url.searchParams.get("due_to")
       if (from || to) calendarRequests.push(url)
+      if (path === `/api/v1/ledgers/${otherLedgerId}/obligations`)
+        return send({ data: [], count: 0 })
       const data = calendarRows.filter((row) =>
         from && to
           ? row.due_date && row.due_date >= from && row.due_date <= to
@@ -460,6 +476,9 @@ for (const [language, month, next, previous, todayLabel] of [
 
     if (language === "en") {
       await day.click()
+      await expect(
+        calendar.getByRole("listitem").filter({ hasText: "Gas bill" }),
+      ).toContainText("Overdue · Needs review")
       await calendar.getByRole("link", { name: "October internet" }).click()
       await expect(page).toHaveURL(
         /year=2026&month=10.*obligation=HOME-2026-10/,
@@ -468,3 +487,39 @@ for (const [language, month, next, previous, todayLabel] of [
     }
   })
 }
+
+test("due calendar resets its selection and requests when switching ledgers", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 780 })
+  const requests = await api(page, "en", "light", "calendar")
+  await page.goto("/")
+  const calendar = page.locator('[aria-labelledby="due-calendar-title"]')
+  await expect(
+    calendar.getByRole("link", { name: "Undated rent" }),
+  ).toBeVisible()
+  await calendar.getByRole("button", { name: "Next month" }).click()
+  await expect(
+    calendar.getByText("December 2026", { exact: true }),
+  ).toBeVisible()
+  await page.getByTestId("ledger-switcher").click()
+  await page.getByRole("menuitem", { name: "Second ledger" }).click()
+  await expect(page).toHaveURL(`/ledgers/${otherLedgerId}`)
+  await page.getByRole("link", { name: "Dashboard", exact: true }).click()
+  await expect(
+    calendar.getByText("November 2026", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    calendar.getByRole("group").locator('[aria-current="date"]'),
+  ).toHaveText("3")
+  await expect(
+    calendar.getByRole("link", { name: "Undated rent" }),
+  ).toHaveCount(0)
+  expect(
+    requests.some(
+      (request) =>
+        request.pathname.endsWith(`/${otherLedgerId}/obligations`) &&
+        request.searchParams.get("due_from") === "2026-11-01",
+    ),
+  ).toBe(true)
+})

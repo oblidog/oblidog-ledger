@@ -28,18 +28,21 @@ function calendarDate(year: number, month: number, day: number) {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
 }
 
-function obligationStatus(item: ObligationPublic, today: string) {
-  if (item.lifecycle === "paid") return "paid"
-  if (
+function needsReview(item: ObligationPublic) {
+  return (
     item.lifecycle === "error" ||
     item.lifecycle === "draft" ||
-    item.lifecycle === "collecting_data"
+    item.lifecycle === "collecting_data" ||
+    item.current_amount == null ||
+    item.amount_state === "unknown" ||
+    item.due_date_state === "unknown"
   )
-    return "incomplete"
+}
+
+function obligationStatus(item: ObligationPublic, today: string) {
+  if (item.lifecycle === "paid") return "paid"
   if (item.due_date && item.due_date < today) return "overdue"
-  return item.amount_state === "unknown" || item.due_date_state === "unknown"
-    ? "incomplete"
-    : "due"
+  return needsReview(item) ? "incomplete" : "due"
 }
 
 function obligationHref(ledgerId: string, item: ObligationPublic) {
@@ -236,22 +239,28 @@ export function DueCalendar({
                 </p>
               ) : (
                 <ul className="divide-y">
-                  {items.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 py-2 text-sm"
-                    >
-                      <a
-                        className="min-w-0 truncate underline-offset-4 hover:underline"
-                        href={obligationHref(ledgerId, item)}
+                  {items.map((item) => {
+                    const status = obligationStatus(item, today)
+                    return (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 py-2 text-sm"
                       >
-                        {item.name}
-                      </a>
-                      <span className="shrink-0 text-muted-foreground">
-                        {t(`due_calendar_${obligationStatus(item, today)}`)}
-                      </span>
-                    </li>
-                  ))}
+                        <a
+                          className="min-w-0 truncate underline-offset-4 hover:underline"
+                          href={obligationHref(ledgerId, item)}
+                        >
+                          {item.name}
+                        </a>
+                        <span className="max-w-1/2 shrink-0 text-right text-muted-foreground">
+                          {t(`due_calendar_${status}`)}
+                          {status === "overdue" && needsReview(item) && (
+                            <> · {t("due_calendar_incomplete")}</>
+                          )}
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>
