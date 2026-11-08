@@ -5,6 +5,7 @@ import { logInUser } from "./utils/user"
 
 test("Admin invitation can be accepted and the recipient can sign in", async ({
   page,
+  browser,
   baseURL,
 }) => {
   const email = randomEmail()
@@ -54,11 +55,17 @@ test("Admin invitation can be accepted and the recipient can sign in", async ({
   await page.getByRole("link", { name: "Go to login" }).click()
   await logInUser(page, email, password)
 
-  await page.context().clearCookies()
-  await page.goto(invitationUrl)
-  await expect(
-    page.getByText("This invitation has already been used"),
-  ).toBeVisible()
+  const anonymousPage = await browser.newPage({
+    storageState: { cookies: [], origins: [] },
+  })
+  try {
+    await anonymousPage.goto(invitationUrl)
+    await expect(
+      anonymousPage.getByText("This invitation has already been used"),
+    ).toBeVisible()
+  } finally {
+    await anonymousPage.close()
+  }
 })
 
 test("Invalid invitation has a terminal state", async ({ page }) => {
