@@ -268,6 +268,9 @@ test("viewers retain read-only access to obligation details", async ({
   const { writes } = await api(page, "en", "light", true)
   await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
   await expect(page.getByRole("button", { name: /Actions for/ })).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Mark as paid", exact: true }),
+  ).toHaveCount(0)
   await page.getByText("Electricity", { exact: true }).click()
   await expect(
     page.getByRole("dialog", { name: "Electricity", exact: true }),
@@ -275,17 +278,31 @@ test("viewers retain read-only access to obligation details", async ({
   expect(writes).toEqual([])
 })
 
-test("owner menus preserve lifecycle-specific payment and reopen actions", async ({
+test("owners can open payment from the list and reopen from the menu", async ({
   page,
-}) => {
+}, testInfo) => {
   const { writes } = await api(page)
   await page.goto(`/ledgers/${ledgerId}?period=all&lifecycle=`)
-  await page
+  const electricity = page
+    .getByTestId(/obligation-(row|card)/)
+    .filter({ hasText: "ELEC-2026-10" })
+  await electricity
+    .getByRole("button", { name: "Mark as paid", exact: true })
+    .click()
+  const confirmation = page.getByRole("dialog", {
+    name: "Mark obligation as paid?",
+  })
+  await expect(confirmation).toBeVisible()
+  await confirmation
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click()
+  await expect(confirmation).toBeHidden()
+  await electricity
     .getByRole("button", { name: "Actions for Electricity", exact: true })
     .click()
   await expect(
     page.getByRole("menuitem", { name: "Mark as paid", exact: true }),
-  ).toBeVisible()
+  ).toHaveCount(testInfo.project.name === "mobile" ? 1 : 0)
   await expect(
     page.getByRole("menuitem", { name: "Mark as ready", exact: true }),
   ).toHaveCount(0)
@@ -328,7 +345,7 @@ test("category picker reopens while focused after selection and Escape", async (
   await expect(page.getByRole("option", { name: /Electricity/ })).toBeVisible()
 })
 
-test("active category and status badges clear individual filters without losing period or navigation context", async ({
+test("active badges clear individual filters and preserve navigation context", async ({
   page,
 }) => {
   const { requests, writes } = await api(page, "en", "light", false, false)
@@ -345,7 +362,9 @@ test("active category and status badges clear individual filters without losing 
   await expect(
     badges.getByText("Status: Unpaid", { exact: true }),
   ).toBeVisible()
-  await expect(badges.getByText(/^Period:/)).toHaveCount(0)
+  await expect(
+    badges.getByText("Period: October 2026", { exact: true }),
+  ).toBeVisible()
   await expect(
     page.getByRole("button", { name: "Clear all", exact: true }),
   ).toHaveCount(1)
@@ -368,13 +387,27 @@ test("active category and status badges clear individual filters without losing 
     .poll(() => requests[requests.length - 1].searchParams.has("category_code"))
     .toBe(false)
   await badges
+    .getByRole("button", {
+      name: "Remove filter: Period: October 2026",
+      exact: true,
+    })
+    .click()
+  await expect(
+    badges.getByText("Status: Unpaid", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("combobox", { name: "Billing period", exact: true }),
+  ).toHaveValue("all")
+  await expect
+    .poll(() => requests[requests.length - 1].searchParams.has("year"))
+    .toBe(false)
+  await badges
     .getByRole("button", { name: "Remove filter: Status: Unpaid", exact: true })
     .click()
   await expect(badges).toHaveCount(0)
   await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("")
   const url = new URL(page.url())
-  expect(url.searchParams.get("year")).toBe("2026")
-  expect(url.searchParams.get("month")).toBe("10")
+  expect(url.searchParams.get("period")).toBe("all")
   expect(url.searchParams.get("source")).toBe("dashboard")
   expect(url.hash).toBe("#invoices")
   await expect(page.getByRole("checkbox")).toHaveCount(0)

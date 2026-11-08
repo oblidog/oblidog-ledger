@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/useMobile"
 import { i18n } from "@/i18n"
+import { formatBillingPeriod } from "@/i18n/format"
 import { CreateObligationDialog } from "./CreateObligationDialog"
 import { EditObligationDialog } from "./EditObligationDialog"
 import type { ObligationItemProps } from "./ObligationActions"
@@ -113,6 +114,15 @@ export function ObligationWorkspace({
   const clearFilters = () =>
     update({ filterByPeriod: false, categoryCode: "", lifecycle: "" })
   const activeFilters: ActiveFilter[] = []
+  if (filterByPeriod && hasValidPeriodFilter) {
+    activeFilters.push({
+      key: "period",
+      label: i18n.t("app:messages.filter_period", {
+        value: formatBillingPeriod({ year: filterYear, month: filterMonth }),
+      }),
+      onRemove: () => update({ filterByPeriod: false }),
+    })
+  }
   if (categoryCode) {
     const categoryName =
       categories.data?.data.find((category) => category.code === categoryCode)

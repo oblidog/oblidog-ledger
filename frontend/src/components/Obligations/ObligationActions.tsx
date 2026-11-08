@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { LoadingButton } from "@/components/ui/loading-button"
 import { ObligationCounterpartyDialog } from "@/features/counterparties/ObligationCounterpartyDialog"
 import { i18n } from "@/i18n"
 import {
@@ -45,12 +46,14 @@ export function ObligationActions({
   obligation,
   canWrite,
   disabled,
+  loading,
+  inlinePayment = false,
   onEdit,
   onCancel,
   onMarkPaid,
   onMarkReady,
   onReopen,
-}: ObligationItemProps) {
+}: ObligationItemProps & { inlinePayment?: boolean }) {
   useTranslation()
   const canCancel = canWrite && canCancelObligation(obligation)
   const canMarkPaid = canWrite && canMarkObligationPaid(obligation)
@@ -59,6 +62,19 @@ export function ObligationActions({
   const canReopen = canWrite && canReopenObligation(obligation)
   return (
     <>
+      {inlinePayment && canMarkPaid ? (
+        <LoadingButton
+          type="button"
+          size="sm"
+          variant="outline"
+          loading={loading}
+          disabled={disabled}
+          onClick={onMarkPaid}
+        >
+          <CreditCard />
+          {i18n.t("app:obligations.mark_as_paid")}
+        </LoadingButton>
+      ) : null}
       {canWrite ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -109,7 +125,7 @@ export function ObligationActions({
                 {i18n.t("app:obligations.cancel")}
               </DropdownMenuItem>
             ) : null}
-            {canMarkPaid ? (
+            {canMarkPaid && !inlinePayment ? (
               <DropdownMenuItem disabled={disabled} onSelect={onMarkPaid}>
                 <CreditCard />
                 {i18n.t("app:obligations.mark_as_paid")}

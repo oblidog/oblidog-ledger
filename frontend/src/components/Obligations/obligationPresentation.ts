@@ -145,10 +145,10 @@ export function isObligationOverdue(
 
 export function obligationSurfaceClasses(
   obligation: ObligationPublic,
-  now = new Date(),
+  { now = new Date(), hoverable = true } = {},
 ) {
   return obligation.lifecycle === "error" ||
     isObligationOverdue(obligation, now)
-    ? "border-destructive/50 bg-destructive/5 hover:bg-destructive/10"
-    : "bg-card hover:bg-muted/50"
+    ? `border-destructive/50 bg-destructive/5${hoverable ? " hover:bg-destructive/10" : ""}`
+    : `bg-card${hoverable ? " hover:bg-muted/50" : ""}`
 }
