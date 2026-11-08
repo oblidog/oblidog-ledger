@@ -321,6 +321,8 @@ def list_obligations_for_ledger(
     category_code: str | None = None,
     category_id: uuid.UUID | None = None,
     lifecycle: ObligationLifecycle | None = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
 ) -> list[Obligation]:
     _require_ledger(session=session, ledger_id=ledger_id)
 
@@ -329,6 +331,10 @@ def list_obligations_for_ledger(
         .join(Obligation.category)
         .where(Obligation.ledger_id == ledger_id)
     )
+    if due_from is not None:
+        statement = statement.where(Obligation.due_date >= due_from)
+    if due_to is not None:
+        statement = statement.where(Obligation.due_date <= due_to)
     if year is not None:
         statement = statement.where(Obligation.period_year == year)
     if month is not None:

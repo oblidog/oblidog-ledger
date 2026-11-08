@@ -50,7 +50,8 @@ import {
   getLocale,
 } from "@/i18n/format"
 import { unpaidObligationsHref } from "./attentionNavigation"
-import { NeedsAttention } from "./NeedsAttention"
+import { DueCalendar } from "./DueCalendar"
+import { NeedsAttention, useAttentionOverview } from "./NeedsAttention"
 
 type Period = { year: number; month: number }
 
@@ -152,6 +153,7 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
     () => addMonths(selectedPeriod, -5),
     [selectedPeriod],
   )
+  const attention = useAttentionOverview(ledgerId)
   const summary = useQuery({
     queryFn: () =>
       AnalyticsService.readPeriodPaymentSummary({
@@ -278,7 +280,17 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
         </div>
       </div>
 
-      <NeedsAttention key={ledgerId} ledgerId={ledgerId} />
+      <NeedsAttention
+        key={ledgerId}
+        ledgerId={ledgerId}
+        attention={attention}
+      />
+      <DueCalendar
+        key={`due-calendar-${ledgerId}`}
+        ledgerId={ledgerId}
+        businessDate={attention.data?.pages[0]?.as_of_date}
+        refreshBusinessDate={() => void attention.refetch()}
+      />
 
       <h2 className="text-lg font-semibold">
         {i18n.t("app:analytics.period_summary")} · {periodLabel(selectedPeriod)}

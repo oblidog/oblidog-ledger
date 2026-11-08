@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { useRouter } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CategoriesService, type ObligationPublic } from "@/client"
@@ -55,7 +56,24 @@ export function ObligationWorkspace({
     queryFn: () =>
       CategoriesService.readCategories({ ledgerId, includeArchived: true }),
   })
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const { history } = useRouter()
+  const [selectedKey, setSelectedKey] = useState(() =>
+    new URLSearchParams(history.location.search).get("obligation"),
+  )
+  function closeObligationDetails() {
+    setSelectedKey(null)
+    const location = history.location
+    const params = new URLSearchParams(location.search)
+    if (!params.has("obligation")) return
+
+    params.delete("obligation")
+    const search = params.toString()
+    history.replace(
+      `${location.pathname}${search ? `?${search}` : ""}${location.hash}`,
+      location.state,
+    )
+  }
+
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
   const [paymentConfirmation, setPaymentConfirmation] =
@@ -260,7 +278,7 @@ export function ObligationWorkspace({
         <ObligationDetailsDialog
           ledgerId={ledgerId}
           selectedKey={selectedKey}
-          setSelectedKey={setSelectedKey}
+          onClose={closeObligationDetails}
           canEdit={canEdit}
           actions={actions}
           setPaymentConfirmation={setPaymentConfirmation}

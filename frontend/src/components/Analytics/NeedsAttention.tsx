@@ -18,10 +18,8 @@ import { domainLabel } from "@/i18n/domainLabels"
 import { formatAmount, formatDate } from "@/i18n/format"
 import { attentionObligationHref } from "./attentionNavigation"
 
-export function NeedsAttention({ ledgerId }: { ledgerId: string }) {
-  useTranslation()
-  const { data: config } = usePublicAppConfig()
-  const attention = useInfiniteQuery({
+export function useAttentionOverview(ledgerId: string) {
+  return useInfiniteQuery({
     queryKey: ["analytics", "attention", ledgerId],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
@@ -35,6 +33,17 @@ export function NeedsAttention({ ledgerId }: { ledgerId: string }) {
         ? last.offset + last.items.length
         : undefined,
   })
+}
+
+export function NeedsAttention({
+  ledgerId,
+  attention,
+}: {
+  ledgerId: string
+  attention: ReturnType<typeof useAttentionOverview>
+}) {
+  useTranslation()
+  const { data: config } = usePublicAppConfig()
   const pages = attention.data?.pages
   const items = pages?.flatMap((page) => page.items) ?? []
   return (
