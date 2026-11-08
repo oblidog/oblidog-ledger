@@ -1,5 +1,5 @@
-from datetime import date, timedelta
 import uuid
+from datetime import date, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
@@ -149,13 +149,16 @@ def read_obligations(
     due_to: date | None = Query(default=None),
     ledger: Ledger = Depends(require_ledger_view_access),
 ) -> Any:
-    if due_from is not None and due_to is not None:
-        if due_from > due_to or due_to - due_from > timedelta(days=366):
-            raise HTTPException(
-                code="invalid_due_date_range",
-                status_code=422,
-                detail="due date range must be ordered and at most 366 days",
-            )
+    if (due_from is None) != (due_to is None) or (
+        due_from is not None
+        and due_to is not None
+        and not timedelta(0) <= due_to - due_from < timedelta(days=366)
+    ):
+        raise HTTPException(
+            code="invalid_due_date_range",
+            status_code=422,
+            detail="provide both due date bounds in order, covering at most 366 days",
+        )
     obligations = obligation_use_cases.list_obligations_for_ledger(
         session=session,
         ledger_id=ledger.id,

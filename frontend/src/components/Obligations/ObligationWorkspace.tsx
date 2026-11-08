@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { useRouter } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CategoriesService, type ObligationPublic } from "@/client"
@@ -55,7 +56,10 @@ export function ObligationWorkspace({
     queryFn: () =>
       CategoriesService.readCategories({ ledgerId, includeArchived: true }),
   })
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const { history } = useRouter()
+  const [selectedKey, setSelectedKey] = useState(() =>
+    new URLSearchParams(history.location.search).get("obligation"),
+  )
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
   const [paymentConfirmation, setPaymentConfirmation] =

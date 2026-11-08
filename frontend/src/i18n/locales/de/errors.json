@@ -57,6 +57,7 @@
   "obligation_manual_forbidden": "Manuelle Zahlungsverpflichtungen sind für automatische Kategorien nicht zulässig",
   "obligation_invalid_key": "Ungültiger Schlüssel der Zahlungsverpflichtung",
   "obligation_invalid_period": "Ungültiger Zeitraum der Zahlungsverpflichtung",
+  "invalid_due_date_range": "Wähle ein Start- und Enddatum in der richtigen Reihenfolge für höchstens 366 Tage.",
   "obligation_invalid_lifecycle": "Diese Aktion ist für den aktuellen Status der Zahlungsverpflichtung nicht verfügbar",
   "obligation_read_only": "Nur Zahlungsverpflichtungen im Entwurf oder in der Datenerfassung können bearbeitet werden",
   "obligation_invalid_values": "Ungültige Werte der Zahlungsverpflichtung. Prüfe Betrag, Daten und Status.",

@@ -2,63 +2,100 @@ import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { client, ObligationsService, type ObligationsPublic } from "@/client"
+import { type ObligationPublic, ObligationsService } from "@/client"
+import { obligationQueryKeys } from "@/components/Obligations/obligationQueries"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getLocale, formatDate } from "@/i18n/format"
+import { formatBillingPeriod, formatDate, getLocale } from "@/i18n/format"
+import { cn } from "@/lib/utils"
 
-type Obligation = ObligationsPublic["data"][number]
-const labels = {
-  en: { title: "Due Calendar", description: "Dates with scheduled obligations", today: "Today", empty: "No payments on this day", failed: "Calendar could not be loaded", unknown: "Obligations without a due date in this billing period", previous: "Previous month", next: "Next month", paid: "Paid", overdue: "Overdue", due: "Due", incomplete: "Needs review" },
-  pl: { title: "Kalendarz płatności", description: "Dni z zaplanowanymi zobowiązaniami", today: "Dzisiaj", empty: "Brak płatności w tym dniu", failed: "Nie udało się pobrać kalendarza", unknown: "Zobowiązania bez terminu w tym okresie rozliczeniowym", previous: "Poprzedni miesiąc", next: "Następny miesiąc", paid: "Opłacone", overdue: "Zaległe", due: "Do zapłaty", incomplete: "Do sprawdzenia" },
-  de: { title: "Fälligkeitskalender", description: "Tage mit fälligen Zahlungen", today: "Heute", empty: "Keine Zahlungen an diesem Tag", failed: "Kalender konnte nicht geladen werden", unknown: "Verpflichtungen ohne Fälligkeitsdatum in diesem Abrechnungszeitraum", previous: "Vorheriger Monat", next: "Nächster Monat", paid: "Bezahlt", overdue: "Überfällig", due: "Fällig", incomplete: "Prüfen" },
+const dayStyles = {
+  overdue: "bg-destructive",
+  incomplete: "bg-amber-500",
+  due: "bg-amber-500",
+  paid: "bg-emerald-600",
 }
-const iso = (year: number, month: number, day: number) =>
-  `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-const localToday = () => {
-  const now = new Date()
-  return iso(now.getFullYear(), now.getMonth() + 1, now.getDate())
+const statusOrder = ["overdue", "incomplete", "due", "paid"] as const
+
+function calendarDate(year: number, month: number, day: number) {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
 }
-const dayStatus = (item: Obligation, today: string) => {
+
+function obligationStatus(item: ObligationPublic, today: string) {
   if (item.lifecycle === "paid") return "paid"
-  if (item.lifecycle === "error" || item.lifecycle === "draft" || item.lifecycle === "collecting_data") return "incomplete"
-  return item.due_date && item.due_date < today ? "overdue" : "due"
+  if (
+    item.lifecycle === "error" ||
+    item.lifecycle === "draft" ||
+    item.lifecycle === "collecting_data"
+  )
+    return "incomplete"
+  if (item.due_date && item.due_date < today) return "overdue"
+  return item.amount_state === "unknown" || item.due_date_state === "unknown"
+    ? "incomplete"
+    : "due"
 }
-const priority: Record<string, number> = { overdue: 4, incomplete: 3, due: 2, paid: 1 }
-const dot: Record<string, string> = { overdue: "bg-destructive", incomplete: "bg-amber-500", due: "bg-amber-500", paid: "bg-emerald-600" }
 
-export function DueCalendar({ ledgerId }: { ledgerId: string }) {
-  const { i18n } = useTranslation()
-  const lang = i18n.resolvedLanguage?.split("-")[0] as keyof typeof labels
-  const t = labels[lang] ?? labels.en
-  const [month, setMonth] = useState(() => new Date().getMonth())
-  const [year, setYear] = useState(() => new Date().getFullYear())
-  const [selected, setSelected] = useState(() => localToday())
-  const today = localToday()
-  const days = new Date(year, month + 1, 0).getDate()
-  const first = (new Date(year, month, 1).getDay() + 6) % 7
-  const from = iso(year, month + 1, 1)
-  const to = iso(year, month + 1, days)
+function obligationHref(ledgerId: string, item: ObligationPublic) {
+  const search = new URLSearchParams({
+    year: String(item.period.year),
+    month: String(item.period.month),
+    lifecycle: "",
+    obligation: item.key,
+  })
+  return `/ledgers/${ledgerId}?${search}`
+}
+
+export function DueCalendar({
+  ledgerId,
+  businessDate,
+}: {
+  ledgerId: string
+  businessDate?: string
+}) {
+  const { t } = useTranslation("app", { keyPrefix: "analytics" })
+  const [monthOffset, setMonthOffset] = useState(0)
+  const [selectedDay, setSelectedDay] = useState<string>()
+  const now = new Date()
+  const today =
+    businessDate ??
+    calendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate())
+  const currentMonth = new Date(`${today.slice(0, 7)}-01T00:00:00Z`)
+  currentMonth.setUTCMonth(currentMonth.getUTCMonth() + monthOffset)
+  const year = currentMonth.getUTCFullYear()
+  const month = currentMonth.getUTCMonth() + 1
+  const first = (currentMonth.getUTCDay() + 6) % 7
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate()
+  const dueFrom = calendarDate(year, month, 1)
+  const dueTo = calendarDate(year, month, days)
+  const selected =
+    selectedDay?.slice(0, 7) === dueFrom.slice(0, 7)
+      ? selectedDay
+      : monthOffset === 0
+        ? today
+        : dueFrom
+  const key = obligationQueryKeys.list(ledgerId)
   const query = useQuery({
-    queryKey: ["obligations", "due-calendar", ledgerId, from, to],
-    queryFn: async () => {
-      const response = await client.get({
-        url: "/api/v1/ledgers/{ledger_id}/obligations",
-        path: { ledger_id: ledgerId },
-        query: { due_from: from, due_to: to },
-        throwOnError: true,
-      })
-      return response.data as ObligationsPublic
-    },
+    queryKey: [...key, "due-calendar", dueFrom, dueTo],
+    queryFn: () =>
+      ObligationsService.readObligations({ ledgerId, dueFrom, dueTo }),
   })
   const missingDates = useQuery({
-    queryKey: ["obligations", "due-calendar-missing", ledgerId, year, month],
-    queryFn: () => ObligationsService.readObligations({ ledgerId, year, month: month + 1 }),
+    queryKey: [...key, { year, month }],
+    queryFn: () =>
+      ObligationsService.readObligations({ ledgerId, year, month }),
   })
-  const undated = (missingDates.data?.data ?? []).filter(item => !item.due_date && item.lifecycle !== "canceled" && item.lifecycle !== "paid")
+  const undated = (missingDates.data?.data ?? []).filter(
+    (item) => !item.due_date && item.lifecycle !== "canceled",
+  )
   const byDate = useMemo(() => {
-    const grouped = new Map<string, Obligation[]>()
+    const grouped = new Map<string, ObligationPublic[]>()
     for (const item of query.data?.data ?? []) {
       if (!item.due_date || item.lifecycle === "canceled") continue
       const items = grouped.get(item.due_date) ?? []
@@ -67,72 +104,185 @@ export function DueCalendar({ ledgerId }: { ledgerId: string }) {
     }
     return grouped
   }, [query.data])
-  const changeMonth = (delta: number) => {
-    const date = new Date(year, month + delta, 1)
-    setYear(date.getFullYear())
-    setMonth(date.getMonth())
-    setSelected(iso(date.getFullYear(), date.getMonth() + 1, 1))
-  }
   const items = byDate.get(selected) ?? []
-  const weekdays = Array.from({ length: 7 }, (_, i) =>
-    new Intl.DateTimeFormat(getLocale(), { weekday: "short", timeZone: "UTC" })
-      .format(new Date(Date.UTC(2024, 0, 1 + i))),
+  const weekdayFormat = new Intl.DateTimeFormat(getLocale(), {
+    weekday: "short",
+    timeZone: "UTC",
+  })
+  const weekdayStart = Date.UTC(2024, 0, 1)
+  const weekdays = Array.from({ length: 7 }, (_, day) =>
+    weekdayFormat.format(weekdayStart + day * 86_400_000),
   )
+
   return (
-    <Card className="gap-3 py-4">
+    <Card className="gap-3 py-4" aria-labelledby="due-calendar-title">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>
+          <h2 id="due-calendar-title">{t("due_calendar_title")}</h2>
+        </CardTitle>
+        <CardDescription>{t("due_calendar_description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <Button variant="outline" size="icon" aria-label={t.previous} onClick={() => changeMonth(-1)}><ChevronLeft /></Button>
-          <span className="font-medium">{new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(new Date(year, month, 1))}</span>
-          <Button variant="outline" size="icon" aria-label={t.next} onClick={() => changeMonth(1)}><ChevronRight /></Button>
-          <Button variant="outline" size="sm" onClick={() => {
-            const now = new Date()
-            setMonth(now.getMonth())
-            setYear(now.getFullYear())
-            setSelected(localToday())
-          }}>{t.today}</Button>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={t("due_calendar_previous")}
+            onClick={() => {
+              setMonthOffset((offset) => offset - 1)
+              setSelectedDay(undefined)
+            }}
+          >
+            <ChevronLeft />
+          </Button>
+          <span className="font-medium" aria-live="polite">
+            {formatBillingPeriod({ year, month })}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={t("due_calendar_next")}
+            onClick={() => {
+              setMonthOffset((offset) => offset + 1)
+              setSelectedDay(undefined)
+            }}
+          >
+            <ChevronRight />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setMonthOffset(0)
+              setSelectedDay(undefined)
+            }}
+          >
+            {t("due_calendar_today")}
+          </Button>
         </div>
-        {query.isPending ? <Skeleton className="h-64 w-full" /> : query.isError ? <p role="alert" className="text-destructive">{t.failed}</p> : (
+        {query.isPending ? (
+          <Skeleton className="h-64 w-full" />
+        ) : query.isError ? (
+          <p role="alert" className="text-destructive">
+            {t("due_calendar_failed")}
+          </p>
+        ) : (
           <>
-            <div className="grid grid-cols-7 gap-1" role="group" aria-label={t.title}>
-              {weekdays.map((day, i) => <span key={i} className="text-center text-xs text-muted-foreground">{day}</span>)}
-              {Array.from({ length: first }, (_, i) => <span key={`blank-${i}`} />)}
-              {Array.from({ length: days }, (_, i) => {
-                const date = iso(year, month + 1, i + 1)
+            <fieldset className="grid min-w-0 grid-cols-7 gap-1">
+              <legend className="sr-only">{t("due_calendar_title")}</legend>
+              {weekdays.map((day, index) => (
+                <span
+                  aria-hidden="true"
+                  key={index}
+                  className="text-center text-xs text-muted-foreground"
+                >
+                  {day}
+                </span>
+              ))}
+              {Array.from({ length: first }, (_, index) => (
+                <span key={`blank-${index}`} />
+              ))}
+              {Array.from({ length: days }, (_, index) => {
+                const date = calendarDate(year, month, index + 1)
                 const entries = byDate.get(date) ?? []
-                const status = entries.map(item => dayStatus(item, today)).sort((a,b) => priority[b] - priority[a])[0]
-                return <button type="button" key={date} aria-pressed={selected === date} aria-label={`${formatDate(date)}: ${entries.length}`} onClick={() => setSelected(date)} className={`flex min-h-11 flex-col items-center justify-center gap-1 rounded-md border text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring ${selected === date ? "border-primary bg-accent" : "border-transparent"} ${date === today ? "font-bold" : ""}`}>
-                  {i + 1}
-                  <span className={`size-1.5 rounded-full ${status ? dot[status] : "bg-transparent"}`} />
-                </button>
+                const statuses = new Set(
+                  entries.map((item) => obligationStatus(item, today)),
+                )
+                const status = statusOrder.find((value) => statuses.has(value))
+                const label = t("due_calendar_day", {
+                  date: formatDate(date, { dateStyle: "full" }),
+                  count: entries.length,
+                })
+
+                return (
+                  <button
+                    type="button"
+                    key={date}
+                    aria-current={date === today ? "date" : undefined}
+                    aria-pressed={selected === date}
+                    aria-label={
+                      status
+                        ? `${label} · ${t(`due_calendar_${status}`)}`
+                        : label
+                    }
+                    onClick={() => setSelectedDay(date)}
+                    className={cn(
+                      "flex min-h-11 flex-col items-center justify-center gap-1 rounded-md border text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
+                      selected === date
+                        ? "border-primary bg-accent"
+                        : "border-transparent",
+                      date === today && "font-bold",
+                    )}
+                  >
+                    {index + 1}
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        status && dayStyles[status],
+                      )}
+                    />
+                  </button>
+                )
               })}
-            </div>
+            </fieldset>
             <div className="space-y-2 border-t pt-3">
-              <h3 className="font-medium">{formatDate(selected)}</h3>
-              {items.length === 0 ? <p className="text-sm text-muted-foreground">{t.empty}</p> : (
+              <h3 className="font-medium" aria-live="polite">
+                {formatDate(selected)}
+              </h3>
+              {items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("due_calendar_empty")}
+                </p>
+              ) : (
                 <ul className="divide-y">
-                  {items.map(item => {
-                    const status = dayStatus(item, today)
-                    return <li key={item.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                      <a className="min-w-0 truncate underline-offset-4 hover:underline" href={`/ledgers/${ledgerId}?year=${item.period.year}&month=${item.period.month}`}>{item.name}</a>
-                      <span className="shrink-0 text-muted-foreground">{t[status as keyof typeof t]}</span>
+                  {items.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 py-2 text-sm"
+                    >
+                      <a
+                        className="min-w-0 truncate underline-offset-4 hover:underline"
+                        href={obligationHref(ledgerId, item)}
+                      >
+                        {item.name}
+                      </a>
+                      <span className="shrink-0 text-muted-foreground">
+                        {t(`due_calendar_${obligationStatus(item, today)}`)}
+                      </span>
                     </li>
-                  })}
+                  ))}
                 </ul>
               )}
             </div>
-            {missingDates.isError ? <p role="alert" className="text-sm text-destructive">{t.failed}</p> : undated.length > 0 ? (
-              <section className="space-y-2 border-t pt-3" aria-label={t.unknown}>
-                <h3 className="text-sm font-medium">{t.unknown} ({undated.length})</h3>
-                <ul className="space-y-1">{undated.map(item => <li key={item.id} className="text-sm"><a className="underline-offset-4 hover:underline" href={`/ledgers/${ledgerId}?year=${item.period.year}&month=${item.period.month}`}>{item.name}</a></li>)}</ul>
-              </section>
-            ) : null}
           </>
         )}
+        {missingDates.isError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {t("due_calendar_undated_failed")}
+          </p>
+        ) : undated.length > 0 ? (
+          <section
+            className="space-y-2 border-t pt-3"
+            aria-labelledby="due-calendar-undated"
+          >
+            <h3 id="due-calendar-undated" className="text-sm font-medium">
+              {t("due_calendar_undated")} ({undated.length})
+            </h3>
+            <ul className="space-y-1">
+              {undated.map((item) => (
+                <li key={item.id} className="text-sm">
+                  <a
+                    className="underline-offset-4 hover:underline"
+                    href={obligationHref(ledgerId, item)}
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </CardContent>
     </Card>
   )

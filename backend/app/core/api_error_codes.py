@@ -65,6 +65,7 @@ ErrorCode = Literal[
     "obligation_manual_forbidden",
     "obligation_invalid_key",
     "obligation_invalid_period",
+    "invalid_due_date_range",
     "obligation_invalid_lifecycle",
     "obligation_read_only",
     "obligation_invalid_values",

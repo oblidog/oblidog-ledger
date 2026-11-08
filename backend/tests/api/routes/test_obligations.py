@@ -1225,13 +1225,22 @@ def test_obligation_due_date_range_filters_actual_due_dates(
     ledger = ledger_use_cases.create_ledger(
         session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
     )
-    obligation = _create_ready_obligation(db, ledger_id=ledger.id)
+    _create_ready_obligation(db, ledger_id=ledger.id)
+    obligation = obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code="ELEC",
+        period=BillingPeriod(2026, 9),
+        data_ready=True,
+        current_amount=Decimal("100.00"),
+        due_date=date(2026, 10, 1),
+    )
     url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
 
     included = client.get(
         url,
         headers=headers,
-        params={"due_from": "2026-08-20", "due_to": "2026-08-20"},
+        params={"due_from": "2026-10-01", "due_to": "2026-10-01"},
     )
     assert included.status_code == 200
     assert [item["id"] for item in included.json()["data"]] == [str(obligation.id)]
@@ -1244,16 +1253,19 @@ def test_obligation_due_date_range_filters_actual_due_dates(
     assert excluded.status_code == 200
     assert excluded.json()["count"] == 0
 
-    invalid = client.get(
+    boundary = client.get(
         url,
         headers=headers,
-        params={"due_from": "2026-09-30", "due_to": "2026-09-01"},
+        params={"due_from": "2026-01-01", "due_to": "2027-01-01"},
     )
-    assert invalid.status_code == 422
+    assert boundary.status_code == 200
 
-    oversized = client.get(
-        url,
-        headers=headers,
-        params={"due_from": "2026-01-01", "due_to": "2027-12-31"},
-    )
-    assert oversized.status_code == 422
+    for params in (
+        {"due_from": "2026-09-30", "due_to": "2026-09-01"},
+        {"due_from": "2026-01-01", "due_to": "2027-01-02"},
+        {"due_from": "2026-01-01"},
+        {"due_to": "2027-01-01"},
+    ):
+        invalid = client.get(url, headers=headers, params=params)
+        assert invalid.status_code == 422
+        assert invalid.json()["code"] == "invalid_due_date_range"
