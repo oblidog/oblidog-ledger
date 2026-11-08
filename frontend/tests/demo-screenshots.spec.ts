@@ -97,5 +97,53 @@ test.describe("demo screenshots", () => {
       animations: "disabled",
       caret: "hide",
     })
+
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto("/")
+    const widgets = page.getByTestId("dashboard-payment-widgets")
+    await expect(
+      widgets.getByRole("region", { name: "Due Calendar" }).getByRole("group"),
+    ).toBeVisible()
+    await expect(
+      widgets
+        .getByRole("region", { name: "Payment Forecast" })
+        .getByTestId("payment-schedule-chart")
+        .first()
+        .locator(".recharts-bar-rectangle path")
+        .first(),
+    ).toBeVisible()
+    for (const [size, width, height] of [
+      ["desktop", 1440, 1000],
+      ["mobile", 390, 844],
+    ] as const) {
+      await page.setViewportSize({ width, height })
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        )
+        .toBe(true)
+      for (const chart of await widgets
+        .getByTestId("payment-schedule-chart")
+        .all()) {
+        await expect
+          .poll(() =>
+            chart.evaluate(
+              (element) =>
+                element.querySelector("svg.recharts-surface")?.clientWidth ===
+                element.clientWidth,
+            ),
+          )
+          .toBe(true)
+      }
+      await widgets.screenshot({
+        path: `test-results/demo-screenshots/dashboard-payments-${size}-light.png`,
+        style:
+          '[data-slot="sidebar-inset"] > :is(header, nav) { visibility: hidden !important; }',
+        animations: "disabled",
+        caret: "hide",
+      })
+    }
   })
 })
