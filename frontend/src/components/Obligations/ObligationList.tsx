@@ -23,11 +23,12 @@ import {
 
 export function ObligationList({ items }: { items: ObligationItemProps[] }) {
   useTranslation()
+  const showActions = items.some((item) => item.canWrite)
   return (
-    <div data-testid="obligation-list" className="min-w-0">
+    <div data-testid="obligation-list" className="@container min-w-0">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow hoverable={false}>
             <TableHead>{i18n.t("app:obligations.obligation")}</TableHead>
             <TableHead>{i18n.t("app:obligations.counterparty")}</TableHead>
             <TableHead>{i18n.t("app:obligations.due_or_paid_date")}</TableHead>
@@ -35,11 +36,13 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
               {i18n.t("app:obligations.amount")}
             </TableHead>
             <TableHead>{i18n.t("app:obligations.status")}</TableHead>
-            <TableHead>
-              <span className="sr-only">
-                {i18n.t("app:obligations.actions")}
-              </span>
-            </TableHead>
+            {showActions ? (
+              <TableHead className="sticky right-0 z-10 border-l bg-muted px-2">
+                <span className="sr-only">
+                  {i18n.t("app:obligations.actions")}
+                </span>
+              </TableHead>
+            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -50,13 +53,17 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
             return (
               <TableRow
                 key={obligation.key}
+                hoverable={false}
                 data-testid="obligation-row"
-                className={obligationSurfaceClasses(obligation)}
+                className={obligationSurfaceClasses(obligation, {
+                  hoverable: false,
+                })}
               >
                 <TableCell className="min-w-36 max-w-64 whitespace-normal">
                   <button
                     type="button"
-                    className="text-left font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                    className="cursor-pointer text-left font-medium text-primary underline decoration-primary/50 underline-offset-4 hover:decoration-current focus-visible:outline-2 focus-visible:outline-ring"
+                    aria-haspopup="dialog"
                     onClick={item.onSelect}
                   >
                     {obligation.name}
@@ -103,9 +110,13 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
                 <TableCell className="min-w-32">
                   <ObligationStatus obligation={obligation} />
                 </TableCell>
-                <TableCell className="w-12">
-                  <ObligationActions {...item} />
-                </TableCell>
+                {showActions ? (
+                  <TableCell className="sticky right-0 z-10 w-12 border-l bg-card px-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <ObligationActions {...item} inlinePayment />
+                    </div>
+                  </TableCell>
+                ) : null}
               </TableRow>
             )
           })}
