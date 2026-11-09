@@ -14,6 +14,7 @@ type Props = Pick<
 > & {
   category: CategoryPublic
   canEdit: boolean
+  demoPreview?: boolean
 }
 
 export function CategoryPaymentAction({
@@ -21,6 +22,7 @@ export function CategoryPaymentAction({
   groups,
   category,
   canEdit,
+  demoPreview = false,
 }: Props) {
   const { t } = useTranslation(["app"])
   if (!category.is_active) return null
@@ -32,11 +34,14 @@ export function CategoryPaymentAction({
         <Link
           to="/ledgers/$ledgerId"
           params={{ ledgerId }}
-          search={firstScheduledPaymentSearch(
-            category.code,
-            period,
-            category.data_source_policy === "automatic",
-          )}
+          search={{
+            ...firstScheduledPaymentSearch(
+              category.code,
+              period,
+              demoPreview || category.data_source_policy === "automatic",
+            ),
+            ...(demoPreview ? { setupPreview: true } : {}),
+          }}
           aria-label={t("app:categories.first_payment_for", {
             name: category.name,
           })}

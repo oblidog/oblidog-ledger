@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { ObligationWorkspace } from "@/components/Obligations/ObligationWorkspace"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { fetchPublicAppConfig } from "@/config"
+import { fetchPublicAppConfig, isDemoSetupPreview } from "@/config"
 import { useLedgerCanEdit } from "@/hooks/useLedgerCanEdit"
 import { i18n } from "@/i18n"
 
@@ -21,6 +21,7 @@ function LedgerDetails() {
   const location = useLocation()
   const isWorkspace = location.pathname === `/ledgers/${ledgerId}`
   const { appConfig } = Route.useRouteContext()
+  const demoPreview = isDemoSetupPreview(appConfig, location.searchStr)
   const canManageComponents = useLedgerCanEdit(ledgerId, isWorkspace)
 
   if (!isWorkspace) {
@@ -31,10 +32,12 @@ function LedgerDetails() {
     <div className="flex flex-col gap-4 md:gap-6">
       <Suspense fallback={<ObligationWorkspaceSkeleton />}>
         <ObligationWorkspace
-          key={ledgerId}
+          key={demoPreview ? `${ledgerId}:setup-preview` : ledgerId}
           ledgerId={ledgerId}
+          demoPreview={demoPreview}
           canEdit={
             canManageComponents &&
+            !demoPreview &&
             (!appConfig.is_demo || appConfig.demo_writes_enabled)
           }
           defaultLifecycle={appConfig.is_demo ? "" : "unpaid"}

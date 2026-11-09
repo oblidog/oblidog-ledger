@@ -93,7 +93,11 @@ function WorkspaceNextStep({
     description = t("app:onboarding.demo_help")
     action = (
       <Button asChild variant="outline">
-        <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
+        <Link
+          to="/ledgers/$ledgerId/categories"
+          params={{ ledgerId }}
+          search={{ setupPreview: true }}
+        >
           {t("app:onboarding.open_categories")}
         </Link>
       </Button>

@@ -695,3 +695,63 @@ def test_dashboard_setup_uses_published_recurring_payments(
         session=db, owner_user_id=owner.id, name="Other ledger"
     )
     assert client.get(f"{URL}dashboard/{other.id}", headers=headers).json() == empty
+
+
+@pytest.mark.parametrize(
+    ("unit", "interval", "next_period"),
+    [
+        (RecurrenceUnit.MONTH, 2, BillingPeriod(2027, 1)),
+        (RecurrenceUnit.YEAR, 1, BillingPeriod(2027, 11)),
+    ],
+)
+def test_dashboard_requires_payment_in_scheduled_period(
+    client: TestClient,
+    db: Session,
+    visitor: tuple[User, dict[str, str]],
+    unit: RecurrenceUnit,
+    interval: int,
+    next_period: BillingPeriod,
+) -> None:
+    owner, headers = visitor
+    ledger = ledgers.create_ledger(session=db, owner_user_id=owner.id, name="Home")
+    group = categories.create_category_group(
+        session=db, ledger_id=ledger.id, name="Bills"
+    )
+    categories.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=group.id,
+        name="Internet",
+        code="INET",
+        data_source_policy=DataSourcePolicy.HYBRID,
+        recurrence_interval=interval,
+        recurrence_unit=unit,
+        first_due_date=date(2026, 11, 1),
+    )
+    obligations.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code="INET",
+        period=BillingPeriod(2026, 12),
+    )
+    url = f"{URL}dashboard/{ledger.id}"
+    pending = client.get(url, headers=headers)
+    assert pending.status_code == 200
+    assert pending.json() == {
+        "completed": False,
+        "payment": {
+            "category_code": "INET",
+            "period": {"year": 2026, "month": 11},
+            "automatic": False,
+        },
+    }
+    obligations.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code="INET",
+        period=next_period,
+    )
+    assert client.get(url, headers=headers).json() == {
+        "completed": True,
+        "payment": None,
+    }

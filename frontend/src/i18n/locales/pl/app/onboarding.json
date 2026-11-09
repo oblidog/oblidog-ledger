@@ -13,5 +13,6 @@
   "integrations": "Zobacz integracje",
   "demo_title": "Zobacz, jak działają płatności cykliczne",
   "demo_help": "Otwórz Kategorie w przykładowym ledgerze i wybierz Pierwsza płatność przy kategorii z harmonogramem, aby zobaczyć zapisany przykład.",
-  "load_error": "Nie udało się sprawdzić następnego kroku dla tego ledgera."
+  "load_error": "Nie udało się sprawdzić następnego kroku dla tego ledgera.",
+  "demo_payment_unavailable": "Ta kategoria nie ma zapisanej płatności do podglądu. Wybierz inny przykład w Kategoriach."
 }

@@ -353,16 +353,62 @@ for (const demoWrites of [true, false]) {
       name: "See how recurring payments work",
     })
     await guide.getByRole("link", { name: "Open categories" }).click()
+    await expect(
+      page.getByRole("button", { name: "New category" }),
+    ).toHaveCount(0)
     await page
       .getByRole("link", { name: `First payment for ${category.name}` })
       .click()
+    const dialog = page.getByRole("dialog")
     await expect(
-      page.getByRole("dialog").getByRole("heading", { name: category.name }),
+      dialog.getByRole("heading", { name: category.name }),
     ).toBeVisible()
+    await expect(
+      dialog.getByRole("button", { name: "Edit", exact: true }),
+    ).toHaveCount(0)
     expect(wizardRequests).toEqual([])
     expect(writes).toEqual([])
   })
 }
+
+test("demo guide keeps a missing hybrid payment read-only when demo writes are enabled", async ({
+  page,
+}) => {
+  const submissions = await mockWorkspace(page, { demoWrites: true })
+  await page.goto("/")
+  const guide = page.getByRole("region", {
+    name: "See how recurring payments work",
+  })
+  await guide.getByRole("link", { name: "Open categories" }).click()
+  const firstPayment = page.getByRole("link", {
+    name: `First payment for ${category.name}`,
+  })
+  await expect(
+    page.getByRole("button", { name: /More actions for/ }),
+  ).toHaveCount(0)
+  await firstPayment.click()
+  await expect(
+    page.getByText(/This category has no saved payment to preview/),
+  ).toBeVisible()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "New obligation" }),
+  ).toHaveCount(0)
+  await page.getByRole("link", { name: "Open categories" }).click()
+  await expect(firstPayment).toBeVisible()
+  await expect(page.getByRole("button", { name: "New category" })).toHaveCount(
+    0,
+  )
+
+  await page.goto(`${ledgerPath}/categories`)
+  await firstPayment.click()
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Create obligation", exact: true }),
+  ).toBeVisible()
+  expect(submissions).toHaveLength(0)
+})
 
 test("opens the obligation if the scheduler creates it before form submission", async ({
   page,

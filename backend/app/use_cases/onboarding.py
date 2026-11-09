@@ -9,7 +9,7 @@ import string
 import unicodedata
 import uuid
 
-from sqlalchemy import extract, select, tuple_
+from sqlalchemy import case, extract, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,7 @@ from app.domain import (
     DataSourcePolicy,
     ObligationActionActor,
     ObligationKey,
+    RecurrenceUnit,
 )
 from app.models import Category, CategoryGroup, Ledger, Obligation, User
 from app.schemas.obligations import BillingPeriodInput
@@ -43,16 +44,22 @@ from app.use_cases.exceptions import (
 
 
 def read_dashboard_setup(session: Session, ledger_id: uuid.UUID) -> DashboardSetup:
+    # Match occurs_in_period without loading obligation history into Python.
+    months_since_start = (
+        (Obligation.period_year - extract("year", Category.first_due_date)) * 12
+        + Obligation.period_month
+        - extract("month", Category.first_due_date)
+    )
+    recurrence_months = Category.recurrence_interval * case(
+        (Category.recurrence_unit == RecurrenceUnit.YEAR, 12), else_=1
+    )
     has_payment = (
         select(Obligation.id)
         .where(
             Obligation.ledger_id == ledger_id,
             Obligation.category_id == Category.id,
-            tuple_(Obligation.period_year, Obligation.period_month)
-            >= tuple_(
-                extract("year", Category.first_due_date),
-                extract("month", Category.first_due_date),
-            ),
+            months_since_start >= 0,
+            months_since_start % func.nullif(recurrence_months, 0) == 0,
         )
         .exists()
     )

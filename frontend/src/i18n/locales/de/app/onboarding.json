@@ -13,5 +13,6 @@
   "integrations": "Integrationen ansehen",
   "demo_title": "Wiederkehrende Zahlungen kennenlernen",
   "demo_help": "Öffne Kategorien im Beispiel-Arbeitsbereich und wähle Erste Zahlung bei einer Kategorie mit Zahlungsplan, um eine gespeicherte Zahlung zu sehen.",
-  "load_error": "Der nächste Schritt für diesen Arbeitsbereich konnte nicht ermittelt werden."
+  "load_error": "Der nächste Schritt für diesen Arbeitsbereich konnte nicht ermittelt werden.",
+  "demo_payment_unavailable": "Für diese Kategorie ist keine Zahlung für die Vorschau gespeichert. Wähle unter Kategorien ein anderes Beispiel."
 }

@@ -13,5 +13,6 @@
   "integrations": "Explore integrations",
   "demo_title": "See how recurring payments work",
   "demo_help": "Open Categories in the sample ledger and choose First payment on a scheduled category to see a saved example.",
-  "load_error": "Could not check the next step for this ledger."
+  "load_error": "Could not check the next step for this ledger.",
+  "demo_payment_unavailable": "This category has no saved payment to preview. Choose another example in Categories."
 }

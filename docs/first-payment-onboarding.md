@@ -6,16 +6,18 @@ Workspace owners and editors can use it. Hiding the guide is a local browser
 preference scoped to the account and workspace. Showing it again recomputes
 progress from saved data.
 
-The API checks for an active recurring category with a payment in or after its
-first scheduled billing period. The lookup returns setup status without loading
+The API checks for an active recurring category with a payment in one of its
+scheduled billing periods. The lookup returns setup status without loading
 the payment history into the browser. An existing payment completes setup and
 integrations are offered as an optional follow-up. If several schedules are
 waiting for their first payment, a hybrid category takes precedence so manual
 setup can continue immediately.
 
 The demo guide links to the regular Categories view in the sample ledger and
-explains how to open a saved payment. The guide performs no demo data writes.
-The existing demo permissions still apply to the regular screens.
+explains how to open a saved payment. The guide keeps the category and payment
+screens in read-only preview mode. If a category has no saved payment, visitors
+can return to Categories and choose another example. The regular navigation
+continues to use the configured demo permissions.
 
 ## Compatibility and cleanup
 

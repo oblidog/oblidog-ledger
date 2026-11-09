@@ -35,10 +35,10 @@ export function firstScheduledPeriod(category: CategoryPublic) {
 export function firstScheduledPaymentSearch(
   categoryCode: string,
   period: { year: number; month: number },
-  automatic: boolean,
+  allPeriods: boolean,
 ) {
   return {
-    ...(automatic ? { period: "all", lifecycle: "" } : period),
+    ...(allPeriods ? { period: "all", lifecycle: "" } : period),
     category: categoryCode,
     firstPayment: categoryCode,
   }
