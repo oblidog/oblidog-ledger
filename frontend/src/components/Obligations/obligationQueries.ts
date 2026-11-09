@@ -1,5 +1,6 @@
 import { type QueryClient, useQuery } from "@tanstack/react-query"
 import { ObligationsService } from "@/client"
+import { apiErrorPayload } from "@/i18n/apiErrors"
 import { isValidPeriod, type LifecycleFilter } from "./obligationLogic"
 
 export const obligationQueryKeys = {
@@ -21,6 +22,8 @@ export const obligationQueryKeys = {
       categoryCode,
       lifecycle,
     ] as const,
+  firstScheduled: (ledgerId: string, key: string | null) =>
+    ["first-scheduled-obligation", ledgerId, key] as const,
   detail: (ledgerId: string, key: string | null) =>
     ["obligation", ledgerId, key] as const,
   actions: (ledgerId: string, key: string) =>
@@ -85,5 +88,30 @@ export function useObligationDetail(
         ledgerId,
         obligationKey: selectedKey!,
       }),
+  })
+}
+
+export function useFirstScheduledObligation(
+  ledgerId: string,
+  key: string | null,
+) {
+  return useQuery({
+    queryKey: obligationQueryKeys.firstScheduled(ledgerId, key),
+    enabled: key !== null,
+    retry: false,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      if (!key) return null
+      try {
+        return await ObligationsService.readObligation({
+          ledgerId,
+          obligationKey: key,
+        })
+      } catch (error) {
+        if (apiErrorPayload(error)?.code === "obligation_not_found") return null
+        throw error
+      }
+    },
   })
 }

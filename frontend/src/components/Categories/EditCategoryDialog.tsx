@@ -23,6 +23,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -302,15 +303,15 @@ export function EditCategoryDialog({
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      {obligationModeDescription(field.value)}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <CurrencyField control={form.control} />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {obligationModeDescription(form.watch("data_source_policy"))}
-            </p>
             {form.watch("data_source_policy") !== "manual" && (
               <PaymentScheduleFields
                 ledgerId={ledgerId}

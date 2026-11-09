@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { i18n } from "@/i18n"
+import { apiErrorPayload } from "@/i18n/apiErrors"
 import { handleError } from "@/utils"
 import { categoryQueryKeys } from "../Categories/categoryQueryKeys"
 import { ObligationValueFields } from "./ObligationValueFields"
@@ -33,16 +34,26 @@ export function CreateObligationDialog({
   defaultPeriod,
   onSuccess,
   onError,
+  firstPayment,
 }: {
   ledgerId: string
   defaultPeriod: { year: number; month: number }
   onSuccess: (message: string) => void
   onError: (message: string) => void
+  firstPayment?: {
+    categoryCode: string
+    obligationKey: string
+    onClose: () => void
+    onResolved: (key: string) => void
+  }
 }) {
   useTranslation()
 
-  const [open, setOpen] = useState(false)
-  const [categoryCode, setCategoryCode] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const open = firstPayment !== undefined || dialogOpen
+  const [categoryCode, setCategoryCode] = useState(
+    firstPayment?.categoryCode ?? "",
+  )
   const [year, setYear] = useState(String(defaultPeriod.year))
   const [month, setMonth] = useState(String(defaultPeriod.month))
   const [dataReady, setDataReady] = useState(false)
@@ -98,23 +109,51 @@ export function CreateObligationDialog({
           notes: notes || undefined,
         },
       }),
-    onError: handleError.bind(onError),
-    onSuccess: () => {
+    onError: (error) => {
+      if (
+        firstPayment &&
+        apiErrorPayload(error)?.code === "obligation_conflict"
+      ) {
+        firstPayment.onResolved(firstPayment.obligationKey)
+        return
+      }
+      handleError.call(onError, error)
+    },
+    onSuccess: (obligation) => {
       onSuccess(i18n.t("app:obligations.obligation_created"))
-      setOpen(false)
+      if (firstPayment) {
+        queryClient.setQueryData(
+          obligationQueryKeys.detail(ledgerId, obligation.key),
+          obligation,
+        )
+        firstPayment.onResolved(obligation.key)
+      } else {
+        setDialogOpen(false)
+      }
       void queryClient.invalidateQueries({
         queryKey: obligationQueryKeys.list(ledgerId),
       })
     },
   })
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus />
-          {i18n.t("app:obligations.new_obligation")}
-        </Button>
-      </DialogTrigger>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (firstPayment) {
+          if (!next && !mutation.isPending) firstPayment.onClose()
+        } else {
+          setDialogOpen(next)
+        }
+      }}
+    >
+      {!firstPayment && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus />
+            {i18n.t("app:obligations.new_obligation")}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent
         className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${touchDialogClasses}`}
       >
@@ -135,6 +174,7 @@ export function CreateObligationDialog({
               id="obligation-category"
               className="border-input bg-background text-foreground h-9 w-full rounded-md border px-3 text-sm"
               value={categoryCode}
+              disabled={firstPayment !== undefined}
               onChange={(event) => setCategoryCode(event.target.value)}
             >
               <option value="" className="bg-background text-foreground">
@@ -159,6 +199,7 @@ export function CreateObligationDialog({
               id="obligation-period"
               type="month"
               value={monthInputValue(year, month)}
+              readOnly={firstPayment !== undefined}
               onChange={(event) => {
                 const selectedPeriod = parseMonthInput(event.target.value)
                 setYear(selectedPeriod?.year ?? "")
@@ -166,15 +207,24 @@ export function CreateObligationDialog({
               }}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="obligation-data-ready"
-              checked={dataReady}
-              onCheckedChange={(checked) => setDataReady(checked === true)}
-            />
-            <Label htmlFor="obligation-data-ready">
-              {i18n.t("app:obligations.is_the_data_ready")}
-            </Label>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="obligation-data-ready"
+                aria-describedby="obligation-data-ready-help"
+                checked={dataReady}
+                onCheckedChange={(checked) => setDataReady(checked === true)}
+              />
+              <Label htmlFor="obligation-data-ready">
+                {i18n.t("app:obligations.is_the_data_ready")}
+              </Label>
+            </div>
+            <p
+              id="obligation-data-ready-help"
+              className="text-sm text-muted-foreground"
+            >
+              {i18n.t("app:obligations.data_ready_help")}
+            </p>
           </div>
           <ObligationValueFields
             idPrefix="obligation"
@@ -194,7 +244,7 @@ export function CreateObligationDialog({
             className="min-h-11 w-full"
             loading={mutation.isPending}
             disabled={
-              !categoryCode ||
+              !selectedCategory ||
               !year ||
               !month ||
               dueDateOutOfRange ||

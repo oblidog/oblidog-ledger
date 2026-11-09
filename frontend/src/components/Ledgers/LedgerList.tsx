@@ -1,12 +1,12 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { ArrowRight, BookOpen, Clock3 } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { LedgersService } from "@/client"
+import { type LedgerPublic, LedgersService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { i18n } from "@/i18n"
 import { getLocale } from "@/i18n/format"
+import AddLedger from "./AddLedger"
 
 export function getLedgersQueryOptions() {
   return {
@@ -21,14 +21,12 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
-export function LedgerList() {
+export function LedgerList({ ledgers }: { ledgers: LedgerPublic[] }) {
   useTranslation()
 
-  const { data } = useSuspenseQuery(getLedgersQueryOptions())
-
-  if (data.data.length === 0) {
+  if (ledgers.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed p-10 text-center">
+      <div className="rounded-xl border border-dashed p-6 text-center sm:p-10">
         <BookOpen className="mx-auto size-10 text-muted-foreground" />
         <h2 className="mt-4 font-semibold">
           {i18n.t("app:ledgers.no_ledgers_yet")}
@@ -38,13 +36,16 @@ export function LedgerList() {
             "app:ledgers.create_your_first_ledger_to_start_organizing_obligations",
           )}
         </p>
+        <div className="mt-4">
+          <AddLedger />
+        </div>
       </div>
     )
   }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {data.data.map((ledger) => (
+      {ledgers.map((ledger) => (
         <Link
           key={ledger.id}
           to="/ledgers/$ledgerId"

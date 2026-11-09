@@ -857,6 +857,50 @@ def test_update_obligation_validates_resulting_dates_and_allows_clearing_values(
     assert updated["issue_date_source"] == CurrentValueSource.UNKNOWN.value
 
 
+def test_update_preserves_scheduled_due_date_in_previous_month(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db,
+        owner_user_id=owner.id,
+        name=f"ledger-{random_lower_string()}",
+        business_calendar_country="PL",
+    )
+    group = category_use_cases.create_category_group(
+        session=db, ledger_id=ledger.id, name="Household"
+    )
+    category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=group.id,
+        name="Internet",
+        code="INET",
+        data_source_policy=DataSourcePolicy.HYBRID,
+        recurrence_interval=1,
+        recurrence_unit=RecurrenceUnit.MONTH,
+        first_due_date=date(2026, 11, 1),
+    )
+    obligation_use_cases.ensure_obligations_for_period(
+        session=db, ledger_id=ledger.id, period=BillingPeriod(2026, 11)
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/INET-2026-11"
+
+    response = client.patch(url, headers=headers, json={"current_amount": "49.99"})
+    assert response.status_code == 200
+    assert response.json()["current_amount"] == "49.99"
+    assert response.json()["due_date"] == "2026-10-30"
+    assert response.json()["due_date_source"] == CurrentValueSource.AUTOMATIC.value
+
+    invalid = client.patch(url, headers=headers, json={"due_date": "2026-10-29"})
+    assert invalid.status_code == 422
+
+    ready = client.patch(f"{url}/ready", headers=headers)
+    assert ready.status_code == 200
+    assert ready.json()["lifecycle"] == ObligationLifecycle.READY.value
+
+
 def test_mark_obligation_ready_requires_estimated_amount_and_due_date(
     client: TestClient, db: Session
 ) -> None:

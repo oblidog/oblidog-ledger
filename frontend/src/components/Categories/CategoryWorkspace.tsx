@@ -22,8 +22,12 @@ import { domainLabel } from "@/i18n/domainLabels"
 
 import { CategoryActions } from "./CategoryActions"
 import { CreateGroupDialog, ManageGroupsDialog } from "./CategoryGroupDialogs"
+import { CategoryPaymentAction } from "./CategoryPaymentAction"
 import { CreateCategoryDialog } from "./CreateCategoryDialog"
-import { categoryCounterparty } from "./categoryPresentation"
+import {
+  categoryCounterparty,
+  firstScheduledPeriod,
+} from "./categoryPresentation"
 import {
   useCategoryArchiveActions,
   useCategoryQueries,
@@ -32,7 +36,13 @@ import {
 type CategoryRow = CategoryPublic & { groupName: string }
 const FILTER_ALL = "all"
 
-export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
+export function CategoryWorkspace({
+  ledgerId,
+  canEdit,
+}: {
+  ledgerId: string
+  canEdit: boolean
+}) {
   const { t } = useTranslation(["common", "app"])
 
   const initialFilters = () => {
@@ -59,6 +69,15 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
   const [sortBy, setSortBy] = useState(filters.sort)
   const includeArchived = statusFilter !== "active"
   const { categories, groups } = useCategoryQueries(ledgerId, includeArchived)
+  const [createdCategoryId, setCreatedCategoryId] = useState<string | null>(
+    null,
+  )
+  const activeGroup = groups.some((group) => group.is_active)
+  const activeCategory = categories.some((category) => category.is_active)
+  const firstStep = canEdit && (!activeGroup || !activeCategory)
+  const latestCreatedCategory = categories.find(
+    (category) => category.id === createdCategoryId,
+  )
   const { archiveGroup, archiveCategory, restoreCategory } =
     useCategoryArchiveActions(ledgerId)
 
@@ -166,6 +185,16 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
                 {row.original.description}
               </p>
             )}
+            {row.original.id !== latestCreatedCategory?.id && (
+              <div className="mt-2">
+                <CategoryPaymentAction
+                  category={row.original}
+                  ledgerId={ledgerId}
+                  groups={groups}
+                  canEdit={canEdit}
+                />
+              </div>
+            )}
           </div>
         ),
       },
@@ -201,12 +230,12 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         id: "recurrence",
         header: t("app:categories.recurrence"),
         cell: ({ row }) =>
-          row.original.recurrence_interval && row.original.recurrence_unit
+          firstScheduledPeriod(row.original)
             ? t(
                 row.original.recurrence_unit === "year"
                   ? "app:messages.years"
                   : "app:messages.months",
-                { count: row.original.recurrence_interval },
+                { count: row.original.recurrence_interval ?? 0 },
               )
             : t("app:categories.none"),
       },
@@ -236,7 +265,23 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
         ),
       },
     ],
-    [archiveCategory, groups, ledgerId, restoreCategory, t],
+    [
+      archiveCategory,
+      canEdit,
+      groups,
+      latestCreatedCategory?.id,
+      ledgerId,
+      restoreCategory,
+      t,
+    ],
+  )
+
+  const createCategory = (
+    <CreateCategoryDialog
+      ledgerId={ledgerId}
+      groups={groups}
+      onCreated={(category) => setCreatedCategoryId(category.id)}
+    />
   )
 
   return (
@@ -244,18 +289,58 @@ export function CategoryWorkspace({ ledgerId }: { ledgerId: string }) {
       <PageHeader
         title={t("app:categories.categories")}
         actions={
-          <>
-            <CreateGroupDialog ledgerId={ledgerId} />
-            <ManageGroupsDialog
-              ledgerId={ledgerId}
-              groups={groups}
-              categories={categories}
-              onArchive={(groupId) => archiveGroup.mutate(groupId)}
-            />
-            <CreateCategoryDialog ledgerId={ledgerId} groups={groups} />
-          </>
+          canEdit && (
+            <>
+              {activeGroup && <CreateGroupDialog ledgerId={ledgerId} />}
+              <ManageGroupsDialog
+                ledgerId={ledgerId}
+                groups={groups}
+                categories={categories}
+                onArchive={(groupId) => archiveGroup.mutate(groupId)}
+              />
+              {!firstStep && createCategory}
+            </>
+          )
         }
       />
+      {firstStep && (
+        <div className="space-y-3 rounded-lg border border-dashed p-4">
+          <h2 className="font-semibold">
+            {t(
+              activeGroup
+                ? "app:categories.add_first_category"
+                : "app:categories.add_first_group",
+            )}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              activeGroup
+                ? "app:categories.first_category_help"
+                : "app:categories.first_group_help",
+            )}
+          </p>
+          {activeGroup ? (
+            createCategory
+          ) : (
+            <CreateGroupDialog ledgerId={ledgerId} />
+          )}
+        </div>
+      )}
+      {latestCreatedCategory?.is_active && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+          <p className="min-w-0 break-words text-sm">
+            {t("app:categories.category_next_step", {
+              name: latestCreatedCategory.name,
+            })}
+          </p>
+          <CategoryPaymentAction
+            category={latestCreatedCategory}
+            ledgerId={ledgerId}
+            groups={groups}
+            canEdit={canEdit}
+          />
+        </div>
+      )}
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_160px]">
           <div className="relative">

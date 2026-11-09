@@ -66,6 +66,7 @@ export function EditObligationDialog({
   ])
 
   const dueDateOutOfRange =
+    dueDate !== originalDueDate &&
     dueDate !== "" &&
     (dueDate < dueDateLimits.min || dueDate > dueDateLimits.max)
   const issueDateAfterDueDate =
