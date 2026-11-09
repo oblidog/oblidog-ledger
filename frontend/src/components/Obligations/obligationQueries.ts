@@ -1,5 +1,6 @@
 import { type QueryClient, useQuery } from "@tanstack/react-query"
 import { ObligationsService } from "@/client"
+import { apiErrorPayload } from "@/i18n/apiErrors"
 import { isValidPeriod, type LifecycleFilter } from "./obligationLogic"
 
 export const obligationQueryKeys = {
@@ -21,6 +22,8 @@ export const obligationQueryKeys = {
       categoryCode,
       lifecycle,
     ] as const,
+  firstScheduled: (ledgerId: string, key: string | null) =>
+    ["first-scheduled-obligation", ledgerId, key] as const,
   detail: (ledgerId: string, key: string | null) =>
     ["obligation", ledgerId, key] as const,
   actions: (ledgerId: string, key: string) =>
@@ -85,5 +88,43 @@ export function useObligationDetail(
         ledgerId,
         obligationKey: selectedKey!,
       }),
+  })
+}
+
+export function useFirstScheduledObligation(
+  ledgerId: string,
+  key: string | null,
+  automaticCategoryCode?: string,
+) {
+  return useQuery({
+    queryKey: [
+      ...obligationQueryKeys.firstScheduled(ledgerId, key),
+      automaticCategoryCode,
+    ],
+    enabled: key !== null,
+    retry: false,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      if (!key) return null
+      if (automaticCategoryCode) {
+        const { data } = await ObligationsService.readObligations({
+          ledgerId,
+          categoryCode: automaticCategoryCode,
+        })
+        // The API orders billing periods newest first. Business keys for
+        // one category sort in billing-period order (CODE-YYYY-MM).
+        return data.filter((obligation) => obligation.key >= key).pop() ?? null
+      }
+      try {
+        return await ObligationsService.readObligation({
+          ledgerId,
+          obligationKey: key,
+        })
+      } catch (error) {
+        if (apiErrorPayload(error)?.code === "obligation_not_found") return null
+        throw error
+      }
+    },
   })
 }

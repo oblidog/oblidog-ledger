@@ -571,7 +571,8 @@ def _update_obligation_values(
     next_due_date = obligation.due_date if isinstance(due_date, _Unset) else due_date
     if next_current_amount is not None and next_current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
-    if next_due_date is not None:
+    # Scheduled deadlines can move into the previous billing month.
+    if next_due_date is not None and not isinstance(due_date, _Unset):
         minimum, maximum = due_date_range(
             BillingPeriod(obligation.period_year, obligation.period_month)
         )

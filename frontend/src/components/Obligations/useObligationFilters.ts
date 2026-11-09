@@ -32,5 +32,5 @@ export function useObligationFilters(defaultLifecycle: LifecycleFilter) {
       location.state,
     )
   }
-  return { filters, update }
+  return { filters, search, update }
 }

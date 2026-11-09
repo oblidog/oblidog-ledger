@@ -12,6 +12,7 @@ export default defineConfig({
     "attention-preview.spec.ts",
     "obligations-preview.spec.ts",
     "obligation-mobile.spec.ts",
+    "first-scheduled-payment.spec.ts",
   ],
   fullyParallel: true,
   use: {

@@ -130,5 +130,11 @@
   "payment_summary": "Payment summary",
   "obligation_code": "Obligation code",
   "data_origin": "Data origin",
-  "data_origin_help": "Field-level sources and confirmation states. See Activity for changes and differences."
+  "data_origin_help": "Field-level sources and confirmation states. See Activity for changes and differences.",
+  "first_category_help": "Start by setting up a category for the bill you want to track.",
+  "checking_first_payment": "Checking for the first scheduled payment…",
+  "could_not_check_first_payment": "Could not check whether the first payment already exists.",
+  "first_automatic_payment_pending": "The first payment has not been generated yet. This category creates obligations automatically from its schedule.",
+  "first_payment_unavailable": "The first payment cannot be opened. Check the category’s schedule or your access to the ledger.",
+  "data_ready_help": "Select this when the amount and due date are confirmed. Leave it unchecked to save what you have and complete the details later."
 }
