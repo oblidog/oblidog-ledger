@@ -57,6 +57,7 @@
   "obligation_manual_forbidden": "Manuelle Zahlungsverpflichtungen sind für automatische Kategorien nicht zulässig",
   "obligation_invalid_key": "Ungültiger Schlüssel der Zahlungsverpflichtung",
   "obligation_invalid_period": "Ungültiger Zeitraum der Zahlungsverpflichtung",
+  "invalid_due_date_range": "Wähle ein Start- und Enddatum in der richtigen Reihenfolge für höchstens 366 Tage.",
   "obligation_invalid_lifecycle": "Diese Aktion ist für den aktuellen Status der Zahlungsverpflichtung nicht verfügbar",
   "obligation_read_only": "Nur Zahlungsverpflichtungen im Entwurf oder in der Datenerfassung können bearbeitet werden",
   "obligation_invalid_values": "Ungültige Werte der Zahlungsverpflichtung. Prüfe Betrag, Daten und Status.",
@@ -83,5 +84,9 @@
   "request_validation_failed": "Prüfe die übermittelten Werte",
   "internal_error": "Etwas ist schiefgelaufen. Versuche es später erneut.",
   "network_error": "Keine Verbindung zum Server. Prüfe deine Verbindung und versuche es erneut.",
-  "generic_error": "Diese Aktion konnte nicht abgeschlossen werden. Versuche es erneut."
+  "generic_error": "Diese Aktion konnte nicht abgeschlossen werden. Versuche es erneut.",
+  "onboarding_changed": "Die Einrichtung wurde in einem anderen Tab geändert. Der letzte gespeicherte Schritt wurde geladen.",
+  "onboarding_due_date_changed": "Das Fälligkeitsdatum der ersten Zahlung hat sich geändert. Prüfe und bestätige das neue Datum.",
+  "onboarding_name_in_use": "Ein Name oder Code ist bereits vergeben. Gehe zurück und wähle einen anderen.",
+  "onboarding_demo_preview": "Nutze in der Demo die separate Einrichtungsvorschau."
 }

@@ -1,16 +1,19 @@
-import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link, useRouter } from "@tanstack/react-router"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CategoriesService, type ObligationPublic } from "@/client"
 import {
   type ActiveFilter,
   ActiveFilterBadges,
 } from "@/components/ActiveFilterBadges"
+import { firstScheduledPeriod } from "@/components/Categories/categoryPresentation"
 import { PageHeader } from "@/components/Common/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/useMobile"
 import { i18n } from "@/i18n"
+import { formatBillingPeriod } from "@/i18n/format"
 import { CreateObligationDialog } from "./CreateObligationDialog"
 import { EditObligationDialog } from "./EditObligationDialog"
 import type { ObligationItemProps } from "./ObligationActions"
@@ -31,23 +34,29 @@ import {
   periodFromSearch,
   visibleObligationRows,
 } from "./obligationPresentation"
-import { useObligationList } from "./obligationQueries"
+import {
+  obligationQueryKeys,
+  useFirstScheduledObligation,
+  useObligationList,
+} from "./obligationQueries"
 import { useObligationActions } from "./useObligationActions"
 import { useObligationFilters } from "./useObligationFilters"
 
 export function ObligationWorkspace({
   ledgerId,
   canEdit,
+  demoPreview,
   defaultLifecycle = "unpaid",
 }: {
   ledgerId: string
   canEdit: boolean
+  demoPreview: boolean
   defaultLifecycle?: LifecycleFilter
 }) {
   useTranslation()
 
   const period = periodFromSearch()
-  const { filters, update } = useObligationFilters(defaultLifecycle)
+  const { filters, search, update } = useObligationFilters(defaultLifecycle)
   const { year, month, filterByPeriod, categoryCode, lifecycle } = filters
   const isMobile = useIsMobile()
   const categories = useQuery({
@@ -55,11 +64,72 @@ export function ObligationWorkspace({
     queryFn: () =>
       CategoriesService.readCategories({ ledgerId, includeArchived: true }),
   })
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const { history } = useRouter()
+  const [selectedKey, setSelectedKey] = useState(() =>
+    new URLSearchParams(history.location.search).get("obligation"),
+  )
+  const queryClient = useQueryClient()
+  const firstPaymentCode = new URLSearchParams(search).get("firstPayment")
+  const firstPaymentCategory = categories.data?.data.find(
+    (category) => category.code === firstPaymentCode && category.is_active,
+  )
+  const firstPeriod =
+    firstPaymentCategory && firstScheduledPeriod(firstPaymentCategory)
+  const firstKey =
+    firstPaymentCategory && firstPeriod
+      ? `${firstPaymentCategory.code}-${monthInputValue(String(firstPeriod.year), String(firstPeriod.month))}`
+      : null
+  const firstObligation = useFirstScheduledObligation(
+    ledgerId,
+    firstKey,
+    demoPreview || firstPaymentCategory?.data_source_policy === "automatic"
+      ? firstPaymentCategory?.code
+      : undefined,
+  )
+  const checkingFirstPayment =
+    !!firstPaymentCode &&
+    (categories.isPending ||
+      (!!firstKey && !firstObligation.isFetchedAfterMount))
+  const canCreateFirstPayment =
+    selectedKey === null &&
+    !!firstPeriod &&
+    firstObligation.data === null &&
+    firstPaymentCategory?.data_source_policy === "hybrid" &&
+    canEdit &&
+    !checkingFirstPayment &&
+    !firstObligation.isError &&
+    !categories.isError
+  const previewWithoutPayment =
+    demoPreview && !firstObligation.isError && !categories.isError
+  const firstPaymentDetails =
+    !checkingFirstPayment && !categories.isError && !firstObligation.isError
+      ? firstObligation.data?.key
+      : undefined
+
+  function clearDialogSearch(...names: string[]) {
+    const location = history.location
+    const params = new URLSearchParams(location.search)
+    if (!names.some((name) => params.has(name))) return
+    for (const name of names) params.delete(name)
+
+    const next = params.toString()
+    history.replace(
+      `${location.pathname}${next ? `?${next}` : ""}${location.hash}`,
+      location.state,
+    )
+  }
+
+  function closeObligationDetails() {
+    setSelectedKey(null)
+    clearDialogSearch("obligation", "firstPayment")
+  }
+
   const [editingObligation, setEditingObligation] =
     useState<ObligationPublic | null>(null)
   const [paymentConfirmation, setPaymentConfirmation] =
     useState<ObligationPublic | null>(null)
+  const workspace = useRef<HTMLElement>(null)
+  const paymentTrigger = useRef<HTMLButtonElement | null>(null)
   const actions = useObligationActions(
     ledgerId,
     canEdit,
@@ -95,6 +165,15 @@ export function ObligationWorkspace({
   const clearFilters = () =>
     update({ filterByPeriod: false, categoryCode: "", lifecycle: "" })
   const activeFilters: ActiveFilter[] = []
+  if (filterByPeriod && hasValidPeriodFilter) {
+    activeFilters.push({
+      key: "period",
+      label: i18n.t("app:messages.filter_period", {
+        value: formatBillingPeriod({ year: filterYear, month: filterMonth }),
+      }),
+      onRemove: () => update({ filterByPeriod: false }),
+    })
+  }
   if (categoryCode) {
     const categoryName =
       categories.data?.data.find((category) => category.code === categoryCode)
@@ -123,33 +202,124 @@ export function ObligationWorkspace({
         loading: pendingActionKey === obligation.key,
         onEdit: () => setEditingObligation(obligation),
         onCancel: () => void runAction(cancel, obligation),
-        onMarkPaid: () => setPaymentConfirmation(obligation),
+        onMarkPaid: (trigger) => {
+          paymentTrigger.current = trigger ?? null
+          setPaymentConfirmation(obligation)
+        },
         onMarkReady: () => void runAction(markReady, obligation),
         onReopen: () => void runAction(reopen, obligation),
-        onSelect: () => setSelectedKey(obligation.key),
+        onSelect: () => {
+          clearDialogSearch("firstPayment")
+          setSelectedKey(obligation.key)
+        },
       })) ?? [])
     : []
 
   return (
-    <section className="min-w-0">
+    <section ref={workspace} tabIndex={-1} className="min-w-0">
       <PageHeader
         title={i18n.t("app:obligations.obligations")}
         actions={
           canEdit ? (
             <CreateObligationDialog
+              key={canCreateFirstPayment ? firstKey : undefined}
               ledgerId={ledgerId}
               defaultPeriod={
-                filterByPeriod && hasValidPeriodFilter
-                  ? { year: filterYear, month: filterMonth }
-                  : period
+                canCreateFirstPayment && firstPeriod
+                  ? firstPeriod
+                  : filterByPeriod && hasValidPeriodFilter
+                    ? { year: filterYear, month: filterMonth }
+                    : period
               }
               onError={showErrorToast}
               onSuccess={showSuccessToast}
+              firstPayment={
+                canCreateFirstPayment && firstKey && firstPaymentCategory
+                  ? {
+                      categoryCode: firstPaymentCategory.code,
+                      obligationKey: firstKey,
+                      onClose: () => clearDialogSearch("firstPayment"),
+                      onResolved: (key) => {
+                        queryClient.removeQueries({
+                          queryKey: obligationQueryKeys.firstScheduled(
+                            ledgerId,
+                            firstKey,
+                          ),
+                        })
+                        setSelectedKey(key)
+                        clearDialogSearch("firstPayment")
+                      },
+                    }
+                  : undefined
+              }
             />
           ) : null
         }
       />
       <div className="mt-6 space-y-4">
+        {canEdit &&
+          categories.isSuccess &&
+          !categories.data.data.some((category) => category.is_active) && (
+            <div className="space-y-3 rounded-lg border border-dashed p-4">
+              <p className="text-sm text-muted-foreground">
+                {i18n.t("app:obligations.first_category_help")}
+              </p>
+              <Button asChild variant="outline">
+                <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
+                  {i18n.t("app:categories.add_first_category")}
+                </Link>
+              </Button>
+            </div>
+          )}
+        {firstPaymentCode && !firstPaymentDetails && !canCreateFirstPayment && (
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-lg border p-4 text-sm"
+            role="status"
+          >
+            <p>
+              {i18n.t(
+                checkingFirstPayment
+                  ? "app:obligations.checking_first_payment"
+                  : firstObligation.isError || categories.isError
+                    ? "app:obligations.could_not_check_first_payment"
+                    : previewWithoutPayment
+                      ? "app:onboarding.demo_payment_unavailable"
+                      : firstPaymentCategory?.data_source_policy ===
+                            "automatic" && firstPeriod
+                        ? "app:obligations.first_automatic_payment_pending"
+                        : "app:obligations.first_payment_unavailable",
+              )}
+            </p>
+            {!checkingFirstPayment && previewWithoutPayment && (
+              <Button asChild variant="outline" size="sm">
+                <Link
+                  to="/ledgers/$ledgerId/categories"
+                  params={{ ledgerId }}
+                  search={{ setupPreview: true }}
+                >
+                  {i18n.t("app:onboarding.open_categories")}
+                </Link>
+              </Button>
+            )}
+            {!checkingFirstPayment && !previewWithoutPayment && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (categories.isError) void categories.refetch()
+                  else if (firstKey) void firstObligation.refetch()
+                  else clearDialogSearch("firstPayment")
+                }}
+              >
+                {i18n.t(
+                  firstKey || categories.isError
+                    ? "app:obligations.try_again"
+                    : "common:actions.close",
+                )}
+              </Button>
+            )}
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="min-w-0 space-y-1.5">
             <Label>{i18n.t("app:obligations.billing_period")}</Label>
@@ -259,8 +429,8 @@ export function ObligationWorkspace({
           ))}
         <ObligationDetailsDialog
           ledgerId={ledgerId}
-          selectedKey={selectedKey}
-          setSelectedKey={setSelectedKey}
+          selectedKey={selectedKey ?? firstPaymentDetails ?? null}
+          onClose={closeObligationDetails}
           canEdit={canEdit}
           actions={actions}
           setPaymentConfirmation={setPaymentConfirmation}
@@ -269,6 +439,15 @@ export function ObligationWorkspace({
         <ObligationPaymentDialog
           paymentConfirmation={paymentConfirmation}
           setPaymentConfirmation={setPaymentConfirmation}
+          onCloseAutoFocus={(event) => {
+            const trigger = paymentTrigger.current
+            paymentTrigger.current = null
+            if (!trigger) return
+
+            event.preventDefault()
+            if (trigger.isConnected && !trigger.disabled) trigger.focus()
+            else workspace.current?.focus({ preventScroll: true })
+          }}
           actions={actions}
         />
         {editingObligation ? (

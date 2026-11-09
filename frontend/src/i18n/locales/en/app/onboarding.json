@@ -1,0 +1,18 @@
+{
+  "title": "Add your first recurring payment",
+  "hide": "Hide setup guide",
+  "show": "Show setup guide",
+  "ledger_help": "Create a ledger to keep related payments together, for example your household bills.",
+  "category_help": "Open Categories and set a schedule for a bill such as internet. Create a group first if the ledger has none.",
+  "payment_help": "Open the first scheduled payment and enter the details you already know.",
+  "automatic_help": "Open the first scheduled payment when it is available. The schedule creates it automatically.",
+  "open_first_payment": "Open first payment",
+  "open_categories": "Open categories",
+  "completed": "Your recurring payment is set up",
+  "integration_optional": "You can keep entering payments yourself or connect an integration to fill in bill details.",
+  "integrations": "Explore integrations",
+  "demo_title": "See how recurring payments work",
+  "demo_help": "Open Categories in the sample ledger and choose First payment on a scheduled category to see a saved example.",
+  "load_error": "Could not check the next step for this ledger.",
+  "demo_payment_unavailable": "This category has no saved payment to preview. Choose another example in Categories."
+}

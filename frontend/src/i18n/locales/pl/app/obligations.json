@@ -34,11 +34,6 @@
   "no_activity_recorded_yet": "Nie zapisano jeszcze żadnej aktywności.",
   "loading": "Ładowanie…",
   "load_more": "Wczytaj więcej",
-  "invoice": "Faktura",
-  "invoice_item": "Pozycja faktury",
-  "adjustment": "Korekta",
-  "consumption": "Zużycie",
-  "other": "Inne",
   "type": "Typ",
   "custom_type": "Własny typ",
   "e_g_meter_reading": "np. odczyt licznika",
@@ -135,5 +130,11 @@
   "payment_summary": "Podsumowanie płatności",
   "obligation_code": "Kod zobowiązania",
   "data_origin": "Pochodzenie danych",
-  "data_origin_help": "Źródła i stany potwierdzenia poszczególnych pól. Zmiany i różnice znajdziesz w zakładce Aktywność."
+  "data_origin_help": "Źródła i stany potwierdzenia poszczególnych pól. Zmiany i różnice znajdziesz w zakładce Aktywność.",
+  "first_category_help": "Zacznij od utworzenia kategorii dla rachunku, który chcesz śledzić.",
+  "checking_first_payment": "Sprawdzanie pierwszej zaplanowanej płatności…",
+  "could_not_check_first_payment": "Nie udało się sprawdzić, czy pierwsza płatność już istnieje.",
+  "first_automatic_payment_pending": "Pierwsza płatność jeszcze nie powstała. Ta kategoria tworzy zobowiązania automatycznie według harmonogramu.",
+  "first_payment_unavailable": "Nie można otworzyć pierwszej płatności. Sprawdź harmonogram kategorii lub uprawnienia do ledgera.",
+  "data_ready_help": "Zaznacz, gdy kwota i termin są potwierdzone. Jeśli danych brakuje, zapisz to, co masz, i uzupełnij resztę później."
 }

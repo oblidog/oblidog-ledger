@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { i18n } from "@/i18n"
 import { domainLabel } from "@/i18n/domainLabels"
-import { formatAmount, formatDate } from "@/i18n/format"
+import { formatAmount, formatBillingPeriod, formatDate } from "@/i18n/format"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
 import { ObligationFieldDetails } from "./ObligationFieldDetails"
@@ -36,7 +36,7 @@ import type { useObligationActions } from "./useObligationActions"
 export function ObligationDetailsDialog({
   ledgerId,
   selectedKey,
-  setSelectedKey,
+  onClose,
   canEdit,
   actions,
   setPaymentConfirmation,
@@ -44,7 +44,7 @@ export function ObligationDetailsDialog({
 }: {
   ledgerId: string
   selectedKey: string | null
-  setSelectedKey: (key: string | null) => void
+  onClose: () => void
   canEdit: boolean
   actions: ReturnType<typeof useObligationActions>
   setPaymentConfirmation: (value: ObligationPublic | null) => void
@@ -64,7 +64,7 @@ export function ObligationDetailsDialog({
   return (
     <Dialog
       open={selectedKey !== null}
-      onOpenChange={(open) => !open && setSelectedKey(null)}
+      onOpenChange={(open) => !open && onClose()}
     >
       <DialogContent
         className={`flex max-h-[min(90dvh,calc(100vh-2rem))] min-w-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl ${touchDialogClasses}`}
@@ -80,10 +80,7 @@ export function ObligationDetailsDialog({
           </DialogTitle>
           <DialogDescription>
             {selected.data
-              ? formatDate(
-                  `${selected.data.period.year}-${String(selected.data.period.month).padStart(2, "0")}-01`,
-                  { month: "long", year: "numeric" },
-                )
+              ? formatBillingPeriod(selected.data.period)
               : i18n.t("app:obligations.obligation_details")}
           </DialogDescription>
         </DialogHeader>

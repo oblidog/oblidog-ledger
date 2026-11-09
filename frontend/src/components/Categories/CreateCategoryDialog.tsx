@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next"
 import {
   CategoriesService,
   type CategoryCreate,
+  type CategoryPublic,
   LedgersService,
 } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -25,6 +26,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -59,9 +61,11 @@ import { categoryQueryKeys } from "./categoryQueryKeys"
 export function CreateCategoryDialog({
   ledgerId,
   groups,
+  onCreated,
 }: {
   ledgerId: string
   groups: { id: string; name: string; is_active: boolean }[]
+  onCreated?: (category: CategoryPublic) => void
 }) {
   useTranslation()
 
@@ -101,21 +105,29 @@ export function CreateCategoryDialog({
         requestBody: data,
       })
       if (counterparty) {
-        await assignCategoryCounterparty(ledgerId, created.id, counterparty.id)
+        try {
+          await assignCategoryCounterparty(
+            ledgerId,
+            created.id,
+            counterparty.id,
+          )
+        } catch (error) {
+          handleError.call(showErrorToast, error)
+        }
       }
       return created
     },
-    onSuccess: () => {
+    onSuccess: async (category) => {
       showSuccessToast(i18n.t("app:categories.category_created"))
       form.reset()
       setCounterparty(null)
       setOpen(false)
+      await queryClient.invalidateQueries({
+        queryKey: categoryQueryKeys.categories(ledgerId),
+      })
+      onCreated?.(category)
     },
     onError: handleError.bind(showErrorToast),
-    onSettled: () =>
-      queryClient.invalidateQueries({
-        queryKey: categoryQueryKeys.categories(ledgerId),
-      }),
   })
 
   return (
@@ -283,15 +295,15 @@ export function CreateCategoryDialog({
                           </SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        {obligationModeDescription(field.value)}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <CurrencyField control={form.control} />
               </div>
-              <p className="text-sm text-muted-foreground">
-                {obligationModeDescription(form.watch("data_source_policy"))}
-              </p>
             </section>
             {form.watch("data_source_policy") !== "manual" && (
               <PaymentScheduleFields

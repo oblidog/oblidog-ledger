@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { i18n } from "@/i18n"
-import { getLocale } from "@/i18n/format"
+import { formatBillingPeriod } from "@/i18n/format"
 import {
   type FilterCategory,
   matchingCategories,
@@ -211,12 +211,10 @@ export function PeriodFilter({
             const parsed = parseMonthInput(period)!
             return (
               <option key={period} value={period}>
-                {new Intl.DateTimeFormat(getLocale(), {
-                  month: "long",
-                  year: "numeric",
-                }).format(
-                  new Date(Number(parsed.year), Number(parsed.month) - 1, 1),
-                )}
+                {formatBillingPeriod({
+                  year: Number(parsed.year),
+                  month: Number(parsed.month),
+                })}
               </option>
             )
           })}

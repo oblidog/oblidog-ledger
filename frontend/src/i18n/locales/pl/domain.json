@@ -33,6 +33,7 @@
     "integration": "Integracja"
   },
   "componentType": {
+    "invoice_line": "Pozycja faktury",
     "invoice": "Faktura",
     "invoice_item": "Pozycja faktury",
     "adjustment": "Korekta",

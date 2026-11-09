@@ -1,0 +1,18 @@
+{
+  "title": "Dodaj pierwszą płatność cykliczną",
+  "hide": "Ukryj przewodnik",
+  "show": "Pokaż przewodnik",
+  "ledger_help": "Utwórz ledger, aby trzymać powiązane płatności razem, na przykład rachunki domowe.",
+  "category_help": "Otwórz Kategorie i ustaw harmonogram rachunku, na przykład za internet. Jeśli w ledgerze brakuje grupy, najpierw ją utwórz.",
+  "payment_help": "Otwórz pierwszą zaplanowaną płatność i wpisz dane, które już znasz.",
+  "automatic_help": "Otwórz pierwszą zaplanowaną płatność, gdy będzie dostępna. Harmonogram utworzy ją automatycznie.",
+  "open_first_payment": "Otwórz pierwszą płatność",
+  "open_categories": "Otwórz kategorie",
+  "completed": "Płatność cykliczna jest skonfigurowana",
+  "integration_optional": "Możesz dalej samodzielnie wpisywać dane płatności lub podłączyć integrację, która uzupełni dane rachunku.",
+  "integrations": "Zobacz integracje",
+  "demo_title": "Zobacz, jak działają płatności cykliczne",
+  "demo_help": "Otwórz Kategorie w przykładowym ledgerze i wybierz Pierwsza płatność przy kategorii z harmonogramem, aby zobaczyć zapisany przykład.",
+  "load_error": "Nie udało się sprawdzić następnego kroku dla tego ledgera.",
+  "demo_payment_unavailable": "Ta kategoria nie ma zapisanej płatności do podglądu. Wybierz inny przykład w Kategoriach."
+}

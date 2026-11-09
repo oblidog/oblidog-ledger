@@ -1,0 +1,18 @@
+{
+  "title": "Erste wiederkehrende Zahlung hinzufügen",
+  "hide": "Einrichtungshilfe ausblenden",
+  "show": "Einrichtungshilfe anzeigen",
+  "ledger_help": "Lege einen Arbeitsbereich an, um zusammengehörige Zahlungen zu bündeln, etwa Haushaltsrechnungen.",
+  "category_help": "Öffne Kategorien und richte einen Zahlungsplan ein, etwa für Internet. Lege zuerst eine Gruppe an, falls noch keine vorhanden ist.",
+  "payment_help": "Öffne die erste geplante Zahlung und trage die Angaben ein, die du bereits kennst.",
+  "automatic_help": "Öffne die erste geplante Zahlung, sobald sie verfügbar ist. Der Zahlungsplan erstellt sie automatisch.",
+  "open_first_payment": "Erste Zahlung öffnen",
+  "open_categories": "Kategorien öffnen",
+  "completed": "Deine wiederkehrende Zahlung ist eingerichtet",
+  "integration_optional": "Du kannst Zahlungsdaten weiterhin selbst eingeben oder eine Integration für die Rechnungsdaten verbinden.",
+  "integrations": "Integrationen ansehen",
+  "demo_title": "Wiederkehrende Zahlungen kennenlernen",
+  "demo_help": "Öffne Kategorien im Beispiel-Arbeitsbereich und wähle Erste Zahlung bei einer Kategorie mit Zahlungsplan, um eine gespeicherte Zahlung zu sehen.",
+  "load_error": "Der nächste Schritt für diesen Arbeitsbereich konnte nicht ermittelt werden.",
+  "demo_payment_unavailable": "Für diese Kategorie ist keine Zahlung für die Vorschau gespeichert. Wähle unter Kategorien ein anderes Beispiel."
+}

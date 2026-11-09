@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next"
 import CategoryWorkspace from "@/components/Categories/CategoryWorkspace"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { isDemoSetupPreview } from "@/config"
+import { useLedgerCanEdit } from "@/hooks/useLedgerCanEdit"
 import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/$ledgerId/categories")({
@@ -26,9 +28,28 @@ function LedgerCategories() {
   return (
     <div className="flex flex-col gap-6">
       <Suspense fallback={<CategoryWorkspaceSkeleton />}>
-        <CategoryWorkspace ledgerId={ledgerId} />
+        <LedgerCategoryWorkspace ledgerId={ledgerId} />
       </Suspense>
     </div>
+  )
+}
+
+function LedgerCategoryWorkspace({ ledgerId }: { ledgerId: string }) {
+  const { appConfig } = Route.useRouteContext()
+  const { searchStr } = useLocation()
+  const demoPreview = isDemoSetupPreview(appConfig, searchStr)
+  const canEdit = useLedgerCanEdit(ledgerId)
+  return (
+    <CategoryWorkspace
+      key={demoPreview ? `${ledgerId}:setup-preview` : ledgerId}
+      ledgerId={ledgerId}
+      canEdit={
+        canEdit &&
+        !demoPreview &&
+        (!appConfig.is_demo || appConfig.demo_writes_enabled)
+      }
+      demoPreview={demoPreview}
+    />
   )
 }
 

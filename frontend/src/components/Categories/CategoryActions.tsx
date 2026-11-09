@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { Ellipsis } from "lucide-react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { CategoryPublic } from "@/client"
 import { CategoryCustomDataDialog } from "@/components/Categories/CategoryCustomDataDialog"
@@ -32,6 +33,17 @@ export function CategoryActions({
   onRestore: (categoryId: string) => void
 }) {
   useTranslation()
+  const [dialog, setDialog] = useState<"history" | "edit" | "apply" | null>(
+    null,
+  )
+  const menuTrigger = useRef<HTMLButtonElement>(null)
+  const hasCounterparty = Boolean(categoryCounterparty(category))
+
+  const closeDialog = () => setDialog(null)
+  const restoreMenuFocus = (event: Event) => {
+    event.preventDefault()
+    menuTrigger.current?.focus()
+  }
 
   return (
     <div className="flex justify-end gap-1">
@@ -41,6 +53,7 @@ export function CategoryActions({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
+            ref={menuTrigger}
             variant="ghost"
             size="sm"
             aria-label={i18n.t("app:categories.more_actions_for", {
@@ -53,16 +66,15 @@ export function CategoryActions({
             </span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <CategoryHistoryDialog
-            ledgerId={ledgerId}
-            category={category}
-            trigger={
-              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-                {i18n.t("app:categories.view_amount_history")}
-              </DropdownMenuItem>
-            }
-          />
+        <DropdownMenuContent
+          align="end"
+          onCloseAutoFocus={(event) => {
+            if (dialog) event.preventDefault()
+          }}
+        >
+          <DropdownMenuItem onSelect={() => setDialog("history")}>
+            {i18n.t("app:categories.view_amount_history")}
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
               to="/ledgers/$ledgerId/categories/$categoryId/custom-fields"
@@ -71,30 +83,15 @@ export function CategoryActions({
               {i18n.t("app:categories.manage_custom_fields")}
             </Link>
           </DropdownMenuItem>
-          <EditCategoryDialog
-            ledgerId={ledgerId}
-            category={category}
-            groups={groups}
-            trigger={
-              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-                {i18n.t("app:categories.edit_category")}
-              </DropdownMenuItem>
-            }
-          />
-          <ApplyCategoryCounterpartyDialog
-            ledgerId={ledgerId}
-            categoryId={category.id}
-            categoryName={category.name}
-            disabled={!categoryCounterparty(category)}
-            trigger={
-              <DropdownMenuItem
-                disabled={!categoryCounterparty(category)}
-                onSelect={(event) => event.preventDefault()}
-              >
-                {i18n.t("app:categories.apply_counterparty_to_obligations")}
-              </DropdownMenuItem>
-            }
-          />
+          <DropdownMenuItem onSelect={() => setDialog("edit")}>
+            {i18n.t("app:categories.edit_category")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!hasCounterparty}
+            onSelect={() => setDialog("apply")}
+          >
+            {i18n.t("app:categories.apply_counterparty_to_obligations")}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           {category.is_active ? (
             <DropdownMenuItem
@@ -110,6 +107,34 @@ export function CategoryActions({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {dialog === "history" && (
+        <CategoryHistoryDialog
+          ledgerId={ledgerId}
+          category={category}
+          onClose={closeDialog}
+          onCloseAutoFocus={restoreMenuFocus}
+        />
+      )}
+      {dialog === "edit" && (
+        <EditCategoryDialog
+          ledgerId={ledgerId}
+          category={category}
+          groups={groups}
+          open
+          onOpenChange={closeDialog}
+          onCloseAutoFocus={restoreMenuFocus}
+        />
+      )}
+      {dialog === "apply" && (
+        <ApplyCategoryCounterpartyDialog
+          ledgerId={ledgerId}
+          categoryId={category.id}
+          categoryName={category.name}
+          disabled={!hasCounterparty}
+          onClose={closeDialog}
+          onCloseAutoFocus={restoreMenuFocus}
+        />
+      )}
     </div>
   )
 }

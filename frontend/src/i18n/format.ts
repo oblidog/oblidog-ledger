@@ -32,6 +32,19 @@ export function formatDate(
   }).format(date)
 }
 
+export function formatBillingPeriod(
+  { year, month }: { year: number; month: number },
+  monthStyle: "long" | "short" = "long",
+  language?: Language,
+) {
+  const isoMonth = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}`
+  return formatDate(
+    `${isoMonth}-01`,
+    { month: monthStyle, year: "numeric" },
+    language,
+  )
+}
+
 export function formatDateTime(
   value: string | Date,
   options: Intl.DateTimeFormatOptions = {

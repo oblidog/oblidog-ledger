@@ -242,6 +242,7 @@ test("history translates known states but preserves user notes and names", async
         changes: {
           notes: { from: "keep_old_notes", to: "keep_manual_notes" },
           lifecycle: { from: "draft", to: "ready" },
+          effective_value_source: { from: "manual", to: "integration" },
         },
       },
     ],
@@ -259,6 +260,9 @@ test("history translates known states but preserves user notes and names", async
     await select("pl")
     const content = browser.document.body.textContent
     expect(content).toContain("Gotowe do opłacenia")
+    expect(content).toContain("Źródło obowiązującej wartości")
+    expect(content).toContain("Integracja")
+    expect(content).not.toContain("effective_value_source")
     expect(content).toContain("keep_manual_notes")
     expect(content).toContain("Custom_User")
     expect(content).not.toContain("keep manual notes")

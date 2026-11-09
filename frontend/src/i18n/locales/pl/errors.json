@@ -57,6 +57,7 @@
   "obligation_manual_forbidden": "Nie można ręcznie tworzyć zobowiązań w kategoriach automatycznych",
   "obligation_invalid_key": "Nieprawidłowy klucz zobowiązania",
   "obligation_invalid_period": "Nieprawidłowy okres zobowiązania",
+  "invalid_due_date_range": "Wybierz datę początkową i końcową w poprawnej kolejności. Zakres może obejmować maksymalnie 366 dni.",
   "obligation_invalid_lifecycle": "Ta operacja jest niedostępna dla obecnego statusu zobowiązania",
   "obligation_read_only": "Można edytować tylko zobowiązania w statusie szkicu lub zbierania danych",
   "obligation_invalid_values": "Nieprawidłowe dane zobowiązania. Sprawdź kwotę, daty i status.",
@@ -83,5 +84,9 @@
   "request_validation_failed": "Sprawdź przesłane dane",
   "internal_error": "Wystąpił błąd. Spróbuj ponownie później.",
   "network_error": "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.",
-  "generic_error": "Nie udało się wykonać operacji. Spróbuj ponownie."
+  "generic_error": "Nie udało się wykonać operacji. Spróbuj ponownie.",
+  "onboarding_changed": "Konfiguracja zmieniła się w innej karcie. Wczytano ostatni zapisany krok.",
+  "onboarding_due_date_changed": "Termin pierwszej płatności się zmienił. Sprawdź nowy termin i potwierdź go ponownie.",
+  "onboarding_name_in_use": "Nazwa lub kod są już zajęte. Wróć i wybierz inne.",
+  "onboarding_demo_preview": "W demo skorzystaj z osobnego podglądu przewodnika."
 }

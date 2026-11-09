@@ -10,7 +10,7 @@ test("Polish screens and system labels do not depend on English fallback", async
   await i18n.changeLanguage("pl")
   expect(i18n.t("app:auth.login_to_your_account")).toBe("Zaloguj się na konto")
   expect(i18n.t("app:categories.create_category")).toBe("Utwórz kategorię")
-  expect(i18n.t("app:analytics.payment_schedule")).toBe("Harmonogram płatności")
+  expect(i18n.t("app:analytics.payment_forecast")).toBe("Prognoza płatności")
   expect(domainLabel("lifecycle", "ready")).toBe("Gotowe do opłacenia")
   expect(domainLabel("valueState", "overridden")).toBe("Nadpisane ręcznie")
   expect(domainLabel("componentType", "customer_defined_type")).toBe(
@@ -53,6 +53,7 @@ test("German screen labels, validation and plural forms use German resources", a
   expect(i18n.t("app:auth.login_to_your_account")).toBe(
     "Bei deinem Konto anmelden",
   )
+  expect(i18n.t("app:analytics.payment_forecast")).toBe("Zahlungsprognose")
   expect(domainLabel("lifecycle", "ready")).toBe("Bereit")
   for (const count of [0, 1, 2, 5, 12, 22]) {
     expect(i18n.t("app:messages.unknown_amounts", { count })).toBe(

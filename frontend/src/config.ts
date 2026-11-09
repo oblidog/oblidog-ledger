@@ -29,3 +29,9 @@ export async function fetchPublicAppConfig(): Promise<PublicAppConfig> {
   }
   return response.json() as Promise<PublicAppConfig>
 }
+
+export function isDemoSetupPreview(config: PublicAppConfig, search: string) {
+  return (
+    config.is_demo && new URLSearchParams(search).get("setupPreview") === "true"
+  )
+}

@@ -71,7 +71,7 @@ test("settled obligations remain neutral despite old due dates; overdue and erro
   for (const lifecycle of ["paid", "canceled"] as const) {
     const item = row(lifecycle, lifecycle, "2026-10-01")
     expect(isObligationOverdue(item, now)).toBe(false)
-    expect(obligationSurfaceClasses(item, now)).toBe(
+    expect(obligationSurfaceClasses(item, { now })).toBe(
       "bg-card hover:bg-muted/50",
     )
   }
@@ -79,12 +79,12 @@ test("settled obligations remain neutral despite old due dates; overdue and erro
     true,
   )
   expect(
-    obligationSurfaceClasses(row("late", "ready", "2026-10-30"), now),
+    obligationSurfaceClasses(row("late", "ready", "2026-10-30"), { now }),
   ).toContain("destructive")
-  expect(obligationSurfaceClasses(row("error", "error", null), now)).toContain(
-    "destructive",
-  )
   expect(
-    obligationSurfaceClasses(row("soon", "ready", "2026-11-01"), now),
+    obligationSurfaceClasses(row("error", "error", null), { now }),
+  ).toContain("destructive")
+  expect(
+    obligationSurfaceClasses(row("soon", "ready", "2026-11-01"), { now }),
   ).not.toContain("destructive")
 })

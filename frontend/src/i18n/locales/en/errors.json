@@ -57,6 +57,7 @@
   "obligation_manual_forbidden": "Manual obligations are not allowed for automatic categories",
   "obligation_invalid_key": "Invalid obligation key",
   "obligation_invalid_period": "Invalid obligation period",
+  "invalid_due_date_range": "Select a start and end date in order, covering at most 366 days.",
   "obligation_invalid_lifecycle": "This action is unavailable for the current obligation status",
   "obligation_read_only": "Only draft and collecting data obligations can be edited",
   "obligation_invalid_values": "Invalid obligation values. Check the amount, dates and status.",
@@ -83,5 +84,9 @@
   "request_validation_failed": "Check the submitted values",
   "internal_error": "Something went wrong. Try again later.",
   "network_error": "Could not connect to the server. Check your connection and try again.",
-  "generic_error": "Could not complete this action. Try again."
+  "generic_error": "Could not complete this action. Try again.",
+  "onboarding_changed": "Setup changed in another tab. The latest saved step has been loaded.",
+  "onboarding_due_date_changed": "The first payment due date changed. Check the updated date and confirm it again.",
+  "onboarding_name_in_use": "A name or code is already used. Go back and choose another.",
+  "onboarding_demo_preview": "Use the isolated setup preview in demo."
 }

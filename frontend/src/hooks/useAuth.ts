@@ -95,11 +95,14 @@ const useAuth = () => {
     }
 
     clearBrowserSessionState()
+    await queryClient.cancelQueries()
     // Persistent observers (including the language provider) must see sign-out
     // before the cache is removed.
     queryClient.setQueryData(["currentUser"], null)
+    // Clearing while protected views are mounted makes their observers refetch
+    // without a session. Late 401 redirects can then interrupt the next navigation.
+    await navigate({ to: "/login" })
     queryClient.clear()
-    navigate({ to: "/login" })
   }
 
   return {

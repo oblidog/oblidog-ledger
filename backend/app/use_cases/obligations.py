@@ -321,6 +321,8 @@ def list_obligations_for_ledger(
     category_code: str | None = None,
     category_id: uuid.UUID | None = None,
     lifecycle: ObligationLifecycle | None = None,
+    due_from: date | None = None,
+    due_to: date | None = None,
 ) -> list[Obligation]:
     _require_ledger(session=session, ledger_id=ledger_id)
 
@@ -329,6 +331,10 @@ def list_obligations_for_ledger(
         .join(Obligation.category)
         .where(Obligation.ledger_id == ledger_id)
     )
+    if due_from is not None:
+        statement = statement.where(Obligation.due_date >= due_from)
+    if due_to is not None:
+        statement = statement.where(Obligation.due_date <= due_to)
     if year is not None:
         statement = statement.where(Obligation.period_year == year)
     if month is not None:
@@ -364,6 +370,7 @@ def create_manual_obligation(
     due_date: date | None = None,
     notes: str | None = None,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    commit: bool = True,
 ) -> Obligation:
     if current_amount is not None and current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
@@ -430,7 +437,10 @@ def create_manual_obligation(
         changes=_created_changes(obligation),
     )
 
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(obligation)
     return obligation
 
@@ -561,7 +571,8 @@ def _update_obligation_values(
     next_due_date = obligation.due_date if isinstance(due_date, _Unset) else due_date
     if next_current_amount is not None and next_current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
-    if next_due_date is not None:
+    # Scheduled deadlines can move into the previous billing month.
+    if next_due_date is not None and not isinstance(due_date, _Unset):
         minimum, maximum = due_date_range(
             BillingPeriod(obligation.period_year, obligation.period_month)
         )
@@ -634,6 +645,7 @@ def mark_obligation_ready(
     ledger_id: uuid.UUID,
     key: ObligationKey,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+    commit: bool = True,
 ) -> Obligation:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
@@ -668,7 +680,10 @@ def mark_obligation_ready(
         actor=actor,
         changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
     )
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(obligation)
     return obligation
 

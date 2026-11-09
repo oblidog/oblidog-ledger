@@ -109,9 +109,11 @@ export function ObligationTile(props: ObligationItemProps) {
           className="mt-4 min-h-11 w-full md:hidden"
           loading={loading}
           disabled={disabled}
-          onClick={
-            canMarkPaid ? onMarkPaid : canMarkReady ? onMarkReady : onEdit
-          }
+          onClick={(event) => {
+            if (canMarkPaid) onMarkPaid(event.currentTarget)
+            else if (canMarkReady) onMarkReady()
+            else onEdit()
+          }}
         >
           {canMarkPaid ? (
             <CreditCard />

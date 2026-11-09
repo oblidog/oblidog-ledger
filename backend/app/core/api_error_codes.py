@@ -3,6 +3,10 @@
 from typing import Literal
 
 ErrorCode = Literal[
+    "onboarding_changed",
+    "onboarding_due_date_changed",
+    "onboarding_name_in_use",
+    "onboarding_demo_preview",
     "auth_invalid_credentials",
     "user_inactive",
     "auth_invalid_token",
@@ -61,6 +65,7 @@ ErrorCode = Literal[
     "obligation_manual_forbidden",
     "obligation_invalid_key",
     "obligation_invalid_period",
+    "invalid_due_date_range",
     "obligation_invalid_lifecycle",
     "obligation_read_only",
     "obligation_invalid_values",

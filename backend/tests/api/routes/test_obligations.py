@@ -857,6 +857,50 @@ def test_update_obligation_validates_resulting_dates_and_allows_clearing_values(
     assert updated["issue_date_source"] == CurrentValueSource.UNKNOWN.value
 
 
+def test_update_preserves_scheduled_due_date_in_previous_month(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db,
+        owner_user_id=owner.id,
+        name=f"ledger-{random_lower_string()}",
+        business_calendar_country="PL",
+    )
+    group = category_use_cases.create_category_group(
+        session=db, ledger_id=ledger.id, name="Household"
+    )
+    category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=group.id,
+        name="Internet",
+        code="INET",
+        data_source_policy=DataSourcePolicy.HYBRID,
+        recurrence_interval=1,
+        recurrence_unit=RecurrenceUnit.MONTH,
+        first_due_date=date(2026, 11, 1),
+    )
+    obligation_use_cases.ensure_obligations_for_period(
+        session=db, ledger_id=ledger.id, period=BillingPeriod(2026, 11)
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/INET-2026-11"
+
+    response = client.patch(url, headers=headers, json={"current_amount": "49.99"})
+    assert response.status_code == 200
+    assert response.json()["current_amount"] == "49.99"
+    assert response.json()["due_date"] == "2026-10-30"
+    assert response.json()["due_date_source"] == CurrentValueSource.AUTOMATIC.value
+
+    invalid = client.patch(url, headers=headers, json={"due_date": "2026-10-29"})
+    assert invalid.status_code == 422
+
+    ready = client.patch(f"{url}/ready", headers=headers)
+    assert ready.status_code == 200
+    assert ready.json()["lifecycle"] == ObligationLifecycle.READY.value
+
+
 def test_mark_obligation_ready_requires_estimated_amount_and_due_date(
     client: TestClient, db: Session
 ) -> None:
@@ -1215,3 +1259,57 @@ def test_obligation_endpoints_require_authentication(
     response = client.get(f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations")
 
     assert response.status_code == 401
+
+
+def test_obligation_due_date_range_filters_actual_due_dates(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    _create_ready_obligation(db, ledger_id=ledger.id)
+    obligation = obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code="ELEC",
+        period=BillingPeriod(2026, 9),
+        data_ready=True,
+        current_amount=Decimal("100.00"),
+        due_date=date(2026, 10, 1),
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+
+    included = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-10-01", "due_to": "2026-10-01"},
+    )
+    assert included.status_code == 200
+    assert [item["id"] for item in included.json()["data"]] == [str(obligation.id)]
+
+    excluded = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-09-01", "due_to": "2026-09-30"},
+    )
+    assert excluded.status_code == 200
+    assert excluded.json()["count"] == 0
+
+    boundary = client.get(
+        url,
+        headers=headers,
+        params={"due_from": "2026-01-01", "due_to": "2027-01-01"},
+    )
+    assert boundary.status_code == 200
+
+    for params in (
+        {"due_from": "2026-09-30", "due_to": "2026-09-01"},
+        {"due_from": "2026-01-01", "due_to": "2027-01-02"},
+        {"due_from": "2026-01-01"},
+        {"due_to": "2027-01-01"},
+    ):
+        invalid = client.get(url, headers=headers, params=params)
+        assert invalid.status_code == 422
+        assert invalid.json()["code"] == "invalid_due_date_range"

@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Pencil } from "lucide-react"
 import { type ReactNode, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
@@ -10,7 +9,6 @@ import {
   type CategoryUpdate,
 } from "@/client"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +21,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -63,15 +62,23 @@ export function EditCategoryDialog({
   category,
   groups,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
+  onCloseAutoFocus,
 }: {
   ledgerId: string
   category: CategoryPublic
   groups: { id: string; name: string; is_active: boolean }[]
   trigger?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  onCloseAutoFocus?: (event: Event) => void
 }) {
   useTranslation()
 
-  const [open, setOpen] = useState(false)
+  const [localOpen, setLocalOpen] = useState(false)
+  const open = controlledOpen ?? localOpen
+  const setOpen = onOpenChange ?? setLocalOpen
   const currentCounterparty = categoryCounterparty(category)
   const [counterparty, setCounterparty] = useState<CounterpartySummary | null>(
     currentCounterparty,
@@ -143,23 +150,11 @@ export function EditCategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={i18n.t("app:categories.more_actions_for", {
-              value1: category.name,
-            })}
-          >
-            <Pencil />
-            <span className="sr-only">
-              {i18n.t("app:categories.edit")} {category.name}
-            </span>
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DialogHeader>
           <DialogTitle>{i18n.t("app:categories.edit_category")}</DialogTitle>
           <DialogDescription>
@@ -302,15 +297,15 @@ export function EditCategoryDialog({
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      {obligationModeDescription(field.value)}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <CurrencyField control={form.control} />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {obligationModeDescription(form.watch("data_source_policy"))}
-            </p>
             {form.watch("data_source_policy") !== "manual" && (
               <PaymentScheduleFields
                 ledgerId={ledgerId}

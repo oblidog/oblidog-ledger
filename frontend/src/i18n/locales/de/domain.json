@@ -33,6 +33,7 @@
     "integration": "Integration"
   },
   "componentType": {
+    "invoice_line": "Rechnungsposition",
     "invoice": "Rechnung",
     "invoice_item": "Rechnungsposten",
     "adjustment": "Korrektur",

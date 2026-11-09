@@ -34,11 +34,6 @@
   "no_activity_recorded_yet": "Noch keine Aktivitäten erfasst.",
   "loading": "Wird geladen…",
   "load_more": "Mehr laden",
-  "invoice": "Rechnung",
-  "invoice_item": "Rechnungsposten",
-  "adjustment": "Korrektur",
-  "consumption": "Verbrauch",
-  "other": "Sonstige",
   "type": "Typ",
   "custom_type": "Benutzerdefinierter Typ",
   "e_g_meter_reading": "z. B. Zählerstand",
@@ -135,5 +130,11 @@
   "payment_summary": "Zahlungsübersicht",
   "obligation_code": "Verbindlichkeitscode",
   "data_origin": "Datenherkunft",
-  "data_origin_help": "Quellen und Bestätigungsstatus der einzelnen Felder. Änderungen und Unterschiede stehen unter Aktivität."
+  "data_origin_help": "Quellen und Bestätigungsstatus der einzelnen Felder. Änderungen und Unterschiede stehen unter Aktivität.",
+  "first_category_help": "Lege zuerst eine Kategorie für die Rechnung an, die du verfolgen möchtest.",
+  "checking_first_payment": "Erste geplante Zahlung wird geprüft…",
+  "could_not_check_first_payment": "Es konnte nicht geprüft werden, ob die erste Zahlung bereits existiert.",
+  "first_automatic_payment_pending": "Die erste Zahlung wurde noch nicht erstellt. Diese Kategorie erstellt Zahlungsverpflichtungen automatisch nach dem Zahlungsplan.",
+  "first_payment_unavailable": "Die erste Zahlung kann nicht geöffnet werden. Prüfe den Zahlungsplan der Kategorie oder deinen Zugriff auf den Arbeitsbereich.",
+  "data_ready_help": "Aktiviere diese Option, wenn Betrag und Fälligkeit bestätigt sind. Du kannst vorhandene Angaben speichern und fehlende Daten später ergänzen."
 }

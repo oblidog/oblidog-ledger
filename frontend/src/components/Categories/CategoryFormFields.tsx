@@ -7,7 +7,11 @@ import {
   useWatch,
 } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { CategoriesService } from "@/client"
+import {
+  CategoriesService,
+  type SchedulePreviewPublic,
+  type SchedulePreviewRequest,
+} from "@/client"
 import {
   FormControl,
   FormField,
@@ -84,9 +88,15 @@ export function PaymentScheduleFields<T extends FieldValues>({
   ledgerId,
   control,
   onPresetChange,
+  previewSchedule,
+  previewKey,
 }: {
   ledgerId: string
   control: Control<T>
+  previewSchedule?: (
+    schedule: SchedulePreviewRequest,
+  ) => Promise<SchedulePreviewPublic>
+  previewKey?: string
   onPresetChange: (preset: string) => void
 }) {
   useTranslation()
@@ -126,13 +136,15 @@ export function PaymentScheduleFields<T extends FieldValues>({
   )
   const settled = schedule === debouncedSchedule
   const preview = useQuery({
-    queryKey: ["schedule-preview", ledgerId, debouncedSchedule],
+    queryKey: ["schedule-preview", ledgerId, debouncedSchedule, previewKey],
     queryFn: () =>
-      CategoriesService.previewPaymentSchedule({
-        ledgerId,
-        requestBody: debouncedSchedule,
-      }),
-    enabled: valid && settled,
+      previewSchedule
+        ? previewSchedule(debouncedSchedule)
+        : CategoriesService.previewPaymentSchedule({
+            ledgerId,
+            requestBody: debouncedSchedule,
+          }),
+    enabled: valid && settled && (!!ledgerId || !!previewSchedule),
     staleTime: 0,
     retry: false,
   })

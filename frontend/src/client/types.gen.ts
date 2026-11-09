@@ -15,7 +15,7 @@ export type ApiErrorResponse = {
     /**
      * Code
      */
-    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    code: 'onboarding_changed' | 'onboarding_due_date_changed' | 'onboarding_name_in_use' | 'onboarding_demo_preview' | 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'invalid_due_date_range' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
     /**
      * Params
      */
@@ -418,6 +418,29 @@ export type CategoryDataSchemasPublic = {
 };
 
 /**
+ * CategoryDraft
+ */
+export type CategoryDraft = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Group Id
+     */
+    group_id?: string | null;
+    /**
+     * Group Name
+     */
+    group_name?: string | null;
+    /**
+     * Code
+     */
+    code?: string | null;
+    currency?: Currency;
+};
+
+/**
  * CategoryGroupCreate
  */
 export type CategoryGroupCreate = {
@@ -578,6 +601,25 @@ export type CategoryUpdate = {
      */
     first_due_date?: string | null;
     currency?: Currency | null;
+};
+
+/**
+ * ChooseLedger
+ */
+export type ChooseLedger = {
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Action
+     */
+    action: 'ledger';
+    /**
+     * Ledger Id
+     */
+    ledger_id?: string | null;
+    ledger?: LedgerCreate | null;
 };
 
 /**
@@ -817,6 +859,32 @@ export type CounterpartyUpdate = {
 };
 
 /**
+ * CreateFirstPayment
+ */
+export type CreateFirstPayment = {
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Action
+     */
+    action: 'payment';
+    /**
+     * Amount
+     */
+    amount?: number | string | null;
+    /**
+     * Ready
+     */
+    ready?: boolean;
+    /**
+     * Confirmed Due Date
+     */
+    confirmed_due_date?: string | null;
+};
+
+/**
  * Currency
  */
 export type Currency = 'PLN' | 'EUR' | 'USD' | 'GBP' | 'CHF';
@@ -921,9 +989,35 @@ export type DailyCashflowPublic = {
 };
 
 /**
+ * DashboardSetup
+ */
+export type DashboardSetup = {
+    /**
+     * Completed
+     */
+    completed?: boolean;
+    payment?: SetupPayment | null;
+};
+
+/**
  * DataSourcePolicy
  */
 export type DataSourcePolicy = 'manual' | 'automatic' | 'hybrid';
+
+/**
+ * DescribeCategory
+ */
+export type DescribeCategory = {
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Action
+     */
+    action: 'category';
+    category: CategoryDraft;
+};
 
 /**
  * EffectiveValueSourceMode
@@ -942,6 +1036,25 @@ export type EnsuredObligationsPublic = {
      * Created Count
      */
     created_count: number;
+};
+
+/**
+ * FirstPaymentPreview
+ */
+export type FirstPaymentPreview = {
+    /**
+     * Business Calendar Country
+     */
+    business_calendar_country?: string | null;
+    /**
+     * First Due Date
+     */
+    first_due_date: string;
+    /**
+     * Recurrence Interval
+     */
+    recurrence_interval?: number;
+    recurrence_unit?: RecurrenceUnit;
 };
 
 /**
@@ -986,7 +1099,7 @@ export type IntegrationConflictResponse = {
     /**
      * Code
      */
-    code: 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    code: 'onboarding_changed' | 'onboarding_due_date_changed' | 'onboarding_name_in_use' | 'onboarding_demo_preview' | 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'invalid_due_date_range' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
     /**
      * Params
      */
@@ -2063,6 +2176,53 @@ export type ObligationsPublic = {
 };
 
 /**
+ * OnboardingState
+ */
+export type OnboardingState = {
+    /**
+     * Revision
+     */
+    revision?: number;
+    /**
+     * Step
+     */
+    step?: number;
+    /**
+     * Dismissed
+     */
+    dismissed?: boolean;
+    /**
+     * Ledger Id
+     */
+    ledger_id?: string | null;
+    default_currency?: Currency;
+    /**
+     * Business Calendar Country
+     */
+    business_calendar_country?: string;
+    category?: CategoryDraft | null;
+    schedule?: ScheduleDraft | null;
+    /**
+     * Obligation Key
+     */
+    obligation_key?: string | null;
+};
+
+/**
+ * PauseOnboarding
+ */
+export type PauseOnboarding = {
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Action
+     */
+    action: 'dismiss' | 'resume' | 'back' | 'restart';
+};
+
+/**
  * PeriodCashflowPublic
  */
 export type PeriodCashflowPublic = {
@@ -2132,6 +2292,21 @@ export type PeriodPaymentSummaryPublic = {
 export type RecurrenceUnit = 'month' | 'year';
 
 /**
+ * ScheduleDraft
+ */
+export type ScheduleDraft = {
+    /**
+     * First Due Date
+     */
+    first_due_date: string;
+    /**
+     * Recurrence Interval
+     */
+    recurrence_interval?: number;
+    recurrence_unit?: RecurrenceUnit;
+};
+
+/**
  * SchedulePreviewPublic
  */
 export type SchedulePreviewPublic = {
@@ -2174,6 +2349,36 @@ export type SchedulePreviewRequest = {
      * Reference Date
      */
     reference_date?: string | null;
+};
+
+/**
+ * SetSchedule
+ */
+export type SetSchedule = {
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Action
+     */
+    action: 'schedule';
+    schedule: ScheduleDraft;
+};
+
+/**
+ * SetupPayment
+ */
+export type SetupPayment = {
+    /**
+     * Category Code
+     */
+    category_code: string;
+    period: BillingPeriodInput;
+    /**
+     * Automatic
+     */
+    automatic: boolean;
 };
 
 /**
@@ -3685,6 +3890,14 @@ export type ObligationsReadObligationsData = {
          * Lifecycle
          */
         lifecycle?: ObligationLifecycle | null;
+        /**
+         * Due From
+         */
+        due_from?: string | null;
+        /**
+         * Due To
+         */
+        due_to?: string | null;
     };
     url: '/api/v1/ledgers/{ledger_id}/obligations';
 };
@@ -3932,6 +4145,316 @@ export type LedgersUpdateLedgerMemberResponses = {
 };
 
 export type LedgersUpdateLedgerMemberResponse = LedgersUpdateLedgerMemberResponses[keyof LedgersUpdateLedgerMemberResponses];
+
+export type OnboardingReadOnboardingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/onboarding/';
+};
+
+export type OnboardingReadOnboardingErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingReadOnboardingError = OnboardingReadOnboardingErrors[keyof OnboardingReadOnboardingErrors];
+
+export type OnboardingReadOnboardingResponses = {
+    /**
+     * Successful Response
+     */
+    200: OnboardingState;
+};
+
+export type OnboardingReadOnboardingResponse = OnboardingReadOnboardingResponses[keyof OnboardingReadOnboardingResponses];
+
+export type OnboardingAdvanceOnboardingData = {
+    /**
+     * Command
+     */
+    body: ({
+        action: 'ledger';
+    } & ChooseLedger) | ({
+        action: 'category';
+    } & DescribeCategory) | ({
+        action: 'schedule';
+    } & SetSchedule) | ({
+        action: 'payment';
+    } & CreateFirstPayment) | ({
+        action: 'dismiss' | 'resume' | 'back' | 'restart';
+    } & PauseOnboarding);
+    path?: never;
+    query?: never;
+    url: '/api/v1/onboarding/';
+};
+
+export type OnboardingAdvanceOnboardingErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingAdvanceOnboardingError = OnboardingAdvanceOnboardingErrors[keyof OnboardingAdvanceOnboardingErrors];
+
+export type OnboardingAdvanceOnboardingResponses = {
+    /**
+     * Successful Response
+     */
+    200: OnboardingState;
+};
+
+export type OnboardingAdvanceOnboardingResponse = OnboardingAdvanceOnboardingResponses[keyof OnboardingAdvanceOnboardingResponses];
+
+export type OnboardingPreviewFirstPaymentData = {
+    body: FirstPaymentPreview;
+    path?: never;
+    query?: never;
+    url: '/api/v1/onboarding/schedule-preview';
+};
+
+export type OnboardingPreviewFirstPaymentErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingPreviewFirstPaymentError = OnboardingPreviewFirstPaymentErrors[keyof OnboardingPreviewFirstPaymentErrors];
+
+export type OnboardingPreviewFirstPaymentResponses = {
+    /**
+     * Successful Response
+     */
+    200: SchedulePreviewPublic;
+};
+
+export type OnboardingPreviewFirstPaymentResponse = OnboardingPreviewFirstPaymentResponses[keyof OnboardingPreviewFirstPaymentResponses];
+
+export type OnboardingReadOnboardingEligibilityData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/onboarding/eligibility/{ledger_id}';
+};
+
+export type OnboardingReadOnboardingEligibilityErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingReadOnboardingEligibilityError = OnboardingReadOnboardingEligibilityErrors[keyof OnboardingReadOnboardingEligibilityErrors];
+
+export type OnboardingReadOnboardingEligibilityResponses = {
+    /**
+     * Response Onboarding-Read Onboarding Eligibility
+     *
+     * Successful Response
+     */
+    200: boolean;
+};
+
+export type OnboardingReadOnboardingEligibilityResponse = OnboardingReadOnboardingEligibilityResponses[keyof OnboardingReadOnboardingEligibilityResponses];
+
+export type OnboardingReadDashboardSetupData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/onboarding/dashboard/{ledger_id}';
+};
+
+export type OnboardingReadDashboardSetupErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingReadDashboardSetupError = OnboardingReadDashboardSetupErrors[keyof OnboardingReadDashboardSetupErrors];
+
+export type OnboardingReadDashboardSetupResponses = {
+    /**
+     * Successful Response
+     */
+    200: DashboardSetup;
+};
+
+export type OnboardingReadDashboardSetupResponse = OnboardingReadDashboardSetupResponses[keyof OnboardingReadDashboardSetupResponses];
 
 export type AnalyticsReadPeriodPaymentSummaryData = {
     body?: never;

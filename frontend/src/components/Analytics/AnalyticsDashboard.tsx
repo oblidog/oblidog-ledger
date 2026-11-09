@@ -11,6 +11,7 @@ import {
   LabelList,
   Pie,
   PieChart,
+  usePlotArea,
   XAxis,
   YAxis,
 } from "recharts"
@@ -44,13 +45,18 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { i18n } from "@/i18n"
-import { formatAmount as exactAmount, getLocale } from "@/i18n/format"
+import {
+  formatAmount as exactAmount,
+  formatBillingPeriod,
+  getLocale,
+} from "@/i18n/format"
 import { unpaidObligationsHref } from "./attentionNavigation"
-import { NeedsAttention } from "./NeedsAttention"
+import { DueCalendar } from "./DueCalendar"
+import { NeedsAttention, useAttentionOverview } from "./NeedsAttention"
 
 type Period = { year: number; month: number }
 
-const paymentScheduleChartConfig = {
+const paymentForecastChartConfig = {
   amount: {
     get label() {
       return i18n.t("app:analytics.due")
@@ -100,10 +106,7 @@ function addMonths(period: Period, offset: number): Period {
 }
 
 function periodLabel(period: Period) {
-  return new Intl.DateTimeFormat(getLocale(), {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(period.year, period.month - 1, 1))
+  return formatBillingPeriod(period, "short")
 }
 
 function formatAmount(amount: string, currency: string | null) {
@@ -151,6 +154,7 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
     () => addMonths(selectedPeriod, -5),
     [selectedPeriod],
   )
+  const attention = useAttentionOverview(ledgerId)
   const summary = useQuery({
     queryFn: () =>
       AnalyticsService.readPeriodPaymentSummary({
@@ -231,50 +235,44 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <BarChart3 className="size-5 text-primary" />
-            <Badge variant="outline">{i18n.t("app:analytics.dashboard")}</Badge>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {i18n.t("app:analytics.dashboard")}
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            {i18n.t(
-              "app:analytics.review_payment_progress_the_payment_schedule_and_period_totals",
-            )}
-          </p>
+      <div>
+        <div className="mb-2 flex items-center gap-2">
+          <BarChart3 className="size-5 text-primary" />
+          <Badge variant="outline">{i18n.t("app:analytics.dashboard")}</Badge>
         </div>
-        <div className="grid gap-1 text-sm font-medium">
-          {i18n.t("app:analytics.selected_period")}
-          <Select
-            value={periodValue(selectedPeriod)}
-            onValueChange={(value) => {
-              const period = selectablePeriods.find(
-                (item) => periodValue(item) === value,
-              )
-              if (period) setSelectedPeriod(period)
-            }}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {selectablePeriods.map((period) => (
-                <SelectItem
-                  key={periodValue(period)}
-                  value={periodValue(period)}
-                >
-                  {periodLabel(period)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {i18n.t("app:analytics.dashboard")}
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          {i18n.t("app:analytics.dashboard_payment_description")}
+        </p>
       </div>
 
-      <NeedsAttention key={ledgerId} ledgerId={ledgerId} />
+      <NeedsAttention
+        key={ledgerId}
+        ledgerId={ledgerId}
+        attention={attention}
+      />
+      <div
+        className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,5fr)]"
+        data-testid="dashboard-payment-widgets"
+      >
+        <DueCalendar
+          key={`due-calendar-${ledgerId}`}
+          ledgerId={ledgerId}
+          businessDate={attention.data?.pages[0]?.as_of_date}
+          refreshBusinessDate={() => void attention.refetch()}
+        />
+        <PaymentForecastCard
+          data={cashflow.data}
+          isError={cashflow.isError}
+          isLoading={cashflow.isLoading}
+          ledgerId={ledgerId}
+          period={selectedPeriod}
+          selectablePeriods={selectablePeriods}
+          onPeriodChange={setSelectedPeriod}
+        />
+      </div>
 
       <h2 className="text-lg font-semibold">
         {i18n.t("app:analytics.period_summary")} · {periodLabel(selectedPeriod)}
@@ -295,14 +293,6 @@ export function AnalyticsDashboard({ ledgerId }: { ledgerId: string }) {
           isLoading={cashflow.isLoading}
         />
       </section>
-
-      <CashflowChart
-        data={cashflow.data}
-        isError={cashflow.isError}
-        isLoading={cashflow.isLoading}
-        ledgerId={ledgerId}
-        period={selectedPeriod}
-      />
 
       <CategoryCostDonutCard
         data={obligations.data}
@@ -490,11 +480,9 @@ function CashflowOverviewCards({
     return (
       <Card className="gap-3 py-4 lg:col-span-2">
         <CardContent className="pt-6">
-          <QueryState
-            message={i18n.t(
-              "app:analytics.payment_schedule_could_not_be_loaded",
-            )}
-          />
+          <p className="text-sm text-muted-foreground">
+            {i18n.t("app:analytics.payment_metrics_could_not_be_loaded")}
+          </p>
         </CardContent>
       </Card>
     )
@@ -594,12 +582,14 @@ function CashflowMetricCard({
   )
 }
 
-function CashflowChart({
+function PaymentForecastCard({
   data,
   isError,
   isLoading,
   ledgerId,
   period,
+  selectablePeriods,
+  onPeriodChange,
 }: {
   data:
     | Awaited<ReturnType<typeof AnalyticsService.readRemainingPeriodCashflow>>
@@ -608,29 +598,72 @@ function CashflowChart({
   isLoading: boolean
   ledgerId: string
   period: Period
+  selectablePeriods: Period[]
+  onPeriodChange: (period: Period) => void
 }) {
   useTranslation()
 
   return (
-    <Card className="min-w-0 overflow-hidden gap-4 py-5">
-      <CardHeader>
-        <CardTitle>{i18n.t("app:analytics.payment_schedule")}</CardTitle>
-        <CardDescription>
-          {i18n.t("app:analytics.unpaid_amounts_grouped_by_due_date_in")}{" "}
-          {periodLabel(period)}
-          {i18n.t("app:analytics.each_currency_is_shown_separately")}
-        </CardDescription>
+    <Card
+      role="region"
+      aria-labelledby="payment-forecast-title"
+      className="@container/forecast min-w-0 gap-4 py-4"
+    >
+      <CardHeader className="flex flex-col gap-3 @md/forecast:flex-row @md/forecast:justify-between">
+        <div className="space-y-2">
+          <CardTitle>
+            <h2 id="payment-forecast-title">
+              {i18n.t("app:analytics.payment_forecast")}
+            </h2>
+          </CardTitle>
+          <CardDescription>
+            {i18n.t("app:analytics.payment_forecast_description")}
+          </CardDescription>
+        </div>
+        <div className="grid shrink-0 gap-1 text-sm font-medium">
+          <span id="payment-forecast-period">
+            {i18n.t("app:analytics.reporting_period")}
+          </span>
+          <Select
+            value={periodValue(period)}
+            onValueChange={(value) => {
+              const selected = selectablePeriods.find(
+                (item) => periodValue(item) === value,
+              )
+              if (selected) onPeriodChange(selected)
+            }}
+          >
+            <SelectTrigger
+              aria-labelledby="payment-forecast-period"
+              className="w-full @md/forecast:min-w-40"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {selectablePeriods.map((item) => (
+                <SelectItem key={periodValue(item)} value={periodValue(item)}>
+                  {formatBillingPeriod(item)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="min-w-0 space-y-4">
         {isLoading ? (
-          <Skeleton className="h-72 w-full" />
+          <div role="status">
+            <span className="sr-only">
+              {i18n.t("app:analytics.payment_forecast_loading")}
+            </span>
+            <Skeleton aria-hidden="true" className="h-72 w-full" />
+          </div>
         ) : isError || !data ? (
-          <QueryState
-            message={i18n.t("app:analytics.cashflow_could_not_be_loaded")}
-          />
+          <p role="alert" className="text-sm text-destructive">
+            {i18n.t("app:analytics.payment_forecast_failed")}
+          </p>
         ) : data.currency_summaries.length === 0 ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p role="status" className="text-sm text-muted-foreground">
               {i18n.t("app:analytics.no_unpaid_known_amounts")}
             </p>
             <ScheduleCompletenessStatus data={data} />
@@ -638,12 +671,12 @@ function CashflowChart({
         ) : (
           <div className="space-y-6">
             <ScheduleCompletenessStatus data={data} />
-            <div className="grid gap-8 xl:grid-cols-2">
+            <div className="grid gap-8 @2xl/forecast:grid-cols-2">
               {data.currency_summaries.map((summary) => (
                 <div
                   className={
                     data.currency_summaries.length === 1
-                      ? "min-w-0 xl:col-span-2"
+                      ? "min-w-0 @2xl/forecast:col-span-2"
                       : "min-w-0"
                   }
                   key={summary.currency}
@@ -712,11 +745,12 @@ function CashflowCurrencyChart({
   const currency = summary.currency
   const chartData = summary.daily.map((point) => ({
     amount: Number(point.amount),
+    amountLabel: formatCompactNumber(Number(point.amount)),
     cumulative: Number(point.cumulative_amount),
     date: point.due_date,
     fill: point.is_overdue ? "var(--destructive)" : "var(--color-amount)",
   }))
-  const showValueLabels = chartData.length <= 8
+  const hasFewBars = chartData.length <= 8
 
   return (
     <section className="min-w-0">
@@ -768,17 +802,18 @@ function CashflowCurrencyChart({
         </p>
       ) : (
         <ChartContainer
-          aria-label={i18n.t("app:analytics.scheduled_payments_for", {
+          role="group"
+          aria-label={i18n.t("app:analytics.payment_forecast_for", {
             value1: currency ?? i18n.t("app:analytics.no_currency_ed3595"),
           })}
           className="mt-4 h-64 w-full"
-          config={paymentScheduleChartConfig}
+          config={paymentForecastChartConfig}
           data-testid="payment-schedule-chart"
         >
           <BarChart
             accessibilityLayer
             data={chartData}
-            margin={{ top: showValueLabels ? 24 : 8, right: 4, left: 0 }}
+            margin={{ top: hasFewBars ? 24 : 8, right: 4, left: 0 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
@@ -836,13 +871,9 @@ function CashflowCurrencyChart({
               {chartData.map((point) => (
                 <Cell fill={point.fill} key={point.date} />
               ))}
-              {showValueLabels && (
-                <LabelList
-                  className="fill-foreground"
-                  dataKey="amount"
-                  fontSize={11}
-                  formatter={(value) => formatCompactNumber(Number(value))}
-                  position="top"
+              {hasFewBars && (
+                <CashflowValueLabels
+                  labels={chartData.map((point) => point.amountLabel)}
                 />
               )}
             </Bar>
@@ -855,6 +886,23 @@ function CashflowCurrencyChart({
         )}
       </p>
     </section>
+  )
+}
+
+function CashflowValueLabels({ labels }: { labels: string[] }) {
+  const plot = usePlotArea()
+  const longestLabel = Math.max(...labels.map((label) => label.length))
+  // Budget nine pixels per character at the 11px font size, plus a gap.
+  const slotWidth = longestLabel * 9 + 4
+  if (!plot || plot.width < labels.length * slotWidth) return null
+
+  return (
+    <LabelList
+      className="fill-foreground"
+      dataKey="amountLabel"
+      fontSize={11}
+      position="top"
+    />
   )
 }
 

@@ -284,3 +284,9 @@ export const UsersService = {
   updateUser: request(generated.UsersService.updateUser<true>),
   updateUserMe: request(generated.UsersService.updateUserMe<true>),
 }
+
+export const OnboardingService = {
+  readDashboardSetup: request(
+    generated.OnboardingService.readDashboardSetup<true>,
+  ),
+}

@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query"
-import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { AnalyticsService, type CategoryPublic } from "@/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -10,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { i18n } from "@/i18n"
@@ -27,15 +25,16 @@ function historyRange() {
 export function CategoryHistoryDialog({
   ledgerId,
   category,
-  trigger,
+  onClose,
+  onCloseAutoFocus,
 }: {
   ledgerId: string
   category: CategoryPublic
-  trigger: ReactNode
+  onClose: () => void
+  onCloseAutoFocus: (event: Event) => void
 }) {
   useTranslation()
 
-  const [open, setOpen] = useState(false)
   const range = historyRange()
   const history = useQuery({
     queryFn: () =>
@@ -46,13 +45,14 @@ export function CategoryHistoryDialog({
         to: range.to,
       }),
     queryKey: ["analytics", "category-history", ledgerId, category.id, range],
-    enabled: open,
   })
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DialogHeader>
           <DialogTitle>
             {category.name} {i18n.t("app:categories.amount_history")}

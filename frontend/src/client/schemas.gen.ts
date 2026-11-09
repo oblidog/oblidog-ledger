@@ -8,6 +8,10 @@ export const ApiErrorResponseSchema = {
         code: {
             type: 'string',
             enum: [
+                'onboarding_changed',
+                'onboarding_due_date_changed',
+                'onboarding_name_in_use',
+                'onboarding_demo_preview',
                 'auth_invalid_credentials',
                 'user_inactive',
                 'auth_invalid_token',
@@ -66,6 +70,7 @@ export const ApiErrorResponseSchema = {
                 'obligation_manual_forbidden',
                 'obligation_invalid_key',
                 'obligation_invalid_period',
+                'invalid_due_date_range',
                 'obligation_invalid_lifecycle',
                 'obligation_read_only',
                 'obligation_invalid_values',
@@ -858,6 +863,63 @@ export const CategoryDataSchemasPublicSchema = {
     title: 'CategoryDataSchemasPublic'
 } as const;
 
+export const CategoryDraftSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        group_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Group Id'
+        },
+        group_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Group Name'
+        },
+        code: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: '^[A-Z]{4}$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Code'
+        },
+        currency: {
+            $ref: '#/components/schemas/Currency',
+            default: 'PLN'
+        }
+    },
+    type: 'object',
+    required: [
+        'name'
+    ],
+    title: 'CategoryDraft'
+} as const;
+
 export const CategoryGroupCreateSchema = {
     properties: {
         name: {
@@ -1228,6 +1290,50 @@ export const CategoryUpdateSchema = {
         'data_source_policy'
     ],
     title: 'CategoryUpdate'
+} as const;
+
+export const ChooseLedgerSchema = {
+    properties: {
+        revision: {
+            type: 'integer',
+            minimum: 0,
+            title: 'Revision'
+        },
+        action: {
+            type: 'string',
+            const: 'ledger',
+            title: 'Action'
+        },
+        ledger_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Ledger Id'
+        },
+        ledger: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/LedgerCreate'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'revision',
+        'action'
+    ],
+    title: 'ChooseLedger'
 } as const;
 
 export const ComponentHistoryGroupPublicSchema = {
@@ -1731,6 +1837,60 @@ export const CounterpartyUpdateSchema = {
     title: 'CounterpartyUpdate'
 } as const;
 
+export const CreateFirstPaymentSchema = {
+    properties: {
+        revision: {
+            type: 'integer',
+            minimum: 0,
+            title: 'Revision'
+        },
+        action: {
+            type: 'string',
+            const: 'payment',
+            title: 'Action'
+        },
+        amount: {
+            anyOf: [
+                {
+                    type: 'number',
+                    minimum: 0
+                },
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Amount'
+        },
+        ready: {
+            type: 'boolean',
+            title: 'Ready',
+            default: false
+        },
+        confirmed_due_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Confirmed Due Date'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'revision',
+        'action'
+    ],
+    title: 'CreateFirstPayment'
+} as const;
+
 export const CurrencySchema = {
     type: 'string',
     enum: [
@@ -1906,6 +2066,28 @@ export const DailyCashflowPublicSchema = {
     title: 'DailyCashflowPublic'
 } as const;
 
+export const DashboardSetupSchema = {
+    properties: {
+        completed: {
+            type: 'boolean',
+            title: 'Completed',
+            default: false
+        },
+        payment: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/SetupPayment'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        }
+    },
+    type: 'object',
+    title: 'DashboardSetup'
+} as const;
+
 export const DataSourcePolicySchema = {
     type: 'string',
     enum: [
@@ -1914,6 +2096,32 @@ export const DataSourcePolicySchema = {
         'hybrid'
     ],
     title: 'DataSourcePolicy'
+} as const;
+
+export const DescribeCategorySchema = {
+    properties: {
+        revision: {
+            type: 'integer',
+            minimum: 0,
+            title: 'Revision'
+        },
+        action: {
+            type: 'string',
+            const: 'category',
+            title: 'Action'
+        },
+        category: {
+            $ref: '#/components/schemas/CategoryDraft'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'revision',
+        'action',
+        'category'
+    ],
+    title: 'DescribeCategory'
 } as const;
 
 export const EffectiveValueSourceModeSchema = {
@@ -1949,6 +2157,43 @@ export const EnsuredObligationsPublicSchema = {
         'created_count'
     ],
     title: 'EnsuredObligationsPublic'
+} as const;
+
+export const FirstPaymentPreviewSchema = {
+    properties: {
+        business_calendar_country: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Business Calendar Country'
+        },
+        first_due_date: {
+            type: 'string',
+            format: 'date',
+            title: 'First Due Date'
+        },
+        recurrence_interval: {
+            type: 'integer',
+            maximum: 1200,
+            minimum: 1,
+            title: 'Recurrence Interval',
+            default: 1
+        },
+        recurrence_unit: {
+            $ref: '#/components/schemas/RecurrenceUnit',
+            default: 'month'
+        }
+    },
+    type: 'object',
+    required: [
+        'first_due_date'
+    ],
+    title: 'FirstPaymentPreview'
 } as const;
 
 export const IntegrationCategoryDataRecordCreateSchema = {
@@ -2020,6 +2265,10 @@ export const IntegrationConflictResponseSchema = {
         code: {
             type: 'string',
             enum: [
+                'onboarding_changed',
+                'onboarding_due_date_changed',
+                'onboarding_name_in_use',
+                'onboarding_demo_preview',
                 'auth_invalid_credentials',
                 'user_inactive',
                 'auth_invalid_token',
@@ -2078,6 +2327,7 @@ export const IntegrationConflictResponseSchema = {
                 'obligation_manual_forbidden',
                 'obligation_invalid_key',
                 'obligation_invalid_period',
+                'invalid_due_date_range',
                 'obligation_invalid_lifecycle',
                 'obligation_read_only',
                 'obligation_invalid_values',
@@ -4327,6 +4577,109 @@ export const ObligationsPublicSchema = {
     title: 'ObligationsPublic'
 } as const;
 
+export const OnboardingStateSchema = {
+    properties: {
+        revision: {
+            type: 'integer',
+            title: 'Revision',
+            default: 0
+        },
+        step: {
+            type: 'integer',
+            maximum: 4,
+            minimum: 0,
+            title: 'Step',
+            default: 0
+        },
+        dismissed: {
+            type: 'boolean',
+            title: 'Dismissed',
+            default: false
+        },
+        ledger_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Ledger Id'
+        },
+        default_currency: {
+            $ref: '#/components/schemas/Currency',
+            default: 'PLN'
+        },
+        business_calendar_country: {
+            type: 'string',
+            title: 'Business Calendar Country',
+            default: 'PL'
+        },
+        category: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/CategoryDraft'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        schedule: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/ScheduleDraft'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        obligation_key: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Obligation Key'
+        }
+    },
+    type: 'object',
+    title: 'OnboardingState'
+} as const;
+
+export const PauseOnboardingSchema = {
+    properties: {
+        revision: {
+            type: 'integer',
+            minimum: 0,
+            title: 'Revision'
+        },
+        action: {
+            type: 'string',
+            enum: [
+                'dismiss',
+                'resume',
+                'back',
+                'restart'
+            ],
+            title: 'Action'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'revision',
+        'action'
+    ],
+    title: 'PauseOnboarding'
+} as const;
+
 export const PeriodCashflowPublicSchema = {
     properties: {
         period: {
@@ -4432,6 +4785,32 @@ export const RecurrenceUnitSchema = {
     title: 'RecurrenceUnit'
 } as const;
 
+export const ScheduleDraftSchema = {
+    properties: {
+        first_due_date: {
+            type: 'string',
+            format: 'date',
+            title: 'First Due Date'
+        },
+        recurrence_interval: {
+            type: 'integer',
+            maximum: 1200,
+            minimum: 1,
+            title: 'Recurrence Interval',
+            default: 1
+        },
+        recurrence_unit: {
+            $ref: '#/components/schemas/RecurrenceUnit',
+            default: 'month'
+        }
+    },
+    type: 'object',
+    required: [
+        'first_due_date'
+    ],
+    title: 'ScheduleDraft'
+} as const;
+
 export const SchedulePreviewPublicSchema = {
     properties: {
         period_year: {
@@ -4532,6 +4911,55 @@ export const SchedulePreviewRequestSchema = {
         'recurrence_unit'
     ],
     title: 'SchedulePreviewRequest'
+} as const;
+
+export const SetScheduleSchema = {
+    properties: {
+        revision: {
+            type: 'integer',
+            minimum: 0,
+            title: 'Revision'
+        },
+        action: {
+            type: 'string',
+            const: 'schedule',
+            title: 'Action'
+        },
+        schedule: {
+            $ref: '#/components/schemas/ScheduleDraft'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'revision',
+        'action',
+        'schedule'
+    ],
+    title: 'SetSchedule'
+} as const;
+
+export const SetupPaymentSchema = {
+    properties: {
+        category_code: {
+            type: 'string',
+            title: 'Category Code'
+        },
+        period: {
+            $ref: '#/components/schemas/BillingPeriodInput'
+        },
+        automatic: {
+            type: 'boolean',
+            title: 'Automatic'
+        }
+    },
+    type: 'object',
+    required: [
+        'category_code',
+        'period',
+        'automatic'
+    ],
+    title: 'SetupPayment'
 } as const;
 
 export const SystemRunPublicSchema = {
