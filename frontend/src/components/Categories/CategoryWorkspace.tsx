@@ -80,8 +80,11 @@ export function CategoryWorkspace({
   const latestCreatedCategory = categories.find(
     (category) => category.id === createdCategoryId,
   )
-  const { archiveGroup, archiveCategory, restoreCategory } =
-    useCategoryArchiveActions(ledgerId)
+  const {
+    archiveGroup,
+    archiveCategory: { mutate: archiveCategory },
+    restoreCategory: { mutate: restoreCategory },
+  } = useCategoryArchiveActions(ledgerId)
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -262,8 +265,8 @@ export function CategoryWorkspace({
             ledgerId={ledgerId}
             category={row.original}
             groups={groups}
-            onArchive={(categoryId) => archiveCategory.mutate(categoryId)}
-            onRestore={(categoryId) => restoreCategory.mutate(categoryId)}
+            onArchive={archiveCategory}
+            onRestore={restoreCategory}
           />
         ),
       },

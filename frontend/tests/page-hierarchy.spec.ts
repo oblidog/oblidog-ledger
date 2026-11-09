@@ -2,6 +2,15 @@ import { expect, type Page, test } from "@playwright/test"
 
 const ledgerId = "11111111-1111-4111-8111-111111111111"
 const userId = "22222222-2222-4222-8222-222222222222"
+const electricityCategory = {
+  id: "category",
+  category_group_id: "group",
+  name: "Electricity",
+  code: "ELEC",
+  is_active: true,
+  currency: "EUR",
+  data_source_policy: "manual",
+}
 test.use({ storageState: { cookies: [], origins: [] } })
 
 async function workspace(
@@ -51,17 +60,7 @@ async function workspace(
       })
     if (path.endsWith("/categories"))
       return send({
-        data: [
-          {
-            id: "category",
-            category_group_id: "group",
-            name: "Electricity",
-            code: "ELEC",
-            is_active: true,
-            currency: "EUR",
-            data_source_policy: "manual",
-          },
-        ],
+        data: [electricityCategory],
         count: 1,
       })
     if (path.includes("history-periods") || path.endsWith("/system-runs/tasks"))
@@ -206,4 +205,37 @@ test("category filters and primary action survive the simpler table", async ({
   await expect(dialog.getByLabel("Group", { exact: true })).toContainText(
     "Household",
   )
+})
+
+test("keeps the category actions menu open while categories refetch", async ({
+  page,
+}) => {
+  await workspace(page, "en", "light")
+  await page.goto(`/ledgers/${ledgerId}/categories`)
+  const actions = page.getByRole("button", {
+    name: "More actions for Electricity",
+  })
+  await actions.click()
+  const customFields = page.getByRole("menuitem", {
+    name: "Manage custom fields",
+  })
+  await expect(customFields).toBeVisible()
+
+  const refreshedDescription = "Details from background refetch"
+  await page.route(/\/api\/v1\/ledgers\/[^/?]+\/categories(?:\?|$)/, (route) =>
+    route.fulfill({
+      json: {
+        data: [{ ...electricityCategory, description: refreshedDescription }],
+        count: 1,
+      },
+    }),
+  )
+  // Suspense queries stay fresh for at least one second.
+  await page.clock.setFixedTime(new Date(Date.now() + 2_000))
+  await page.evaluate(() => window.dispatchEvent(new Event("visibilitychange")))
+
+  await expect(page.getByText(refreshedDescription)).toBeVisible()
+  await expect(customFields).toBeVisible()
+  await customFields.click()
+  await expect(page).toHaveURL(/\/custom-fields$/)
 })
