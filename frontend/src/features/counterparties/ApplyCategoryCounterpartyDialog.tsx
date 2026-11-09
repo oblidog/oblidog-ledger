@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type ReactNode, useId, useState } from "react"
+import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -26,18 +25,19 @@ export function ApplyCategoryCounterpartyDialog({
   categoryId,
   categoryName,
   disabled,
-  trigger,
+  onClose,
+  onCloseAutoFocus,
 }: {
   ledgerId: string
   categoryId: string
   categoryName: string
   disabled: boolean
-  trigger: ReactNode
+  onClose: () => void
+  onCloseAutoFocus: (event: Event) => void
 }) {
   useTranslation()
 
   const checkboxId = useId()
-  const [open, setOpen] = useState(false)
   const [overwrite, setOverwrite] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -45,7 +45,7 @@ export function ApplyCategoryCounterpartyDialog({
     queryKey: ["category-counterparty-apply", ledgerId, categoryId, overwrite],
     queryFn: () =>
       previewCategoryCounterpartyApply(ledgerId, categoryId, overwrite),
-    enabled: open && !disabled,
+    enabled: !disabled,
     staleTime: 0,
   })
   const mutation = useMutation({
@@ -61,7 +61,7 @@ export function ApplyCategoryCounterpartyDialog({
     },
     onSuccess: (result) => {
       showSuccessToast(result.message)
-      setOpen(false)
+      onClose()
       for (const key of ["obligations", "obligation", "obligation-actions"]) {
         void queryClient.invalidateQueries({ queryKey: [key, ledgerId] })
       }
@@ -73,15 +73,12 @@ export function ApplyCategoryCounterpartyDialog({
   })
   return (
     <Dialog
-      open={open}
-      onOpenChange={(value) => {
-        if (mutation.isPending) return
-        setOpen(value)
-        if (value) setOverwrite(false)
+      open
+      onOpenChange={() => {
+        if (!mutation.isPending) onClose()
       }}
     >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent>
+      <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>
             {i18n.t("app:counterparties.apply_counterparty_to_obligations")}
@@ -142,7 +139,7 @@ export function ApplyCategoryCounterpartyDialog({
           <Button
             variant="outline"
             disabled={mutation.isPending}
-            onClick={() => setOpen(false)}
+            onClick={onClose}
           >
             {i18n.t("app:counterparties.cancel")}
           </Button>
