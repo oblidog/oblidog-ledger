@@ -2,7 +2,10 @@ import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import type { CategoryPublic } from "@/client"
 import { Button } from "@/components/ui/button"
-import { firstScheduledPeriod } from "./categoryPresentation"
+import {
+  firstScheduledPaymentSearch,
+  firstScheduledPeriod,
+} from "./categoryPresentation"
 import { EditCategoryDialog } from "./EditCategoryDialog"
 
 type Props = Pick<
@@ -29,13 +32,11 @@ export function CategoryPaymentAction({
         <Link
           to="/ledgers/$ledgerId"
           params={{ ledgerId }}
-          search={{
-            ...(category.data_source_policy === "automatic"
-              ? { period: "all", lifecycle: "" }
-              : period),
-            category: category.code,
-            firstPayment: category.code,
-          }}
+          search={firstScheduledPaymentSearch(
+            category.code,
+            period,
+            category.data_source_policy === "automatic",
+          )}
           aria-label={t("app:categories.first_payment_for", {
             name: category.name,
           })}

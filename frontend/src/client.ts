@@ -286,14 +286,7 @@ export const UsersService = {
 }
 
 export const OnboardingService = {
-  readOnboardingEligibility: request(
-    generated.OnboardingService.readOnboardingEligibility<true>,
-  ),
-  previewFirstPayment: request(
-    generated.OnboardingService.previewFirstPayment<true>,
-  ),
-  readOnboarding: request(generated.OnboardingService.readOnboarding<true>),
-  advanceOnboarding: request(
-    generated.OnboardingService.advanceOnboarding<true>,
+  readDashboardSetup: request(
+    generated.OnboardingService.readDashboardSetup<true>,
   ),
 }

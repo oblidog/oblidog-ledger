@@ -11,7 +11,13 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.domain import BillingPeriod, Currency, DataSourcePolicy, LedgerAccessRole
+from app.domain import (
+    BillingPeriod,
+    Currency,
+    DataSourcePolicy,
+    LedgerAccessRole,
+    RecurrenceUnit,
+)
 from app.models import (
     Category,
     CategoryGroup,
@@ -590,3 +596,102 @@ def test_preview_of_unsaved_workspace_is_read_only_in_demo(
         )
         == 0
     )
+
+
+def test_dashboard_setup_uses_published_recurring_payments(
+    client: TestClient,
+    db: Session,
+    visitor: tuple[User, dict[str, str]],
+) -> None:
+    owner, headers = visitor
+    old_draft = draft(client, headers)
+    ledger_id = uuid.UUID(old_draft["ledger_id"])
+    url = f"{URL}dashboard/{ledger_id}"
+    empty = {"completed": False, "payment": None}
+    assert client.get(url, headers=headers).json() == empty
+
+    group = categories.create_category_group(
+        session=db, ledger_id=ledger_id, name="Existing bills"
+    )
+    categories.create_category(
+        session=db,
+        ledger_id=ledger_id,
+        category_group_id=group.id,
+        name="One-off payment",
+        code="ONCE",
+        data_source_policy=DataSourcePolicy.MANUAL,
+    )
+    obligations.create_manual_obligation(
+        session=db,
+        ledger_id=ledger_id,
+        category_code="ONCE",
+        period=BillingPeriod(2026, 11),
+    )
+    assert client.get(url, headers=headers).json() == empty
+
+    for name, code, policy in (
+        ("Automatic bill", "AUTO", DataSourcePolicy.AUTOMATIC),
+        ("Internet", "INET", DataSourcePolicy.HYBRID),
+    ):
+        categories.create_category(
+            session=db,
+            ledger_id=ledger_id,
+            category_group_id=group.id,
+            name=name,
+            code=code,
+            data_source_policy=policy,
+            recurrence_interval=1,
+            recurrence_unit=RecurrenceUnit.MONTH,
+            first_due_date=date(2026, 11, 1),
+        )
+    obligations.create_manual_obligation(
+        session=db,
+        ledger_id=ledger_id,
+        category_code="INET",
+        period=BillingPeriod(2026, 10),
+    )
+    expected = {
+        "completed": False,
+        "payment": {
+            "category_code": "INET",
+            "period": {"year": 2026, "month": 11},
+            "automatic": False,
+        },
+    }
+    assert client.get(url, headers=headers).json() == expected
+
+    collaborator = create_random_user(db)
+    collaborator_headers = authentication_token_from_email(
+        client=client, email=collaborator.email, db=db
+    )
+    assert client.get(url, headers=collaborator_headers).status_code == 404
+    ledgers.share_ledger(
+        session=db,
+        ledger_id=ledger_id,
+        target_user_id=collaborator.id,
+        role=LedgerAccessRole.VIEWER,
+    )
+    assert client.get(url, headers=collaborator_headers).status_code == 404
+    ledgers.share_ledger(
+        session=db,
+        ledger_id=ledger_id,
+        target_user_id=collaborator.id,
+        role=LedgerAccessRole.EDITOR,
+    )
+    assert client.get(url, headers=collaborator_headers).json() == expected
+
+    obligations.ensure_obligations_for_period(
+        session=db,
+        ledger_id=ledger_id,
+        period=BillingPeriod(2026, 12),
+    )
+    assert client.get(url, headers=headers).json() == {
+        "completed": True,
+        "payment": None,
+    }
+    assert client.get(URL, headers=headers).json() == old_draft
+
+    other = ledgers.create_ledger(
+        session=db, owner_user_id=owner.id, name="Other ledger"
+    )
+    assert client.get(f"{URL}dashboard/{other.id}", headers=headers).json() == empty

@@ -7,7 +7,6 @@ import LedgerList, {
   getLedgersQueryOptions,
 } from "@/components/Ledgers/LedgerList"
 import PendingLedgers from "@/components/Ledgers/PendingLedgers"
-import { OnboardingEntry } from "@/components/Onboarding/OnboardingEntry"
 import { i18n } from "@/i18n"
 
 export const Route = createFileRoute("/_layout/ledgers/")({
@@ -42,7 +41,6 @@ function LedgersContent() {
         </div>
         {data.data.length > 0 && <AddLedger />}
       </div>
-      <OnboardingEntry />
       <LedgerList ledgers={data.data} />
     </>
   )

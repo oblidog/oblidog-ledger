@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 
 from app.domain import Currency, RecurrenceUnit
 from app.schemas.ledgers import LedgerCreate, LedgerPreferencesInput
+from app.schemas.obligations import BillingPeriodInput
 
 Name = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
@@ -49,6 +50,17 @@ class OnboardingState(BaseModel):
     category: CategoryDraft | None = None
     schedule: ScheduleDraft | None = None
     obligation_key: str | None = None
+
+
+class SetupPayment(BaseModel):
+    category_code: str
+    period: BillingPeriodInput
+    automatic: bool
+
+
+class DashboardSetup(BaseModel):
+    completed: bool = False
+    payment: SetupPayment | None = None
 
 
 class Command(BaseModel):

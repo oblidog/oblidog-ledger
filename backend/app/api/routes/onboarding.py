@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
-from app.api.deps import CurrentUser, SessionDep, require_ledger_view_access
+from app.api.deps import (
+    CurrentUser,
+    SessionDep,
+    require_ledger_edit_access,
+    require_ledger_view_access,
+)
 from app.core.config import settings
 from app.domain import BillingPeriod
 from app.domain.business_calendar import BusinessCalendar
@@ -9,6 +14,7 @@ from app.domain.payment_schedule import payment_for_period
 from app.models import Ledger, Obligation
 from app.schemas.categories import SchedulePreviewPublic
 from app.schemas.onboarding import (
+    DashboardSetup,
     FirstPaymentPreview,
     OnboardingCommand,
     OnboardingState,
@@ -66,3 +72,11 @@ def read_onboarding_eligibility(
         )
         is None
     )
+
+
+@router.get("/dashboard/{ledger_id}", response_model=DashboardSetup)
+def read_dashboard_setup(
+    session: SessionDep,
+    ledger: Ledger = Depends(require_ledger_edit_access),
+) -> DashboardSetup:
+    return onboarding.read_dashboard_setup(session, ledger.id)
