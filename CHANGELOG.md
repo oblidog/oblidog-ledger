@@ -1,3 +1,21 @@
+## v0.23.0 (2026-11-09)
+
+### Feat
+
+- **onboarding**: guide setup from the dashboard (#644)
+- **onboarding**: guide users to the first scheduled payment (#643)
+- **dashboard**: pair due calendar with payment forecast (#633) (#638)
+- add dashboard Due Calendar (#632) (#634)
+- **onboarding**: guide users to their first recurring payment (#629)
+
+### Fix
+
+- **categories**: keep the actions menu open during refresh (#646)
+- **obligations**: restore table filters and quick payment (#640)
+- **i18n**: localize system labels and billing periods (#631)
+- **onboarding**: isolate drafts and reconcile resumed setup (#630)
+- **auth**: clear session queries after leaving protected views
+
 ## v0.22.1 (2026-11-03)
 
 ### Fix
