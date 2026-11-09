@@ -114,6 +114,9 @@ export function CreateObligationDialog({
         firstPayment &&
         apiErrorPayload(error)?.code === "obligation_conflict"
       ) {
+        void queryClient.invalidateQueries({
+          queryKey: obligationQueryKeys.list(ledgerId),
+        })
         firstPayment.onResolved(firstPayment.obligationKey)
         return
       }

@@ -53,6 +53,8 @@ async function mockWorkspace(
     firstExists = false,
     racesWithScheduler = false,
     automatic = false,
+    firstDueDate = category.first_due_date,
+    otherPayments = [] as ObligationPublic[],
     unscheduled = false,
     viewer = false,
     language = "en",
@@ -66,7 +68,7 @@ async function mockWorkspace(
   const savedCategory = {
     ...category,
     data_source_policy: automatic ? "automatic" : category.data_source_policy,
-    first_due_date: unscheduled ? null : category.first_due_date,
+    first_due_date: unscheduled ? null : firstDueDate,
   }
   const submissions: unknown[] = []
   const ledger = {
@@ -82,7 +84,8 @@ async function mockWorkspace(
   }, language)
   await page.route("**/api/v1/**", (route) => {
     const request = route.request()
-    const path = new URL(request.url()).pathname.replace(/\/$/, "")
+    const { pathname, searchParams } = new URL(request.url())
+    const path = pathname.replace(/\/$/, "")
     const post = request.method() === "POST"
     const send = (json: unknown, status = 200) =>
       route.fulfill({ json, status })
@@ -150,7 +153,22 @@ async function mockWorkspace(
       })
     }
     if (path.endsWith("/obligations")) {
-      if (!post) return list(exists ? [savedObligation] : [])
+      if (!post) {
+        const year = searchParams.get("year")
+        const month = searchParams.get("month")
+        const payments = exists
+          ? [...otherPayments, savedObligation]
+          : otherPayments
+        return list(
+          payments
+            .filter(
+              ({ period }) =>
+                (!year || period.year === Number(year)) &&
+                (!month || period.month === Number(month)),
+            )
+            .sort((a, b) => b.key.localeCompare(a.key)),
+        )
+      }
       submissions.push(request.postDataJSON())
       exists = true
       if (racesWithScheduler) return send({ code: "obligation_conflict" }, 409)
@@ -253,7 +271,9 @@ test("opens the obligation if the scheduler creates it before form submission", 
   page,
 }) => {
   const submissions = await mockWorkspace(page, { racesWithScheduler: true })
-  await page.goto(`${ledgerPath}?firstPayment=INET`)
+  await page.goto(
+    `${ledgerPath}?year=2026&month=11&category=INET&firstPayment=INET`,
+  )
   const dialog = page.getByRole("dialog")
   await dialog
     .getByRole("button", { name: "Create obligation", exact: true })
@@ -262,6 +282,12 @@ test("opens the obligation if the scheduler creates it before form submission", 
     dialog.getByRole("heading", { name: category.name }),
   ).toBeVisible()
   expect(submissions).toHaveLength(1)
+  await dialog.getByRole("button", { name: "Close", exact: true }).click()
+  const row = page
+    .getByTestId(/obligation-(row|card)$/)
+    .filter({ hasText: obligation.key })
+  await expect(row).toBeVisible()
+  await row.getByText(category.name, { exact: true }).click()
 
   await dialog.getByRole("button", { name: "Edit", exact: true }).click()
   const edit = page.getByRole("dialog", { name: "Edit obligation" })
@@ -296,6 +322,47 @@ for (const [language, label] of [
     expect(submissions).toHaveLength(0)
   })
 }
+
+test("opens the earliest recorded automatic payment after an ungenerated anchor", async ({
+  page,
+}) => {
+  const submissions = await mockWorkspace(page, {
+    automatic: true,
+    firstExists: true,
+    firstDueDate: "2026-09-01",
+    otherPayments: [
+      {
+        ...obligation,
+        id: "earlier",
+        key: "INET-2026-08",
+        period: { year: 2026, month: 8 },
+      },
+      {
+        ...obligation,
+        id: "later",
+        key: "INET-2026-12",
+        period: { year: 2026, month: 12 },
+      },
+    ],
+  })
+  await page.goto(`${ledgerPath}/categories`)
+  await page
+    .getByRole("link", { name: `First payment for ${category.name}` })
+    .click()
+  const dialog = page.getByRole("dialog")
+  await expect(
+    dialog
+      .getByRole("region", { name: "Payment summary" })
+      .getByText(obligation.key),
+  ).toBeVisible()
+  await dialog.getByRole("button", { name: "Close", exact: true }).click()
+  await expect(
+    page
+      .getByTestId(/obligation-(row|card)$/)
+      .filter({ hasText: obligation.key }),
+  ).toBeVisible()
+  expect(submissions).toHaveLength(0)
+})
 
 test("offers schedule setup for a category without a first due date", async ({
   page,

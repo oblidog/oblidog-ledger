@@ -338,12 +338,10 @@ test("German account choice persists and preserves category content", async ({
     .click()
   await expect(page.getByRole("dialog")).toBeVisible()
   await expect(
-    page
-      .getByRole("dialog")
-      .getByText(
-        "Zahlungsverpflichtungen folgen dem Zahlungsplan und können auch manuell erstellt werden.",
-      ),
-  ).toBeVisible()
+    page.getByRole("dialog").getByRole("combobox", { name: "Kategoriemodus" }),
+  ).toHaveAccessibleDescription(
+    /Du kannst Rechnungsdaten ohne Integration selbst eingeben\./,
+  )
   await noOverflow(page)
   await page
     .getByRole("dialog")

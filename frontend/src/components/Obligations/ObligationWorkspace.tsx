@@ -77,7 +77,13 @@ export function ObligationWorkspace({
     firstPaymentCategory && firstPeriod
       ? `${firstPaymentCategory.code}-${monthInputValue(String(firstPeriod.year), String(firstPeriod.month))}`
       : null
-  const firstObligation = useFirstScheduledObligation(ledgerId, firstKey)
+  const firstObligation = useFirstScheduledObligation(
+    ledgerId,
+    firstKey,
+    firstPaymentCategory?.data_source_policy === "automatic"
+      ? firstPaymentCategory.code
+      : undefined,
+  )
   const checkingFirstPayment =
     !!firstPaymentCode &&
     (categories.isPending ||

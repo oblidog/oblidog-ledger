@@ -30,7 +30,9 @@ export function CategoryPaymentAction({
           to="/ledgers/$ledgerId"
           params={{ ledgerId }}
           search={{
-            ...period,
+            ...(category.data_source_policy === "automatic"
+              ? { period: "all", lifecycle: "" }
+              : period),
             category: category.code,
             firstPayment: category.code,
           }}
