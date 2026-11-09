@@ -2,7 +2,10 @@ import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import type { CategoryPublic } from "@/client"
 import { Button } from "@/components/ui/button"
-import { firstScheduledPeriod } from "./categoryPresentation"
+import {
+  firstScheduledPaymentSearch,
+  firstScheduledPeriod,
+} from "./categoryPresentation"
 import { EditCategoryDialog } from "./EditCategoryDialog"
 
 type Props = Pick<
@@ -11,6 +14,7 @@ type Props = Pick<
 > & {
   category: CategoryPublic
   canEdit: boolean
+  demoPreview?: boolean
 }
 
 export function CategoryPaymentAction({
@@ -18,6 +22,7 @@ export function CategoryPaymentAction({
   groups,
   category,
   canEdit,
+  demoPreview = false,
 }: Props) {
   const { t } = useTranslation(["app"])
   if (!category.is_active) return null
@@ -30,11 +35,12 @@ export function CategoryPaymentAction({
           to="/ledgers/$ledgerId"
           params={{ ledgerId }}
           search={{
-            ...(category.data_source_policy === "automatic"
-              ? { period: "all", lifecycle: "" }
-              : period),
-            category: category.code,
-            firstPayment: category.code,
+            ...firstScheduledPaymentSearch(
+              category.code,
+              period,
+              demoPreview || category.data_source_policy === "automatic",
+            ),
+            ...(demoPreview ? { setupPreview: true } : {}),
           }}
           aria-label={t("app:categories.first_payment_for", {
             name: category.name,

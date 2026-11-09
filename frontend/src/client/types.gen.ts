@@ -989,6 +989,17 @@ export type DailyCashflowPublic = {
 };
 
 /**
+ * DashboardSetup
+ */
+export type DashboardSetup = {
+    /**
+     * Completed
+     */
+    completed?: boolean;
+    payment?: SetupPayment | null;
+};
+
+/**
  * DataSourcePolicy
  */
 export type DataSourcePolicy = 'manual' | 'automatic' | 'hybrid';
@@ -2353,6 +2364,21 @@ export type SetSchedule = {
      */
     action: 'schedule';
     schedule: ScheduleDraft;
+};
+
+/**
+ * SetupPayment
+ */
+export type SetupPayment = {
+    /**
+     * Category Code
+     */
+    category_code: string;
+    period: BillingPeriodInput;
+    /**
+     * Automatic
+     */
+    automatic: boolean;
 };
 
 /**
@@ -4367,6 +4393,68 @@ export type OnboardingReadOnboardingEligibilityResponses = {
 };
 
 export type OnboardingReadOnboardingEligibilityResponse = OnboardingReadOnboardingEligibilityResponses[keyof OnboardingReadOnboardingEligibilityResponses];
+
+export type OnboardingReadDashboardSetupData = {
+    body?: never;
+    path: {
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/onboarding/dashboard/{ledger_id}';
+};
+
+export type OnboardingReadDashboardSetupErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type OnboardingReadDashboardSetupError = OnboardingReadDashboardSetupErrors[keyof OnboardingReadDashboardSetupErrors];
+
+export type OnboardingReadDashboardSetupResponses = {
+    /**
+     * Successful Response
+     */
+    200: DashboardSetup;
+};
+
+export type OnboardingReadDashboardSetupResponse = OnboardingReadDashboardSetupResponses[keyof OnboardingReadDashboardSetupResponses];
 
 export type AnalyticsReadPeriodPaymentSummaryData = {
     body?: never;

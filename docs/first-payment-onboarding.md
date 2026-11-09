@@ -1,60 +1,41 @@
-# First recurring payment (#382)
+# First recurring payment (#382, #636)
 
-The guide is optional. Empty dashboards/workspaces offer it, and an interrupted
-setup can be resumed from the dashboard, workspace or ledger list. It never
-opens automatically. Existing users with populated ledgers get no new setup
-prompt. A dismissed prompt becomes a small resume button; normal forms remain
-available. The initial guide supports ledgers owned by the current user.
+The dashboard guide shows one next action for the active workspace. It opens the
+regular ledger form, the category list, or the First payment action from #635.
+Workspace owners and editors can use it. Hiding the guide is a local browser
+preference scoped to the account and workspace. Showing it again recomputes
+progress from saved data.
 
-## Persistence and publication
+The API checks for an active recurring category with a payment in one of its
+scheduled billing periods. The lookup returns setup status without loading
+the payment history into the browser. An existing payment completes setup and
+integrations are offered as an optional follow-up. If several schedules are
+waiting for their first payment, a hybrid category takes precedence so manual
+setup can continue immediately.
 
-`GET /api/v1/onboarding/eligibility/{ledger_id}` uses an existence query, so
-showing an empty-state prompt never downloads the ledger's payment history.
+The demo guide links to the regular Categories view in the sample ledger and
+explains how to open a saved payment. The guide keeps the category and payment
+screens in read-only preview mode. If a category has no saved payment, visitors
+can return to Categories and choose another example. The regular navigation
+continues to use the configured demo permissions.
 
-`GET /api/v1/onboarding/` reads the user's saved state. Commands to the same
-endpoint carry the last revision. A user-row lock serializes concurrent tabs;
-a stale revision returns `onboarding_changed`, prompting a progress refresh.
-The lock, state change and domain writes commit in a single transaction.
+## Compatibility and cleanup
 
-1. Choose an owned ledger or create one. Re-entering its name after restarting
-   reuses the existing active ledger; its existing preferences take precedence.
-2. Describe the category and select an existing group or enter a new group name.
-3. Set and preview the schedule. Steps 2–3 store drafts, without publishing a
-   category that the scheduler could pick up.
-4. Create the group (if needed), category and first obligation together. An
-   unused four-letter code is generated unless the user supplies one.
+The self-hosted v0.22.1 frontend predates the wizard. The previous `dev` frontend
+contains the wizard and is a source for Vercel demo previews. Existing preview
+builds and already-open browser sessions can still call the old API. The
+wizard API and saved state stay available during this transition.
 
-Back changes the current step and preserves the saved drafts. Finish later saves
-completed steps; unsent edits in the current step are not saved. Start over
-clears the guide's draft, without deleting a workspace already created. If the
-workspace or group was deleted/archived while paused, the user can go back or
-start over and select a valid one. A conflicting name/code rolls back the whole
-final transaction, including a newly created group.
+Published ledgers, groups, categories and obligations remain available in the
+regular screens. The old wizard saved category and schedule drafts separately
+until its final commit. The new guide uses published records. A user who paused
+with an unpublished draft can continue from any ledger already created and
+enter the remaining details in the regular forms.
 
-The category uses `hybrid`, because `manual` disables recurrence. Integration
-setup is optional and does not affect completion. An unknown amount produces a
-collecting-data obligation; a known amount remains estimated unless the user
-confirms both amount and effective due date. Confirming marks it ready, never
-paid. Future obligations use the normal scheduler and estimation rules.
-
-The first obligation uses the anchor's billing period even when the business
-calendar moves the due date into the previous month. Its creation and ready
-confirmation use the existing use cases and action log with the current user
-as actor. The normal generator subsequently reuses its business key.
-
-`POST /api/v1/onboarding/schedule-preview` is an authenticated, read-only
-calculation using the common business-calendar rules. It also previews a
-workspace that has not been saved, without creating it.
-
-## Demo
-
-Demo exposes a small “Try the setup guide” button even with populated data.
-The same forms run as a local, ephemeral preview. Commands never reach the
-shared account, regardless of `DEMO_WRITES_ENABLED`; the API rejects onboarding
-mutations in demo as well. Only the side-effect-free schedule preview is
-allowed in read-only demo. Currency and calendar selections are reflected in
-the preview. Closing the guide discards its local progress. The completion
-screen explicitly says no data was saved and has no links to fictional entities.
+After all wizard-based frontends have been replaced and the rollback window has
+ended, verify the old endpoints have no consumers before removing their routes,
+generated client contract and saved draft state. Treat the state removal as a
+separate migration.
 
 ## Pilot checklist — pending human validation
 

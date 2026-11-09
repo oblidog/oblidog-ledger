@@ -39,9 +39,11 @@ const FILTER_ALL = "all"
 export function CategoryWorkspace({
   ledgerId,
   canEdit,
+  demoPreview,
 }: {
   ledgerId: string
   canEdit: boolean
+  demoPreview: boolean
 }) {
   const { t } = useTranslation(["common", "app"])
 
@@ -192,6 +194,7 @@ export function CategoryWorkspace({
                   ledgerId={ledgerId}
                   groups={groups}
                   canEdit={canEdit}
+                  demoPreview={demoPreview}
                 />
               </div>
             )}
@@ -268,6 +271,7 @@ export function CategoryWorkspace({
     [
       archiveCategory,
       canEdit,
+      demoPreview,
       groups,
       latestCreatedCategory?.id,
       ledgerId,
@@ -386,7 +390,14 @@ export function CategoryWorkspace({
           </Select>
         </div>
         <div className="overflow-hidden rounded-lg border">
-          <DataTable columns={columns} data={rows} />
+          <DataTable
+            columns={
+              demoPreview
+                ? columns.filter((column) => column.id !== "actions")
+                : columns
+            }
+            data={rows}
+          />
         </div>
       </div>
     </div>

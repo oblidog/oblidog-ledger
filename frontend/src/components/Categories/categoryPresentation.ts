@@ -31,3 +31,15 @@ export function firstScheduledPeriod(category: CategoryPublic) {
   const [year, month] = category.first_due_date.split("-").map(Number)
   return { year, month }
 }
+
+export function firstScheduledPaymentSearch(
+  categoryCode: string,
+  period: { year: number; month: number },
+  allPeriods: boolean,
+) {
+  return {
+    ...(allPeriods ? { period: "all", lifecycle: "" } : period),
+    category: categoryCode,
+    firstPayment: categoryCode,
+  }
+}

@@ -9,7 +9,7 @@ import string
 import unicodedata
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import case, extract, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,15 +21,19 @@ from app.domain import (
     DataSourcePolicy,
     ObligationActionActor,
     ObligationKey,
+    RecurrenceUnit,
 )
-from app.models import Category, CategoryGroup, Ledger, User
+from app.models import Category, CategoryGroup, Ledger, Obligation, User
+from app.schemas.obligations import BillingPeriodInput
 from app.schemas.onboarding import (
     ChooseLedger,
     CreateFirstPayment,
+    DashboardSetup,
     DescribeCategory,
     OnboardingCommand,
     OnboardingState,
     SetSchedule,
+    SetupPayment,
 )
 from app.use_cases import categories, ledgers, obligations
 from app.use_cases.exceptions import (
@@ -37,6 +41,68 @@ from app.use_cases.exceptions import (
     DuplicateCategoryError,
     DuplicateCategoryGroupError,
 )
+
+
+def read_dashboard_setup(session: Session, ledger_id: uuid.UUID) -> DashboardSetup:
+    # Match occurs_in_period without loading obligation history into Python.
+    months_since_start = (
+        (Obligation.period_year - extract("year", Category.first_due_date)) * 12
+        + Obligation.period_month
+        - extract("month", Category.first_due_date)
+    )
+    recurrence_months = Category.recurrence_interval * case(
+        (Category.recurrence_unit == RecurrenceUnit.YEAR, 12), else_=1
+    )
+    has_payment = (
+        select(Obligation.id)
+        .where(
+            Obligation.ledger_id == ledger_id,
+            Obligation.category_id == Category.id,
+            months_since_start >= 0,
+            months_since_start % func.nullif(recurrence_months, 0) == 0,
+        )
+        .exists()
+    )
+    candidate = session.execute(
+        select(
+            Category.code,
+            Category.first_due_date,
+            Category.data_source_policy,
+            has_payment,
+        )
+        .where(
+            Category.ledger_id == ledger_id,
+            Category.is_active.is_(True),
+            Category.data_source_policy.in_(
+                [DataSourcePolicy.HYBRID, DataSourcePolicy.AUTOMATIC]
+            ),
+            Category.recurrence_interval > 0,
+            Category.recurrence_unit.is_not(None),
+            Category.first_due_date.is_not(None),
+        )
+        .order_by(
+            has_payment.desc(),
+            (Category.data_source_policy == DataSourcePolicy.HYBRID).desc(),
+            Category.name,
+            Category.id,
+        )
+        .limit(1)
+    ).one_or_none()
+    if candidate is None:
+        return DashboardSetup()
+    code, first_due_date, policy, completed = candidate
+    if completed:
+        return DashboardSetup(completed=True)
+    assert first_due_date is not None
+    return DashboardSetup(
+        payment=SetupPayment(
+            category_code=code,
+            period=BillingPeriodInput(
+                year=first_due_date.year, month=first_due_date.month
+            ),
+            automatic=policy is DataSourcePolicy.AUTOMATIC,
+        ),
+    )
 
 
 def _conflict() -> ApplicationError:

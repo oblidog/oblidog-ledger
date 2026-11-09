@@ -94,12 +94,12 @@ export function useObligationDetail(
 export function useFirstScheduledObligation(
   ledgerId: string,
   key: string | null,
-  automaticCategoryCode?: string,
+  existingCategoryCode?: string,
 ) {
   return useQuery({
     queryKey: [
       ...obligationQueryKeys.firstScheduled(ledgerId, key),
-      automaticCategoryCode,
+      existingCategoryCode,
     ],
     enabled: key !== null,
     retry: false,
@@ -107,10 +107,10 @@ export function useFirstScheduledObligation(
     refetchOnWindowFocus: false,
     queryFn: async () => {
       if (!key) return null
-      if (automaticCategoryCode) {
+      if (existingCategoryCode) {
         const { data } = await ObligationsService.readObligations({
           ledgerId,
-          categoryCode: automaticCategoryCode,
+          categoryCode: existingCategoryCode,
         })
         // The API orders billing periods newest first. Business keys for
         // one category sort in billing-period order (CODE-YYYY-MM).

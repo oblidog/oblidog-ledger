@@ -45,10 +45,12 @@ import { useObligationFilters } from "./useObligationFilters"
 export function ObligationWorkspace({
   ledgerId,
   canEdit,
+  demoPreview,
   defaultLifecycle = "unpaid",
 }: {
   ledgerId: string
   canEdit: boolean
+  demoPreview: boolean
   defaultLifecycle?: LifecycleFilter
 }) {
   useTranslation()
@@ -80,8 +82,8 @@ export function ObligationWorkspace({
   const firstObligation = useFirstScheduledObligation(
     ledgerId,
     firstKey,
-    firstPaymentCategory?.data_source_policy === "automatic"
-      ? firstPaymentCategory.code
+    demoPreview || firstPaymentCategory?.data_source_policy === "automatic"
+      ? firstPaymentCategory?.code
       : undefined,
   )
   const checkingFirstPayment =
@@ -97,6 +99,8 @@ export function ObligationWorkspace({
     !checkingFirstPayment &&
     !firstObligation.isError &&
     !categories.isError
+  const previewWithoutPayment =
+    demoPreview && !firstObligation.isError && !categories.isError
   const firstPaymentDetails =
     !checkingFirstPayment && !categories.isError && !firstObligation.isError
       ? firstObligation.data?.key
@@ -278,13 +282,26 @@ export function ObligationWorkspace({
                   ? "app:obligations.checking_first_payment"
                   : firstObligation.isError || categories.isError
                     ? "app:obligations.could_not_check_first_payment"
-                    : firstPaymentCategory?.data_source_policy ===
-                          "automatic" && firstPeriod
-                      ? "app:obligations.first_automatic_payment_pending"
-                      : "app:obligations.first_payment_unavailable",
+                    : previewWithoutPayment
+                      ? "app:onboarding.demo_payment_unavailable"
+                      : firstPaymentCategory?.data_source_policy ===
+                            "automatic" && firstPeriod
+                        ? "app:obligations.first_automatic_payment_pending"
+                        : "app:obligations.first_payment_unavailable",
               )}
             </p>
-            {!checkingFirstPayment && (
+            {!checkingFirstPayment && previewWithoutPayment && (
+              <Button asChild variant="outline" size="sm">
+                <Link
+                  to="/ledgers/$ledgerId/categories"
+                  params={{ ledgerId }}
+                  search={{ setupPreview: true }}
+                >
+                  {i18n.t("app:onboarding.open_categories")}
+                </Link>
+              </Button>
+            )}
+            {!checkingFirstPayment && !previewWithoutPayment && (
               <Button
                 variant="outline"
                 size="sm"

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { AnalyticsDashboard } from "@/components/Analytics/AnalyticsDashboard"
-import { OnboardingEntry } from "@/components/Onboarding/OnboardingEntry"
+import { DashboardNextSteps } from "@/components/Onboarding/DashboardNextSteps"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useActiveLedger } from "@/hooks/useActiveLedger"
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_layout/")({
 function Dashboard() {
   useTranslation()
 
-  const { activeLedger, isLoading } = useActiveLedger()
+  const { activeLedger, isLoading, isError } = useActiveLedger()
 
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />
@@ -30,7 +30,7 @@ function Dashboard() {
   if (activeLedger) {
     return (
       <div className="space-y-6">
-        <OnboardingEntry ledgerId={activeLedger.id} />
+        <DashboardNextSteps ledger={activeLedger} />
         <AnalyticsDashboard ledgerId={activeLedger.id} />
       </div>
     )
@@ -38,7 +38,6 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <OnboardingEntry />
       <div>
         <h1 className="max-w-xl truncate text-2xl font-semibold">
           {i18n.t("app:analytics.dashboard")}
@@ -47,6 +46,7 @@ function Dashboard() {
           {i18n.t("app:analytics.select_a_ledger_to_see_its_payment_analytics")}
         </p>
       </div>
+      {!isError && <DashboardNextSteps ledger={null} />}
       <section className="rounded-lg border bg-card p-6 text-card-foreground">
         <h2 className="text-lg font-medium">
           {i18n.t("app:analytics.no_ledger_selected")}

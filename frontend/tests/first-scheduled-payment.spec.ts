@@ -57,6 +57,7 @@ async function mockWorkspace(
     otherPayments = [] as ObligationPublic[],
     unscheduled = false,
     viewer = false,
+    demoWrites = undefined as boolean | undefined,
     language = "en",
   } = {},
 ) {
@@ -92,9 +93,9 @@ async function mockWorkspace(
     const list = (data: unknown[]) => send({ data, count: data.length })
     if (path.endsWith("/utils/public-config")) {
       return send({
-        environment: "local",
-        is_demo: false,
-        demo_writes_enabled: false,
+        environment: demoWrites === undefined ? "local" : "demo",
+        is_demo: demoWrites !== undefined,
+        demo_writes_enabled: demoWrites ?? false,
       })
     }
     if (path.endsWith("/users/me")) {
@@ -143,6 +144,50 @@ async function mockWorkspace(
       }
       return list(categories ? [savedCategory] : [])
     }
+    if (path === `/api/v1/onboarding/dashboard/${ledgerId}`) {
+      return send({
+        completed: exists,
+        payment:
+          categories && !exists && !unscheduled
+            ? {
+                category_code: category.code,
+                period: obligation.period,
+                automatic,
+              }
+            : null,
+      })
+    }
+    if (path.endsWith("/analytics/attention")) {
+      return send({
+        as_of_date: "2026-11-01",
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 8,
+      })
+    }
+    if (path.endsWith("/analytics/period-summary")) {
+      return send({
+        period: obligation.period,
+        total_obligation_count: 0,
+        paid_obligation_count: 0,
+        paid_percentage: null,
+        unknown_amount_count: 0,
+        is_complete: true,
+        amount_summaries: [],
+      })
+    }
+    if (path.endsWith("/analytics/cashflow")) {
+      return send({
+        period: obligation.period,
+        as_of_date: "2026-11-01",
+        unknown_amount_count: 0,
+        without_due_date_count: 0,
+        is_complete: true,
+        currency_summaries: [],
+      })
+    }
+    if (path.includes("/analytics/")) return send({ points: [] })
     if (path.endsWith("/schedule-preview")) {
       return send({
         period_year: 2026,
@@ -198,16 +243,21 @@ test("creates the first recurring payment through the ordinary forms and reopens
 }) => {
   test.slow()
   const submissions = await mockWorkspace(page, { empty: true })
-  await page.goto("/ledgers")
+  await page.goto("/")
+  const guide = page.getByRole("region", {
+    name: "Add your first recurring payment",
+  })
   const dialog = page.getByRole("dialog")
-  await page.getByRole("button", { name: "New ledger", exact: true }).click()
+  await guide.getByRole("button", { name: "Hide setup guide" }).click()
+  await page.reload()
+  await expect(guide).toHaveCount(0)
+  await page.getByRole("button", { name: "Show setup guide" }).click()
+  await guide.getByRole("button", { name: "New ledger", exact: true }).click()
   await dialog.getByLabel("Name", { exact: true }).fill("Household ledger")
   await dialog
     .getByRole("button", { name: "Create ledger", exact: true })
     .click()
-  await page.getByRole("link", { name: /Household ledger/ }).click()
-
-  await page.getByRole("link", { name: "Add your first category" }).click()
+  await guide.getByRole("link", { name: "Open categories" }).click()
   await expect(page.getByText(/A category needs an active group/)).toBeVisible()
   await page.getByRole("button", { name: "New group", exact: true }).click()
   await dialog.getByLabel("Name", { exact: true }).fill(group.name)
@@ -227,9 +277,8 @@ test("creates the first recurring payment through the ordinary forms and reopens
     .click()
 
   await expect(page.getByText(`Next step for ${category.name}`)).toBeVisible()
-  await page
-    .getByRole("link", { name: `First payment for ${category.name}` })
-    .click()
+  await page.goto("/")
+  await guide.getByRole("link", { name: "Open first payment" }).click()
   await expect(dialog.getByLabel("Category", { exact: true })).toHaveValue(
     category.code,
   )
@@ -265,6 +314,100 @@ test("creates the first recurring payment through the ordinary forms and reopens
     dialog.getByRole("heading", { name: category.name }),
   ).toBeVisible()
   expect(submissions).toHaveLength(1)
+
+  await page.goto("/")
+  const done = page.getByRole("region", {
+    name: "Your recurring payment is set up",
+  })
+  await expect(
+    done.getByRole("link", { name: "Explore integrations" }),
+  ).toHaveAttribute("href", `${ledgerPath}/integrations`)
+  await expect(
+    page.getByRole("link", { name: "Open first payment" }),
+  ).toHaveCount(0)
+})
+
+for (const demoWrites of [true, false]) {
+  test(`dashboard demo guide opens a saved payment with writes ${demoWrites ? "enabled" : "disabled"}`, async ({
+    page,
+  }) => {
+    await mockWorkspace(page, {
+      automatic: true,
+      firstExists: true,
+      demoWrites,
+    })
+    const writes: string[] = []
+    const wizardRequests: string[] = []
+    page.on("request", (request) => {
+      const path = new URL(request.url()).pathname
+      if (path.includes("/api/v1/onboarding")) wizardRequests.push(path)
+      if (
+        path.includes("/api/v1/") &&
+        !["GET", "OPTIONS"].includes(request.method())
+      ) {
+        writes.push(path)
+      }
+    })
+    await page.goto("/")
+    const guide = page.getByRole("region", {
+      name: "See how recurring payments work",
+    })
+    await guide.getByRole("link", { name: "Open categories" }).click()
+    await expect(
+      page.getByRole("button", { name: "New category" }),
+    ).toHaveCount(0)
+    await page
+      .getByRole("link", { name: `First payment for ${category.name}` })
+      .click()
+    const dialog = page.getByRole("dialog")
+    await expect(
+      dialog.getByRole("heading", { name: category.name }),
+    ).toBeVisible()
+    await expect(
+      dialog.getByRole("button", { name: "Edit", exact: true }),
+    ).toHaveCount(0)
+    expect(wizardRequests).toEqual([])
+    expect(writes).toEqual([])
+  })
+}
+
+test("demo guide keeps a missing hybrid payment read-only when demo writes are enabled", async ({
+  page,
+}) => {
+  const submissions = await mockWorkspace(page, { demoWrites: true })
+  await page.goto("/")
+  const guide = page.getByRole("region", {
+    name: "See how recurring payments work",
+  })
+  await guide.getByRole("link", { name: "Open categories" }).click()
+  const firstPayment = page.getByRole("link", {
+    name: `First payment for ${category.name}`,
+  })
+  await expect(
+    page.getByRole("button", { name: /More actions for/ }),
+  ).toHaveCount(0)
+  await firstPayment.click()
+  await expect(
+    page.getByText(/This category has no saved payment to preview/),
+  ).toBeVisible()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "New obligation" }),
+  ).toHaveCount(0)
+  await page.getByRole("link", { name: "Open categories" }).click()
+  await expect(firstPayment).toBeVisible()
+  await expect(page.getByRole("button", { name: "New category" })).toHaveCount(
+    0,
+  )
+
+  await page.goto(`${ledgerPath}/categories`)
+  await firstPayment.click()
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Create obligation", exact: true }),
+  ).toBeVisible()
+  expect(submissions).toHaveLength(0)
 })
 
 test("opens the obligation if the scheduler creates it before form submission", async ({
@@ -382,6 +525,19 @@ test("offers schedule setup for a category without a first due date", async ({
 
 test("does not offer the creation form to a viewer", async ({ page }) => {
   const submissions = await mockWorkspace(page, { viewer: true })
+  const setupRequests: string[] = []
+  page.on("request", (request) => {
+    if (request.url().includes("/onboarding/dashboard/"))
+      setupRequests.push(request.url())
+  })
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "Dashboard", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("region", { name: "Add your first recurring payment" }),
+  ).toHaveCount(0)
+  expect(setupRequests).toEqual([])
   await page.goto(`${ledgerPath}?firstPayment=INET`)
   await expect(
     page.getByText(/The first payment cannot be opened/),

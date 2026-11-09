@@ -2066,6 +2066,28 @@ export const DailyCashflowPublicSchema = {
     title: 'DailyCashflowPublic'
 } as const;
 
+export const DashboardSetupSchema = {
+    properties: {
+        completed: {
+            type: 'boolean',
+            title: 'Completed',
+            default: false
+        },
+        payment: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/SetupPayment'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        }
+    },
+    type: 'object',
+    title: 'DashboardSetup'
+} as const;
+
 export const DataSourcePolicySchema = {
     type: 'string',
     enum: [
@@ -4915,6 +4937,29 @@ export const SetScheduleSchema = {
         'schedule'
     ],
     title: 'SetSchedule'
+} as const;
+
+export const SetupPaymentSchema = {
+    properties: {
+        category_code: {
+            type: 'string',
+            title: 'Category Code'
+        },
+        period: {
+            $ref: '#/components/schemas/BillingPeriodInput'
+        },
+        automatic: {
+            type: 'boolean',
+            title: 'Automatic'
+        }
+    },
+    type: 'object',
+    required: [
+        'category_code',
+        'period',
+        'automatic'
+    ],
+    title: 'SetupPayment'
 } as const;
 
 export const SystemRunPublicSchema = {
