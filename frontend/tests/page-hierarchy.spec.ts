@@ -239,3 +239,46 @@ test("keeps the category actions menu open while categories refetch", async ({
   await customFields.click()
   await expect(page).toHaveURL(/\/custom-fields$/)
 })
+
+test("can reopen category actions after saving a category edit", async ({
+  page,
+}) => {
+  await workspace(page, "en", "light")
+  const categoriesPath = `/api/v1/ledgers/${ledgerId}/categories`
+  let category = electricityCategory
+  await page.route(`**${categoriesPath}**`, async (route) => {
+    const request = route.request()
+    const path = new URL(request.url()).pathname
+    if (
+      path === `${categoriesPath}/${category.id}` &&
+      request.method() === "PATCH"
+    ) {
+      category = { ...category, ...request.postDataJSON() }
+      return route.fulfill({ json: category })
+    }
+    if (path === categoriesPath && request.method() === "GET") {
+      return route.fulfill({ json: { data: [category], count: 1 } })
+    }
+    return route.fallback()
+  })
+  await page.goto(`/ledgers/${ledgerId}/categories`)
+
+  const actions = page.getByRole("button", {
+    name: "More actions for Electricity",
+  })
+  await actions.press("Enter")
+  await page.getByRole("menuitem", { name: "Edit category" }).press("Enter")
+  const dialog = page.getByRole("dialog", { name: "Edit category" })
+  await expect(dialog).toBeVisible()
+  const description = "Updated electricity category"
+  await dialog.getByLabel("Description").fill(description)
+  await dialog.getByRole("button", { name: "Save changes" }).click()
+
+  await expect(dialog).toBeHidden()
+  await expect(page.getByText(description, { exact: true })).toBeVisible()
+  await expect(actions).toBeFocused()
+  await actions.click()
+  await expect(
+    page.getByRole("menuitem", { name: "Edit category" }),
+  ).toBeVisible()
+})
