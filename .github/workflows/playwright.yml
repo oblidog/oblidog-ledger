@@ -139,7 +139,7 @@ jobs:
         # Replace only this shard on retries; keep the other shard's report.
         name: blob-report-shard-${{ matrix.shard }}
         path: frontend/blob-report
-        retention-days: 1
+        retention-days: 30
         overwrite: true
         if-no-files-found: error
 
