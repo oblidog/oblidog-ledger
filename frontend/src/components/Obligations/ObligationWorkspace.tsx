@@ -57,7 +57,7 @@ export function ObligationWorkspace({
 
   const period = periodFromSearch()
   const { filters, search, update } = useObligationFilters(defaultLifecycle)
-  const { year, month, filterByPeriod, categoryCode, lifecycle } = filters
+  const { year, month, filterByPeriod, periods, categoryCode, lifecycle } = filters
   const isMobile = useIsMobile()
   const categories = useQuery({
     queryKey: ["categories", ledgerId, "obligation-filters"],
@@ -153,6 +153,7 @@ export function ObligationWorkspace({
   const obligations = useObligationList(
     ledgerId,
     filterByPeriod,
+    periods,
     year,
     month,
     categoryCode,
@@ -163,16 +164,28 @@ export function ObligationWorkspace({
     lifecycle,
   )
   const clearFilters = () =>
-    update({ filterByPeriod: false, categoryCode: "", lifecycle: "" })
+    update({ filterByPeriod: false, periods: [], categoryCode: "", lifecycle: "" })
   const activeFilters: ActiveFilter[] = []
   if (filterByPeriod && hasValidPeriodFilter) {
-    activeFilters.push({
-      key: "period",
-      label: i18n.t("app:messages.filter_period", {
-        value: formatBillingPeriod({ year: filterYear, month: filterMonth }),
-      }),
-      onRemove: () => update({ filterByPeriod: false }),
-    })
+    for (const selected of periods) {
+      const parsed = parseMonthInput(selected)
+      if (!parsed) continue
+      activeFilters.push({
+        key: `period-${selected}`,
+        label: i18n.t("app:messages.filter_period", {
+          value: formatBillingPeriod({ year: Number(parsed.year), month: Number(parsed.month) }),
+        }),
+        onRemove: () => {
+          const remaining = periods.filter((item) => item !== selected)
+          const first = remaining[0] && parseMonthInput(remaining[0])
+          update({
+            periods: remaining,
+            filterByPeriod: remaining.length > 0,
+            ...(first ? { year: first.year, month: first.month } : {}),
+          })
+        },
+      })
+    }
   }
   if (categoryCode) {
     const categoryName =
@@ -324,19 +337,14 @@ export function ObligationWorkspace({
           <div className="min-w-0 space-y-1.5">
             <Label>{i18n.t("app:obligations.billing_period")}</Label>
             <PeriodFilter
-              key={filterByPeriod ? monthInputValue(year, month) : "all"}
-              value={filterByPeriod ? monthInputValue(year, month) : ""}
-              onChange={(value) => {
-                const selected = parseMonthInput(value)
-                update(
-                  selected
-                    ? {
-                        year: selected.year,
-                        month: selected.month,
-                        filterByPeriod: true,
-                      }
-                    : { filterByPeriod: false },
-                )
+              value={filterByPeriod ? periods : []}
+              onChange={(selected) => {
+                const first = selected[0] && parseMonthInput(selected[0])
+                update({
+                  periods: selected,
+                  filterByPeriod: selected.length > 0,
+                  ...(first ? { year: first.year, month: first.month } : {}),
+                })
               }}
             />
           </div>
