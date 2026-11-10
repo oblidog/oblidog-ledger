@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import date, timedelta
 from typing import Any
@@ -143,6 +144,7 @@ def read_obligations(
     session: SessionDep,
     year: int | None = Query(default=None, ge=1, le=9999),
     month: int | None = Query(default=None, ge=1, le=12),
+    periods: list[str] | None = Query(default=None, max_length=24),
     category_code: str | None = Query(default=None, pattern=r"^[A-Z]{4}$"),
     lifecycle: ObligationLifecycle | None = None,
     due_from: date | None = Query(default=None),
@@ -159,9 +161,17 @@ def read_obligations(
             status_code=422,
             detail="provide both due date bounds in order, covering at most 366 days",
         )
+    parsed_periods = None
+    if periods is not None:
+        if year is not None or month is not None or not periods or len(periods) > 24:
+            raise HTTPException(code="invalid_periods", status_code=422, detail="Provide 1-24 periods without year/month")
+        if any(re.fullmatch(r"[0-9]{4}-(0[1-9]|1[0-2])", p) is None or p.startswith("0000-") for p in periods):
+            raise HTTPException(code="invalid_periods", status_code=422, detail="Periods must use YYYY-MM")
+        parsed_periods = list({(int(p[:4]), int(p[5:])) for p in periods})
     obligations = obligation_use_cases.list_obligations_for_ledger(
         session=session,
         ledger_id=ledger.id,
+        periods=parsed_periods,
         year=year,
         month=month,
         category_code=category_code,
