@@ -70,22 +70,14 @@ export function useObligationList(
     ),
     enabled: !filterByPeriod || isValidPeriod(Number(year), Number(month)),
     queryFn: async () => {
-      const multi = filterByPeriod && periods.length > 1
-      const response = await ObligationsService.readObligations({
+      return ObligationsService.readObligations({
         ledgerId,
-        year: filterByPeriod && !multi ? Number(year) : undefined,
-        month: filterByPeriod && !multi ? Number(month) : undefined,
+        periods: filterByPeriod && periods.length > 1 ? periods : undefined,
+        year: filterByPeriod && periods.length <= 1 ? Number(year) : undefined,
+        month: filterByPeriod && periods.length <= 1 ? Number(month) : undefined,
         categoryCode: categoryCode || undefined,
         lifecycle: lifecycle === "unpaid" ? undefined : lifecycle || undefined,
       })
-      if (!multi) return response
-      const selected = new Set(periods)
-      return {
-        ...response,
-        data: response.data.filter((item) =>
-          selected.has(`${String(item.period.year).padStart(4, "0")}-${String(item.period.month).padStart(2, "0")}`),
-        ),
-      }
     },
   })
 }
