@@ -8,6 +8,7 @@ export const obligationQueryKeys = {
   filteredList: (
     ledgerId: string,
     filterByPeriod: boolean,
+    periods: string[],
     year: string,
     month: string,
     categoryCode: string,
@@ -17,6 +18,7 @@ export const obligationQueryKeys = {
       "obligations",
       ledgerId,
       filterByPeriod,
+      periods,
       year,
       month,
       categoryCode,
@@ -50,6 +52,7 @@ export async function invalidateObligationAction(
 export function useObligationList(
   ledgerId: string,
   filterByPeriod: boolean,
+  periods: string[],
   year: string,
   month: string,
   categoryCode: string,
@@ -59,20 +62,31 @@ export function useObligationList(
     queryKey: obligationQueryKeys.filteredList(
       ledgerId,
       filterByPeriod,
+      periods,
       year,
       month,
       categoryCode,
       lifecycle,
     ),
     enabled: !filterByPeriod || isValidPeriod(Number(year), Number(month)),
-    queryFn: () =>
-      ObligationsService.readObligations({
+    queryFn: async () => {
+      const multi = filterByPeriod && periods.length > 1
+      const response = await ObligationsService.readObligations({
         ledgerId,
-        year: filterByPeriod ? Number(year) : undefined,
-        month: filterByPeriod ? Number(month) : undefined,
+        year: filterByPeriod && !multi ? Number(year) : undefined,
+        month: filterByPeriod && !multi ? Number(month) : undefined,
         categoryCode: categoryCode || undefined,
         lifecycle: lifecycle === "unpaid" ? undefined : lifecycle || undefined,
-      }),
+      })
+      if (!multi) return response
+      const selected = new Set(periods)
+      return {
+        ...response,
+        data: response.data.filter((item) =>
+          selected.has(`${String(item.period.year).padStart(4, "0")}-${String(item.period.month).padStart(2, "0")}`),
+        ),
+      }
+    },
   })
 }
 
