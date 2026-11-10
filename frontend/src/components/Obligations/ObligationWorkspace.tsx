@@ -23,7 +23,6 @@ import { ObligationList } from "./ObligationList"
 import { ObligationPaymentDialog } from "./ObligationPaymentDialog"
 import { ObligationTile } from "./ObligationTile"
 import {
-  isValidPeriod,
   type LifecycleFilter,
   lifecycleFilterLabel,
   lifecycleOptions,
@@ -57,7 +56,7 @@ export function ObligationWorkspace({
 
   const period = periodFromSearch()
   const { filters, search, update } = useObligationFilters(defaultLifecycle)
-  const { year, month, filterByPeriod, categoryCode, lifecycle } = filters
+  const { periods, categoryCode, lifecycle } = filters
   const isMobile = useIsMobile()
   const categories = useQuery({
     queryKey: ["categories", ledgerId, "obligation-filters"],
@@ -145,33 +144,31 @@ export function ObligationWorkspace({
     showErrorToast,
     showSuccessToast,
   } = actions
-  const filterYear = Number(year)
-  const filterMonth = Number(month)
-  const hasValidPeriodFilter =
-    !filterByPeriod || isValidPeriod(filterYear, filterMonth)
-
-  const obligations = useObligationList(
-    ledgerId,
-    filterByPeriod,
-    year,
-    month,
-    categoryCode,
-    lifecycle,
+  const latestSelectedPeriod = parseMonthInput(
+    periods[periods.length - 1] ?? "",
   )
+  const obligations = useObligationList(ledgerId, filters)
   const visibleObligations = visibleObligationRows(
     obligations.data?.data,
     lifecycle,
+    periods,
   )
   const clearFilters = () =>
-    update({ filterByPeriod: false, categoryCode: "", lifecycle: "" })
+    update({ periods: [], categoryCode: "", lifecycle: "" })
   const activeFilters: ActiveFilter[] = []
-  if (filterByPeriod && hasValidPeriodFilter) {
+  for (const selected of periods) {
+    const parsed = parseMonthInput(selected)
+    if (!parsed) continue
     activeFilters.push({
-      key: "period",
+      key: `period-${selected}`,
       label: i18n.t("app:messages.filter_period", {
-        value: formatBillingPeriod({ year: filterYear, month: filterMonth }),
+        value: formatBillingPeriod({
+          year: Number(parsed.year),
+          month: Number(parsed.month),
+        }),
       }),
-      onRemove: () => update({ filterByPeriod: false }),
+      onRemove: () =>
+        update({ periods: periods.filter((item) => item !== selected) }),
     })
   }
   if (categoryCode) {
@@ -227,8 +224,11 @@ export function ObligationWorkspace({
               defaultPeriod={
                 canCreateFirstPayment && firstPeriod
                   ? firstPeriod
-                  : filterByPeriod && hasValidPeriodFilter
-                    ? { year: filterYear, month: filterMonth }
+                  : latestSelectedPeriod
+                    ? {
+                        year: Number(latestSelectedPeriod.year),
+                        month: Number(latestSelectedPeriod.month),
+                      }
                     : period
               }
               onError={showErrorToast}
@@ -321,25 +321,10 @@ export function ObligationWorkspace({
           </div>
         )}
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="min-w-0 space-y-1.5">
-            <Label>{i18n.t("app:obligations.billing_period")}</Label>
-            <PeriodFilter
-              key={filterByPeriod ? monthInputValue(year, month) : "all"}
-              value={filterByPeriod ? monthInputValue(year, month) : ""}
-              onChange={(value) => {
-                const selected = parseMonthInput(value)
-                update(
-                  selected
-                    ? {
-                        year: selected.year,
-                        month: selected.month,
-                        filterByPeriod: true,
-                      }
-                    : { filterByPeriod: false },
-                )
-              }}
-            />
-          </div>
+          <PeriodFilter
+            value={periods}
+            onChange={(periods) => update({ periods })}
+          />
           <div className="min-w-0 space-y-1.5">
             <Label>{i18n.t("app:obligations.category_filter")}</Label>
             <CategoryFilter
@@ -381,24 +366,17 @@ export function ObligationWorkspace({
             size="sm"
             className="ml-auto"
             onClick={clearFilters}
-            disabled={!filterByPeriod && !categoryCode && !lifecycle}
+            disabled={periods.length === 0 && !categoryCode && !lifecycle}
           >
             {i18n.t("app:filters.clear_all")}
           </Button>
         </div>
-        {filterByPeriod && !hasValidPeriodFilter ? (
-          <p className="text-sm text-muted-foreground">
-            {i18n.t(
-              "app:obligations.enter_a_valid_year_and_month_to_load_obligations",
-            )}
-          </p>
-        ) : null}
-        {hasValidPeriodFilter && obligations.isLoading ? (
+        {obligations.isLoading ? (
           <p className="text-sm text-muted-foreground">
             {i18n.t("app:obligations.loading_obligations")}
           </p>
         ) : null}
-        {hasValidPeriodFilter && obligations.isError ? (
+        {obligations.isError ? (
           <div className="flex items-center gap-3 text-sm text-destructive">
             <span>{i18n.t("app:obligations.unable_to_load_obligations")}</span>
             <Button
@@ -410,9 +388,7 @@ export function ObligationWorkspace({
             </Button>
           </div>
         ) : null}
-        {hasValidPeriodFilter &&
-        !obligations.isError &&
-        visibleObligations?.length === 0 ? (
+        {!obligations.isError && visibleObligations?.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {i18n.t("app:obligations.no_obligations_match_these_filters")}
           </p>

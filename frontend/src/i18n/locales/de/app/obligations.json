@@ -123,6 +123,8 @@
   "no_categories_match": "Keine passenden Kategorien",
   "category_names_unavailable": "Kategorienamen konnten nicht geladen werden. Versuche es später erneut.",
   "all_periods": "Alle Zeiträume",
+  "add_period": "Weiteren Monat hinzufügen…",
+  "period_limit_reached": "Monatslimit erreicht ({{count}})",
   "other_period": "Anderen Monat wählen…",
   "choose_month": "Monat wählen",
   "apply_period": "Anwenden",

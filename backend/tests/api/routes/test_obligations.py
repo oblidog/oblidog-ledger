@@ -1313,3 +1313,78 @@ def test_obligation_due_date_range_filters_actual_due_dates(
         invalid = client.get(url, headers=headers, params=params)
         assert invalid.status_code == 422
         assert invalid.json()["code"] == "invalid_due_date_range"
+
+
+def test_read_obligations_multiple_nonconsecutive_periods(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    ready = _create_ready_obligation(db, ledger_id=ledger.id)
+    category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=ready.category.category_group_id,
+        name="Water",
+        code="WATR",
+    )
+    for category_code, year, month in [
+        ("ELEC", 2026, 9),
+        ("ELEC", 2026, 11),
+        ("ELEC", 2025, 8),
+        ("WATR", 2026, 8),
+    ]:
+        obligation_use_cases.create_manual_obligation(
+            session=db,
+            ledger_id=ledger.id,
+            category_code=category_code,
+            period=BillingPeriod(year, month),
+        )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    params = {"periods": ["2026-08", "2026-11", "2026-08"], "category_code": "ELEC"}
+    response = client.get(url, headers=headers, params=params)
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+    assert [
+        (row["period"]["year"], row["period"]["month"])
+        for row in response.json()["data"]
+    ] == [(2026, 11), (2026, 8)]
+
+    ready_only = client.get(
+        url, headers=headers, params={**params, "lifecycle": "ready"}
+    )
+    assert ready_only.status_code == 200
+    assert [row["key"] for row in ready_only.json()["data"]] == [ready.business_key]
+
+
+@pytest.mark.parametrize(
+    ("params", "code"),
+    [
+        ({"periods": "2026-00"}, "obligation_invalid_period"),
+        ({"periods": "2026-13"}, "obligation_invalid_period"),
+        ({"periods": "2026-1"}, "obligation_invalid_period"),
+        ({"periods": ""}, "obligation_invalid_period"),
+        ({"periods": "0000-01"}, "obligation_invalid_period"),
+        ({"periods": "2026-08", "year": "2026"}, "obligation_invalid_period"),
+        ({"periods": "2026-08", "month": "8"}, "obligation_invalid_period"),
+        ({"periods": ["2026-08"] * 25}, "request_validation_failed"),
+    ],
+)
+def test_read_obligations_rejects_invalid_multi_periods(
+    client: TestClient, db: Session, params: dict[str, str | list[str]], code: str
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations",
+        headers=headers,
+        params=params,
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == code

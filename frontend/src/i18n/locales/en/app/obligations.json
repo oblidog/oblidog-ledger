@@ -123,6 +123,8 @@
   "no_categories_match": "No matching categories",
   "category_names_unavailable": "Category names could not be loaded. Try again later.",
   "all_periods": "All periods",
+  "add_period": "Add another month…",
+  "period_limit_reached": "Month limit reached ({{count}})",
   "other_period": "Choose another month…",
   "choose_month": "Choose month",
   "apply_period": "Apply",

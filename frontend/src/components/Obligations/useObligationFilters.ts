@@ -27,10 +27,14 @@ export function useObligationFilters(defaultLifecycle: LifecycleFilter) {
       ...filters,
       ...patch,
     })
-    history.replace(
-      `${location.pathname}${next ? `?${next}` : ""}${location.hash}`,
-      location.state,
-    )
+    const nextSearch = next ? `?${next}` : ""
+    if (nextSearch === location.search) return
+    const href = `${location.pathname}${nextSearch}${location.hash}`
+    if (patch.periods && patch.periods.join() !== filters.periods.join()) {
+      history.push(href, location.state)
+    } else {
+      history.replace(href, location.state)
+    }
   }
   return { filters, search, update }
 }

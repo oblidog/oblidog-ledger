@@ -14,10 +14,10 @@ export const lifecycleOptions: LifecycleFilter[] = [
   "error",
 ]
 
+export const maxSelectedPeriods = 24
+
 export type ObligationFilters = {
-  year: string
-  month: string
-  filterByPeriod: boolean
+  periods: string[]
   categoryCode: string
   lifecycle: LifecycleFilter
 }
@@ -43,6 +43,7 @@ export function monthInputValue(year: string, month: string) {
 }
 
 export function parseMonthInput(value: string) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) return null
   const [year, month] = value.split("-").map(Number)
   if (!isValidPeriod(year, month)) {
     return null
@@ -79,11 +80,22 @@ export function parseObligationFilters(
   const month = Number(params.get("month"))
   const period = isValidPeriod(year, month) ? { year, month } : fallbackPeriod
   const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
+  const selected = [
+    ...new Set(
+      params.getAll("periods").filter((item) => parseMonthInput(item)),
+    ),
+  ]
+    .slice(0, maxSelectedPeriods)
+    .sort()
+  const legacy = monthInputValue(String(period.year), String(period.month))
 
   return {
-    year: String(period.year),
-    month: String(period.month),
-    filterByPeriod: params.get("period") !== "all",
+    periods:
+      params.get("period") === "all"
+        ? []
+        : selected.length > 0
+          ? selected
+          : [legacy],
     categoryCode: (params.get("category") ?? "").toUpperCase().slice(0, 4),
     lifecycle:
       lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
@@ -100,16 +112,21 @@ export function serializeObligationFilters(
   params.delete("year")
   params.delete("month")
   params.delete("period")
+  params.delete("periods")
   params.delete("category")
   params.delete("lifecycle")
 
-  const year = Number(filters.year)
-  const month = Number(filters.month)
-  if (filters.filterByPeriod && isValidPeriod(year, month)) {
-    params.set("year", String(year))
-    params.set("month", String(month))
-  } else if (!filters.filterByPeriod) {
-    params.set("period", "all")
+  const { periods } = filters
+  if (periods.length > 1) {
+    for (const period of periods) params.append("periods", period)
+  } else {
+    const selected = periods[0] && parseMonthInput(periods[0])
+    if (selected) {
+      params.set("year", selected.year)
+      params.set("month", selected.month)
+    } else {
+      params.set("period", "all")
+    }
   }
   if (filters.categoryCode) params.set("category", filters.categoryCode)
   params.set("lifecycle", filters.lifecycle)
