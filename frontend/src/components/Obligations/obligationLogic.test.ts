@@ -58,6 +58,7 @@ describe("obligation filter query", () => {
       year: "2026",
       month: "10",
       filterByPeriod: true,
+      periods: ["2026-10"],
       categoryCode: "ENER",
       lifecycle: "collecting_data",
     })
@@ -84,9 +85,24 @@ describe("obligation filter query", () => {
       year: "2026",
       month: "9",
       filterByPeriod: true,
+      periods: ["2026-09"],
       categoryCode: "ABCD",
       lifecycle: "unpaid",
     })
+  })
+
+  test("round-trips non-consecutive months and keeps other filters", () => {
+    const filters = parseObligationFilters(
+      "?periods=2026-09&periods=2026-11&category=ener&lifecycle=ready",
+      "unpaid",
+      { year: 2026, month: 10 },
+    )
+    expect(filters.periods).toEqual(["2026-09", "2026-11"])
+    expect(filters.categoryCode).toBe("ENER")
+    const serialized = serializeObligationFilters("", filters)
+    expect(new URLSearchParams(serialized).getAll("periods")).toEqual(["2026-09", "2026-11"])
+    expect(parseObligationFilters("?" + serialized, "unpaid", { year: 2026, month: 10 }).periods)
+      .toEqual(["2026-09", "2026-11"])
   })
 
   test("serializes the all-period state without stale year and month", () => {
@@ -94,6 +110,7 @@ describe("obligation filter query", () => {
       year: "2026",
       month: "10",
       filterByPeriod: false,
+      periods: [],
       categoryCode: "",
       lifecycle: "",
     })
