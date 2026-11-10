@@ -163,81 +163,65 @@ export function PeriodFilter({
   value,
   onChange,
 }: {
-  value: string
-  onChange: (period: string) => void
+  value: string[]
+  onChange: (periods: string[]) => void
 }) {
   useTranslation()
   const [custom, setCustom] = useState(false)
   const [draft, setDraft] = useState(
-    value ||
-      monthInputValue(
-        String(new Date().getFullYear()),
-        String(new Date().getMonth() + 1),
-      ),
+    monthInputValue(String(new Date().getFullYear()), String(new Date().getMonth() + 1)),
   )
   const now = new Date()
-  const periods = new Set(
-    [
-      value,
-      ...Array.from({ length: 25 }, (_, index) => {
-        const date = new Date(now.getFullYear(), now.getMonth() + index - 12, 1)
-        return monthInputValue(
-          String(date.getFullYear()),
-          String(date.getMonth() + 1),
-        )
-      }),
-    ].filter(Boolean),
-  )
+  const periods = new Set([
+    ...value,
+    ...Array.from({ length: 25 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() + index - 12, 1)
+      return monthInputValue(String(date.getFullYear()), String(date.getMonth() + 1))
+    }),
+  ])
   const valid = parseMonthInput(draft)
+  const addPeriod = (period: string) => {
+    if (!value.includes(period)) onChange([...value, period].sort())
+  }
   return (
     <div className="min-w-0 space-y-2">
       <select
         aria-label={i18n.t("app:obligations.billing_period")}
         className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
-        value={custom ? "custom" : value || "all"}
+        value=""
         onChange={(event) => {
-          if (event.target.value === "custom") setCustom(true)
-          else {
-            setCustom(false)
-            onChange(event.target.value === "all" ? "" : event.target.value)
-          }
+          const selected = event.target.value
+          if (selected === "custom") setCustom(true)
+          else if (selected === "all") { setCustom(false); onChange([]) }
+          else { setCustom(false); addPeriod(selected) }
         }}
       >
+        <option value="" disabled>{value.length === 0
+          ? i18n.t("app:obligations.all_periods")
+          : value.map((period) => {
+              const parsed = parseMonthInput(period)!
+              return formatBillingPeriod({ year: Number(parsed.year), month: Number(parsed.month) })
+            }).join(", ")}</option>
         <option value="all">{i18n.t("app:obligations.all_periods")}</option>
-        {[...periods]
-          .sort()
-          .reverse()
-          .map((period) => {
-            const parsed = parseMonthInput(period)!
-            return (
-              <option key={period} value={period}>
-                {formatBillingPeriod({
-                  year: Number(parsed.year),
-                  month: Number(parsed.month),
-                })}
-              </option>
-            )
-          })}
+        {[...periods].sort().reverse().map((period) => {
+          const parsed = parseMonthInput(period)!
+          return (
+            <option key={period} value={period} disabled={value.includes(period)}>
+              {value.includes(period) ? "✓ " : ""}
+              {formatBillingPeriod({ year: Number(parsed.year), month: Number(parsed.month) })}
+            </option>
+          )
+        })}
         <option value="custom">{i18n.t("app:obligations.other_period")}</option>
       </select>
       {custom && (
-        <form
-          className="flex flex-wrap gap-2"
-          onSubmit={(event) => {
-            event.preventDefault()
-            if (valid) {
-              onChange(draft)
-              setCustom(false)
-            }
-          }}
-        >
-          <Input
-            type="month"
-            aria-label={i18n.t("app:obligations.choose_month")}
-            className="min-w-0 flex-1"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
+        <form className="flex flex-wrap gap-2" onSubmit={(event) => {
+          event.preventDefault()
+          if (valid) { addPeriod(draft); setCustom(false) }
+        }}>
+          <Input type="month" aria-label={i18n.t("app:obligations.choose_month")}
+            className="min-w-0 flex-1" value={draft}
+            onChange={(event) => setDraft(event.target.value)} />
           <Button type="submit" variant="outline" disabled={!valid}>
             {i18n.t("app:obligations.apply_period")}
           </Button>
