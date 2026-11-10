@@ -1313,3 +1313,54 @@ def test_obligation_due_date_range_filters_actual_due_dates(
         invalid = client.get(url, headers=headers, params=params)
         assert invalid.status_code == 422
         assert invalid.json()["code"] == "invalid_due_date_range"
+
+
+def test_read_obligations_multiple_nonconsecutive_periods(client: TestClient, db: Session) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    _create_ready_obligation(db, ledger_id=ledger.id)
+    for month in (9, 11):
+        obligation_use_cases.create_manual_obligation(
+            session=db,
+            ledger_id=ledger.id,
+            category_code="ELEC",
+            period=BillingPeriod(2026, month),
+        )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    response = client.get(
+        url,
+        headers=headers,
+        params=[("periods", "2026-08"), ("periods", "2026-11"), ("category_code", "ELEC")],
+    )
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+    assert [(row["period"]["year"], row["period"]["month"]) for row in response.json()["data"]] == [(2026, 11), (2026, 8)]
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        [("periods", "2026-00")],
+        [("periods", "2026-13")],
+        [("periods", "not-a-month")],
+        [("periods", "0000-01")],
+        [("periods", "2026-08"), ("year", "2026")],
+    ],
+)
+def test_read_obligations_rejects_invalid_multi_periods(
+    client: TestClient, db: Session, params: list[tuple[str, str]]
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations",
+        headers=headers,
+        params=params,
+    )
+    assert response.status_code == 422
