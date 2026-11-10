@@ -68,7 +68,7 @@ export function useObligationList(
       categoryCode,
       lifecycle,
     ),
-    enabled: !filterByPeriod || isValidPeriod(Number(year), Number(month)),
+    enabled: !filterByPeriod || periods.length > 1 || isValidPeriod(Number(year), Number(month)),
     queryFn: async () => {
       return ObligationsService.readObligations({
         ledgerId,
