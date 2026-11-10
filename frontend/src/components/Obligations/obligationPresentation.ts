@@ -2,7 +2,11 @@ import type { ObligationLifecycle, ObligationPublic } from "@/client"
 import type { ObligationWithCounterparty } from "@/features/counterparties/api"
 import { i18n } from "@/i18n"
 import { formatDate } from "@/i18n/format"
-import { isValidPeriod, type LifecycleFilter } from "./obligationLogic"
+import {
+  isValidPeriod,
+  type LifecycleFilter,
+  monthInputValue,
+} from "./obligationLogic"
 
 export const touchDialogClasses =
   "[&_[data-slot=dialog-close]]:size-11 [&_[data-slot=dialog-close]]:top-2 [&_[data-slot=dialog-close]]:right-2 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center"
@@ -114,13 +118,23 @@ export function paidDateLabel(paidAt: string | null) {
 export function visibleObligationRows(
   obligations: ObligationPublic[] | undefined,
   lifecycle: LifecycleFilter,
+  periods: string[] = [],
 ) {
+  // A preview may use an older API that ignores the repeated periods parameter.
+  const selectedPeriods = periods.length > 1 ? new Set(periods) : null
   return obligations
     ?.filter(
       (obligation) =>
-        lifecycle !== "unpaid" ||
-        (obligation.lifecycle !== "paid" &&
-          obligation.lifecycle !== "canceled"),
+        (lifecycle !== "unpaid" ||
+          (obligation.lifecycle !== "paid" &&
+            obligation.lifecycle !== "canceled")) &&
+        (!selectedPeriods ||
+          selectedPeriods.has(
+            monthInputValue(
+              String(obligation.period.year),
+              String(obligation.period.month),
+            ),
+          )),
     )
     .sort((first, second) => {
       if (first.due_date === null) return second.due_date === null ? 0 : -1

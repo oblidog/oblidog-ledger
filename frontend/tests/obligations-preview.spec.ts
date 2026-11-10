@@ -229,6 +229,7 @@ test("searches category names/codes, clears a single period selector, and restor
     exact: true,
   })
   await period.selectOption("all")
+  await page.getByRole("button", { name: "Apply", exact: true }).click()
   await expect
     .poll(() => requests[requests.length - 1].searchParams.has("year"))
     .toBe(false)
@@ -277,6 +278,7 @@ test("searches category names/codes, clears a single period selector, and restor
 test("combines non-consecutive months and restores the selection on reload and navigation", async ({
   page,
 }) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T12:00:00Z"))
   const oldBill = {
     ...obligation("March electricity", "ELEC", "ready", "39.90"),
     id: "electricity-2022-03",
@@ -322,6 +324,15 @@ test("combines non-consecutive months and restores the selection on reload and n
   expect(query?.has("year")).toBe(false)
   expect(query?.has("month")).toBe(false)
 
+  await page
+    .getByRole("button", { name: "New obligation", exact: true })
+    .click()
+  await expect(
+    page.getByRole("dialog").getByLabel("Billing period", { exact: true }),
+  ).toHaveValue("2026-10")
+  await page.keyboard.press("Escape")
+  await expect(page.getByRole("dialog")).toBeHidden()
+
   await page.reload()
   await expect(items).toHaveCount(2)
   await page.goBack()
@@ -338,6 +349,60 @@ test("combines non-consecutive months and restores the selection on reload and n
   const url = new URL(page.url())
   expect(url.searchParams.get("category")).toBe("ELEC")
   expect(url.searchParams.get("lifecycle")).toBe("ready")
+})
+
+test("arrow keys browse preset months without applying the selection", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T12:00:00Z"))
+  const { requests } = await api(page)
+  await page.goto(
+    `/ledgers/${ledgerId}?year=2026&month=10&category=ELEC&lifecycle=ready`,
+  )
+  const period = page.getByLabel("Billing period", { exact: true })
+  const apply = page.getByRole("button", { name: "Apply", exact: true })
+  await expect(page.getByTestId(/^obligation-(row|card)$/)).toHaveCount(1)
+  await expect(apply).toBeDisabled()
+  const initialUrl = page.url()
+  const requestCount = requests.length
+
+  await period.press("ArrowDown")
+  await expect(period).toHaveValue("all")
+  await expect(page).toHaveURL(initialUrl)
+  await period.press("ArrowDown")
+  await expect(period).toHaveValue("2027-11")
+  await expect(page).toHaveURL(initialUrl)
+  expect(requests).toHaveLength(requestCount)
+
+  await period.press("Tab")
+  await expect(apply).toBeFocused()
+  await apply.press("Enter")
+  await expect
+    .poll(() => requests[requests.length - 1]?.searchParams.getAll("periods"))
+    .toEqual(["2026-10", "2027-11"])
+  await expect(period).toBeFocused()
+})
+
+test("an older API response cannot show obligations outside the selected months", async ({
+  page,
+}) => {
+  await api(page)
+  const september = {
+    ...rows[0],
+    id: "electricity-2026-09",
+    key: "ELEC-2026-09",
+    name: "September electricity",
+    period: { year: 2026, month: 9 },
+  }
+  await page.route("**/api/v1/ledgers/*/obligations?*", (route) =>
+    route.fulfill({ json: { data: [september, rows[0]], count: 2 } }),
+  )
+  await page.goto(
+    `/ledgers/${ledgerId}?periods=2026-09&periods=2026-11&category=ELEC&lifecycle=ready`,
+  )
+  const items = page.getByTestId(/^obligation-(row|card)$/)
+  await expect(items).toHaveCount(1)
+  await expect(items.first()).toContainText("September electricity")
 })
 
 test("viewers retain read-only access to obligation details", async ({

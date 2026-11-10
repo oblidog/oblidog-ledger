@@ -144,11 +144,14 @@ export function ObligationWorkspace({
     showErrorToast,
     showSuccessToast,
   } = actions
-  const singlePeriod = periods.length === 1 ? parseMonthInput(periods[0]) : null
+  const latestSelectedPeriod = parseMonthInput(
+    periods[periods.length - 1] ?? "",
+  )
   const obligations = useObligationList(ledgerId, filters)
   const visibleObligations = visibleObligationRows(
     obligations.data?.data,
     lifecycle,
+    periods,
   )
   const clearFilters = () =>
     update({ periods: [], categoryCode: "", lifecycle: "" })
@@ -221,10 +224,10 @@ export function ObligationWorkspace({
               defaultPeriod={
                 canCreateFirstPayment && firstPeriod
                   ? firstPeriod
-                  : singlePeriod
+                  : latestSelectedPeriod
                     ? {
-                        year: Number(singlePeriod.year),
-                        month: Number(singlePeriod.month),
+                        year: Number(latestSelectedPeriod.year),
+                        month: Number(latestSelectedPeriod.month),
                       }
                     : period
               }
