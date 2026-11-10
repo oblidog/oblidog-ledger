@@ -1,29 +1,20 @@
 import { type QueryClient, useQuery } from "@tanstack/react-query"
 import { ObligationsService } from "@/client"
 import { apiErrorPayload } from "@/i18n/apiErrors"
-import { isValidPeriod, type LifecycleFilter } from "./obligationLogic"
+import {
+  type LifecycleFilter,
+  type ObligationFilters,
+  parseMonthInput,
+} from "./obligationLogic"
 
 export const obligationQueryKeys = {
   list: (ledgerId: string) => ["obligations", ledgerId] as const,
   filteredList: (
     ledgerId: string,
-    filterByPeriod: boolean,
     periods: string[],
-    year: string,
-    month: string,
     categoryCode: string,
     lifecycle: LifecycleFilter,
-  ) =>
-    [
-      "obligations",
-      ledgerId,
-      filterByPeriod,
-      periods,
-      year,
-      month,
-      categoryCode,
-      lifecycle,
-    ] as const,
+  ) => ["obligations", ledgerId, periods, categoryCode, lifecycle] as const,
   firstScheduled: (ledgerId: string, key: string | null) =>
     ["first-scheduled-obligation", ledgerId, key] as const,
   detail: (ledgerId: string, key: string | null) =>
@@ -51,34 +42,25 @@ export async function invalidateObligationAction(
 
 export function useObligationList(
   ledgerId: string,
-  filterByPeriod: boolean,
-  periods: string[],
-  year: string,
-  month: string,
-  categoryCode: string,
-  lifecycle: LifecycleFilter,
+  { periods, categoryCode, lifecycle }: ObligationFilters,
 ) {
+  const singlePeriod = periods.length === 1 ? parseMonthInput(periods[0]) : null
   return useQuery({
     queryKey: obligationQueryKeys.filteredList(
       ledgerId,
-      filterByPeriod,
       periods,
-      year,
-      month,
       categoryCode,
       lifecycle,
     ),
-    enabled: !filterByPeriod || periods.length > 1 || isValidPeriod(Number(year), Number(month)),
-    queryFn: async () => {
-      return ObligationsService.readObligations({
+    queryFn: () =>
+      ObligationsService.readObligations({
         ledgerId,
-        periods: filterByPeriod && periods.length > 1 ? periods : undefined,
-        year: filterByPeriod && periods.length <= 1 ? Number(year) : undefined,
-        month: filterByPeriod && periods.length <= 1 ? Number(month) : undefined,
+        periods: periods.length > 1 ? periods : undefined,
+        year: singlePeriod ? Number(singlePeriod.year) : undefined,
+        month: singlePeriod ? Number(singlePeriod.month) : undefined,
         categoryCode: categoryCode || undefined,
         lifecycle: lifecycle === "unpaid" ? undefined : lifecycle || undefined,
-      })
-    },
+      }),
   })
 }
 

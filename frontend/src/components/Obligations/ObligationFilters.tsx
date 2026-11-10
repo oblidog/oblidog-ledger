@@ -1,13 +1,15 @@
 import { Check, X } from "lucide-react"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { i18n } from "@/i18n"
 import { formatBillingPeriod } from "@/i18n/format"
 import {
   type FilterCategory,
   matchingCategories,
+  maxSelectedPeriods,
   monthInputValue,
   parseMonthInput,
 } from "./obligationLogic"
@@ -167,62 +169,100 @@ export function PeriodFilter({
   onChange: (periods: string[]) => void
 }) {
   useTranslation()
-  const [custom, setCustom] = useState(false)
-  const [draft, setDraft] = useState(
-    monthInputValue(String(new Date().getFullYear()), String(new Date().getMonth() + 1)),
-  )
+  const id = useId()
+  const selectRef = useRef<HTMLSelectElement>(null)
   const now = new Date()
+  const [custom, setCustom] = useState(false)
+  const [draft, setDraft] = useState(() =>
+    monthInputValue(String(now.getFullYear()), String(now.getMonth() + 1)),
+  )
   const periods = new Set([
     ...value,
     ...Array.from({ length: 25 }, (_, index) => {
       const date = new Date(now.getFullYear(), now.getMonth() + index - 12, 1)
-      return monthInputValue(String(date.getFullYear()), String(date.getMonth() + 1))
+      return monthInputValue(
+        String(date.getFullYear()),
+        String(date.getMonth() + 1),
+      )
     }),
   ])
-  const valid = parseMonthInput(draft)
-  const addPeriod = (period: string) => {
-    if (!value.includes(period)) onChange([...value, period].sort())
+  const atLimit = value.length >= maxSelectedPeriods
+  const canApply = !atLimit && parseMonthInput(draft) && !value.includes(draft)
+  const allPeriods = i18n.t("app:obligations.all_periods")
+  let prompt = allPeriods
+  if (atLimit) {
+    prompt = i18n.t("app:obligations.period_limit_reached", {
+      count: maxSelectedPeriods,
+    })
+  } else if (value.length > 0) {
+    prompt = i18n.t("app:obligations.add_period")
   }
+
+  const addPeriod = (period: string) => onChange([...value, period].sort())
+
   return (
-    <div className="min-w-0 space-y-2">
+    <div className="min-w-0 space-y-1.5">
+      <Label htmlFor={id}>{i18n.t("app:obligations.billing_period")}</Label>
       <select
-        aria-label={i18n.t("app:obligations.billing_period")}
+        id={id}
+        ref={selectRef}
         className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
         value=""
         onChange={(event) => {
           const selected = event.target.value
-          if (selected === "custom") setCustom(true)
-          else if (selected === "all") { setCustom(false); onChange([]) }
-          else { setCustom(false); addPeriod(selected) }
+          setCustom(selected === "custom")
+          if (selected === "all") onChange([])
+          else if (selected !== "custom") addPeriod(selected)
         }}
       >
-        <option value="" disabled>{value.length === 0
-          ? i18n.t("app:obligations.all_periods")
-          : value.map((period) => {
-              const parsed = parseMonthInput(period)!
-              return formatBillingPeriod({ year: Number(parsed.year), month: Number(parsed.month) })
-            }).join(", ")}</option>
-        <option value="all">{i18n.t("app:obligations.all_periods")}</option>
-        {[...periods].sort().reverse().map((period) => {
-          const parsed = parseMonthInput(period)!
-          return (
-            <option key={period} value={period} disabled={value.includes(period)}>
-              {value.includes(period) ? "✓ " : ""}
-              {formatBillingPeriod({ year: Number(parsed.year), month: Number(parsed.month) })}
-            </option>
-          )
-        })}
-        <option value="custom">{i18n.t("app:obligations.other_period")}</option>
+        <option value="" disabled>
+          {prompt}
+        </option>
+        {value.length > 0 && <option value="all">{allPeriods}</option>}
+        {[...periods]
+          .sort()
+          .reverse()
+          .map((period) => {
+            const parsed = parseMonthInput(period)
+            if (!parsed) return null
+            const selected = value.includes(period)
+            return (
+              <option
+                key={period}
+                value={period}
+                disabled={atLimit || selected}
+              >
+                {selected ? "✓ " : ""}
+                {formatBillingPeriod({
+                  year: Number(parsed.year),
+                  month: Number(parsed.month),
+                })}
+              </option>
+            )
+          })}
+        <option value="custom" disabled={atLimit}>
+          {i18n.t("app:obligations.other_period")}
+        </option>
       </select>
-      {custom && (
-        <form className="flex flex-wrap gap-2" onSubmit={(event) => {
-          event.preventDefault()
-          if (valid) { addPeriod(draft); setCustom(false) }
-        }}>
-          <Input type="month" aria-label={i18n.t("app:obligations.choose_month")}
-            className="min-w-0 flex-1" value={draft}
-            onChange={(event) => setDraft(event.target.value)} />
-          <Button type="submit" variant="outline" disabled={!valid}>
+      {custom && !atLimit && (
+        <form
+          className="flex flex-wrap gap-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!canApply) return
+            addPeriod(draft)
+            setCustom(false)
+            selectRef.current?.focus()
+          }}
+        >
+          <Input
+            type="month"
+            aria-label={i18n.t("app:obligations.choose_month")}
+            className="min-w-0 flex-1"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <Button type="submit" variant="outline" disabled={!canApply}>
             {i18n.t("app:obligations.apply_period")}
           </Button>
         </form>

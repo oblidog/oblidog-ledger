@@ -3883,7 +3883,9 @@ export type ObligationsReadObligationsData = {
          */
         month?: number | null;
         /**
-         * Billing periods (YYYY-MM), repeat query parameter
+         * Periods
+         *
+         * Billing months (YYYY-MM), supplied as repeated parameters without year or month.
          */
         periods?: Array<string> | null;
         /**

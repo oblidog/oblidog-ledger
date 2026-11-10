@@ -11,18 +11,16 @@ test("lifecycle refresh invalidates every filtered list and only the affected de
   const affected = [
     obligationQueryKeys.filteredList(
       "home",
-      true,
-      "2026",
-      "10",
+      ["2026-08", "2026-10"],
       "ELEC",
       "unpaid",
     ),
-    obligationQueryKeys.filteredList("home", false, "", "", "", ""),
+    obligationQueryKeys.filteredList("home", [], "", ""),
     obligationQueryKeys.detail("home", "one"),
     obligationQueryKeys.actions("home", "one"),
   ]
   const untouched = [
-    obligationQueryKeys.filteredList("other", false, "", "", "", ""),
+    obligationQueryKeys.filteredList("other", [], "", ""),
     obligationQueryKeys.detail("home", "two"),
     obligationQueryKeys.actions("home", "two"),
   ]

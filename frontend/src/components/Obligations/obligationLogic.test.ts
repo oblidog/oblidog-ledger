@@ -8,6 +8,7 @@ import {
   canReopenObligation,
   dueDateRange,
   matchingCategories,
+  maxSelectedPeriods,
   monthInputValue,
   parseMonthInput,
   parseObligationFilters,
@@ -55,9 +56,6 @@ describe("obligation filter query", () => {
     )
 
     expect(filters).toEqual({
-      year: "2026",
-      month: "10",
-      filterByPeriod: true,
       periods: ["2026-10"],
       categoryCode: "ENER",
       lifecycle: "collecting_data",
@@ -82,9 +80,6 @@ describe("obligation filter query", () => {
         { year: 2026, month: 9 },
       ),
     ).toEqual({
-      year: "2026",
-      month: "9",
-      filterByPeriod: true,
       periods: ["2026-09"],
       categoryCode: "ABCD",
       lifecycle: "unpaid",
@@ -100,16 +95,37 @@ describe("obligation filter query", () => {
     expect(filters.periods).toEqual(["2026-09", "2026-11"])
     expect(filters.categoryCode).toBe("ENER")
     const serialized = serializeObligationFilters("", filters)
-    expect(new URLSearchParams(serialized).getAll("periods")).toEqual(["2026-09", "2026-11"])
-    expect(parseObligationFilters("?" + serialized, "unpaid", { year: 2026, month: 10 }).periods)
-      .toEqual(["2026-09", "2026-11"])
+    expect(new URLSearchParams(serialized).getAll("periods")).toEqual([
+      "2026-09",
+      "2026-11",
+    ])
+    expect(
+      parseObligationFilters(`?${serialized}`, "unpaid", {
+        year: 2026,
+        month: 10,
+      }).periods,
+    ).toEqual(["2026-09", "2026-11"])
+  })
+
+  test("normalizes repeated periods and keeps bookmarked selections within the API limit", () => {
+    const query = new URLSearchParams()
+    for (let year = 2000; year <= 2024; year += 1) {
+      query.append("periods", `${year}-01`)
+    }
+    query.append("periods", "0000-01")
+    query.append("periods", "2000-01")
+    const fallback = { year: 2026, month: 10 }
+    const { periods } = parseObligationFilters(query.toString(), "", fallback)
+    expect(periods).toHaveLength(maxSelectedPeriods)
+    expect(periods[0]).toBe("2000-01")
+    expect(periods[periods.length - 1]).toBe("2023-01")
+    expect(
+      parseObligationFilters("?periods=0000-01", "", fallback).periods,
+    ).toEqual(["2026-10"])
   })
 
   test("serializes the all-period state without stale year and month", () => {
     const serialized = serializeObligationFilters("?year=2025&month=12", {
-      year: "2026",
-      month: "10",
-      filterByPeriod: false,
       periods: [],
       categoryCode: "",
       lifecycle: "",
