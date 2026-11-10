@@ -18,6 +18,7 @@ export type ObligationFilters = {
   year: string
   month: string
   filterByPeriod: boolean
+  periods: string[]
   categoryCode: string
   lifecycle: LifecycleFilter
 }
@@ -79,11 +80,15 @@ export function parseObligationFilters(
   const month = Number(params.get("month"))
   const period = isValidPeriod(year, month) ? { year, month } : fallbackPeriod
   const lifecycleParam = params.get("lifecycle") as LifecycleFilter | null
+  const selected = [...new Set(params.getAll("periods").flatMap((item) => item.split(",")).filter((item) => /^\d{4}-(0[1-9]|1[0-2])$/.test(item) && !!parseMonthInput(item)))]
+  const legacy = monthInputValue(String(period.year), String(period.month))
+  const filterByPeriod = params.get("period") !== "all" && (selected.length > 0 || !params.has("periods"))
 
   return {
     year: String(period.year),
     month: String(period.month),
-    filterByPeriod: params.get("period") !== "all",
+    filterByPeriod,
+    periods: filterByPeriod ? (selected.length ? selected : [legacy]) : [],
     categoryCode: (params.get("category") ?? "").toUpperCase().slice(0, 4),
     lifecycle:
       lifecycleParam !== null && lifecycleOptions.includes(lifecycleParam)
@@ -100,12 +105,21 @@ export function serializeObligationFilters(
   params.delete("year")
   params.delete("month")
   params.delete("period")
+  params.delete("periods")
   params.delete("category")
   params.delete("lifecycle")
 
   const year = Number(filters.year)
   const month = Number(filters.month)
-  if (filters.filterByPeriod && isValidPeriod(year, month)) {
+  if (filters.filterByPeriod && filters.periods.length > 1) {
+    for (const period of [...new Set(filters.periods)].sort()) params.append("periods", period)
+  } else if (filters.filterByPeriod && filters.periods.length === 1) {
+    const selected = parseMonthInput(filters.periods[0])
+    if (selected) {
+      params.set("year", selected.year)
+      params.set("month", selected.month)
+    }
+  } else if (filters.filterByPeriod && isValidPeriod(year, month)) {
     params.set("year", String(year))
     params.set("month", String(month))
   } else if (!filters.filterByPeriod) {
