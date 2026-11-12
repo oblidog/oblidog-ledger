@@ -15,11 +15,16 @@ from app.domain import (
     ValueState,
     due_date_range,
 )
+from app.domain.obligations import MAX_BILLING_YEAR, MIN_BILLING_YEAR
 from app.schemas.counterparties import CounterpartySummaryPublic
 
 
 class BillingPeriodInput(BaseModel):
-    year: int = Field(ge=1, le=9999)
+    year: int = Field(
+        ge=MIN_BILLING_YEAR,
+        le=MAX_BILLING_YEAR,
+        description="Supported billing years, inclusive: 1970–2199",
+    )
     month: int = Field(ge=1, le=12)
 
 
@@ -173,8 +178,10 @@ class ObligationNoteAppend(BaseModel):
     text: str = Field(min_length=1)
 
 
-class ObligationPeriodPublic(BillingPeriodInput):
-    pass
+class ObligationPeriodPublic(BaseModel):
+    # Existing periods remain readable even if they predate the write policy.
+    year: int = Field(ge=1, le=9999)
+    month: int = Field(ge=1, le=12)
 
 
 class ObligationPublic(BaseModel):

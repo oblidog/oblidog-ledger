@@ -7,6 +7,7 @@ import {
   canMarkObligationReady,
   canReopenObligation,
   dueDateRange,
+  isValidPeriod,
   matchingCategories,
   maxSelectedPeriods,
   monthInputValue,
@@ -29,6 +30,27 @@ function obligation(
 }
 
 describe("billing periods", () => {
+  test.each([1970, 2199])("accepts both boundary months in %i", (year) => {
+    for (const month of [1, 12]) {
+      expect(isValidPeriod(year, month)).toBe(true)
+      const input = `${year}-${String(month).padStart(2, "0")}`
+      expect(parseMonthInput(input)).toEqual({
+        year: String(year),
+        month: String(month),
+      })
+      expect(monthInputValue(String(year), String(month))).toBe(input)
+    }
+  })
+
+  test.each([1, 999, 1969, 2200, 9999])(
+    "rejects unsupported year %i",
+    (year) => {
+      expect(isValidPeriod(year, 1)).toBe(false)
+      expect(parseMonthInput(`${String(year).padStart(4, "0")}-01`)).toBeNull()
+      expect(monthInputValue(String(year), "1")).toBe("")
+    },
+  )
+
   test("handles year and leap-month boundaries as date-only values", () => {
     expect(dueDateRange(2026, 12)).toEqual({
       min: "2026-12-01",

@@ -323,9 +323,10 @@ export const BillingPeriodInputSchema = {
     properties: {
         year: {
             type: 'integer',
-            maximum: 9999,
-            minimum: 1,
-            title: 'Year'
+            maximum: 2199,
+            minimum: 1970,
+            title: 'Year',
+            description: 'Supported billing years, inclusive: 1970–2199'
         },
         month: {
             type: 'integer',

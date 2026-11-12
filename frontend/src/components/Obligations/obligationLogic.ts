@@ -14,6 +14,11 @@ export const lifecycleOptions: LifecycleFilter[] = [
   "error",
 ]
 
+export const minBillingYear = 1970
+export const maxBillingYear = 2199
+export const minBillingPeriod = `${minBillingYear}-01`
+export const maxBillingPeriod = `${maxBillingYear}-12`
+
 export const maxSelectedPeriods = 24
 
 export type ObligationFilters = {
@@ -25,8 +30,8 @@ export type ObligationFilters = {
 export function isValidPeriod(year: number, month: number) {
   return (
     Number.isInteger(year) &&
-    year >= 1 &&
-    year <= 9999 &&
+    year >= minBillingYear &&
+    year <= maxBillingYear &&
     Number.isInteger(month) &&
     month >= 1 &&
     month <= 12

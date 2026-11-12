@@ -137,6 +137,8 @@ export type AvailableHistoryPeriodPublic = {
 export type BillingPeriodInput = {
     /**
      * Year
+     *
+     * Supported billing years, inclusive: 1970–2199
      */
     year: number;
     /**

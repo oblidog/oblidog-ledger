@@ -1388,3 +1388,69 @@ def test_read_obligations_rejects_invalid_multi_periods(
     )
     assert response.status_code == 422
     assert response.json()["code"] == code
+
+
+@pytest.mark.parametrize("year", [1970, 2199, 1969, 2200])
+def test_billing_period_write_boundaries(
+    client: TestClient, db: Session, year: int
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    group = category_use_cases.create_category_group(
+        session=db, ledger_id=ledger.id, name="Group"
+    )
+    category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=group.id,
+        name="Electricity",
+        code="ELEC",
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    expected_status = 200 if 1970 <= year <= 2199 else 422
+    response = client.post(
+        url,
+        headers=headers,
+        json={"category_code": "ELEC", "period": {"year": year, "month": 12}},
+    )
+    assert response.status_code == expected_status
+    assert (
+        client.post(
+            f"{url}/ensure", headers=headers, params={"year": year, "month": 12}
+        ).status_code
+        == expected_status
+    )
+    if expected_status == 422:
+        assert response.json()["code"] == "request_validation_failed"
+
+
+@pytest.mark.parametrize("year", [999, 1969, 2200])
+def test_existing_out_of_range_obligations_remain_readable_and_editable(
+    client: TestClient, db: Session, year: int
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    obligation = _create_ready_obligation(db, ledger_id=ledger.id)
+    # Simulate a row persisted before the stricter write policy.
+    obligation.period_year = year
+    obligation.lifecycle = ObligationLifecycle.DRAFT
+    db.commit()
+    key = obligation.business_key
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    listed = client.get(url, headers=headers, params={"year": year, "month": 8})
+    assert listed.status_code == 200
+    assert listed.json()["data"][0]["period"]["year"] == year
+    detail = client.get(f"{url}/{key}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["period"]["year"] == year
+    edited = client.patch(
+        f"{url}/{key}", headers=headers, json={"notes": "Preserved history"}
+    )
+    assert edited.status_code == 200
+    assert edited.json()["notes"] == "Preserved history"

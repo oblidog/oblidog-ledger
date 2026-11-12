@@ -427,3 +427,26 @@ def test_category_data_history_preserves_filters_order_and_access_boundaries(
 
     for invalid_query in ({"limit": 0}, {"limit": 101}, {"offset": -1}):
         assert client.get(url, headers=headers, params=invalid_query).status_code == 422
+
+
+@pytest.mark.parametrize("year", [999, 1969, 2200])
+def test_integration_can_read_and_update_existing_out_of_range_periods(
+    client: TestClient, db: Session, year: int
+) -> None:
+    created, _, ledger, category = _create_integration(client, db)
+    obligation = obligation_use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 8),
+    )
+    obligation.period_year = year
+    db.commit()
+    headers = {"Authorization": f"Bearer {created['connection_key']}"}
+    url = f"{settings.API_V1_STR}/integration/obligations/{year:04d}-08"
+    response = client.get(url, headers=headers)
+    assert response.status_code == 200
+    assert response.json()["period"]["year"] == year
+    updated = client.patch(url, headers=headers, json={"current_amount": "12.34"})
+    assert updated.status_code == 200
+    assert updated.json()["current_amount"] == "12.34"
