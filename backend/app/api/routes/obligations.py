@@ -14,6 +14,7 @@ from app.api.deps import (
 from app.core.api_errors import ApplicationError as HTTPException
 from app.core.business_date import business_today
 from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
+from app.domain.obligations import MAX_BILLING_YEAR, MIN_BILLING_YEAR
 from app.models import Ledger, Obligation
 from app.schemas import (
     CounterpartySummaryPublic,
@@ -108,7 +109,7 @@ def ensure_obligations(
     *,
     session: SessionDep,
     actor: CurrentActionActor,
-    year: int | None = Query(default=None, ge=1, le=9999),
+    year: int | None = Query(default=None, ge=MIN_BILLING_YEAR, le=MAX_BILLING_YEAR),
     month: int | None = Query(default=None, ge=1, le=12),
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:

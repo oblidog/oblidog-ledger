@@ -5,7 +5,12 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from app.domain.business_calendar import BusinessCalendar
-from app.domain.obligations import BillingPeriod, RecurrenceUnit
+from app.domain.obligations import (
+    MAX_BILLING_YEAR,
+    MIN_BILLING_YEAR,
+    BillingPeriod,
+    RecurrenceUnit,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,17 +61,20 @@ def next_payment(
     """
     if interval < 1:
         raise ValueError("interval must be positive")
+    reference_year, reference_month = max(
+        (reference_date.year, reference_date.month), (MIN_BILLING_YEAR, 1)
+    )
     step = interval * (12 if unit is RecurrenceUnit.YEAR else 1)
     difference = (
-        (reference_date.year - first_due_date.year) * 12
-        + reference_date.month
+        (reference_year - first_due_date.year) * 12
+        + reference_month
         - first_due_date.month
     )
     occurrence = max(0, (difference + step - 1) // step)
     anchor_month = (first_due_date.year - 1) * 12 + first_due_date.month - 1
     while True:
         year_index, month_index = divmod(anchor_month + occurrence * step, 12)
-        if year_index >= 9999:
+        if year_index >= MAX_BILLING_YEAR:
             return None
         payment = payment_for_period(
             first_due_date=first_due_date,

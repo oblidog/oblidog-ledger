@@ -9,7 +9,9 @@ import { formatBillingPeriod } from "@/i18n/format"
 import {
   type FilterCategory,
   matchingCategories,
+  maxBillingPeriod,
   maxSelectedPeriods,
+  minBillingPeriod,
   monthInputValue,
   parseMonthInput,
 } from "./obligationLogic"
@@ -257,6 +259,10 @@ export function PeriodFilter({
         {showCustomMonth && (
           <Input
             type="month"
+            min={minBillingPeriod}
+            max={maxBillingPeriod}
+            aria-invalid={draft !== "" && parseMonthInput(draft) === null}
+            aria-describedby={`${id}-help`}
             aria-label={i18n.t("app:obligations.choose_month")}
             className="min-w-0"
             value={draft}
@@ -267,6 +273,11 @@ export function PeriodFilter({
           {i18n.t("app:obligations.apply_period")}
         </Button>
       </div>
+      {showCustomMonth && (
+        <p id={`${id}-help`} className="text-sm text-muted-foreground">
+          {i18n.t("app:obligations.supported_billing_years")}
+        </p>
+      )}
     </form>
   )
 }

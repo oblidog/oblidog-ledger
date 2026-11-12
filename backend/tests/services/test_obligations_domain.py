@@ -240,3 +240,25 @@ def test_preview_matches_ensure_and_existing_dates_are_preserved(
         == []
     )
     assert obligation.due_date == anchor
+
+
+def test_ensure_does_not_create_period_past_supported_range(db: Session) -> None:
+    ledger, _, _ = create_category_with_recurrence(db)
+    created = obligation_service.ensure_obligations_for_period(
+        session=db, ledger_id=ledger.id, current_period=BillingPeriod(2199, 12)
+    )
+    assert [(item.period_year, item.period_month) for item in created] == [(2199, 12)]
+
+
+@pytest.mark.parametrize("year", [1969, 2200])
+def test_services_reject_new_unsupported_periods(db: Session, year: int) -> None:
+    ledger, _, category = create_category_with_recurrence(db)
+    with pytest.raises(ValueError, match="between 1970 and 2199"):
+        obligation_service.ensure_obligations_for_period(
+            session=db, ledger_id=ledger.id, current_period=BillingPeriod(year, 1)
+        )
+    with pytest.raises(ValueError, match="between 1970 and 2199"):
+        obligation_service.get_or_create_obligation(
+            session=db, category=category, period=BillingPeriod(year, 1)
+        )
+    assert db.query(Obligation).filter(Obligation.ledger_id == ledger.id).count() == 0

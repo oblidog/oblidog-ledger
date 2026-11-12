@@ -25,6 +25,7 @@ from app.domain import (
     ValueState,
     due_date_range,
 )
+from app.domain.obligations import validate_new_billing_year
 from app.models import (
     Category,
     Ledger,
@@ -377,6 +378,7 @@ def create_manual_obligation(
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
     commit: bool = True,
 ) -> Obligation:
+    validate_new_billing_year(period.year)
     if current_amount is not None and current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
     if data_ready and (current_amount is None or due_date is None):
