@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import Generator
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -511,6 +511,15 @@ def test_demo_history_is_coherent_across_calendar_boundaries(
             "healthy",
             "error",
         }
+    before_next_reset = datetime.combine(
+        reference_date + timedelta(days=1), time(3), tzinfo=UTC
+    ) - timedelta(microseconds=1)
+    assert {
+        integration_status(item, before_next_reset)[2].value for item in integrations
+    } == {
+        "healthy",
+        "error",
+    }
     runs = {
         run.id: run
         for run in db.scalars(

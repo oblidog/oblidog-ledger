@@ -410,8 +410,8 @@ def _create_integrations(
     categories: dict[str, Category],
     reference_date: date,
 ) -> dict[str, Integration]:
-    # 21:30 UTC precedes midnight in Warsaw in both winter and summer, and
-    # remains within the 26-hour freshness window throughout the reference day.
+    # 21:30 UTC precedes midnight in Warsaw in both winter and summer.
+    # A 32-hour demo freshness window also covers the next reset at 03:00 UTC.
     finished_at = datetime.combine(
         reference_date - timedelta(days=1), time(21, 30), tzinfo=UTC
     )
@@ -439,7 +439,7 @@ def _create_integrations(
                 ),
                 1,
             ),
-            stale_after_seconds=93600,
+            stale_after_seconds=32 * 60 * 60,
             run_timeout_seconds=1800,
             revision=2,
             current_run_id=run_id,
