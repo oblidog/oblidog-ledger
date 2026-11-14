@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import date, timedelta
 from typing import Any
@@ -13,6 +14,7 @@ from app.api.deps import (
 from app.core.api_errors import ApplicationError as HTTPException
 from app.core.business_date import business_today
 from app.domain import BillingPeriod, ObligationKey, ObligationLifecycle
+from app.domain.obligations import MAX_BILLING_YEAR, MIN_BILLING_YEAR
 from app.models import Ledger, Obligation
 from app.schemas import (
     CounterpartySummaryPublic,
@@ -107,7 +109,7 @@ def ensure_obligations(
     *,
     session: SessionDep,
     actor: CurrentActionActor,
-    year: int | None = Query(default=None, ge=1, le=9999),
+    year: int | None = Query(default=None, ge=MIN_BILLING_YEAR, le=MAX_BILLING_YEAR),
     month: int | None = Query(default=None, ge=1, le=12),
     ledger: Ledger = Depends(require_ledger_edit_access),
 ) -> Any:
@@ -143,6 +145,12 @@ def read_obligations(
     session: SessionDep,
     year: int | None = Query(default=None, ge=1, le=9999),
     month: int | None = Query(default=None, ge=1, le=12),
+    periods: list[str] | None = Query(
+        default=None,
+        min_length=1,
+        max_length=24,
+        description="Billing months (YYYY-MM), supplied as repeated parameters without year or month.",
+    ),
     category_code: str | None = Query(default=None, pattern=r"^[A-Z]{4}$"),
     lifecycle: ObligationLifecycle | None = None,
     due_from: date | None = Query(default=None),
@@ -159,9 +167,31 @@ def read_obligations(
             status_code=422,
             detail="provide both due date bounds in order, covering at most 366 days",
         )
+    parsed_periods = None
+    if periods is not None:
+        if year is not None or month is not None:
+            raise HTTPException(
+                code="obligation_invalid_period",
+                status_code=422,
+                detail="Provide periods without year or month",
+            )
+        if any(
+            re.fullmatch(r"[0-9]{4}-(0[1-9]|1[0-2])", period) is None
+            or period.startswith("0000-")
+            for period in periods
+        ):
+            raise HTTPException(
+                code="obligation_invalid_period",
+                status_code=422,
+                detail="Periods must use YYYY-MM",
+            )
+        parsed_periods = list(
+            dict.fromkeys((int(period[:4]), int(period[5:])) for period in periods)
+        )
     obligations = obligation_use_cases.list_obligations_for_ledger(
         session=session,
         ledger_id=ledger.id,
+        periods=parsed_periods,
         year=year,
         month=month,
         category_code=category_code,

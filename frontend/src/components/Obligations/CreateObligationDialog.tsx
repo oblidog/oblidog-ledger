@@ -23,8 +23,10 @@ import { categoryQueryKeys } from "../Categories/categoryQueryKeys"
 import { ObligationValueFields } from "./ObligationValueFields"
 import {
   dueDateRange,
+  isValidPeriod,
+  maxBillingPeriod,
+  minBillingPeriod,
   monthInputValue,
-  parseMonthInput,
 } from "./obligationLogic"
 import { touchDialogClasses } from "./obligationPresentation"
 import { obligationQueryKeys } from "./obligationQueries"
@@ -54,8 +56,9 @@ export function CreateObligationDialog({
   const [categoryCode, setCategoryCode] = useState(
     firstPayment?.categoryCode ?? "",
   )
-  const [year, setYear] = useState(String(defaultPeriod.year))
-  const [month, setMonth] = useState(String(defaultPeriod.month))
+  const [periodInput, setPeriodInput] = useState(
+    monthInputValue(String(defaultPeriod.year), String(defaultPeriod.month)),
+  )
   const [dataReady, setDataReady] = useState(false)
   const [currentAmount, setCurrentAmount] = useState("")
   const [issueDate, setIssueDate] = useState("")
@@ -65,8 +68,9 @@ export function CreateObligationDialog({
     if (!open) {
       return
     }
-    setYear(String(defaultPeriod.year))
-    setMonth(String(defaultPeriod.month))
+    setPeriodInput(
+      monthInputValue(String(defaultPeriod.year), String(defaultPeriod.month)),
+    )
   }, [defaultPeriod.month, defaultPeriod.year, open])
   const submitLock = useRef(false)
   const queryClient = useQueryClient()
@@ -80,12 +84,12 @@ export function CreateObligationDialog({
   const selectedCategory = categories.data?.data.find(
     (category) => category.code === categoryCode,
   )
+  const [year, month] = periodInput.split("-")
   const periodYear = Number(year)
   const periodMonth = Number(month)
+  const validPeriod = isValidPeriod(periodYear, periodMonth)
   const dueDateLimits = dueDateRange(
-    Number.isInteger(periodYear) && periodYear > 0
-      ? periodYear
-      : defaultPeriod.year,
+    validPeriod ? periodYear : defaultPeriod.year,
     Number.isInteger(periodMonth) && periodMonth >= 1 && periodMonth <= 12
       ? periodMonth
       : defaultPeriod.month,
@@ -201,15 +205,23 @@ export function CreateObligationDialog({
             <Input
               id="obligation-period"
               type="month"
-              value={monthInputValue(year, month)}
+              min={minBillingPeriod}
+              max={maxBillingPeriod}
+              aria-invalid={periodInput !== "" && !validPeriod}
+              aria-describedby="obligation-period-help"
+              value={periodInput}
               readOnly={firstPayment !== undefined}
               onChange={(event) => {
-                const selectedPeriod = parseMonthInput(event.target.value)
-                setYear(selectedPeriod?.year ?? "")
-                setMonth(selectedPeriod?.month ?? "")
+                setPeriodInput(event.target.value)
               }}
             />
           </div>
+          <p
+            id="obligation-period-help"
+            className="text-sm text-muted-foreground"
+          >
+            {i18n.t("app:obligations.supported_billing_years")}
+          </p>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Checkbox
@@ -248,14 +260,13 @@ export function CreateObligationDialog({
             loading={mutation.isPending}
             disabled={
               !selectedCategory ||
-              !year ||
-              !month ||
+              !validPeriod ||
               dueDateOutOfRange ||
               issueDateAfterDueDate ||
               (dataReady && (!currentAmount || !dueDate))
             }
             onClick={() => {
-              if (submitLock.current) return
+              if (!validPeriod || submitLock.current) return
               submitLock.current = true
               void mutation
                 .mutateAsync()

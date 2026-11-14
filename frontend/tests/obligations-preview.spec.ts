@@ -61,6 +61,7 @@ async function api(
   viewer = false,
   demo = true,
   detailOverride: Partial<ObligationPublic> = {},
+  extraRows: ObligationPublic[] = [],
 ) {
   const requests: URL[] = []
   const writes: string[] = []
@@ -123,8 +124,17 @@ async function api(
       })
     if (path.endsWith("/obligations")) {
       requests.push(url)
-      const data = rows.filter(
+      const selectedPeriods = url.searchParams.getAll("periods")
+      const year = url.searchParams.get("year")
+      const month = url.searchParams.get("month")
+      const data = [...rows, ...extraRows].filter(
         (row) =>
+          (selectedPeriods.length === 0 ||
+            selectedPeriods.includes(
+              `${row.period.year}-${String(row.period.month).padStart(2, "0")}`,
+            )) &&
+          (!year || row.period.year === Number(year)) &&
+          (!month || row.period.month === Number(month)) &&
           (!url.searchParams.get("category_code") ||
             row.category_code === url.searchParams.get("category_code")) &&
           (!url.searchParams.get("lifecycle") ||
@@ -219,6 +229,7 @@ test("searches category names/codes, clears a single period selector, and restor
     exact: true,
   })
   await period.selectOption("all")
+  await page.getByRole("button", { name: "Apply", exact: true }).click()
   await expect
     .poll(() => requests[requests.length - 1].searchParams.has("year"))
     .toBe(false)
@@ -227,11 +238,13 @@ test("searches category names/codes, clears a single period selector, and restor
   await period.selectOption("custom")
   await page.getByLabel("Choose month", { exact: true }).fill("2022-03")
   await page.getByRole("button", { name: "Apply", exact: true }).click()
-  await expect(period).toHaveValue("2022-03")
+  await expect(
+    page.getByRole("button", { name: "Remove filter: Period: March 2022" }),
+  ).toBeVisible()
   await expect(page).toHaveURL(/year=2022/)
   await page.getByRole("button", { name: "Clear all", exact: true }).click()
   await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("")
-  await expect(period).toHaveValue("all")
+  await expect(period.locator("option:checked")).toHaveText("All periods")
   await expect(category).toHaveValue("")
   await page.reload()
   await expect(page.getByLabel("Lifecycle", { exact: true })).toHaveValue("")
@@ -260,6 +273,136 @@ test("searches category names/codes, clears a single period selector, and restor
     page.getByRole("combobox", { name: "Category", exact: true }),
   ).toHaveValue("Internet")
   expect(writes).toEqual([])
+})
+
+test("combines non-consecutive months and restores the selection on reload and navigation", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T12:00:00Z"))
+  const oldBill = {
+    ...obligation("March electricity", "ELEC", "ready", "39.90"),
+    id: "electricity-2022-03",
+    key: "ELEC-2022-03",
+    period: { year: 2022, month: 3 },
+    due_date: "2022-03-15",
+  }
+  const { requests } = await api(page, "en", "light", false, false, {}, [
+    oldBill,
+    {
+      ...oldBill,
+      id: "electricity-2022-04",
+      key: "ELEC-2022-04",
+      period: { year: 2022, month: 4 },
+    },
+  ])
+  await page.setViewportSize({ width: 375, height: 800 })
+  await page.goto(
+    `/ledgers/${ledgerId}?year=2026&month=10&category=ELEC&lifecycle=ready`,
+  )
+  const items = page.getByTestId("obligation-card")
+  const october = page.getByRole("button", {
+    name: "Remove filter: Period: October 2026",
+  })
+  const march = page.getByRole("button", {
+    name: "Remove filter: Period: March 2022",
+  })
+
+  await expect(items).toHaveCount(1)
+  await page
+    .getByLabel("Billing period", { exact: true })
+    .selectOption("custom")
+  await page.getByLabel("Choose month", { exact: true }).fill("2022-03")
+  await page.getByRole("button", { name: "Apply", exact: true }).press("Enter")
+  await expect(items).toHaveCount(2)
+  await expect(items.first()).toContainText("March electricity")
+  await expect(october).toBeVisible()
+  await expect(march).toBeVisible()
+  const query = requests[requests.length - 1]?.searchParams
+  expect(query?.getAll("periods")).toEqual(["2022-03", "2026-10"])
+  expect(query?.get("category_code")).toBe("ELEC")
+  expect(query?.get("lifecycle")).toBe("ready")
+  expect(query?.has("year")).toBe(false)
+  expect(query?.has("month")).toBe(false)
+
+  await page
+    .getByRole("button", { name: "New obligation", exact: true })
+    .click()
+  await expect(
+    page.getByRole("dialog").getByLabel("Billing period", { exact: true }),
+  ).toHaveValue("2026-10")
+  await page.keyboard.press("Escape")
+  await expect(page.getByRole("dialog")).toBeHidden()
+
+  await page.reload()
+  await expect(items).toHaveCount(2)
+  await page.goBack()
+  await expect(items).toHaveCount(1)
+  await expect(march).toHaveCount(0)
+  await page.goForward()
+  await expect(items).toHaveCount(2)
+
+  await march.press("Enter")
+  await expect(items).toHaveCount(1)
+  await october.press("Enter")
+  await expect(page).toHaveURL(/period=all/)
+  await expect(items).toHaveCount(3)
+  const url = new URL(page.url())
+  expect(url.searchParams.get("category")).toBe("ELEC")
+  expect(url.searchParams.get("lifecycle")).toBe("ready")
+})
+
+test("arrow keys browse preset months without applying the selection", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-11-10T12:00:00Z"))
+  const { requests } = await api(page)
+  await page.goto(
+    `/ledgers/${ledgerId}?year=2026&month=10&category=ELEC&lifecycle=ready`,
+  )
+  const period = page.getByLabel("Billing period", { exact: true })
+  const apply = page.getByRole("button", { name: "Apply", exact: true })
+  await expect(page.getByTestId(/^obligation-(row|card)$/)).toHaveCount(1)
+  await expect(apply).toBeDisabled()
+  const initialUrl = page.url()
+  const requestCount = requests.length
+
+  await period.press("ArrowDown")
+  await expect(period).toHaveValue("all")
+  await expect(page).toHaveURL(initialUrl)
+  await period.press("ArrowDown")
+  await expect(period).toHaveValue("2027-11")
+  await expect(page).toHaveURL(initialUrl)
+  expect(requests).toHaveLength(requestCount)
+
+  await period.press("Tab")
+  await expect(apply).toBeFocused()
+  await apply.press("Enter")
+  await expect
+    .poll(() => requests[requests.length - 1]?.searchParams.getAll("periods"))
+    .toEqual(["2026-10", "2027-11"])
+  await expect(period).toBeFocused()
+})
+
+test("an older API response cannot show obligations outside the selected months", async ({
+  page,
+}) => {
+  await api(page)
+  const september = {
+    ...rows[0],
+    id: "electricity-2026-09",
+    key: "ELEC-2026-09",
+    name: "September electricity",
+    period: { year: 2026, month: 9 },
+  }
+  await page.route("**/api/v1/ledgers/*/obligations?*", (route) =>
+    route.fulfill({ json: { data: [september, rows[0]], count: 2 } }),
+  )
+  await page.goto(
+    `/ledgers/${ledgerId}?periods=2026-09&periods=2026-11&category=ELEC&lifecycle=ready`,
+  )
+  const items = page.getByTestId(/^obligation-(row|card)$/)
+  await expect(items).toHaveCount(1)
+  await expect(items.first()).toContainText("September electricity")
 })
 
 test("viewers retain read-only access to obligation details", async ({
@@ -421,8 +564,8 @@ test("active badges clear individual filters and preserve navigation context", a
     badges.getByText("Status: Unpaid", { exact: true }),
   ).toBeVisible()
   await expect(
-    page.getByRole("combobox", { name: "Billing period", exact: true }),
-  ).toHaveValue("2026-10")
+    badges.getByRole("button", { name: "Remove filter: Period: October 2026" }),
+  ).toBeVisible()
   await expect
     .poll(() => requests[requests.length - 1].searchParams.has("category_code"))
     .toBe(false)
@@ -436,8 +579,10 @@ test("active badges clear individual filters and preserve navigation context", a
     badges.getByText("Status: Unpaid", { exact: true }),
   ).toBeVisible()
   await expect(
-    page.getByRole("combobox", { name: "Billing period", exact: true }),
-  ).toHaveValue("all")
+    page
+      .getByRole("combobox", { name: "Billing period", exact: true })
+      .locator("option:checked"),
+  ).toHaveText("All periods")
   await expect
     .poll(() => requests[requests.length - 1].searchParams.has("year"))
     .toBe(false)
@@ -474,8 +619,10 @@ test("one clear-all action resets restored badges and the period selector", asyn
     page.getByRole("group", { name: "Active filters", exact: true }),
   ).toHaveCount(0)
   await expect(
-    page.getByRole("combobox", { name: "Billing period", exact: true }),
-  ).toHaveValue("all")
+    page
+      .getByRole("combobox", { name: "Billing period", exact: true })
+      .locator("option:checked"),
+  ).toHaveText("All periods")
   await expect(
     page.getByRole("combobox", { name: "Category", exact: true }),
   ).toHaveValue("")
@@ -800,7 +947,7 @@ for (const theme of ["light", "dark"]) {
       await expect(page.locator("html")).toHaveClass(new RegExp(theme))
       await expect(page).toHaveURL(selectedUrl)
       await expect(page.locator('option[value="2026-10"]')).toHaveText(
-        labels.period,
+        `✓ ${labels.period}`,
       )
       await expect(page.locator('option[value="ready"]')).toHaveText(
         labels.ready,

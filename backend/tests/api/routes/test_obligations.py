@@ -1313,3 +1313,144 @@ def test_obligation_due_date_range_filters_actual_due_dates(
         invalid = client.get(url, headers=headers, params=params)
         assert invalid.status_code == 422
         assert invalid.json()["code"] == "invalid_due_date_range"
+
+
+def test_read_obligations_multiple_nonconsecutive_periods(
+    client: TestClient, db: Session
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    ready = _create_ready_obligation(db, ledger_id=ledger.id)
+    category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=ready.category.category_group_id,
+        name="Water",
+        code="WATR",
+    )
+    for category_code, year, month in [
+        ("ELEC", 2026, 9),
+        ("ELEC", 2026, 11),
+        ("ELEC", 2025, 8),
+        ("WATR", 2026, 8),
+    ]:
+        obligation_use_cases.create_manual_obligation(
+            session=db,
+            ledger_id=ledger.id,
+            category_code=category_code,
+            period=BillingPeriod(year, month),
+        )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    params = {"periods": ["2026-08", "2026-11", "2026-08"], "category_code": "ELEC"}
+    response = client.get(url, headers=headers, params=params)
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+    assert [
+        (row["period"]["year"], row["period"]["month"])
+        for row in response.json()["data"]
+    ] == [(2026, 11), (2026, 8)]
+
+    ready_only = client.get(
+        url, headers=headers, params={**params, "lifecycle": "ready"}
+    )
+    assert ready_only.status_code == 200
+    assert [row["key"] for row in ready_only.json()["data"]] == [ready.business_key]
+
+
+@pytest.mark.parametrize(
+    ("params", "code"),
+    [
+        ({"periods": "2026-00"}, "obligation_invalid_period"),
+        ({"periods": "2026-13"}, "obligation_invalid_period"),
+        ({"periods": "2026-1"}, "obligation_invalid_period"),
+        ({"periods": ""}, "obligation_invalid_period"),
+        ({"periods": "0000-01"}, "obligation_invalid_period"),
+        ({"periods": "2026-08", "year": "2026"}, "obligation_invalid_period"),
+        ({"periods": "2026-08", "month": "8"}, "obligation_invalid_period"),
+        ({"periods": ["2026-08"] * 25}, "request_validation_failed"),
+    ],
+)
+def test_read_obligations_rejects_invalid_multi_periods(
+    client: TestClient, db: Session, params: dict[str, str | list[str]], code: str
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    response = client.get(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations",
+        headers=headers,
+        params=params,
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == code
+
+
+@pytest.mark.parametrize("year", [1970, 2199, 1969, 2200])
+def test_billing_period_write_boundaries(
+    client: TestClient, db: Session, year: int
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    group = category_use_cases.create_category_group(
+        session=db, ledger_id=ledger.id, name="Group"
+    )
+    category_use_cases.create_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_group_id=group.id,
+        name="Electricity",
+        code="ELEC",
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    expected_status = 200 if 1970 <= year <= 2199 else 422
+    response = client.post(
+        url,
+        headers=headers,
+        json={"category_code": "ELEC", "period": {"year": year, "month": 12}},
+    )
+    assert response.status_code == expected_status
+    assert (
+        client.post(
+            f"{url}/ensure", headers=headers, params={"year": year, "month": 12}
+        ).status_code
+        == expected_status
+    )
+    if expected_status == 422:
+        assert response.json()["code"] == "request_validation_failed"
+
+
+@pytest.mark.parametrize("year", [999, 1969, 2200])
+def test_existing_out_of_range_obligations_remain_readable_and_editable(
+    client: TestClient, db: Session, year: int
+) -> None:
+    owner = create_random_user(db)
+    headers = authentication_token_from_email(client=client, email=owner.email, db=db)
+    ledger = ledger_use_cases.create_ledger(
+        session=db, owner_user_id=owner.id, name=f"ledger-{random_lower_string()}"
+    )
+    obligation = _create_ready_obligation(db, ledger_id=ledger.id)
+    # Simulate a row persisted before the stricter write policy.
+    obligation.period_year = year
+    obligation.lifecycle = ObligationLifecycle.DRAFT
+    db.commit()
+    key = obligation.business_key
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    listed = client.get(url, headers=headers, params={"year": year, "month": 8})
+    assert listed.status_code == 200
+    assert listed.json()["data"][0]["period"]["year"] == year
+    detail = client.get(f"{url}/{key}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["period"]["year"] == year
+    edited = client.patch(
+        f"{url}/{key}", headers=headers, json={"notes": "Preserved history"}
+    )
+    assert edited.status_code == 200
+    assert edited.json()["notes"] == "Preserved history"

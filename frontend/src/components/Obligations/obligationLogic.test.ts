@@ -7,7 +7,9 @@ import {
   canMarkObligationReady,
   canReopenObligation,
   dueDateRange,
+  isValidPeriod,
   matchingCategories,
+  maxSelectedPeriods,
   monthInputValue,
   parseMonthInput,
   parseObligationFilters,
@@ -28,6 +30,27 @@ function obligation(
 }
 
 describe("billing periods", () => {
+  test.each([1970, 2199])("accepts both boundary months in %i", (year) => {
+    for (const month of [1, 12]) {
+      expect(isValidPeriod(year, month)).toBe(true)
+      const input = `${year}-${String(month).padStart(2, "0")}`
+      expect(parseMonthInput(input)).toEqual({
+        year: String(year),
+        month: String(month),
+      })
+      expect(monthInputValue(String(year), String(month))).toBe(input)
+    }
+  })
+
+  test.each([1, 999, 1969, 2200, 9999])(
+    "rejects unsupported year %i",
+    (year) => {
+      expect(isValidPeriod(year, 1)).toBe(false)
+      expect(parseMonthInput(`${String(year).padStart(4, "0")}-01`)).toBeNull()
+      expect(monthInputValue(String(year), "1")).toBe("")
+    },
+  )
+
   test("handles year and leap-month boundaries as date-only values", () => {
     expect(dueDateRange(2026, 12)).toEqual({
       min: "2026-12-01",
@@ -55,9 +78,7 @@ describe("obligation filter query", () => {
     )
 
     expect(filters).toEqual({
-      year: "2026",
-      month: "10",
-      filterByPeriod: true,
+      periods: ["2026-10"],
       categoryCode: "ENER",
       lifecycle: "collecting_data",
     })
@@ -81,19 +102,53 @@ describe("obligation filter query", () => {
         { year: 2026, month: 9 },
       ),
     ).toEqual({
-      year: "2026",
-      month: "9",
-      filterByPeriod: true,
+      periods: ["2026-09"],
       categoryCode: "ABCD",
       lifecycle: "unpaid",
     })
   })
 
+  test("round-trips non-consecutive months and keeps other filters", () => {
+    const filters = parseObligationFilters(
+      "?periods=2026-09&periods=2026-11&category=ener&lifecycle=ready",
+      "unpaid",
+      { year: 2026, month: 10 },
+    )
+    expect(filters.periods).toEqual(["2026-09", "2026-11"])
+    expect(filters.categoryCode).toBe("ENER")
+    const serialized = serializeObligationFilters("", filters)
+    expect(new URLSearchParams(serialized).getAll("periods")).toEqual([
+      "2026-09",
+      "2026-11",
+    ])
+    expect(
+      parseObligationFilters(`?${serialized}`, "unpaid", {
+        year: 2026,
+        month: 10,
+      }).periods,
+    ).toEqual(["2026-09", "2026-11"])
+  })
+
+  test("normalizes repeated periods and keeps bookmarked selections within the API limit", () => {
+    const query = new URLSearchParams()
+    for (let year = 2000; year <= 2024; year += 1) {
+      query.append("periods", `${year}-01`)
+    }
+    query.append("periods", "0000-01")
+    query.append("periods", "2000-01")
+    const fallback = { year: 2026, month: 10 }
+    const { periods } = parseObligationFilters(query.toString(), "", fallback)
+    expect(periods).toHaveLength(maxSelectedPeriods)
+    expect(periods[0]).toBe("2000-01")
+    expect(periods[periods.length - 1]).toBe("2023-01")
+    expect(
+      parseObligationFilters("?periods=0000-01", "", fallback).periods,
+    ).toEqual(["2026-10"])
+  })
+
   test("serializes the all-period state without stale year and month", () => {
     const serialized = serializeObligationFilters("?year=2025&month=12", {
-      year: "2026",
-      month: "10",
-      filterByPeriod: false,
+      periods: [],
       categoryCode: "",
       lifecycle: "",
     })

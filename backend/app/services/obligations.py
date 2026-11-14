@@ -16,6 +16,7 @@ from app.domain import (
     ValueState,
 )
 from app.domain.business_calendar import BusinessCalendar
+from app.domain.obligations import MAX_BILLING_YEAR, validate_new_billing_year
 from app.domain.payment_schedule import payment_for_period
 from app.models import Category, Obligation
 
@@ -49,6 +50,7 @@ def get_or_create_obligation(
     if obligation is not None:
         return obligation, False
 
+    validate_new_billing_year(period.year)
     due_date = _due_date_for_period(category=category, period=period)
 
     obligation = Obligation(
@@ -106,6 +108,11 @@ def ensure_obligations_for_period(
     ledger_id: uuid.UUID,
     current_period: BillingPeriod,
 ) -> list[Obligation]:
+    validate_new_billing_year(current_period.year)
+    periods = [current_period]
+    following = current_period.next()
+    if following.year <= MAX_BILLING_YEAR:
+        periods.append(following)
     categories = session.scalars(
         select(Category).where(
             Category.ledger_id == ledger_id,
@@ -115,7 +122,7 @@ def ensure_obligations_for_period(
 
     created: list[Obligation] = []
     for category in categories:
-        for period in (current_period, current_period.next()):
+        for period in periods:
             if not category.occurs_in(period):
                 continue
             obligation, was_created = get_or_create_obligation(

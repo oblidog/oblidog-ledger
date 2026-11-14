@@ -7,7 +7,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,7 @@ from app.domain import (
     ValueState,
     due_date_range,
 )
+from app.domain.obligations import validate_new_billing_year
 from app.models import (
     Category,
     Ledger,
@@ -318,6 +319,7 @@ def list_obligations_for_ledger(
     ledger_id: uuid.UUID,
     year: int | None = None,
     month: int | None = None,
+    periods: list[tuple[int, int]] | None = None,
     category_code: str | None = None,
     category_id: uuid.UUID | None = None,
     lifecycle: ObligationLifecycle | None = None,
@@ -335,6 +337,10 @@ def list_obligations_for_ledger(
         statement = statement.where(Obligation.due_date >= due_from)
     if due_to is not None:
         statement = statement.where(Obligation.due_date <= due_to)
+    if periods is not None:
+        statement = statement.where(
+            tuple_(Obligation.period_year, Obligation.period_month).in_(periods)
+        )
     if year is not None:
         statement = statement.where(Obligation.period_year == year)
     if month is not None:
@@ -372,6 +378,7 @@ def create_manual_obligation(
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
     commit: bool = True,
 ) -> Obligation:
+    validate_new_billing_year(period.year)
     if current_amount is not None and current_amount < 0:
         raise ValueError("current_amount must be greater than or equal to zero")
     if data_ready and (current_amount is None or due_date is None):

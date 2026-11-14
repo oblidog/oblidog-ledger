@@ -8,6 +8,17 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 
+MIN_BILLING_YEAR = 1970
+MAX_BILLING_YEAR = 2199
+
+
+def validate_new_billing_year(year: int) -> None:
+    """Validate writes without preventing historical periods from being read."""
+    if not MIN_BILLING_YEAR <= year <= MAX_BILLING_YEAR:
+        raise ValueError(
+            f"Billing year must be between {MIN_BILLING_YEAR} and {MAX_BILLING_YEAR}"
+        )
+
 
 class ObligationLifecycle(StrEnum):
     DRAFT = "draft"

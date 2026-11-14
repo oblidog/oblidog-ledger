@@ -6,7 +6,7 @@ import os
 import uuid
 from calendar import monthrange
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -27,6 +27,7 @@ from app.domain import (
 from app.domain.integrations import IntegrationResult
 from app.models import (
     Category,
+    CategoryDataRecord,
     Counterparty,
     Integration,
     IntegrationRun,
@@ -54,6 +55,7 @@ logger = logging.getLogger(__name__)
 
 DEMO_LEDGER_NAME = "Oblidog Demo"
 DEMO_PASSWORD_ENV = "DEMO_USER_PASSWORD"
+DEMO_HISTORY_MONTHS = 4
 _DEMO_UUID_NAMESPACE = uuid.UUID("5d1a6522-b2a3-4db9-b6c2-69db1fe69317")
 
 
@@ -80,7 +82,7 @@ class CategorySpec:
     description: str
     due_day: int
     counterparty: str
-    amounts: tuple[str, str, str]
+    amounts: tuple[str, ...]
     integration_name: str | None = None
 
 
@@ -129,7 +131,7 @@ CATEGORY_SPECS = (
         "Rent and service charge.",
         5,
         "housing",
-        ("2850.00", "2850.00", "2850.00"),
+        ("2750.00", "2750.00", "2850.00", "2850.00", "2850.00"),
     ),
     CategorySpec(
         "Utilities",
@@ -138,7 +140,7 @@ CATEGORY_SPECS = (
         "Usage and distribution charges.",
         12,
         "energy",
-        ("196.40", "208.75", "214.30"),
+        ("184.20", "201.65", "190.80", "196.40", "208.75"),
         "NorthGrid electricity",
     ),
     CategorySpec(
@@ -148,7 +150,7 @@ CATEGORY_SPECS = (
         "Heating and hot water gas.",
         15,
         "energy",
-        ("86.20", "92.10", "118.60"),
+        ("98.40", "82.60", "79.30", "86.20", "92.10"),
         "NorthGrid gas",
     ),
     CategorySpec(
@@ -158,7 +160,7 @@ CATEGORY_SPECS = (
         "Water and sewage settlement.",
         18,
         "city",
-        ("121.60", "126.30", "132.40"),
+        ("118.20", "124.80", "119.50", "121.60", "126.30"),
         "City water meter",
     ),
     CategorySpec(
@@ -168,7 +170,7 @@ CATEGORY_SPECS = (
         "Municipal waste fee.",
         20,
         "city",
-        ("74.00", "74.00", "78.00"),
+        ("74.00", "74.00", "74.00", "74.00", "74.00"),
         "City waste billing",
     ),
     CategorySpec(
@@ -178,7 +180,7 @@ CATEGORY_SPECS = (
         "Fibre plan and router.",
         18,
         "connect",
-        ("89.99", "89.99", "89.99"),
+        ("89.99", "89.99", "89.99", "89.99", "89.99"),
         "Connecta fibre",
     ),
     CategorySpec(
@@ -188,7 +190,7 @@ CATEGORY_SPECS = (
         "Family plan and device.",
         22,
         "connect",
-        ("64.90", "64.90", "64.90"),
+        ("59.90", "59.90", "64.90", "64.90", "64.90"),
         "Connecta mobile",
     ),
     CategorySpec(
@@ -198,7 +200,7 @@ CATEGORY_SPECS = (
         "Car policy provision.",
         9,
         "insurance",
-        ("118.00", "118.00", "124.00"),
+        ("118.00", "118.00", "118.00", "118.00", "118.00"),
         "SafeHarbor car policy",
     ),
     CategorySpec(
@@ -208,7 +210,7 @@ CATEGORY_SPECS = (
         "Home policy provision.",
         3,
         "insurance",
-        ("42.00", "42.00", "45.00"),
+        ("42.00", "42.00", "42.00", "42.00", "42.00"),
         "SafeHarbor home policy",
     ),
     CategorySpec(
@@ -218,7 +220,7 @@ CATEGORY_SPECS = (
         "Family video plan.",
         14,
         "media",
-        ("49.00", "49.00", "54.00"),
+        ("49.00", "49.00", "49.00", "49.00", "49.00"),
         "Northstar video",
     ),
     CategorySpec(
@@ -228,7 +230,7 @@ CATEGORY_SPECS = (
         "Family music plan.",
         16,
         "media",
-        ("32.99", "32.99", "32.99"),
+        ("32.99", "32.99", "32.99", "32.99", "32.99"),
         "Northstar music",
     ),
     CategorySpec(
@@ -238,7 +240,7 @@ CATEGORY_SPECS = (
         "Shared cloud storage.",
         24,
         "cloud",
-        ("11.99", "11.99", "11.99"),
+        ("11.99", "11.99", "11.99", "11.99", "11.99"),
         "SkyVault storage",
     ),
     CategorySpec(
@@ -248,7 +250,7 @@ CATEGORY_SPECS = (
         "Monthly gym membership.",
         10,
         "fitness",
-        ("129.00", "129.00", "139.00"),
+        ("129.00", "129.00", "129.00", "129.00", "129.00"),
     ),
     CategorySpec(
         "Family & lifestyle",
@@ -257,7 +259,7 @@ CATEGORY_SPECS = (
         "School canteen settlement.",
         20,
         "school",
-        ("176.00", "192.00", "184.00"),
+        ("160.00", "184.00", "168.00", "176.00", "192.00"),
     ),
     CategorySpec(
         "Transport",
@@ -266,7 +268,7 @@ CATEGORY_SPECS = (
         "Monthly city pass.",
         8,
         "transit",
-        ("119.00", "119.00", "129.00"),
+        ("119.00", "119.00", "119.00", "119.00", "119.00"),
         "Metro pass",
     ),
 )
@@ -288,30 +290,6 @@ def _date_in_period(period: BillingPeriod, day: int) -> date:
 
 def _key(category_code: str, period: BillingPeriod) -> ObligationKey:
     return ObligationKey(category_code=category_code, period=period)
-
-
-def _create_ready_obligation(
-    *,
-    session: Session,
-    ledger_id: uuid.UUID,
-    category_code: str,
-    period: BillingPeriod,
-    amount: str,
-    due_date: date,
-    issue_date: date | None = None,
-    notes: str | None = None,
-) -> Obligation:
-    return create_manual_obligation(
-        session=session,
-        ledger_id=ledger_id,
-        category_code=category_code,
-        period=period,
-        data_ready=True,
-        current_amount=Decimal(amount),
-        issue_date=issue_date,
-        due_date=due_date,
-        notes=notes,
-    )
 
 
 def _ensure_demo_user(*, session: Session, password: str) -> User:
@@ -432,7 +410,11 @@ def _create_integrations(
     categories: dict[str, Category],
     reference_date: date,
 ) -> dict[str, Integration]:
-    finished_at = datetime.combine(reference_date, time(6, 30), tzinfo=UTC)
+    # 21:30 UTC precedes midnight in Warsaw in both winter and summer.
+    # A 32-hour demo freshness window also covers the next reset at 03:00 UTC.
+    finished_at = datetime.combine(
+        reference_date - timedelta(days=1), time(21, 30), tzinfo=UTC
+    )
     integrations: dict[str, Integration] = {}
     for spec in CATEGORY_SPECS:
         if spec.integration_name is None:
@@ -442,12 +424,22 @@ def _create_integrations(
         integration = Integration(
             ledger_id=ledger_id,
             category_id=categories[spec.code].id,
-            name=spec.integration_name,
+            name=f"Demo: {spec.integration_name}",
             enabled=True,
-            created_at=finished_at,
+            created_at=_at_utc(
+                _shift_period(
+                    BillingPeriod.from_date(reference_date), -DEMO_HISTORY_MONTHS
+                ),
+                1,
+            ),
             updated_at=finished_at,
-            enabled_at=finished_at,
-            stale_after_seconds=93600,
+            enabled_at=_at_utc(
+                _shift_period(
+                    BillingPeriod.from_date(reference_date), -DEMO_HISTORY_MONTHS
+                ),
+                1,
+            ),
+            stale_after_seconds=32 * 60 * 60,
             run_timeout_seconds=1800,
             revision=2,
             current_run_id=run_id,
@@ -460,10 +452,14 @@ def _create_integrations(
                 if failed
                 else IntegrationResult.SUCCESS.value
             ),
-            last_changes_detected=None if failed else True,
+            last_changes_detected=(
+                None if failed else spec.code not in {"INET", "MUSC", "CLDS"}
+            ),
             last_error_code="provider_unavailable" if failed else None,
             last_error_message=(
-                "The provider did not respond during the last sync." if failed else None
+                "Synthetic demo: provider unavailable; previous billing data is retained."
+                if failed
+                else None
             ),
             last_success_at=None if failed else finished_at,
         )
@@ -497,16 +493,24 @@ def _create_seed_obligation(
     period: BillingPeriod,
     amount: str,
     integration: Integration | None,
+    reference_date: date,
 ) -> Obligation:
-    issue_date = _date_in_period(period, max(1, spec.due_day - 7))
+    issue_date = min(
+        _date_in_period(period, max(1, spec.due_day - 7)),
+        reference_date - timedelta(days=1),
+    )
     due_date = _date_in_period(period, spec.due_day)
     if integration is None:
-        return _create_ready_obligation(
+        return create_manual_obligation(
             session=session,
             ledger_id=ledger_id,
             category_code=spec.code,
             period=period,
-            amount=amount,
+            current_amount=Decimal(amount),
+            data_ready=not (
+                spec.code == "MEAL"
+                and period == BillingPeriod.from_date(reference_date)
+            ),
             issue_date=issue_date,
             due_date=due_date,
         )
@@ -514,6 +518,18 @@ def _create_seed_obligation(
     run_id = uuid.uuid5(
         _DEMO_UUID_NAMESPACE,
         f"obligation-run:{spec.code}:{period.year:04d}-{period.month:02d}",
+    )
+    synced_at = datetime.combine(issue_date, time(6), tzinfo=UTC)
+    session.add(
+        IntegrationRun(
+            id=run_id,
+            integration_id=integration.id,
+            started_at=synced_at - timedelta(minutes=15),
+            deadline_at=synced_at + timedelta(minutes=15),
+            finished_at=synced_at,
+            result=IntegrationResult.SUCCESS.value,
+            changes_detected=True,
+        )
     )
     actor = ObligationActionActor.integration(
         integration_id=integration.id,
@@ -542,7 +558,11 @@ def _create_seed_obligation(
         key=_key(spec.code, period),
         actor=actor,
     )
-    obligation.last_auto_sync_at = _at_utc(period, max(1, spec.due_day - 6))
+    if integration.last_success_at is None:
+        integration.last_success_at = synced_at
+    elif integration.last_success_at < synced_at:
+        integration.last_success_at = synced_at
+    obligation.last_auto_sync_at = synced_at
     session.commit()
     session.refresh(obligation)
     return obligation
@@ -552,17 +572,18 @@ def _seed_obligations(
     *,
     session: Session,
     ledger_id: uuid.UUID,
-    periods: tuple[BillingPeriod, BillingPeriod, BillingPeriod],
+    periods: tuple[BillingPeriod, ...],
     categories: dict[str, Category],
     integrations: dict[str, Integration],
     reference_date: date,
 ) -> None:
-    previously_paid = {spec.code for spec in CATEGORY_SPECS} - {"WATR", "INET"}
-    current_period = periods[1]
+    current_period = periods[-1]
     overdue_budget = len(CATEGORY_SPECS) // 5
     due_days = {spec.code: spec.due_day for spec in CATEGORY_SPECS}
-    error_is_overdue = (
-        _date_in_period(current_period, due_days["MOBI"]) < reference_date
+    pending_codes = {"MOBI", "MEAL"}
+    pending_overdue = sum(
+        _date_in_period(current_period, due_days[code]) < reference_date
+        for code in pending_codes
     )
     overdue_showcase = ("HOME", "TRNS", "GYMM")
     current_overdue_codes = {
@@ -570,16 +591,14 @@ def _seed_obligations(
         for code in overdue_showcase
         if _date_in_period(current_period, due_days[code]) < reference_date
     }
-    allowed_showcase_count = max(0, overdue_budget - int(error_is_overdue))
+    allowed_showcase_count = max(0, overdue_budget - pending_overdue)
     current_overdue_codes = {
         code
         for code in overdue_showcase[:allowed_showcase_count]
         if code in current_overdue_codes
     }
     for spec in CATEGORY_SPECS:
-        for period_index, (period, amount) in enumerate(
-            zip(periods, spec.amounts, strict=True)
-        ):
+        for period, amount in zip(periods, spec.amounts, strict=True):
             obligation = _create_seed_obligation(
                 session=session,
                 ledger_id=ledger_id,
@@ -588,16 +607,36 @@ def _seed_obligations(
                 period=period,
                 amount=amount,
                 integration=integrations.get(spec.code),
+                reference_date=reference_date,
             )
-            if period_index == 1 and spec.code == "MOBI":
+            if period == current_period and spec.code == "MEAL":
+                obligation.notes = "Synthetic demo: awaiting the final meal count before confirming the bill."
+                session.commit()
+                continue
+            if period == current_period and spec.code == "MOBI":
+                obligation.notes = "Synthetic demo: provider unavailable; displayed amount is the last received bill."
+                session.commit()
+                integration = integrations[spec.code]
                 mark_obligation_error(
                     session=session,
                     ledger_id=ledger_id,
                     key=_key(spec.code, period),
+                    actor=ObligationActionActor.integration(
+                        integration_id=integration.id,
+                        display_name=integration.name,
+                        run_id=integration.current_run_id,
+                    ),
                 )
                 continue
-            should_be_paid = (period_index == 0 and spec.code in previously_paid) or (
-                period_index == 1
+            is_previous = period == periods[-2]
+            if is_previous and spec.code == "WATR":
+                obligation.notes = (
+                    "Synthetic demo: payment is still awaiting manual confirmation."
+                )
+            should_be_paid = (
+                period != current_period and not (is_previous and spec.code == "WATR")
+            ) or (
+                period == current_period
                 and obligation.due_date is not None
                 and obligation.due_date < reference_date
                 and spec.code not in current_overdue_codes
@@ -619,7 +658,8 @@ def _seed_category_data(
     session: Session,
     ledger_id: uuid.UUID,
     categories: dict[str, Category],
-    periods: tuple[BillingPeriod, BillingPeriod, BillingPeriod],
+    periods: tuple[BillingPeriod, ...],
+    reference_date: date,
 ) -> None:
     datasets: dict[str, tuple[dict[str, Any], tuple[dict[str, Any], ...]]] = {
         "ELEC": (
@@ -727,15 +767,22 @@ def _seed_category_data(
             category_id=category.id,
             schema=schema,
         )
-        for period, record in zip(periods, records, strict=True):
-            data = dict(record)
+        meter = Decimal("8000.0")
+        for index, period in enumerate(periods):
+            data = dict(records[index % len(records)])
+            if code == "ELEC":
+                meter += Decimal(str(data["consumption_kwh"]))
+                data["meter_reading_kwh"] = float(meter)
+            observed_date = min(
+                _date_in_period(period, 6), reference_date - timedelta(days=1)
+            )
             if code == "WATR":
-                data["reading_date"] = _date_in_period(period, 6).isoformat()
+                data["reading_date"] = observed_date.isoformat()
             category_use_cases.create_category_data_record(
                 session=session,
                 ledger_id=ledger_id,
                 category_id=category.id,
-                observed_at=_at_utc(period, 6),
+                observed_at=datetime.combine(observed_date, time(6), tzinfo=UTC),
                 data=data,
                 source="demo-integration",
                 external_id=f"{code}-{period.year:04d}-{period.month:02d}",
@@ -746,81 +793,142 @@ def _seed_components(
     *,
     session: Session,
     ledger_id: uuid.UUID,
-    periods: tuple[BillingPeriod, BillingPeriod, BillingPeriod],
+    periods: tuple[BillingPeriod, ...],
 ) -> None:
-    electricity = (
-        (
-            ("Energy", "132.10"),
-            ("Distribution", "58.20"),
-            ("Renewables fee", "6.10"),
-        ),
-        (
-            ("Energy", "141.05"),
-            ("Distribution", "61.50"),
-            ("Renewables fee", "6.20"),
-        ),
-        (
-            ("Energy", "144.80"),
-            ("Distribution", "63.20"),
-            ("Renewables fee", "6.30"),
-        ),
-    )
-    for period, components in zip(periods, electricity, strict=True):
-        for index, (label, amount) in enumerate(components):
+    specs = {spec.code: spec for spec in CATEGORY_SPECS}
+    for period_index, period in enumerate(periods):
+        total = Decimal(specs["ELEC"].amounts[period_index])
+        distribution = Decimal("56.00") + Decimal(period_index) * Decimal("1.25")
+        renewable = Decimal("6.00") + Decimal(period_index) * Decimal("0.05")
+        electricity = (
+            ("Energy", total - distribution - renewable),
+            ("Distribution", distribution),
+            ("Renewables fee", renewable),
+        )
+        mobile_total = Decimal(specs["MOBI"].amounts[period_index])
+        components: list[tuple[str, str, str, Decimal, dict[str, object]]] = [
+            ("ELEC", "invoice_line", label, amount, {}) for label, amount in electricity
+        ] + [
+            (
+                "INET",
+                "plan",
+                "600 Mbps fibre",
+                Decimal("79.99"),
+                {"contract": "open-ended"},
+            ),
+            (
+                "INET",
+                "equipment",
+                "Router rental",
+                Decimal("10.00"),
+                {"model": "Connecta Hub"},
+            ),
+            (
+                "MOBI",
+                "plan",
+                "Family mobile plan",
+                mobile_total - Decimal("20.00"),
+                {"lines": 2},
+            ),
+            (
+                "MOBI",
+                "device",
+                "Phone instalment",
+                Decimal("20.00"),
+                {"instalment": f"{4 + period_index} of 24"},
+            ),
+        ]
+        for index, (code, type_, label, amount, metadata) in enumerate(components):
             upsert_obligation_component(
                 session=session,
                 ledger_id=ledger_id,
-                key=_key("ELEC", period),
-                type="invoice_line",
+                key=_key(code, period),
+                type=type_,
                 label=label,
-                amount=Decimal(amount),
-                source="northgrid",
-                external_id=f"{period.year:04d}-{period.month:02d}:{index}",
+                amount=amount,
+                metadata=metadata,
+                source="demo-seed",
+                external_id=f"{code}:{index}",
             )
 
-    current = periods[1]
-    component_specs: tuple[tuple[str, str, str, str | None, dict[str, object]], ...] = (
-        ("RENT", "lease", "Apartment 3B", None, {"floor": 3, "area_m2": 68.4}),
-        (
-            "INET",
-            "plan",
-            "600 Mbps fibre",
-            "79.99",
-            {"contract": "open-ended"},
-        ),
-        (
-            "INET",
-            "equipment",
-            "Router rental",
-            "10.00",
-            {"model": "Connecta Hub"},
-        ),
-        ("MOBI", "plan", "Family mobile plan", "44.90", {"lines": 2}),
-        (
-            "MOBI",
-            "device",
-            "Phone instalment",
-            "20.00",
-            {"instalment": "8 of 24"},
-        ),
-        ("MEAL", "usage", "16 school meals", "192.00", {"meals": 16}),
-    )
-    for index, (code, type_, label, component_amount, metadata) in enumerate(
-        component_specs
-    ):
-        upsert_obligation_component(
-            session=session,
-            ledger_id=ledger_id,
-            key=_key(code, current),
-            type=type_,
-            label=label,
-            amount=(
-                Decimal(component_amount) if component_amount is not None else None
-            ),
-            metadata=metadata,
-            source="demo-seed",
-            external_id=f"{code}:{index}",
+
+def _seed_planned_obligations(
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    categories: dict[str, Category],
+    current: BillingPeriod,
+) -> None:
+    following = _shift_period(current, 1)
+    for spec in CATEGORY_SPECS:
+        category = categories[spec.code]
+        if spec.integration_name is None:
+            obligation = create_manual_obligation(
+                session=session,
+                ledger_id=ledger_id,
+                category_code=spec.code,
+                period=following,
+                current_amount=Decimal(spec.amounts[-1]),
+                due_date=_date_in_period(following, spec.due_day),
+            )
+        else:
+            obligation, _ = obligation_service.get_or_create_obligation(
+                session=session,
+                category=category,
+                period=following,
+            )
+        obligation.notes = (
+            "Synthetic demo: planned payment; amount estimated from recorded bills."
         )
+    session.commit()
+    obligation_service.estimate_missing_obligation_amounts(
+        session=session,
+        ledger_id=ledger_id,
+        current_period=current,
+    )
+    session.commit()
+
+
+def _date_seed_history(
+    *, session: Session, ledger_id: uuid.UUID, reference_date: date
+) -> None:
+    """Keep historical bills and their audit trail on the same synthetic timeline."""
+    for obligation in session.scalars(
+        select(Obligation).where(Obligation.ledger_id == ledger_id)
+    ):
+        day = obligation.issue_date or reference_date - timedelta(days=1)
+        created_at = datetime.combine(day, time(6), tzinfo=UTC)
+        obligation.created_at = created_at
+        timestamps = [created_at]
+        for index, action in enumerate(
+            sorted(
+                obligation.action_logs, key=lambda item: (item.created_at, str(item.id))
+            )
+        ):
+            action_date = created_at
+            if action.action == "marked_error" and action.run_id is not None:
+                run = session.get(IntegrationRun, action.run_id)
+                assert run is not None and run.finished_at is not None
+                action_date = run.finished_at
+            if action.action == "marked_paid":
+                assert obligation.paid_at is not None
+                action_date = obligation.paid_at
+                action.changes = {
+                    **action.changes,
+                    "paid_at": {"from": None, "to": obligation.paid_at.isoformat()},
+                }
+            action.created_at = action_date + timedelta(seconds=index)
+            timestamps.append(action.created_at)
+        for component in obligation.components:
+            component.created_at = created_at
+            component.updated_at = created_at
+        obligation.updated_at = max(timestamps)
+    for record in session.scalars(
+        select(CategoryDataRecord).join(Category).where(Category.ledger_id == ledger_id)
+    ):
+        record.created_at = record.observed_at
+        record.updated_at = record.observed_at
+    session.commit()
 
 
 def seed_demo(
@@ -831,9 +939,9 @@ def seed_demo(
 ) -> DemoSeedResult:
     today = reference_date or business_today()
     current = BillingPeriod.from_date(today)
-    previous = _shift_period(current, -1)
-    two_months_ago = _shift_period(current, -2)
-    next_period = _shift_period(current, 1)
+    history_periods = tuple(
+        _shift_period(current, offset) for offset in range(-DEMO_HISTORY_MONTHS, 1)
+    )
 
     user = _ensure_demo_user(session=session, password=password)
     _remove_existing_demo_ledgers(session=session, user_id=user.id)
@@ -843,12 +951,12 @@ def seed_demo(
         session=session,
         owner_user_id=user.id,
         name=DEMO_LEDGER_NAME,
-        description="Public demo ledger with resettable sample household expenses.",
+        description="Synthetic household expenses and integration results. No external services are connected.",
     )
     categories = _create_categories(
         session=session,
         ledger_id=ledger.id,
-        first_period=previous,
+        first_period=history_periods[0],
         counterparties=counterparties,
     )
     integrations = _create_integrations(
@@ -857,11 +965,10 @@ def seed_demo(
         categories=categories,
         reference_date=today,
     )
-    obligation_periods = (previous, current, next_period)
     _seed_obligations(
         session=session,
         ledger_id=ledger.id,
-        periods=obligation_periods,
+        periods=history_periods,
         categories=categories,
         integrations=integrations,
         reference_date=today,
@@ -870,13 +977,22 @@ def seed_demo(
         session=session,
         ledger_id=ledger.id,
         categories=categories,
-        periods=(two_months_ago, previous, current),
+        periods=history_periods,
+        reference_date=today,
     )
     _seed_components(
         session=session,
         ledger_id=ledger.id,
-        periods=obligation_periods,
+        periods=history_periods,
     )
+
+    _seed_planned_obligations(
+        session=session,
+        ledger_id=ledger.id,
+        categories=categories,
+        current=current,
+    )
+    _date_seed_history(session=session, ledger_id=ledger.id, reference_date=today)
 
     return DemoSeedResult(
         user_id=user.id,

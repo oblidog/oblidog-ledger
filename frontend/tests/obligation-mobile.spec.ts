@@ -234,7 +234,9 @@ for (const width of [320, 375, 414]) {
       page.getByRole("combobox", { name: "Category", exact: true }),
     ).toHaveValue("ELEC")
     await expect(page.getByLabel("Lifecycle")).toHaveValue("unpaid")
-    await expect(page.getByLabel("Billing period")).toHaveValue("2026-10")
+    await expect(
+      page.getByRole("button", { name: "Remove filter: Period: October 2026" }),
+    ).toBeVisible()
     await expect(
       page.getByRole("button", { name: "Mark as paid", exact: true }),
     ).toHaveCount(0)

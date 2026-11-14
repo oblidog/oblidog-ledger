@@ -1,7 +1,9 @@
 import { expect, type Page, test } from "@playwright/test"
+import en from "../src/i18n/locales/en/app/auth.json" with { type: "json" }
 
 const screenshotDate = process.env.DEMO_SCREENSHOT_DATE ?? "2026-09-15"
 const referenceDate = new Date(`${screenshotDate}T12:00:00Z`)
+const demoEmail = "demo@oblidog.com"
 const demoPassword = "public-demo-password"
 
 const mockDemoConfig = async (page: Page) => {
@@ -14,7 +16,7 @@ const mockDemoConfig = async (page: Page) => {
         is_demo: true,
         demo_writes_enabled: true,
         demo_credentials: {
-          email: "demo@oblidog.com",
+          email: demoEmail,
           password: demoPassword,
         },
       }),
@@ -49,7 +51,8 @@ test.describe("demo screenshots", () => {
 
     await page.goto("/login")
     await expect(page.getByTestId("demo-banner")).toBeVisible()
-    await page.getByRole("button", { name: "Log In" }).click()
+    await expect(page.getByTestId("email-input")).toHaveValue(demoEmail)
+    await page.getByRole("button", { name: en.enter_demo, exact: true }).click()
     await page.waitForURL(/\/ledgers\/[^/?]+/)
 
     await expect(
@@ -112,6 +115,19 @@ test.describe("demo screenshots", () => {
         .locator(".recharts-bar-rectangle path")
         .first(),
     ).toBeVisible()
+    const dashboardCharts = page.getByTestId(
+      /^(payment-schedule-chart|category-cost-donut|period-totals-chart|category-history-chart)$/,
+    )
+    for (const chart of [
+      "category-cost-donut",
+      "period-totals-chart",
+      "category-history-chart",
+    ]) {
+      await expect(
+        page.getByTestId(chart).first().locator("svg.recharts-surface"),
+      ).toBeVisible()
+    }
+
     for (const [size, width, height] of [
       ["desktop", 1440, 1000],
       ["mobile", 390, 844],
@@ -124,9 +140,7 @@ test.describe("demo screenshots", () => {
           ),
         )
         .toBe(true)
-      for (const chart of await widgets
-        .getByTestId("payment-schedule-chart")
-        .all()) {
+      for (const chart of await dashboardCharts.all()) {
         await expect
           .poll(() =>
             chart.evaluate(
@@ -137,6 +151,18 @@ test.describe("demo screenshots", () => {
           )
           .toBe(true)
       }
+      await page.screenshot({
+        path: `test-results/demo-screenshots/dashboard-${size}-light.png`,
+        fullPage: true,
+        style: `
+          [data-testid="demo-indicator"], [data-slot="sidebar-inset"] > nav {
+            display: none !important;
+          }
+          [data-slot="sidebar-inset"] > header { position: static !important; }
+        `,
+        animations: "disabled",
+        caret: "hide",
+      })
       await widgets.screenshot({
         path: `test-results/demo-screenshots/dashboard-payments-${size}-light.png`,
         style:

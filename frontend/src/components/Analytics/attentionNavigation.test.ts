@@ -19,9 +19,7 @@ test("unpaid navigation overrides demo defaults, keeps period and exposes remova
   })
   expect(filters).toMatchObject({
     lifecycle: "unpaid",
-    year: "2026",
-    month: "11",
-    filterByPeriod: true,
+    periods: ["2026-11"],
   })
   const cleared = serializeObligationFilters(url.search, {
     ...filters,
@@ -45,8 +43,7 @@ test("attention target uses its own earlier period instead of the dashboard mont
   expect(
     parseObligationFilters(url.search, "", { year: 2026, month: 11 }),
   ).toMatchObject({
-    year: "2026",
-    month: "10",
+    periods: ["2026-10"],
     categoryCode: "HOME",
     lifecycle: "unpaid",
   })
