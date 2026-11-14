@@ -78,6 +78,22 @@ schema change that is incompatible with the currently deployed backend, plan
 the migration and deployment ordering before merging. Seeding is never part of
 normal deploys or function startup. Periodic reset remains tracked in #278.
 
+## Demo dataset
+
+The canonical seed uses the reset date to create four previous billing months,
+the current month, and one planned month ahead (90 obligations in 15 categories).
+Historical bills are paid except for one water bill awaiting payment confirmation.
+The current month includes a provider error retaining the last received mobile
+bill and an estimated school-meal bill awaiting its final count. The next month
+contains estimated amounts and due dates, without issued invoices, payment dates,
+components, or future integration results.
+
+Electricity, internet, and mobile bills include five periods of component history.
+Integration names and explanatory notes identify the data as synthetic; the seed
+creates no credentials and calls no external providers. PL/EN/DE share one ledger
+with English sample names. Resets reproduce the same business data for the same
+reference date while replacing ledger and record IDs as before.
+
 ## Demo reset (#278)
 
 The backend has a hidden `GET /api/v1/demo/reset` operator endpoint. Configure

@@ -1,7 +1,8 @@
 import uuid
 from collections.abc import Generator
-from datetime import date
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 import pytest
 from sqlalchemy import delete, func, select
@@ -9,7 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.core.security import verify_password
 from app.demo_seed import DEMO_EMAIL, DEMO_LEDGER_NAME, seed_demo
-from app.domain import EffectiveValueSourceMode, ObligationLifecycle
+from app.domain import (
+    CurrentValueSource,
+    EffectiveValueSourceMode,
+    ObligationLifecycle,
+    ValueState,
+)
 from app.models import (
     Category,
     CategoryDataRecord,
@@ -24,6 +30,7 @@ from app.models import (
     User,
 )
 from app.services import demo_reset as demo_reset_service
+from app.use_cases.integrations import integration_status
 from app.use_cases.ledgers import create_ledger
 
 REFERENCE_DATE = date(2026, 9, 7)
@@ -110,7 +117,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
     )
     assert category_count == 15
     assert group_count == 7
-    assert obligation_count == 45
+    assert obligation_count == 90
 
     integrations = list(
         db.scalars(select(Integration).where(Integration.ledger_id == ledger.id))
@@ -137,10 +144,12 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
             )
         )
     )
-    assert len(runs) == 12
+    assert len(runs) == 72
     by_id = {item.id: item for item in integrations}
     for run in runs:
         integration = by_id[run.integration_id]
+        if run.id != integration.current_run_id:
+            continue
         assert run.id == integration.current_run_id
         assert run.result == integration.last_result
         assert run.error_code == integration.last_error_code
@@ -160,14 +169,14 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
             obligation.effective_value_source is EffectiveValueSourceMode.INTEGRATION
             for obligation in obligations
         )
-        == 36
+        == 60
     )
     assert (
         sum(
             obligation.effective_value_source is EffectiveValueSourceMode.MANUAL
             for obligation in obligations
         )
-        == 9
+        == 18
     )
 
     overdue = _obligation(
@@ -215,7 +224,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
         year=2026,
         month=10,
     )
-    assert future.lifecycle is ObligationLifecycle.READY
+    assert future.lifecycle is ObligationLifecycle.COLLECTING_DATA
     assert future.due_date is not None and future.due_date > REFERENCE_DATE
 
     assert (
@@ -234,7 +243,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
             .join(Category, Category.id == CategoryDataRecord.category_id)
             .where(Category.ledger_id == ledger.id)
         )
-        == 15
+        == 25
     )
     assert (
         db.scalar(
@@ -243,7 +252,7 @@ def test_seed_demo_creates_relative_representative_dataset(db: Session) -> None:
             .join(Obligation, Obligation.id == ObligationComponent.obligation_id)
             .where(Obligation.ledger_id == ledger.id)
         )
-        == 15
+        == 35
     )
 
     shared_counterparty = db.scalar(
@@ -387,5 +396,187 @@ def test_failed_reset_restores_previous_ledger(
             .select_from(Obligation)
             .where(Obligation.ledger_id == first.ledger_id)
         )
-        == 45
+        == 90
     )
+
+
+@pytest.mark.parametrize(
+    "reference_date",
+    [date(2027, 1, 1), date(2028, 2, 29), date(2026, 12, 31), date(2026, 6, 1)],
+)
+def test_demo_history_is_coherent_across_calendar_boundaries(
+    db: Session, reference_date: date
+) -> None:
+    result = seed_demo(
+        session=db, password=DEMO_TEST_PASSWORD, reference_date=reference_date
+    )
+    cutoff = datetime.combine(reference_date, time(), tzinfo=UTC)
+    obligations = list(
+        db.scalars(select(Obligation).where(Obligation.ledger_id == result.ledger_id))
+    )
+    current_month = reference_date.year * 12 + reference_date.month
+    by_month: dict[int, list[Obligation]] = {}
+    for obligation in obligations:
+        month = obligation.period_year * 12 + obligation.period_month
+        by_month.setdefault(month, []).append(obligation)
+        assert obligation.created_at < cutoff
+        assert obligation.updated_at < cutoff
+        assert obligation.issue_date is None or obligation.issue_date < reference_date
+        assert (
+            obligation.last_auto_sync_at is None
+            or obligation.last_auto_sync_at < cutoff
+        )
+        if obligation.lifecycle is ObligationLifecycle.PAID:
+            assert obligation.paid_at is not None and obligation.paid_at < cutoff
+            assert obligation.issue_date is not None
+            assert obligation.due_date is not None
+            assert (
+                obligation.issue_date
+                <= obligation.paid_at.date()
+                <= obligation.due_date
+            )
+        else:
+            assert obligation.paid_at is None
+        if obligation.components:
+            assert (
+                sum(
+                    (
+                        component.amount
+                        for component in obligation.components
+                        if component.amount is not None
+                    ),
+                    Decimal("0.00"),
+                )
+                == obligation.current_amount
+            )
+        for action in obligation.action_logs:
+            assert obligation.created_at <= action.created_at <= obligation.updated_at
+            if action.action == "marked_paid":
+                assert obligation.paid_at is not None
+                assert action.changes["paid_at"] == {
+                    "from": None,
+                    "to": obligation.paid_at.isoformat(),
+                }
+
+    assert sorted(by_month) == list(range(current_month - 4, current_month + 2))
+    assert all(len(items) == 15 for items in by_month.values())
+    for month in range(current_month - 4, current_month - 1):
+        assert all(
+            item.lifecycle is ObligationLifecycle.PAID for item in by_month[month]
+        )
+    previous_unpaid = [
+        item
+        for item in by_month[current_month - 1]
+        if item.lifecycle is not ObligationLifecycle.PAID
+    ]
+    assert len(previous_unpaid) == 1
+    assert previous_unpaid[0].category.code == "WATR"
+    for obligation in by_month[current_month + 1]:
+        assert obligation.lifecycle in {
+            ObligationLifecycle.DRAFT,
+            ObligationLifecycle.COLLECTING_DATA,
+        }
+        assert obligation.amount_state is ValueState.ESTIMATED
+        assert obligation.current_amount is not None
+        assert obligation.amount_source in {
+            CurrentValueSource.AUTOMATIC,
+            CurrentValueSource.MANUAL,
+        }
+        assert obligation.issue_date is None
+        assert obligation.last_auto_sync_at is None
+        assert not obligation.components
+
+    current = by_month[current_month]
+    assert any(
+        item.lifecycle is ObligationLifecycle.ERROR and item.notes for item in current
+    )
+    assert any(
+        item.lifecycle is ObligationLifecycle.COLLECTING_DATA
+        and item.amount_state is ValueState.ESTIMATED
+        and item.notes
+        for item in current
+    )
+    integrations = list(
+        db.scalars(select(Integration).where(Integration.ledger_id == result.ledger_id))
+    )
+    assert all(
+        item.name.startswith("Demo:") and not item.credentials for item in integrations
+    )
+    assert {item.last_changes_detected for item in integrations} == {True, False, None}
+    for day_time in (time.min, time.max):
+        now = datetime.combine(
+            reference_date, day_time, tzinfo=ZoneInfo("Europe/Warsaw")
+        )
+        assert {integration_status(item, now)[2].value for item in integrations} == {
+            "healthy",
+            "error",
+        }
+    runs = {
+        run.id: run
+        for run in db.scalars(
+            select(IntegrationRun).where(
+                IntegrationRun.integration_id.in_([item.id for item in integrations])
+            )
+        )
+    }
+    assert all(
+        run.finished_at is not None and run.finished_at < cutoff
+        for run in runs.values()
+    )
+    for obligation in obligations:
+        for action in obligation.action_logs:
+            if action.run_id is not None:
+                assert action.run_id in runs
+                assert runs[action.run_id].integration_id == action.integration_id
+    records = list(
+        db.scalars(
+            select(CategoryDataRecord)
+            .join(Category)
+            .where(Category.ledger_id == result.ledger_id)
+        )
+    )
+    assert len(records) == 25
+    assert all(record.observed_at < cutoff for record in records)
+    electricity = sorted(
+        [
+            record
+            for record in records
+            if record.category_id
+            == next(
+                item.category_id for item in current if item.category.code == "ELEC"
+            )
+        ],
+        key=lambda item: item.observed_at,
+    )
+    for previous, following in zip(electricity, electricity[1:], strict=False):
+        assert Decimal(str(following.data["meter_reading_kwh"])) - Decimal(
+            str(previous.data["meter_reading_kwh"])
+        ) == Decimal(str(following.data["consumption_kwh"]))
+
+
+def test_reseed_restores_same_business_dataset(db: Session) -> None:
+    def snapshot() -> list[tuple[object, ...]]:
+        return sorted(
+            (
+                item.category.code,
+                item.period_year,
+                item.period_month,
+                item.lifecycle.value,
+                item.current_amount,
+                item.amount_state.value,
+                item.due_date,
+                item.issue_date,
+                item.paid_at,
+                item.last_auto_sync_at,
+                item.notes,
+                sorted((part.label, part.amount) for part in item.components),
+            )
+            for item in db.scalars(
+                select(Obligation).join(Ledger).where(Ledger.name == DEMO_LEDGER_NAME)
+            )
+        )
+
+    seed_demo(session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE)
+    first = snapshot()
+    seed_demo(session=db, password=DEMO_TEST_PASSWORD, reference_date=REFERENCE_DATE)
+    assert snapshot() == first
