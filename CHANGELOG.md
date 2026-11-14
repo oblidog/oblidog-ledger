@@ -1,3 +1,15 @@
+## v0.24.0 (2026-11-14)
+
+### Feat
+
+- **demo**: seed four previous billing months and planned payments (#658)
+- **obligations**: filter by multiple billing periods (#641) (#649)
+
+### Fix
+
+- **deps**: bump the web-stack group with 17 updates (#657)
+- **validation**: restrict new billing periods to 1970-2199 (#651)
+
 ## v0.23.0 (2026-11-09)
 
 ### Feat
