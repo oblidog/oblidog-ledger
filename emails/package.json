@@ -19,9 +19,9 @@
   "devDependencies": {
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
-    "react-email": "6.11.13",
+    "react-email": "6.11.16",
     "typescript": "7.0.2",
-    "@react-email/ui": "6.11.13",
+    "@react-email/ui": "6.11.16",
     "@biomejs/biome": "2.6.8"
   }
 }
