@@ -1,3 +1,10 @@
+## v0.24.3 (2026-11-19)
+
+### Fix
+
+- **deps**: update email preview tooling to patched Next.js (#677)
+- **deps**: bump the web-stack group with 12 updates (#674)
+
 ## v0.24.2 (2026-11-15)
 
 ### Fix
