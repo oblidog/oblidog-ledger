@@ -88,6 +88,7 @@ ErrorCode = Literal[
     "system_run_non_manual_tasks",
     "analytics_invalid_range",
     "service_unavailable",
+    "request_too_large",
     "request_invalid",
     "request_validation_failed",
     "internal_error",

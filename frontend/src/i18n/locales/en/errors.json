@@ -80,6 +80,7 @@
   "system_run_non_manual_tasks": "Only manual-only tasks may be selected",
   "analytics_invalid_range": "Invalid analytics period or comparison settings",
   "service_unavailable": "Service is temporarily unavailable. Try again later.",
+  "request_too_large": "The request is too large. Send less data.",
   "request_invalid": "The request is invalid. Check the submitted values.",
   "request_validation_failed": "Check the submitted values",
   "internal_error": "Something went wrong. Try again later.",

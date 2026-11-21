@@ -6,6 +6,7 @@ from pydantic import (
     BeforeValidator,
     EmailStr,
     HttpUrl,
+    PositiveInt,
     PostgresDsn,
     computed_field,
     model_validator,
@@ -38,6 +39,8 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "demo", "production"] = "local"
     DEMO_WRITES_ENABLED: bool = True
+    REQUEST_BODY_LIMIT_BYTES: PositiveInt = 1024 * 1024
+    DEMO_REQUEST_BODY_LIMIT_BYTES: PositiveInt = 64 * 1024
 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)

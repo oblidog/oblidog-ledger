@@ -80,6 +80,7 @@
   "system_run_non_manual_tasks": "Es dürfen nur ausschließlich manuelle Aufgaben ausgewählt werden",
   "analytics_invalid_range": "Ungültiger Auswertungszeitraum oder ungültige Vergleichseinstellungen",
   "service_unavailable": "Der Dienst ist vorübergehend nicht verfügbar. Versuche es später erneut.",
+  "request_too_large": "Die Anfrage ist zu groß. Sende weniger Daten.",
   "request_invalid": "Die Anfrage ist ungültig. Prüfe die übermittelten Werte.",
   "request_validation_failed": "Prüfe die übermittelten Werte",
   "internal_error": "Etwas ist schiefgelaufen. Versuche es später erneut.",
