@@ -93,6 +93,7 @@ export const ApiErrorResponseSchema = {
                 'system_run_non_manual_tasks',
                 'analytics_invalid_range',
                 'service_unavailable',
+                'request_too_large',
                 'request_invalid',
                 'request_validation_failed',
                 'internal_error'
@@ -2351,6 +2352,7 @@ export const IntegrationConflictResponseSchema = {
                 'system_run_non_manual_tasks',
                 'analytics_invalid_range',
                 'service_unavailable',
+                'request_too_large',
                 'request_invalid',
                 'request_validation_failed',
                 'internal_error'

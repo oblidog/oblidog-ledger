@@ -44,7 +44,7 @@ STATUS_CODES: dict[int, ErrorCode] = {
     401: "auth_required",
     403: "permission_denied",
     404: "resource_not_found",
-    413: "request_invalid",
+    413: "request_too_large",
     422: "request_validation_failed",
     503: "service_unavailable",
 }

@@ -109,3 +109,9 @@ history. Health is derived on read: disabled, timed out, stale, running, never
 run, error, or healthy. Disabling an integration blocks new starts but does not
 stop a runner process or revoke its key; revoke the key separately if needed.
 System Run does not launch integration jobs.
+
+## Request body limits
+
+Integration writes use the shared API body budget (1 MiB by default outside
+demo). Oversized requests return 413. See [request limits](request-limits.md)
+for environment settings, dynamic payloads and proxy behavior.

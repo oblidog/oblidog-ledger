@@ -85,7 +85,12 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'bun run dev',
+    // Node/V8 can abort in Buffer.byteLength while Vite serves transformed
+    // modules (nodejs/node#66870). Disable only the affected optimization in
+    // the CI dev server; keep the normal local development command.
+    command: process.env.CI
+      ? 'node --no-turbo-fast-api-calls ./node_modules/vite/bin/vite.js'
+      : 'bun run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
   },
