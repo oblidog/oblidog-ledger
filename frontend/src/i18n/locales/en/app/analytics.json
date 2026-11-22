@@ -139,5 +139,6 @@
   "period_summary": "Period summary",
   "attention_no_upcoming": "No upcoming payments",
   "attention_schedule_incomplete": "Schedule incomplete",
-  "attention_demo": "Synthetic demo data. Integration problems are illustrative examples."
+  "attention_demo": "Synthetic demo data. Integration problems are illustrative examples.",
+  "attention_verify_payment": "Check whether the payment was collected or the transfer was executed."
 }

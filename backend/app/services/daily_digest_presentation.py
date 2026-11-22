@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 SECTION_TITLES = {
     "overdue": "Overdue",
+    "verify_payment": "Verify payment execution",
     "errors": "Obligation errors",
     "ready_to_pay": "Ready to pay",
     "needs_preparation": "Needs preparation",

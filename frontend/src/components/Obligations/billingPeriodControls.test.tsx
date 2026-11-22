@@ -17,6 +17,10 @@ for (const [key, value] of Object.entries({
   MutationObserver: browser.MutationObserver,
   HTMLElement: browser.HTMLElement,
   HTMLInputElement: browser.HTMLInputElement,
+  HTMLFormElement: browser.HTMLFormElement,
+  DocumentFragment: browser.DocumentFragment,
+  HTMLSelectElement: browser.HTMLSelectElement,
+  Event: browser.Event,
   Node: browser.Node,
   NodeFilter: browser.NodeFilter,
   CustomEvent: browser.CustomEvent,
@@ -129,3 +133,46 @@ test("custom period filter rejects unsupported years", async () => {
   })
   expect(browser.document.querySelector("button")!.disabled).toBe(true)
 })
+
+test.each([
+  ["ready", true, true],
+  ["error", true, true],
+  ["draft", true, true],
+  ["paid", true, false],
+  ["canceled", true, false],
+  ["ready", false, false],
+] as const)(
+  "payment planning for %s with write access %s exposes editing: %s",
+  async (lifecycle, canEdit, editable) => {
+    const { ObligationPaymentExecution } = await import(
+      "./ObligationPaymentExecution"
+    )
+    client = new QueryClient()
+    container()
+    await act(async () =>
+      root!.render(
+        <QueryClientProvider client={client!}>
+          <ObligationPaymentExecution
+            ledgerId="ledger"
+            obligation={
+              {
+                key: "TEST-2026-11",
+                lifecycle,
+                payment_execution: "automatic_collection",
+              } as import("@/client").ObligationPublic
+            }
+            canEdit={canEdit}
+            onSuccess={mock()}
+            onError={mock()}
+          />
+        </QueryClientProvider>,
+      ),
+    )
+    expect(browser.document.querySelector('[role="combobox"]') !== null).toBe(
+      editable,
+    )
+    expect(browser.document.body.textContent).toContain(
+      i18n.t("app:obligations.payment_execution_automatic_collection"),
+    )
+  },
+)

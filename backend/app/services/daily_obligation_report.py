@@ -169,8 +169,12 @@ def _section_for(
     if obligation.lifecycle is ObligationLifecycle.ERROR:
         return "errors"
     if obligation.due_date is not None and obligation.due_date < report_date:
-        return "overdue"
+        return (
+            "verify_payment" if obligation.payment_execution is not None else "overdue"
+        )
     if obligation.lifecycle is ObligationLifecycle.READY:
+        if obligation.payment_execution is not None:
+            return None
         if (
             obligation.due_date is not None
             and calendar.business_days_until(start=report_date, end=obligation.due_date)
@@ -323,6 +327,7 @@ def _value_change_messages(
         "current_amount": "field_amount",
         "issue_date": "field_issue_date",
         "due_date": "field_due_date",
+        "payment_execution": "field_payment_execution",
     }
     messages: list[str] = []
     for field, label in labels.items():
@@ -397,6 +402,8 @@ def _display(
     value: object, language: Language = "en", field: str = "current_amount"
 ) -> str:
     locale = EmailLocale(language)
+    if field == "payment_execution":
+        return locale.tr("payment_execution_" + str(value or "manual"))
     if value is None:
         return locale.tr("unknown")
     if field in {"issue_date", "due_date"} and isinstance(value, str):

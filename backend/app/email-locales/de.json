@@ -158,5 +158,10 @@
   "weekly_attention": "Verbindlichkeiten mit fehlenden oder unbestätigten Daten",
   "weekly_comparison_unavailable": "Kein Vergleich: unvollständige Daten oder keine Vormonatsdaten",
   "weekly_due_tomorrow": "Morgen",
-  "weekly_data_complete": "Beträge und Fälligkeitstermine bestätigt."
+  "weekly_data_complete": "Beträge und Fälligkeitstermine bestätigt.",
+  "field_payment_execution": "Zahlungsausführung",
+  "payment_execution_manual": "Manuelle Zahlung",
+  "payment_execution_scheduled_transfer": "Bei der Bank geplanter Überweisungsauftrag",
+  "payment_execution_automatic_collection": "Automatischer Einzug",
+  "section_verify_payment": "Zahlungsausführung prüfen"
 }

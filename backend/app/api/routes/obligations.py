@@ -80,6 +80,7 @@ def to_obligation_public(obligation: Obligation) -> ObligationPublic:
         due_date_state=obligation.due_date_state,
         due_date_source=obligation.due_date_source,
         currency=obligation.currency,
+        payment_execution=obligation.payment_execution,
         paid_at=obligation.paid_at,
         created_at=obligation.created_at,
         updated_at=obligation.updated_at,
@@ -230,6 +231,7 @@ def create_obligation(
                 year=obligation_in.period.year,
                 month=obligation_in.period.month,
             ),
+            payment_execution=obligation_in.payment_execution,
             data_ready=obligation_in.data_ready,
             current_amount=obligation_in.current_amount,
             issue_date=obligation_in.issue_date,
@@ -501,7 +503,11 @@ def update_obligation(
         raise HTTPException(
             code="obligation_read_only",
             status_code=409,
-            detail="Only draft and collecting data obligations can be edited",
+            detail=(
+                "Paid and canceled obligations cannot change payment execution"
+                if obligation_in.model_fields_set == {"payment_execution"}
+                else "Only draft and collecting data obligations can be edited"
+            ),
         ) from caught_error
     except ValueError as exc:
         raise HTTPException(

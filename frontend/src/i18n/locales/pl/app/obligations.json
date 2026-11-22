@@ -139,5 +139,11 @@
   "could_not_check_first_payment": "Nie udało się sprawdzić, czy pierwsza płatność już istnieje.",
   "first_automatic_payment_pending": "Pierwsza płatność jeszcze nie powstała. Ta kategoria tworzy zobowiązania automatycznie według harmonogramu.",
   "first_payment_unavailable": "Nie można otworzyć pierwszej płatności. Sprawdź harmonogram kategorii lub uprawnienia do ledgera.",
-  "data_ready_help": "Zaznacz, gdy kwota i termin są potwierdzone. Jeśli danych brakuje, zapisz to, co masz, i uzupełnij resztę później."
+  "data_ready_help": "Zaznacz, gdy kwota i termin są potwierdzone. Jeśli danych brakuje, zapisz to, co masz, i uzupełnij resztę później.",
+  "payment_execution": "Realizacja płatności",
+  "payment_execution_manual": "Płatność ręczna",
+  "payment_execution_scheduled_transfer": "Przelew zaplanowany w banku",
+  "payment_execution_automatic_collection": "Automatyczne pobranie",
+  "payment_execution_help": "Płatności zaplanowane i automatyczne wymagają sprawdzenia dopiero po terminie. Brakujące dane i błędy nadal wymagają uwagi.",
+  "verify_payment": "Sprawdź, czy płatność została pobrana lub przelew został zrealizowany."
 }

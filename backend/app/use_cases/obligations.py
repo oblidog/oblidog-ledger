@@ -22,6 +22,7 @@ from app.domain import (
     ObligationActionType,
     ObligationKey,
     ObligationLifecycle,
+    PaymentExecution,
     ValueState,
     due_date_range,
 )
@@ -74,6 +75,7 @@ _AUDITED_OBLIGATION_FIELDS = (
     "due_date_source",
     "effective_value_source",
     "paid_at",
+    "payment_execution",
 )
 
 _MONEY_QUANTUM = Decimal("0.01")
@@ -370,6 +372,7 @@ def create_manual_obligation(
     ledger_id: uuid.UUID,
     category_code: str,
     period: BillingPeriod,
+    payment_execution: PaymentExecution | None = None,
     data_ready: bool = False,
     current_amount: Decimal | None = None,
     issue_date: date | None = None,
@@ -434,6 +437,7 @@ def create_manual_obligation(
         obligation.due_date_state = value_state
         obligation.due_date_source = CurrentValueSource.MANUAL
 
+    obligation.payment_execution = payment_execution
     _update_effective_value_source(obligation)
 
     _record_action(
@@ -508,6 +512,7 @@ def update_manual_obligation(
     issue_date: date | None | _Unset = UNSET,
     due_date: date | None | _Unset = UNSET,
     notes: str | None | _Unset = UNSET,
+    payment_execution: PaymentExecution | None | _Unset = UNSET,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
     return _update_obligation_values(
@@ -518,6 +523,7 @@ def update_manual_obligation(
         issue_date=issue_date,
         due_date=due_date,
         notes=notes,
+        payment_execution=payment_execution,
         source=CurrentValueSource.MANUAL,
         actor=actor,
     )
@@ -554,13 +560,24 @@ def _update_obligation_values(
     issue_date: date | None | _Unset = UNSET,
     due_date: date | None | _Unset = UNSET,
     notes: str | None | _Unset = UNSET,
+    payment_execution: PaymentExecution | None | _Unset = UNSET,
     source: CurrentValueSource,
     actor: ObligationActionActor,
 ) -> Obligation:
     obligation = get_obligation_by_key(
         session=session, ledger_id=ledger_id, key=key, lock=True
     )
-    if obligation.lifecycle not in {
+    metadata_only = (
+        source is CurrentValueSource.MANUAL
+        and not isinstance(payment_execution, _Unset)
+        and all(
+            isinstance(value, _Unset)
+            for value in (current_amount, issue_date, due_date, notes)
+        )
+    )
+    if obligation.lifecycle in {ObligationLifecycle.PAID, ObligationLifecycle.CANCELED}:
+        raise ObligationReadOnlyError
+    if not metadata_only and obligation.lifecycle not in {
         ObligationLifecycle.DRAFT,
         ObligationLifecycle.COLLECTING_DATA,
     }:
@@ -576,7 +593,11 @@ def _update_obligation_values(
         obligation.issue_date if isinstance(issue_date, _Unset) else issue_date
     )
     next_due_date = obligation.due_date if isinstance(due_date, _Unset) else due_date
-    if next_current_amount is not None and next_current_amount < 0:
+    if (
+        not metadata_only
+        and next_current_amount is not None
+        and next_current_amount < 0
+    ):
         raise ValueError("current_amount must be greater than or equal to zero")
     # Scheduled deadlines can move into the previous billing month.
     if next_due_date is not None and not isinstance(due_date, _Unset):
@@ -588,7 +609,7 @@ def _update_obligation_values(
                 "due_date must be within the billing period or the first "
                 "seven business days after it"
             )
-    if next_issue_date is not None and next_due_date is not None:
+    if not metadata_only and next_issue_date is not None and next_due_date is not None:
         if next_issue_date > next_due_date:
             raise ValueError("issue_date cannot be later than due_date")
 
@@ -633,7 +654,11 @@ def _update_obligation_values(
 
     if has_value_changes and obligation.lifecycle is ObligationLifecycle.DRAFT:
         obligation.lifecycle = ObligationLifecycle.COLLECTING_DATA
-    _update_effective_value_source(obligation)
+    if not isinstance(payment_execution, _Unset):
+        obligation.payment_execution = payment_execution
+
+    if not metadata_only:
+        _update_effective_value_source(obligation)
     _record_action(
         session=session,
         obligation=obligation,

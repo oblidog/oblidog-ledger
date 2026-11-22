@@ -29,6 +29,11 @@ class ObligationLifecycle(StrEnum):
     ERROR = "error"
 
 
+class PaymentExecution(StrEnum):
+    SCHEDULED_TRANSFER = "scheduled_transfer"
+    AUTOMATIC_COLLECTION = "automatic_collection"
+
+
 class DataSourcePolicy(StrEnum):
     MANUAL = "manual"
     AUTOMATIC = "automatic"
@@ -158,6 +163,7 @@ class Obligation:
     paid_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    payment_execution: PaymentExecution | None = None
 
     @property
     def business_key(self) -> str:

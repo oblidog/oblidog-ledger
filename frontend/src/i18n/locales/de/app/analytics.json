@@ -139,5 +139,6 @@
   "period_summary": "Zeitraumübersicht",
   "attention_no_upcoming": "Keine anstehenden Zahlungen",
   "attention_schedule_incomplete": "Zeitplan unvollständig",
-  "attention_demo": "Synthetische Demodaten. Integrationsprobleme sind illustrative Beispiele."
+  "attention_demo": "Synthetische Demodaten. Integrationsprobleme sind illustrative Beispiele.",
+  "attention_verify_payment": "Prüfen Sie, ob die Zahlung eingezogen oder die Überweisung ausgeführt wurde."
 }

@@ -83,7 +83,7 @@ export type AttentionItemPublic = {
     /**
      * Reasons
      */
-    reasons?: Array<'overdue' | 'error' | 'incomplete' | 'upcoming'>;
+    reasons?: Array<'overdue' | 'error' | 'incomplete' | 'upcoming' | 'verify_payment'>;
     /**
      * Integrations
      */
@@ -1979,6 +1979,7 @@ export type ObligationCreate = {
      * Notes
      */
     notes?: string | null;
+    payment_execution?: PaymentExecution | null;
 };
 
 /**
@@ -2127,6 +2128,7 @@ export type ObligationPublic = {
      * Currency
      */
     currency: string | null;
+    payment_execution?: PaymentExecution | null;
     /**
      * Paid At
      */
@@ -2161,6 +2163,7 @@ export type ObligationUpdate = {
      * Notes
      */
     notes?: string | null;
+    payment_execution?: PaymentExecution | null;
 };
 
 /**
@@ -2223,6 +2226,11 @@ export type PauseOnboarding = {
      */
     action: 'dismiss' | 'resume' | 'back' | 'restart';
 };
+
+/**
+ * PaymentExecution
+ */
+export type PaymentExecution = 'scheduled_transfer' | 'automatic_collection';
 
 /**
  * PeriodCashflowPublic
