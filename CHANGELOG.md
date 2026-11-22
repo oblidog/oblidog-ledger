@@ -1,3 +1,13 @@
+## v0.25.0 (2026-11-22)
+
+### Feat
+
+- track scheduled and automatic payment execution (#683)
+
+### Fix
+
+- **api**: bound production request bodies before parsing (#681)
+
 ## v0.24.3 (2026-11-19)
 
 ### Fix
