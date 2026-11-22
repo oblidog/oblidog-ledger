@@ -206,6 +206,9 @@ export const LoginService = {
   resetPassword: request(generated.LoginService.resetPassword<true>),
 }
 export const ObligationsService = {
+  setScheduledTransfer: request(
+    generated.ObligationsService.setScheduledTransfer<true>,
+  ),
   addObligationComponent: request(
     generated.ObligationsService.addObligationComponent<true>,
   ),

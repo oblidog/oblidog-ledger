@@ -64,8 +64,9 @@ export function CreateObligationDialog({
   const [periodInput, setPeriodInput] = useState(
     monthInputValue(String(defaultPeriod.year), String(defaultPeriod.month)),
   )
-  const [paymentExecution, setPaymentExecution] =
-    useState<PaymentExecution | null>(null)
+  const [paymentExecution, setPaymentExecution] = useState<
+    PaymentExecution | null | undefined
+  >(undefined)
   const [dataReady, setDataReady] = useState(false)
   const [currentAmount, setCurrentAmount] = useState("")
   const [issueDate, setIssueDate] = useState("")
@@ -135,7 +136,7 @@ export function CreateObligationDialog({
       handleError.call(onError, error)
     },
     onSuccess: (obligation) => {
-      setPaymentExecution(null)
+      setPaymentExecution(undefined)
       onSuccess(i18n.t("app:obligations.obligation_created"))
       if (firstPayment) {
         queryClient.setQueryData(
@@ -191,7 +192,10 @@ export function CreateObligationDialog({
               className="border-input bg-background text-foreground h-9 w-full rounded-md border px-3 text-sm"
               value={categoryCode}
               disabled={firstPayment !== undefined}
-              onChange={(event) => setCategoryCode(event.target.value)}
+              onChange={(event) => {
+                setCategoryCode(event.target.value)
+                setPaymentExecution(undefined)
+              }}
             >
               <option value="" className="bg-background text-foreground">
                 {i18n.t("app:obligations.choose_a_category")}
@@ -251,7 +255,13 @@ export function CreateObligationDialog({
             </p>
           </div>
           <PaymentExecutionField
-            value={paymentExecution}
+            value={
+              paymentExecution === undefined
+                ? selectedCategory?.automatic_collection
+                  ? "automatic_collection"
+                  : null
+                : paymentExecution
+            }
             onChange={setPaymentExecution}
             disabled={mutation.isPending}
           />

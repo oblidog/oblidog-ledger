@@ -217,5 +217,7 @@
   "first_payment": "Pierwsza płatność",
   "first_payment_for": "Pierwsza płatność dla kategorii {{name}}",
   "set_up_schedule": "Ustaw harmonogram",
-  "set_up_schedule_for": "Ustaw harmonogram dla kategorii {{name}}"
+  "set_up_schedule_for": "Ustaw harmonogram dla kategorii {{name}}",
+  "automatic_collection": "Płatności pobierane automatycznie",
+  "automatic_collection_help": "Domyślne dla nowych zobowiązań. Nie zmienia istniejących płatności. Sposób płatności można zmienić w edycji zobowiązania."
 }

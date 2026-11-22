@@ -306,3 +306,252 @@ def test_payment_execution_patch_obeys_existing_editable_lifecycles(
         for key, value in before.items()
         if key not in {"payment_execution", "updated_at"}
     }
+
+
+@pytest.mark.parametrize("lifecycle", list(ObligationLifecycle))
+@pytest.mark.parametrize("execution", [None, *list(PaymentExecution)])
+def test_scheduled_transfer_action_lifecycle_and_audit(
+    lifecycle: ObligationLifecycle,
+    execution: PaymentExecution | None,
+    client: TestClient,
+    db: Session,
+) -> None:
+    ledger, _, category = create_category_tree(db)
+    headers = authentication_token_from_email(
+        client=client, email=ledger.owner.email, db=db
+    )
+    item = use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 11),
+        current_amount=Decimal("29.99"),
+        due_date=date(2026, 11, 25),
+        payment_execution=execution,
+    )
+    item.lifecycle = lifecycle
+    db.commit()
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/{item.business_key}"
+    before = client.get(url, headers=headers).json()
+    allowed = (
+        lifecycle
+        in {
+            ObligationLifecycle.DRAFT,
+            ObligationLifecycle.COLLECTING_DATA,
+            ObligationLifecycle.READY,
+        }
+        and execution is not PaymentExecution.AUTOMATIC_COLLECTION
+    )
+    count_before = db.scalar(
+        select(func.count())
+        .select_from(ObligationActionLog)
+        .where(ObligationActionLog.obligation_id == item.id)
+    )
+    response = client.patch(
+        f"{url}/scheduled-transfer", headers=headers, json={"scheduled": True}
+    )
+    assert response.status_code == (200 if allowed else 409), response.text
+    if not allowed:
+        assert client.get(url, headers=headers).json() == before
+        return
+    after = response.json()
+    assert after["payment_execution"] == "scheduled_transfer"
+    assert {
+        k: v for k, v in after.items() if k not in {"payment_execution", "updated_at"}
+    } == {
+        k: v for k, v in before.items() if k not in {"payment_execution", "updated_at"}
+    }
+    assert (
+        client.patch(
+            f"{url}/scheduled-transfer", headers=headers, json={"scheduled": True}
+        ).status_code
+        == 200
+    )
+    count_after = db.scalar(
+        select(func.count())
+        .select_from(ObligationActionLog)
+        .where(ObligationActionLog.obligation_id == item.id)
+    )
+    assert count_before is not None
+    assert count_after == count_before + (execution is None)
+    response = client.patch(
+        f"{url}/scheduled-transfer", headers=headers, json={"scheduled": False}
+    )
+    assert response.status_code == 200
+    assert response.json()["payment_execution"] is None
+    logs = list(
+        db.scalars(
+            select(ObligationActionLog)
+            .where(
+                ObligationActionLog.obligation_id == item.id,
+                ObligationActionLog.action == "values_updated",
+            )
+            .order_by(ObligationActionLog.created_at)
+        )
+    )
+    assert logs[-1].changes == {
+        "payment_execution": {"from": "scheduled_transfer", "to": None}
+    }
+    assert logs[-1].actor_type == "user"
+
+
+def test_scheduled_transfer_action_rejects_extra_fields_and_unauthorized_users(
+    client: TestClient, db: Session
+) -> None:
+    from app.domain import LedgerAccessRole
+    from app.use_cases import ledgers
+    from tests.utils.user import create_random_user
+
+    ledger, _, category = create_category_tree(db)
+    item = use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 11),
+        data_ready=True,
+        current_amount=Decimal("37.00"),
+        due_date=date(2026, 11, 24),
+    )
+    owner_headers = authentication_token_from_email(
+        client=client, email=ledger.owner.email, db=db
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/{item.business_key}/scheduled-transfer"
+    for body in [
+        {"scheduled": True, "current_amount": "1"},
+        {"scheduled": True, "payment_execution": "automatic_collection"},
+        {"scheduled": None},
+        {"scheduled": "true"},
+        {},
+    ]:
+        assert client.patch(url, headers=owner_headers, json=body).status_code == 422
+    assert client.patch(url, json={"scheduled": True}).status_code == 401
+    for role in [None, LedgerAccessRole.VIEWER, LedgerAccessRole.EDITOR]:
+        user = create_random_user(db)
+        if role:
+            ledgers.share_ledger(
+                session=db, ledger_id=ledger.id, target_user_id=user.id, role=role
+            )
+        headers = authentication_token_from_email(
+            client=client, email=user.email, db=db
+        )
+        assert client.patch(
+            url, headers=headers, json={"scheduled": True}
+        ).status_code == (200 if role is LedgerAccessRole.EDITOR else 404)
+    db.refresh(item)
+    assert item.current_amount == Decimal("37.00")
+    assert item.lifecycle is ObligationLifecycle.READY
+    assert item.paid_at is None
+    other, _, _ = create_category_tree(db)
+    other_headers = authentication_token_from_email(
+        client=client, email=other.owner.email, db=db
+    )
+    other_url = f"{settings.API_V1_STR}/ledgers/{other.id}/obligations/{item.business_key}/scheduled-transfer"
+    assert (
+        client.patch(
+            other_url, headers=other_headers, json={"scheduled": True}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.patch(
+            url.replace(item.business_key, "invalid"),
+            headers=owner_headers,
+            json={"scheduled": True},
+        ).status_code
+        == 422
+    )
+
+
+def test_category_automatic_collection_is_a_creation_default_with_explicit_overrides(
+    client: TestClient, db: Session
+) -> None:
+    from app.services.obligations import get_or_create_obligation
+    from app.use_cases import categories
+
+    ledger, _, category = create_category_tree(db)
+    headers = authentication_token_from_email(
+        client=client, email=ledger.owner.email, db=db
+    )
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations"
+    old = use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 1),
+        payment_execution=PaymentExecution.SCHEDULED_TRANSFER,
+    )
+    cat_url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories/{category.id}"
+    body = {
+        "name": category.name,
+        "data_source_policy": category.data_source_policy.value,
+        "automatic_collection": True,
+    }
+    response = client.patch(cat_url, headers=headers, json=body)
+    assert response.status_code == 200, response.text
+    assert response.json()["automatic_collection"] is True
+    # Older clients omitting the new field cannot clear an existing default.
+    body.pop("automatic_collection")
+    assert (
+        client.patch(cat_url, headers=headers, json=body).json()["automatic_collection"]
+        is True
+    )
+    create_cases: list[tuple[int, dict[str, str | None], str | None]] = [
+        (2, {}, "automatic_collection"),
+        (3, {"payment_execution": None}, None),
+        (4, {"payment_execution": "scheduled_transfer"}, "scheduled_transfer"),
+    ]
+    for month, extra, expected in create_cases:
+        response = client.post(
+            url,
+            headers=headers,
+            json={
+                "category_code": category.code,
+                "period": {"year": 2026, "month": month},
+                **extra,
+            },
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["payment_execution"] == expected
+    db.refresh(category)
+    generated, created = get_or_create_obligation(
+        session=db, category=category, period=BillingPeriod(2026, 5)
+    )
+    assert created
+    assert generated.payment_execution is PaymentExecution.AUTOMATIC_COLLECTION
+    db.commit()
+    categories.update_category(
+        session=db,
+        ledger_id=ledger.id,
+        category_id=category.id,
+        name=category.name,
+        automatic_collection=False,
+    )
+    db.refresh(old)
+    db.refresh(generated)
+    assert old.payment_execution is PaymentExecution.SCHEDULED_TRANSFER
+    assert generated.payment_execution is PaymentExecution.AUTOMATIC_COLLECTION
+    same, created = get_or_create_obligation(
+        session=db, category=category, period=BillingPeriod(2026, 5)
+    )
+    assert not created
+    assert same.payment_execution is PaymentExecution.AUTOMATIC_COLLECTION
+    next_item = use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 6),
+    )
+    assert next_item.payment_execution is None
+    # Category creation API persists the default too.
+    response = client.post(
+        f"{settings.API_V1_STR}/ledgers/{ledger.id}/categories",
+        headers=headers,
+        json={
+            "category_group_id": str(category.category_group_id),
+            "name": "Subscription",
+            "code": "SUBS",
+            "automatic_collection": True,
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["automatic_collection"] is True

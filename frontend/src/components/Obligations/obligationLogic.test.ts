@@ -222,3 +222,33 @@ test("category search matches human names and optional codes without mutating th
   expect(matchingCategories(categories, "missing")).toEqual([])
   expect(matchingCategories(categories, "")).toEqual(categories)
 })
+
+test("bank transfers can be scheduled in ready without allowing value edits", async () => {
+  const { canScheduleTransfer, canEditObligation } = await import(
+    "./obligationLogic"
+  )
+  for (const lifecycle of [
+    "draft",
+    "collecting_data",
+    "ready",
+    "paid",
+    "error",
+    "canceled",
+  ] as const) {
+    for (const payment_execution of [
+      null,
+      "scheduled_transfer",
+      "automatic_collection",
+    ] as const) {
+      const item = {
+        lifecycle,
+        payment_execution,
+      } as import("@/client").ObligationPublic
+      expect(canScheduleTransfer(item)).toBe(
+        ["draft", "collecting_data", "ready"].includes(lifecycle) &&
+          payment_execution !== "automatic_collection",
+      )
+      if (lifecycle === "ready") expect(canEditObligation(item)).toBe(false)
+    }
+  }
+})

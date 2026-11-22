@@ -49,16 +49,19 @@ comparison with October.
 
 Oblidog tracks the workflow; it does not initiate bank payments.
 
-For a subscription collected automatically or a transfer already scheduled in
-your bank, choose the payment execution type when creating the obligation or in
-its details. Ready planned payments stay out of Needs attention and daily
-payment reminders through their due date. If still unpaid the next day, they
-appear with a request to check execution. Errors and incomplete data still need
-review. These obligations remain in unpaid totals until payment is confirmed.
-The plan is editable while an obligation is draft or collecting data; reopen
-other states before changing it. The setting applies to one obligation; later
-billing periods start with manual payment. See [payment execution](docs/obligation-lifecycle.md#payment-execution)
-for the rules.
+Set automatic collection on a category to use it as the default for new
+obligations, and override the payment method in an obligation’s creation or edit
+form. Existing obligations keep their plan when the category changes. Mark a
+bank transfer as already scheduled, or undo scheduling, from the obligation menu
+or details, including when it is ready to pay. Amounts and dates remain locked
+in ready state.
+
+Ready planned payments stay out of Needs attention and daily payment reminders
+through their due date. If still unpaid the next day, they appear with a request
+to check execution. Errors and incomplete data still need review. These
+obligations remain in unpaid totals until payment is confirmed. Scheduled bank
+transfers apply to one obligation and never carry into later periods. See
+[payment execution](docs/obligation-lifecycle.md#payment-execution) for the rules.
 
 ## Automation without lock-in
 

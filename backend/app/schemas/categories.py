@@ -33,6 +33,7 @@ class CategoryCreate(BaseModel):
     recurrence_interval: int | None = Field(default=None, gt=0)
     recurrence_unit: RecurrenceUnit | None = None
     first_due_date: date | None = None
+    automatic_collection: bool = False
     currency: Currency | None = None
 
 
@@ -46,6 +47,7 @@ class CategoryUpdate(BaseModel):
     recurrence_interval: int | None = Field(default=None, gt=0)
     recurrence_unit: RecurrenceUnit | None = None
     first_due_date: date | None = None
+    automatic_collection: bool | None = None
     currency: Currency | None = None
 
 
@@ -81,6 +83,7 @@ class CategoryPublic(BaseModel):
     recurrence_interval: int | None
     recurrence_unit: RecurrenceUnit | None
     first_due_date: date | None
+    automatic_collection: bool
     currency: Currency
     archived_at: datetime | None
     has_data_schema: bool

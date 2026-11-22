@@ -372,7 +372,7 @@ def create_manual_obligation(
     ledger_id: uuid.UUID,
     category_code: str,
     period: BillingPeriod,
-    payment_execution: PaymentExecution | None = None,
+    payment_execution: PaymentExecution | None | _Unset = UNSET,
     data_ready: bool = False,
     current_amount: Decimal | None = None,
     issue_date: date | None = None,
@@ -437,7 +437,8 @@ def create_manual_obligation(
         obligation.due_date_state = value_state
         obligation.due_date_source = CurrentValueSource.MANUAL
 
-    obligation.payment_execution = payment_execution
+    if not isinstance(payment_execution, _Unset):
+        obligation.payment_execution = payment_execution
     _update_effective_value_source(obligation)
 
     _record_action(
@@ -644,6 +645,43 @@ def _update_obligation_values(
         obligation.payment_execution = payment_execution
 
     _update_effective_value_source(obligation)
+    _record_action(
+        session=session,
+        obligation=obligation,
+        action=ObligationActionType.VALUES_UPDATED,
+        actor=actor,
+        changes=_snapshot_diff(before, _obligation_snapshot(obligation)),
+    )
+    session.commit()
+    session.refresh(obligation)
+    return obligation
+
+
+def set_scheduled_transfer(
+    *,
+    session: Session,
+    ledger_id: uuid.UUID,
+    key: ObligationKey,
+    scheduled: bool,
+    actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
+) -> Obligation:
+    obligation = get_obligation_by_key(
+        session=session, ledger_id=ledger_id, key=key, lock=True
+    )
+    if (
+        obligation.lifecycle
+        not in {
+            ObligationLifecycle.DRAFT,
+            ObligationLifecycle.COLLECTING_DATA,
+            ObligationLifecycle.READY,
+        }
+        or obligation.payment_execution is PaymentExecution.AUTOMATIC_COLLECTION
+    ):
+        raise ObligationReadOnlyError
+    before = _obligation_snapshot(obligation)
+    obligation.payment_execution = (
+        PaymentExecution.SCHEDULED_TRANSFER if scheduled else None
+    )
     _record_action(
         session=session,
         obligation=obligation,

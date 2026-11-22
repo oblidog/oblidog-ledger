@@ -189,3 +189,10 @@ export function matchingCategories(
     normalize(`${category.name} ${category.code}`).includes(text),
   )
 }
+
+export function canScheduleTransfer(obligation: ObligationPublic) {
+  return (
+    ["draft", "collecting_data", "ready"].includes(obligation.lifecycle) &&
+    obligation.payment_execution !== "automatic_collection"
+  )
+}

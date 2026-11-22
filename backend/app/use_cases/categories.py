@@ -323,6 +323,7 @@ def create_category(
     recurrence_unit: RecurrenceUnit | None = None,
     first_due_date: date | None = None,
     currency: Currency | None = None,
+    automatic_collection: bool = False,
     commit: bool = True,
 ) -> Category:
     ledger = _require_ledger(session=session, ledger_id=ledger_id)
@@ -379,6 +380,7 @@ def create_category(
         recurrence_interval=recurrence_interval,
         recurrence_unit=recurrence_unit,
         first_due_date=first_due_date,
+        automatic_collection=automatic_collection,
         currency=currency if currency is not None else ledger.default_currency,
     )
     session.add(category)
@@ -403,6 +405,7 @@ def update_category(
     recurrence_unit: RecurrenceUnit | None = None,
     first_due_date: date | None = None,
     currency: Currency | None = None,
+    automatic_collection: bool | None = None,
 ) -> Category:
     _require_ledger(session=session, ledger_id=ledger_id)
     category = session.scalar(
@@ -447,6 +450,8 @@ def update_category(
     category.recurrence_interval = recurrence_interval
     category.recurrence_unit = recurrence_unit
     category.first_due_date = first_due_date
+    if automatic_collection is not None:
+        category.automatic_collection = automatic_collection
     if currency is not None:
         category.currency = currency
     session.commit()

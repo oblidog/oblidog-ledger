@@ -331,6 +331,10 @@ export type CategoryCreate = {
      * First Due Date
      */
     first_due_date?: string | null;
+    /**
+     * Automatic Collection
+     */
+    automatic_collection?: boolean;
     currency?: Currency | null;
 };
 
@@ -561,6 +565,10 @@ export type CategoryPublic = {
      * First Due Date
      */
     first_due_date: string | null;
+    /**
+     * Automatic Collection
+     */
+    automatic_collection: boolean;
     currency: Currency;
     /**
      * Archived At
@@ -602,6 +610,10 @@ export type CategoryUpdate = {
      * First Due Date
      */
     first_due_date?: string | null;
+    /**
+     * Automatic Collection
+     */
+    automatic_collection?: boolean | null;
     currency?: Currency | null;
 };
 
@@ -2359,6 +2371,16 @@ export type SchedulePreviewRequest = {
      * Reference Date
      */
     reference_date?: string | null;
+};
+
+/**
+ * ScheduledTransferUpdate
+ */
+export type ScheduledTransferUpdate = {
+    /**
+     * Scheduled
+     */
+    scheduled: boolean;
 };
 
 /**
@@ -8923,6 +8945,72 @@ export type ObligationsUpdateObligationResponses = {
 };
 
 export type ObligationsUpdateObligationResponse = ObligationsUpdateObligationResponses[keyof ObligationsUpdateObligationResponses];
+
+export type ObligationsSetScheduledTransferData = {
+    body: ScheduledTransferUpdate;
+    path: {
+        /**
+         * Obligation Key
+         */
+        obligation_key: string;
+        /**
+         * Ledger Id
+         */
+        ledger_id: string;
+    };
+    query?: never;
+    url: '/api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/scheduled-transfer';
+};
+
+export type ObligationsSetScheduledTransferErrors = {
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    400: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    401: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    403: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    404: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    409: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    413: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    422: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    500: ApiErrorResponse;
+    /**
+     * Application error with stable code; legacy detail is unchanged
+     */
+    503: ApiErrorResponse;
+};
+
+export type ObligationsSetScheduledTransferError = ObligationsSetScheduledTransferErrors[keyof ObligationsSetScheduledTransferErrors];
+
+export type ObligationsSetScheduledTransferResponses = {
+    /**
+     * Successful Response
+     */
+    200: ObligationPublic;
+};
+
+export type ObligationsSetScheduledTransferResponse = ObligationsSetScheduledTransferResponses[keyof ObligationsSetScheduledTransferResponses];
 
 export type ObligationsMarkObligationReadyData = {
     body?: never;

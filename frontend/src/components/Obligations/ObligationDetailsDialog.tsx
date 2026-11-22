@@ -26,6 +26,7 @@ import {
   canMarkObligationPaid,
   canMarkObligationReady,
   canReopenObligation,
+  canScheduleTransfer,
 } from "./obligationLogic"
 import {
   sourceBadgeClasses,
@@ -57,6 +58,7 @@ export function ObligationDetailsDialog({
     actionPending,
     runAction,
     markReady,
+    scheduleTransfer,
     cancel,
     reopen,
     showErrorToast,
@@ -108,13 +110,7 @@ export function ObligationDetailsDialog({
             >
               <div className="min-w-0 space-y-4">
                 <ObligationPaymentSummary obligation={selected.data} />
-                <ObligationPaymentExecution
-                  ledgerId={ledgerId}
-                  obligation={selected.data}
-                  canEdit={canEdit && !actionPending}
-                  onError={showErrorToast}
-                  onSuccess={showSuccessToast}
-                />
+                <ObligationPaymentExecution obligation={selected.data} />
                 {selected.data.notes ? (
                   <div className="space-y-1">
                     <p className="text-muted-foreground font-medium">
@@ -286,6 +282,24 @@ export function ObligationDetailsDialog({
                 >
                   <CreditCard />
                   {i18n.t("app:obligations.mark_as_paid")}
+                </Button>
+              ) : null}
+              {canScheduleTransfer(selected.data) ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11"
+                  disabled={actionPending}
+                  onClick={() =>
+                    void runAction(scheduleTransfer, selected.data)
+                  }
+                >
+                  <CreditCard />
+                  {i18n.t(
+                    selected.data.payment_execution === "scheduled_transfer"
+                      ? "app:obligations.undo_scheduled_transfer"
+                      : "app:obligations.schedule_transfer",
+                  )}
                 </Button>
               ) : null}
               {canReopenObligation(selected.data) ? (
