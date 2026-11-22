@@ -12,9 +12,10 @@ editor and viewer); it does not add any mutation or payment action.
 - Paid/canceled obligations, inactive or archived categories and disabled
   integrations do not contribute to attention.
 - Errors are always visible. Multiple reasons appear on one obligation row.
-- Ready payments enter the upcoming horizon at **two business days**, other
-  lifecycles at **three business days**, reusing daily-report policy constants
-  and the ledger's business calendar, including public holidays. Due-today and
+- Ready manual payments enter the upcoming horizon at **two business days**;
+  planned/automatic ready payments follow the exception below. Other lifecycles
+  enter their data-review horizon at **three business days**, reusing daily-report
+  policy constants and the ledger's business calendar, including public holidays. Due-today and
   intervening non-working days are included; distant future payments are omitted.
 - Draft/collecting obligations and unknown required amount/date values need data
   review once overdue, within their preparation horizon, or in error. A missing
