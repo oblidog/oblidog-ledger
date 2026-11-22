@@ -135,6 +135,7 @@ export function CreateObligationDialog({
       handleError.call(onError, error)
     },
     onSuccess: (obligation) => {
+      setPaymentExecution(null)
       onSuccess(i18n.t("app:obligations.obligation_created"))
       if (firstPayment) {
         queryClient.setQueryData(
