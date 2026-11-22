@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, expect, mock, test } from "bun:test"
+import { afterEach, beforeAll, expect, mock, spyOn, test } from "bun:test"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Window } from "happy-dom"
 import { act } from "react"
@@ -16,7 +16,15 @@ for (const [key, value] of Object.entries({
   getComputedStyle: browser.getComputedStyle.bind(browser),
   MutationObserver: browser.MutationObserver,
   HTMLElement: browser.HTMLElement,
+  Element: browser.Element,
+  ResizeObserver: browser.ResizeObserver,
+  requestAnimationFrame: browser.requestAnimationFrame.bind(browser),
+  cancelAnimationFrame: browser.cancelAnimationFrame.bind(browser),
   HTMLInputElement: browser.HTMLInputElement,
+  HTMLFormElement: browser.HTMLFormElement,
+  DocumentFragment: browser.DocumentFragment,
+  HTMLSelectElement: browser.HTMLSelectElement,
+  Event: browser.Event,
   Node: browser.Node,
   NodeFilter: browser.NodeFilter,
   CustomEvent: browser.CustomEvent,
@@ -43,6 +51,7 @@ beforeAll(async () => {
 })
 afterEach(async () => {
   await act(async () => root?.unmount())
+  mock.restore()
   client?.clear()
   browser.document.body.innerHTML = ""
 })
@@ -129,3 +138,148 @@ test("custom period filter rejects unsupported years", async () => {
   })
   expect(browser.document.querySelector("button")!.disabled).toBe(true)
 })
+
+test.each([
+  ["ready", true, false],
+  ["error", true, false],
+  ["draft", true, true],
+  ["collecting_data", true, true],
+  ["paid", true, false],
+  ["canceled", true, false],
+  ["ready", false, false],
+] as const)(
+  "payment planning for %s with write access %s exposes editing: %s",
+  async (lifecycle, canEdit, editable) => {
+    const { ObligationPaymentExecution } = await import(
+      "./ObligationPaymentExecution"
+    )
+    client = new QueryClient()
+    container()
+    await act(async () =>
+      root!.render(
+        <QueryClientProvider client={client!}>
+          <ObligationPaymentExecution
+            ledgerId="ledger"
+            obligation={
+              {
+                key: "TEST-2026-11",
+                lifecycle,
+                payment_execution: "automatic_collection",
+              } as import("@/client").ObligationPublic
+            }
+            canEdit={canEdit}
+            onSuccess={mock()}
+            onError={mock()}
+          />
+        </QueryClientProvider>,
+      ),
+    )
+    expect(browser.document.querySelector('[role="combobox"]') !== null).toBe(
+      editable,
+    )
+    expect(browser.document.body.textContent).toContain(
+      i18n.t("app:obligations.payment_execution_automatic_collection"),
+    )
+  },
+)
+
+test.each(["automatic_collection", "scheduled_transfer"] as const)(
+  "creating a %s payment does not schedule the next obligation",
+  async (execution) => {
+    const { ObligationsService } = await import("@/client")
+    const create = spyOn(
+      ObligationsService,
+      "createObligation",
+    ).mockImplementation(
+      async ({ requestBody }) =>
+        ({
+          key: `${requestBody.category_code}-2026-11`,
+        }) as import("@/client").ObligationPublic,
+    )
+    client = new QueryClient({
+      defaultOptions: { queries: { staleTime: Infinity } },
+    })
+    client.setQueryData(categoryQueryKeys.categories("ledger"), {
+      data: [
+        {
+          id: "subscription",
+          code: "SUBS",
+          name: "Subscription",
+          data_source_policy: "manual",
+        },
+        {
+          id: "rent",
+          code: "RENT",
+          name: "Rent",
+          data_source_policy: "manual",
+        },
+      ],
+      count: 2,
+    })
+    container()
+    const onSuccess = mock()
+    await act(async () =>
+      root!.render(
+        <QueryClientProvider client={client!}>
+          <Create
+            ledgerId="ledger"
+            defaultPeriod={{ year: 2026, month: 11 }}
+            onError={mock()}
+            onSuccess={onSuccess}
+          />
+        </QueryClientProvider>,
+      ),
+    )
+    async function clickButton(label: string) {
+      await act(async () => {
+        const button = [...browser.document.querySelectorAll("button")].find(
+          (item) => item.textContent?.trim() === label,
+        )
+        expect(button).toBeDefined()
+        button!.click()
+      })
+    }
+    async function chooseCategory(code: string) {
+      await act(async () => {
+        const select = browser.document.querySelector<HTMLSelectElement>(
+          "#obligation-category",
+        )!
+        select.value = code
+        select.dispatchEvent(new browser.Event("change", { bubbles: true }))
+      })
+    }
+    await clickButton(i18n.t("app:obligations.new_obligation"))
+    await chooseCategory("SUBS")
+    await act(async () => {
+      browser.document
+        .querySelector("#obligation-payment-execution")!
+        .dispatchEvent(
+          new browser.KeyboardEvent("keydown", {
+            key: "ArrowDown",
+            bubbles: true,
+          }),
+        )
+    })
+    await act(async () => {
+      const label = i18n.t(`app:obligations.payment_execution_${execution}`)
+      const option = [
+        ...browser.document.querySelectorAll<HTMLElement>('[role="option"]'),
+      ].find((item) => item.textContent?.trim() === label)
+      expect(option).toBeDefined()
+      option!.click()
+    })
+    await clickButton(i18n.t("app:obligations.create_obligation"))
+    expect(onSuccess).toHaveBeenCalledTimes(1)
+    await clickButton(i18n.t("app:obligations.new_obligation"))
+    await chooseCategory("RENT")
+    await clickButton(i18n.t("app:obligations.create_obligation"))
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(create.mock.calls[0][0].requestBody.payment_execution).toBe(
+      execution,
+    )
+    expect(create.mock.calls[1][0].requestBody).toMatchObject({
+      category_code: "RENT",
+      payment_execution: null,
+    })
+  },
+)

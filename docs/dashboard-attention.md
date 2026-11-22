@@ -12,9 +12,10 @@ editor and viewer); it does not add any mutation or payment action.
 - Paid/canceled obligations, inactive or archived categories and disabled
   integrations do not contribute to attention.
 - Errors are always visible. Multiple reasons appear on one obligation row.
-- Ready payments enter the upcoming horizon at **two business days**, other
-  lifecycles at **three business days**, reusing daily-report policy constants
-  and the ledger's business calendar, including public holidays. Due-today and
+- Ready manual payments enter the upcoming horizon at **two business days**;
+  planned/automatic ready payments follow the exception below. Other lifecycles
+  enter their data-review horizon at **three business days**, reusing daily-report
+  policy constants and the ledger's business calendar, including public holidays. Due-today and
   intervening non-working days are included; distant future payments are omitted.
 - Draft/collecting obligations and unknown required amount/date values need data
   review once overdue, within their preparation horizon, or in error. A missing
@@ -53,3 +54,27 @@ review horizon and unavailable are different states. An empty attention list
 makes no claim about later scheduled payments or the entire ledger's health.
 The next-payment card uses unpaid obligation dates, including unknown amounts;
 missing schedule data is incomplete rather than an apparent absence of payments.
+
+## Planned payment execution
+
+Each obligation has optional `payment_execution` metadata: `null` (manual),
+`scheduled_transfer` (already scheduled at the bank), or `automatic_collection`.
+The existing `due_date` is the only deadline. This is a plan for this obligation,
+not a recurrence rule or evidence of payment; it never sets `paid_at` or changes
+lifecycle, amounts, unpaid totals, payment charts, or the due calendar.
+
+Ready planned/automatic payments do not enter upcoming attention or daily payment
+reminders before or on their due date. Starting the following calendar
+date (`today > due_date`, including weekends/holidays), they retain the overdue
+reason and add `verify_payment`; the UI and daily digest ask the user to check
+execution. No date means no execution-verification deadline. Errors and missing
+or incomplete required data retain their existing review rules. Weekly cash-flow
+summaries still include expected upcoming payments and unpaid amounts.
+
+Owners/editors can set or clear the plan in obligation details only in `DRAFT`
+and `COLLECTING_DATA`. `READY`, `ERROR`, `PAID`, and `CANCELED` retain their plan
+and must be reopened before any PATCH edit, including a plan-only change.
+Plan-only updates preserve lifecycle and value certainty and are recorded as
+`values_updated` actions. Integration value updates
+preserve the user-owned plan. Newly generated periods start with no plan; automatic
+inheritance from categories is outside this change.

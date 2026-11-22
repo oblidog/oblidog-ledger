@@ -15,7 +15,7 @@ export type ApiErrorResponse = {
     /**
      * Code
      */
-    code: 'onboarding_changed' | 'onboarding_due_date_changed' | 'onboarding_name_in_use' | 'onboarding_demo_preview' | 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'invalid_due_date_range' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    code: 'onboarding_changed' | 'onboarding_due_date_changed' | 'onboarding_name_in_use' | 'onboarding_demo_preview' | 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'invalid_due_date_range' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_too_large' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
     /**
      * Params
      */
@@ -83,7 +83,7 @@ export type AttentionItemPublic = {
     /**
      * Reasons
      */
-    reasons?: Array<'overdue' | 'error' | 'incomplete' | 'upcoming'>;
+    reasons?: Array<'overdue' | 'error' | 'incomplete' | 'upcoming' | 'verify_payment'>;
     /**
      * Integrations
      */
@@ -1101,7 +1101,7 @@ export type IntegrationConflictResponse = {
     /**
      * Code
      */
-    code: 'onboarding_changed' | 'onboarding_due_date_changed' | 'onboarding_name_in_use' | 'onboarding_demo_preview' | 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'invalid_due_date_range' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
+    code: 'onboarding_changed' | 'onboarding_due_date_changed' | 'onboarding_name_in_use' | 'onboarding_demo_preview' | 'auth_invalid_credentials' | 'user_inactive' | 'auth_invalid_token' | 'auth_required' | 'auth_session_expired' | 'auth_invalid_api_key' | 'auth_inactive_api_key' | 'auth_csrf_invalid' | 'auth_origin_forbidden' | 'permission_denied' | 'capability_disabled' | 'demo_read_only' | 'demo_limit_reached' | 'demo_request_too_large' | 'demo_reset_running' | 'demo_reset_failed' | 'resource_not_found' | 'user_not_found' | 'user_email_conflict' | 'user_incorrect_password' | 'user_same_password' | 'user_self_delete_forbidden' | 'ledger_not_found' | 'ledger_member_not_found' | 'ledger_membership_conflict' | 'ledger_owner_change_forbidden' | 'ledger_owner_remove_forbidden' | 'ledger_categories_in_use' | 'ledger_invalid_values' | 'category_not_found' | 'category_conflict' | 'category_code_conflict' | 'category_code_invalid' | 'category_group_not_found' | 'category_group_conflict' | 'category_group_in_use' | 'category_group_archived' | 'category_invalid_values' | 'category_group_invalid_values' | 'category_cross_ledger' | 'category_schema_not_found' | 'category_schema_not_configured' | 'category_schema_invalid' | 'category_schema_incompatible' | 'category_data_invalid' | 'category_data_not_found' | 'category_csv_unsupported' | 'counterparty_not_found' | 'counterparty_conflict' | 'counterparty_in_use' | 'counterparty_invalid_values' | 'counterparty_required' | 'counterparty_preview_stale' | 'obligation_not_found' | 'obligation_conflict' | 'obligation_manual_forbidden' | 'obligation_invalid_key' | 'obligation_invalid_period' | 'invalid_due_date_range' | 'obligation_invalid_lifecycle' | 'obligation_read_only' | 'obligation_invalid_values' | 'obligation_not_ready' | 'obligation_component_not_found' | 'obligation_component_conflict' | 'integration_not_found' | 'integration_key_not_found' | 'integration_conflict' | 'integration_invalid_limits' | 'invitation_conflict' | 'invitation_accepted' | 'invitation_revoked' | 'invitation_expired' | 'invitation_not_found' | 'system_run_running' | 'system_run_not_found' | 'system_run_unknown_tasks' | 'system_run_disabled_tasks' | 'system_run_non_manual_tasks' | 'analytics_invalid_range' | 'service_unavailable' | 'request_too_large' | 'request_invalid' | 'request_validation_failed' | 'internal_error';
     /**
      * Params
      */
@@ -1979,6 +1979,7 @@ export type ObligationCreate = {
      * Notes
      */
     notes?: string | null;
+    payment_execution?: PaymentExecution | null;
 };
 
 /**
@@ -2127,6 +2128,7 @@ export type ObligationPublic = {
      * Currency
      */
     currency: string | null;
+    payment_execution?: PaymentExecution | null;
     /**
      * Paid At
      */
@@ -2161,6 +2163,7 @@ export type ObligationUpdate = {
      * Notes
      */
     notes?: string | null;
+    payment_execution?: PaymentExecution | null;
 };
 
 /**
@@ -2223,6 +2226,11 @@ export type PauseOnboarding = {
      */
     action: 'dismiss' | 'resume' | 'back' | 'restart';
 };
+
+/**
+ * PaymentExecution
+ */
+export type PaymentExecution = 'scheduled_transfer' | 'automatic_collection';
 
 /**
  * PeriodCashflowPublic

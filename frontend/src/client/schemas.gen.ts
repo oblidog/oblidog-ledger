@@ -93,6 +93,7 @@ export const ApiErrorResponseSchema = {
                 'system_run_non_manual_tasks',
                 'analytics_invalid_range',
                 'service_unavailable',
+                'request_too_large',
                 'request_invalid',
                 'request_validation_failed',
                 'internal_error'
@@ -235,7 +236,8 @@ export const AttentionItemPublicSchema = {
                     'overdue',
                     'error',
                     'incomplete',
-                    'upcoming'
+                    'upcoming',
+                    'verify_payment'
                 ]
             },
             type: 'array',
@@ -2351,6 +2353,7 @@ export const IntegrationConflictResponseSchema = {
                 'system_run_non_manual_tasks',
                 'analytics_invalid_range',
                 'service_unavailable',
+                'request_too_large',
                 'request_invalid',
                 'request_validation_failed',
                 'internal_error'
@@ -4145,6 +4148,16 @@ export const ObligationCreateSchema = {
                 }
             ],
             title: 'Notes'
+        },
+        payment_execution: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/PaymentExecution'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
@@ -4444,6 +4457,16 @@ export const ObligationPublicSchema = {
             ],
             title: 'Currency'
         },
+        payment_execution: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/PaymentExecution'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
         paid_at: {
             anyOf: [
                 {
@@ -4549,6 +4572,16 @@ export const ObligationUpdateSchema = {
                 }
             ],
             title: 'Notes'
+        },
+        payment_execution: {
+            anyOf: [
+                {
+                    $ref: '#/components/schemas/PaymentExecution'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     additionalProperties: false,
@@ -4679,6 +4712,15 @@ export const PauseOnboardingSchema = {
         'action'
     ],
     title: 'PauseOnboarding'
+} as const;
+
+export const PaymentExecutionSchema = {
+    type: 'string',
+    enum: [
+        'scheduled_transfer',
+        'automatic_collection'
+    ],
+    title: 'PaymentExecution'
 } as const;
 
 export const PeriodCashflowPublicSchema = {

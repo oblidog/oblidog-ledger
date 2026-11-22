@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
+    Enum,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
@@ -25,6 +26,7 @@ from app.domain import (
     CurrentValueSource,
     EffectiveValueSourceMode,
     ObligationLifecycle,
+    PaymentExecution,
     ValueState,
 )
 from app.models.base import Base, get_datetime_utc
@@ -90,6 +92,16 @@ class Obligation(Base):
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     due_date_state: Mapped[ValueState] = mapped_column(nullable=False)
     due_date_source: Mapped[CurrentValueSource] = mapped_column(nullable=False)
+    payment_execution: Mapped[PaymentExecution | None] = mapped_column(
+        Enum(
+            PaymentExecution,
+            native_enum=False,
+            create_constraint=True,
+            name="payment_execution",
+            values_callable=lambda enum: [item.value for item in enum],
+        ),
+        nullable=True,
+    )
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     paid_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

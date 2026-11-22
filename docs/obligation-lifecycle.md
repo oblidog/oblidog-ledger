@@ -6,14 +6,14 @@ field.
 
 ## States
 
-| State | Meaning | Editable through `PATCH` |
-| --- | --- | --- |
-| `DRAFT` | An obligation created for a future period; data collection has not started. | Yes |
-| `COLLECTING_DATA` | Payment data is being collected or corrected. | Yes |
-| `READY` | Amount and due date are confirmed; issue date is also confirmed when present; the obligation is ready to be paid. | No |
-| `PAID` | The obligation has been marked as paid. | No |
-| `CANCELED` | The obligation was canceled and may be reopened. | No |
-| `ERROR` | An integration detected invalid or inconsistent obligation data and raised an alarm. It does not represent integration health. | No |
+| State | Meaning | Amount, dates, and notes through `PATCH` | Payment execution through `PATCH` |
+| --- | --- | --- | --- |
+| `DRAFT` | An obligation created for a future period; data collection has not started. | Yes | Yes |
+| `COLLECTING_DATA` | Payment data is being collected or corrected. | Yes | Yes |
+| `READY` | Amount and due date are confirmed; issue date is also confirmed when present; the obligation is ready to be paid. | No | No |
+| `PAID` | The obligation has been marked as paid. | No | No |
+| `CANCELED` | The obligation was canceled and may be reopened. | No | No |
+| `ERROR` | An integration detected invalid or inconsistent obligation data and raised an alarm. It does not represent integration health. | No | No |
 
 ## Allowed transitions
 
@@ -57,16 +57,19 @@ stateDiagram-v2
 | `ERROR` | `ERROR` | `mark_obligation_error` | Implemented (idempotent) |
 | `ERROR` | `COLLECTING_DATA` | `reopen_obligation` | Implemented |
 
-No other transitions are allowed. In particular, `READY`, `PAID`, `CANCELED`,
-and `ERROR` cannot be changed through the ordinary `PATCH` endpoint.
+No other transitions are allowed. `READY`, `PAID`, `CANCELED`, and `ERROR`
+cannot be edited through the ordinary `PATCH` endpoint, including requests
+containing only `payment_execution`. Reopen the obligation before changing its
+values or payment plan.
 
 ## Use cases and their effects
 
 | Use case | Allowed input state | Result | Fields changed |
 | --- | --- | --- | --- |
 | `ensure_obligations_for_period` | — (creation) | Current period: `COLLECTING_DATA`; next period: `DRAFT` | Creates missing records with initial values; does not change existing ones |
-| `create_manual_obligation` | — (creation) | `COLLECTING_DATA`, or `READY` when `data_ready=true` | `lifecycle`, supplied manual values, their `*_state`/`*_source`, `effective_value_source`, and `notes` |
-| `update_manual_obligation` / `update_integration_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied values, their `*_state`/`*_source`, `effective_value_source`, and—after an actual draft change—`lifecycle`; manual updates may also change `notes` |
+| `create_manual_obligation` | — (creation) | `COLLECTING_DATA`, or `READY` when `data_ready=true` | `lifecycle`, supplied manual values, their `*_state`/`*_source`, `effective_value_source`, `notes`, and optional `payment_execution` |
+| `update_manual_obligation` / `update_integration_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied values, their `*_state`/`*_source`, `effective_value_source`, and—after an actual draft change—`lifecycle`; manual updates may also change `notes` and `payment_execution` |
+| `update_manual_obligation` with only `payment_execution` | `DRAFT`, `COLLECTING_DATA` | Lifecycle unchanged, including `DRAFT` | Only `payment_execution`; value states and sources are preserved |
 | `mark_obligation_ready` | `DRAFT`, `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED`, and `issue_date_state=CONFIRMED` when `issue_date` is present |
 | `mark_obligation_paid` | `READY`; repeated calls for `PAID` are idempotent | `PAID` | On the first call: `lifecycle`, `paid_at=now(UTC)` |
 | `cancel_obligation` | `COLLECTING_DATA` | `CANCELED` | `lifecycle` |
@@ -84,7 +87,7 @@ All current actions require the ledger's `EDITOR` or `OWNER` role.
 
 | Endpoint | Use case | Notes |
 | --- | --- | --- |
-| `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}` | `update_manual_obligation` | Only `DRAFT` and `COLLECTING_DATA` |
+| `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}` | `update_manual_obligation` | Only `DRAFT` and `COLLECTING_DATA`, including payment-execution-only requests |
 | `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/ready` | `mark_obligation_ready` | Accepts `DRAFT` and `COLLECTING_DATA`; requires at least an estimated amount and due date |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/mark-paid` | `mark_obligation_paid` | Idempotent for `PAID` |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/cancel` | `cancel_obligation` | Only `COLLECTING_DATA` |
@@ -100,6 +103,53 @@ ledger member role. Their obligation endpoints address a billing period as
 `ERROR` is an alarm about invalid obligation data, not integration health. The
 latter belongs to the separate integration-state model. Integration diagnostics
 may be appended through the integration-only notes endpoint.
+
+## Payment execution
+
+`payment_execution` is optional metadata on an individual obligation, separate
+from its lifecycle and from category recurrence:
+
+| Value | Meaning |
+| --- | --- |
+| `null` (default) | The user needs to arrange payment manually |
+| `scheduled_transfer` | The transfer has already been scheduled in the bank |
+| `automatic_collection` | The provider is expected to collect payment automatically, for example a subscription |
+
+Choose the execution type in the creation form or in obligation details. The
+existing `due_date` is the only deadline; there is no separate execution date.
+For API clients, omit the field to preserve its value on an update, or send
+`null` to return to manual payment. For example, an owner/editor can update a
+draft or collecting-data obligation:
+
+```http
+PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}
+Content-Type: application/json
+
+{"payment_execution": "automatic_collection"}
+```
+
+The same edit restrictions apply to every field: only `DRAFT` and
+`COLLECTING_DATA` accept this request. `READY`, `ERROR`, `PAID`, and `CANCELED`
+retain their plan and must be reopened before it can be changed. There is no
+separate payment-execution action endpoint. Actual changes are recorded in the
+[action log](obligation-action-log.md) as `values_updated`; identical writes do
+not create another entry. Integration value updates preserve the user's plan.
+
+Ready planned/automatic payments do not enter upcoming Needs attention or daily
+payment reminders before or on `due_date`. If still unpaid when
+`today > due_date`, they become overdue and request execution verification,
+including on weekends and public holidays. Dates use `SYSTEM_RUN_TIMEZONE`.
+Errors and data-preparation warnings retain their existing rules. Without a
+due date there is no execution-verification deadline; missing-data reminders
+still apply. See [dashboard attention](dashboard-attention.md) for the full
+selection policy.
+
+Planning does not confirm payment, set `paid_at`, or remove amounts from unpaid
+totals, charts, the due calendar, or weekly cash-flow summaries. Payment still
+requires a user or integration to mark the obligation paid. Generated periods
+default to `null`; the plan is not inherited from an earlier obligation or its
+category. After successful manual creation, the form resets execution to manual
+for the next entry. A failed save retains the current selection.
 
 ## Payment schedule and due-date preview
 

@@ -9,14 +9,19 @@ event-sourcing store and does not replace application or integration logs.
 
 | Action | Recorded change |
 | --- | --- |
-| `created` | Initial lifecycle and value fields |
-| `values_updated` | Changed amount, date, state, source, and effective-source fields |
+| `created` | Initial lifecycle, value fields, and `payment_execution` |
+| `values_updated` | Changed amount, date, state, source, effective-source, and `payment_execution` fields |
 | `components_changed` | Added, updated, and removed component snapshots or diffs |
 | `marked_ready` | Lifecycle and implicitly confirmed value states |
 | `marked_paid` | Lifecycle and `paid_at` |
 | `canceled` | Lifecycle |
 | `reopened` | Lifecycle and cleared `paid_at`, when applicable |
 | `marked_error` | Lifecycle |
+
+Changing or clearing a [payment execution plan](obligation-lifecycle.md#payment-execution)
+records a `payment_execution` diff with `from` and `to`, including `null` for
+manual payment. A metadata-only change preserves lifecycle and value certainty;
+marking the obligation paid retains the plan.
 
 No-op and failed mutations do not create entries. The business mutation and
 its action entry are committed in the same database transaction.

@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { CategoriesService, ObligationsService } from "@/client"
+import {
+  CategoriesService,
+  ObligationsService,
+  type PaymentExecution,
+} from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -20,6 +24,7 @@ import { i18n } from "@/i18n"
 import { apiErrorPayload } from "@/i18n/apiErrors"
 import { handleError } from "@/utils"
 import { categoryQueryKeys } from "../Categories/categoryQueryKeys"
+import { PaymentExecutionField } from "./ObligationPaymentExecution"
 import { ObligationValueFields } from "./ObligationValueFields"
 import {
   dueDateRange,
@@ -59,6 +64,8 @@ export function CreateObligationDialog({
   const [periodInput, setPeriodInput] = useState(
     monthInputValue(String(defaultPeriod.year), String(defaultPeriod.month)),
   )
+  const [paymentExecution, setPaymentExecution] =
+    useState<PaymentExecution | null>(null)
   const [dataReady, setDataReady] = useState(false)
   const [currentAmount, setCurrentAmount] = useState("")
   const [issueDate, setIssueDate] = useState("")
@@ -107,6 +114,7 @@ export function CreateObligationDialog({
           category_code: categoryCode,
           period: { year: Number(year), month: Number(month) },
           data_ready: dataReady,
+          payment_execution: paymentExecution,
           current_amount: currentAmount || undefined,
           issue_date: issueDate || undefined,
           due_date: dueDate || undefined,
@@ -127,6 +135,7 @@ export function CreateObligationDialog({
       handleError.call(onError, error)
     },
     onSuccess: (obligation) => {
+      setPaymentExecution(null)
       onSuccess(i18n.t("app:obligations.obligation_created"))
       if (firstPayment) {
         queryClient.setQueryData(
@@ -241,6 +250,11 @@ export function CreateObligationDialog({
               {i18n.t("app:obligations.data_ready_help")}
             </p>
           </div>
+          <PaymentExecutionField
+            value={paymentExecution}
+            onChange={setPaymentExecution}
+            disabled={mutation.isPending}
+          />
           <ObligationValueFields
             idPrefix="obligation"
             currency={selectedCategory?.currency}

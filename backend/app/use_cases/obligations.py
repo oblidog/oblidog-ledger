@@ -22,6 +22,7 @@ from app.domain import (
     ObligationActionType,
     ObligationKey,
     ObligationLifecycle,
+    PaymentExecution,
     ValueState,
     due_date_range,
 )
@@ -74,6 +75,7 @@ _AUDITED_OBLIGATION_FIELDS = (
     "due_date_source",
     "effective_value_source",
     "paid_at",
+    "payment_execution",
 )
 
 _MONEY_QUANTUM = Decimal("0.01")
@@ -370,6 +372,7 @@ def create_manual_obligation(
     ledger_id: uuid.UUID,
     category_code: str,
     period: BillingPeriod,
+    payment_execution: PaymentExecution | None = None,
     data_ready: bool = False,
     current_amount: Decimal | None = None,
     issue_date: date | None = None,
@@ -434,6 +437,7 @@ def create_manual_obligation(
         obligation.due_date_state = value_state
         obligation.due_date_source = CurrentValueSource.MANUAL
 
+    obligation.payment_execution = payment_execution
     _update_effective_value_source(obligation)
 
     _record_action(
@@ -508,6 +512,7 @@ def update_manual_obligation(
     issue_date: date | None | _Unset = UNSET,
     due_date: date | None | _Unset = UNSET,
     notes: str | None | _Unset = UNSET,
+    payment_execution: PaymentExecution | None | _Unset = UNSET,
     actor: ObligationActionActor = SYSTEM_ACTION_ACTOR,
 ) -> Obligation:
     return _update_obligation_values(
@@ -518,6 +523,7 @@ def update_manual_obligation(
         issue_date=issue_date,
         due_date=due_date,
         notes=notes,
+        payment_execution=payment_execution,
         source=CurrentValueSource.MANUAL,
         actor=actor,
     )
@@ -554,6 +560,7 @@ def _update_obligation_values(
     issue_date: date | None | _Unset = UNSET,
     due_date: date | None | _Unset = UNSET,
     notes: str | None | _Unset = UNSET,
+    payment_execution: PaymentExecution | None | _Unset = UNSET,
     source: CurrentValueSource,
     actor: ObligationActionActor,
 ) -> Obligation:
@@ -633,6 +640,9 @@ def _update_obligation_values(
 
     if has_value_changes and obligation.lifecycle is ObligationLifecycle.DRAFT:
         obligation.lifecycle = ObligationLifecycle.COLLECTING_DATA
+    if not isinstance(payment_execution, _Unset):
+        obligation.payment_execution = payment_execution
+
     _update_effective_value_source(obligation)
     _record_action(
         session=session,

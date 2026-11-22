@@ -56,6 +56,8 @@ def obligation_reasons(
     overdue = item.due_date is not None and item.due_date < today
     if overdue:
         reasons.append("overdue")
+        if item.payment_execution is not None:
+            reasons.append("verify_payment")
     if item.lifecycle == ObligationLifecycle.ERROR:
         reasons.append("error")
     period = (item.period_year, item.period_month)
@@ -90,7 +92,7 @@ def obligation_reasons(
     )
     if incomplete and (overdue or upcoming or missing_date_due or "error" in reasons):
         reasons.append("incomplete")
-    if upcoming:
+    if upcoming and item.payment_execution is None:
         reasons.append("upcoming")
     return reasons
 

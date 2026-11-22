@@ -89,19 +89,26 @@ export function NeedsAttention({
                 <div className="min-w-0 space-y-1">
                   <p className="break-words font-medium">{item.name}</p>
                   <div className="flex flex-wrap gap-1">
-                    {(item.reasons ?? []).map((reason) => (
-                      <Badge
-                        key={reason}
-                        variant={
-                          reason === "overdue" || reason === "error"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {i18n.t(`app:analytics.attention_${reason}`)}
-                      </Badge>
-                    ))}
+                    {(item.reasons ?? [])
+                      .filter((reason) => reason !== "verify_payment")
+                      .map((reason) => (
+                        <Badge
+                          key={reason}
+                          variant={
+                            reason === "overdue" || reason === "error"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {i18n.t(`app:analytics.attention_${reason}`)}
+                        </Badge>
+                      ))}
                   </div>
+                  {item.reasons?.includes("verify_payment") && (
+                    <p className="text-sm">
+                      {i18n.t("app:obligations.verify_payment")}
+                    </p>
+                  )}
                   {item.category_code && (
                     <p className="text-sm text-muted-foreground">
                       {item.year}-{String(item.month).padStart(2, "0")} ·{" "}

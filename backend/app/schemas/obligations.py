@@ -12,6 +12,7 @@ from app.domain import (
     ObligationActionActorType,
     ObligationActionType,
     ObligationLifecycle,
+    PaymentExecution,
     ValueState,
     due_date_range,
 )
@@ -36,6 +37,7 @@ class ObligationCreate(BaseModel):
     issue_date: date | None = None
     due_date: date | None = None
     notes: str | None = None
+    payment_execution: PaymentExecution | None = None
 
     @model_validator(mode="after")
     def require_confirmed_values_when_data_is_ready(self) -> ObligationCreate:
@@ -65,6 +67,7 @@ class ObligationUpdate(BaseModel):
     issue_date: date | None = None
     due_date: date | None = None
     notes: str | None = None
+    payment_execution: PaymentExecution | None = None
 
 
 class ObligationComponentCreate(BaseModel):
@@ -209,6 +212,7 @@ class ObligationPublic(BaseModel):
     due_date_state: ValueState
     due_date_source: CurrentValueSource
     currency: str | None
+    payment_execution: PaymentExecution | None = None
     paid_at: datetime | None
     created_at: datetime
     updated_at: datetime
