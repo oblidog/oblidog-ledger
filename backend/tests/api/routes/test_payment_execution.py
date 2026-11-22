@@ -88,7 +88,7 @@ def test_payment_plans_do_not_hide_errors_or_missing_data(
     )
 
 
-def test_api_plan_updates_ready_items_without_changing_values_and_audits_changes(
+def test_api_plan_updates_editable_items_without_changing_values_and_audits_changes(
     client: TestClient, db: Session
 ) -> None:
     ledger, _, category = create_category_tree(db)
@@ -99,7 +99,7 @@ def test_api_plan_updates_ready_items_without_changing_values_and_audits_changes
         ledger_id=ledger.id,
         category_code=category.code,
         period=BillingPeriod(2026, 11),
-        data_ready=True,
+        data_ready=False,
         current_amount=Decimal("29.99"),
         due_date=date(2026, 11, 25),
     )
@@ -109,7 +109,7 @@ def test_api_plan_updates_ready_items_without_changing_values_and_audits_changes
     )
     assert response.status_code == 200, response.text
     assert response.json()["payment_execution"] == "automatic_collection"
-    assert response.json()["lifecycle"] == "ready"
+    assert response.json()["lifecycle"] == "collecting_data"
     assert response.json()["current_amount"] == "29.99"
     assert response.json()["paid_at"] is None
     count = db.scalar(
@@ -150,6 +150,21 @@ def test_api_plan_updates_ready_items_without_changing_values_and_audits_changes
         ).status_code
         == 422
     )
+    assert (
+        client.patch(url, headers=headers, json={"payment_execution": None}).json()[
+            "payment_execution"
+        ]
+        is None
+    )
+    assert client.get(url, headers=headers).json()["payment_execution"] is None
+    # After data confirmation, even a plan-only PATCH must be rejected.
+    use_cases.mark_obligation_ready(
+        session=db, ledger_id=ledger.id, key=ObligationKey.parse(item.business_key)
+    )
+    assert (
+        client.patch(url, headers=headers, json={"payment_execution": None}).status_code
+        == 409
+    )
     # A plan update must not bypass lifecycle restrictions on amounts/dates.
     assert (
         client.patch(
@@ -159,13 +174,6 @@ def test_api_plan_updates_ready_items_without_changing_values_and_audits_changes
         ).status_code
         == 409
     )
-    assert (
-        client.patch(url, headers=headers, json={"payment_execution": None}).json()[
-            "payment_execution"
-        ]
-        is None
-    )
-    assert client.get(url, headers=headers).json()["payment_execution"] is None
     # Viewers can read the plan but cannot change it.
     from app.domain import LedgerAccessRole
     from app.use_cases import ledgers
@@ -250,3 +258,51 @@ def test_verification_section_is_presented_in_all_languages() -> None:
         assert (
             digest.sections[0].ledgers[0].obligations[0].category_name == "Subscription"
         )
+
+
+@pytest.mark.parametrize("lifecycle", list(ObligationLifecycle))
+def test_payment_execution_patch_obeys_existing_editable_lifecycles(
+    lifecycle: ObligationLifecycle, client: TestClient, db: Session
+) -> None:
+    ledger, _, category = create_category_tree(db)
+    headers = authentication_token_from_email(
+        client=client, email=ledger.owner.email, db=db
+    )
+    item = use_cases.create_manual_obligation(
+        session=db,
+        ledger_id=ledger.id,
+        category_code=category.code,
+        period=BillingPeriod(2026, 11),
+        current_amount=Decimal("29.99"),
+        due_date=date(2026, 11, 25),
+    )
+    item.lifecycle = lifecycle
+    db.commit()
+    url = f"{settings.API_V1_STR}/ledgers/{ledger.id}/obligations/{item.business_key}"
+    before = client.get(url, headers=headers).json()
+    response = client.patch(
+        url, headers=headers, json={"payment_execution": "scheduled_transfer"}
+    )
+    if lifecycle not in {
+        ObligationLifecycle.DRAFT,
+        ObligationLifecycle.COLLECTING_DATA,
+    }:
+        assert response.status_code == 409
+        assert (
+            response.json()["detail"]
+            == "Only draft and collecting data obligations can be edited"
+        )
+        assert client.get(url, headers=headers).json() == before
+        return
+    assert response.status_code == 200, response.text
+    after = response.json()
+    assert after["payment_execution"] == "scheduled_transfer"
+    assert {
+        key: value
+        for key, value in after.items()
+        if key not in {"payment_execution", "updated_at"}
+    } == {
+        key: value
+        for key, value in before.items()
+        if key not in {"payment_execution", "updated_at"}
+    }

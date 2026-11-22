@@ -71,9 +71,10 @@ execution. No date means no execution-verification deadline. Errors and missing
 or incomplete required data retain their existing review rules. Weekly cash-flow
 summaries still include expected upcoming payments and unpaid amounts.
 
-Owners/editors can set or clear the plan in obligation details, including on ready
-and error obligations. Paid/canceled obligations retain their plan as history and
-cannot change it until reopened. Metadata-only updates do not reopen or confirm
-values, and are recorded as `values_updated` actions. Integration value updates
+Owners/editors can set or clear the plan in obligation details only in `DRAFT`
+and `COLLECTING_DATA`. `READY`, `ERROR`, `PAID`, and `CANCELED` retain their plan
+and must be reopened before any PATCH edit, including a plan-only change.
+Plan-only updates preserve lifecycle and value certainty and are recorded as
+`values_updated` actions. Integration value updates
 preserve the user-owned plan. Newly generated periods start with no plan; automatic
 inheritance from categories is outside this change.

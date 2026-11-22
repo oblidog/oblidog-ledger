@@ -52,8 +52,8 @@ export function ObligationPaymentExecution({
   })
   const readOnly =
     !canEdit ||
-    obligation.lifecycle === "paid" ||
-    obligation.lifecycle === "canceled"
+    (obligation.lifecycle !== "draft" &&
+      obligation.lifecycle !== "collecting_data")
   return (
     <PaymentExecutionField
       value={obligation.payment_execution ?? null}

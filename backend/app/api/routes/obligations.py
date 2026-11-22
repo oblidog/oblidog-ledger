@@ -503,11 +503,7 @@ def update_obligation(
         raise HTTPException(
             code="obligation_read_only",
             status_code=409,
-            detail=(
-                "Paid and canceled obligations cannot change payment execution"
-                if obligation_in.model_fields_set == {"payment_execution"}
-                else "Only draft and collecting data obligations can be edited"
-            ),
+            detail="Only draft and collecting data obligations can be edited",
         ) from caught_error
     except ValueError as exc:
         raise HTTPException(

@@ -55,8 +55,9 @@ its details. Ready planned payments stay out of Needs attention and daily
 payment reminders through their due date. If still unpaid the next day, they
 appear with a request to check execution. Errors and incomplete data still need
 review. These obligations remain in unpaid totals until payment is confirmed.
-The setting applies to one obligation; later billing periods start with manual
-payment. See [payment execution](docs/obligation-lifecycle.md#payment-execution)
+The plan is editable while an obligation is draft or collecting data; reopen
+other states before changing it. The setting applies to one obligation; later
+billing periods start with manual payment. See [payment execution](docs/obligation-lifecycle.md#payment-execution)
 for the rules.
 
 ## Automation without lock-in

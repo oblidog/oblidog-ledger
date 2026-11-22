@@ -140,9 +140,10 @@ test("custom period filter rejects unsupported years", async () => {
 })
 
 test.each([
-  ["ready", true, true],
-  ["error", true, true],
+  ["ready", true, false],
+  ["error", true, false],
   ["draft", true, true],
+  ["collecting_data", true, true],
   ["paid", true, false],
   ["canceled", true, false],
   ["ready", false, false],
