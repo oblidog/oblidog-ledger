@@ -7,7 +7,9 @@ from pydantic import BaseModel, Field
 
 from app.domain import ValueState
 
-AttentionReason = Literal["overdue", "error", "incomplete", "upcoming"]
+AttentionReason = Literal[
+    "overdue", "error", "incomplete", "upcoming", "verify_payment"
+]
 
 
 class AttentionIntegrationPublic(BaseModel):

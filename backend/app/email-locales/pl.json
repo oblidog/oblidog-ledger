@@ -178,5 +178,10 @@
   "weekly_attention": "Zobowiązania z brakującymi lub niepotwierdzonymi danymi",
   "weekly_comparison_unavailable": "Brak porównania: niepełne dane lub brak danych poprzedniego miesiąca",
   "weekly_due_tomorrow": "Jutro",
-  "weekly_data_complete": "Kwoty i terminy potwierdzone."
+  "weekly_data_complete": "Kwoty i terminy potwierdzone.",
+  "field_payment_execution": "Realizacja płatności",
+  "payment_execution_manual": "Płatność ręczna",
+  "payment_execution_scheduled_transfer": "Przelew zaplanowany w banku",
+  "payment_execution_automatic_collection": "Automatyczne pobranie",
+  "section_verify_payment": "Sprawdź realizację płatności"
 }

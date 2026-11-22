@@ -158,5 +158,10 @@
   "weekly_attention": "Obligations with missing or unconfirmed data",
   "weekly_comparison_unavailable": "Not comparable: incomplete data or no previous-month data",
   "weekly_due_tomorrow": "Tomorrow",
-  "weekly_data_complete": "Amounts and due dates confirmed."
+  "weekly_data_complete": "Amounts and due dates confirmed.",
+  "field_payment_execution": "Payment execution",
+  "payment_execution_manual": "Manual payment",
+  "payment_execution_scheduled_transfer": "Transfer scheduled in the bank",
+  "payment_execution_automatic_collection": "Automatic collection",
+  "section_verify_payment": "Verify payment execution"
 }

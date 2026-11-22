@@ -139,5 +139,6 @@
   "period_summary": "Podsumowanie okresu",
   "attention_no_upcoming": "Brak nadchodzących płatności",
   "attention_schedule_incomplete": "Harmonogram niekompletny",
-  "attention_demo": "Dane demonstracyjne. Problemy integracji są przykładowe."
+  "attention_demo": "Dane demonstracyjne. Problemy integracji są przykładowe.",
+  "attention_verify_payment": "Sprawdź, czy płatność została pobrana lub przelew został zrealizowany."
 }

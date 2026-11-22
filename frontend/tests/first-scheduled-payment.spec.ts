@@ -299,6 +299,7 @@ test("creates the first recurring payment through the ordinary forms and reopens
       category_code: category.code,
       period: obligation.period,
       data_ready: false,
+      payment_execution: null,
     },
   ])
 

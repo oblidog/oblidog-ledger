@@ -18,6 +18,7 @@ import { formatAmount, formatBillingPeriod, formatDate } from "@/i18n/format"
 import { ObligationActionHistory } from "./ObligationActionHistory"
 import { ObligationComponentsSection } from "./ObligationComponentsSection"
 import { ObligationFieldDetails } from "./ObligationFieldDetails"
+import { ObligationPaymentExecution } from "./ObligationPaymentExecution"
 import { ObligationPaymentSummary } from "./ObligationPaymentSummary"
 import {
   canCancelObligation,
@@ -107,6 +108,13 @@ export function ObligationDetailsDialog({
             >
               <div className="min-w-0 space-y-4">
                 <ObligationPaymentSummary obligation={selected.data} />
+                <ObligationPaymentExecution
+                  ledgerId={ledgerId}
+                  obligation={selected.data}
+                  canEdit={canEdit && !actionPending}
+                  onError={showErrorToast}
+                  onSuccess={showSuccessToast}
+                />
                 {selected.data.notes ? (
                   <div className="space-y-1">
                     <p className="text-muted-foreground font-medium">

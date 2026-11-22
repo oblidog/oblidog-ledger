@@ -30,6 +30,13 @@ export function ObligationStatus({
         ) : null}
         {domainLabel("lifecycle", obligation.lifecycle)}
       </Badge>
+      {obligation.payment_execution && (
+        <Badge variant="secondary">
+          {i18n.t(
+            `app:obligations.payment_execution_${obligation.payment_execution}`,
+          )}
+        </Badge>
+      )}
       {isObligationOverdue(obligation) && (
         <Badge
           variant="outline"

@@ -139,5 +139,11 @@
   "could_not_check_first_payment": "Could not check whether the first payment already exists.",
   "first_automatic_payment_pending": "The first payment has not been generated yet. This category creates obligations automatically from its schedule.",
   "first_payment_unavailable": "The first payment cannot be opened. Check the category’s schedule or your access to the ledger.",
-  "data_ready_help": "Select this when the amount and due date are confirmed. Leave it unchecked to save what you have and complete the details later."
+  "data_ready_help": "Select this when the amount and due date are confirmed. Leave it unchecked to save what you have and complete the details later.",
+  "payment_execution": "Payment execution",
+  "payment_execution_manual": "Manual payment",
+  "payment_execution_scheduled_transfer": "Transfer scheduled in the bank",
+  "payment_execution_automatic_collection": "Automatic collection",
+  "payment_execution_help": "Scheduled and automatic payments require checking only after the due date. Missing data and errors still need attention.",
+  "verify_payment": "Check whether the payment was collected or the transfer was executed."
 }

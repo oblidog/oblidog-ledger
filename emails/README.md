@@ -117,14 +117,24 @@ selected rows and their subtotals. Selection, recipient access, the previous-day
 activity window, business calendars, the no-email condition and delivery keys
 remain owned by the existing report service.
 
-The stable section order is overdue, obligation errors, ready to pay, needs
-preparation and missing due date. Currency subtotals cover the complete selected digest, including rows omitted
+The stable section order is overdue, verify payment execution, obligation errors,
+ready to pay, needs preparation and missing due date. Currency subtotals cover
+the complete selected digest, including rows omitted
 from a size-limited email; confirmed/overridden values are separate from estimated/unconfirmed
 values. Missing amounts stay unknown, and unspecified currencies are never
 added together. Activity and integration health retain their details, links,
 last-success timestamps and all truncation notices.
 
-The 12 `fixtures/daily/*.json` cases cover each section, activity-only and
+Ready obligations with `scheduled_transfer` or `automatic_collection` skip daily
+payment reminders through `due_date`. Once `report_date > due_date`, the selector
+places them in `verify_payment`, asking the recipient to check execution.
+Errors and data-preparation warnings still apply. Payment-plan changes can also
+appear in the activity section; a payment reminder being suppressed does not
+suppress other digest content. Weekly cash-flow summaries still include planned
+unpaid amounts. See [payment execution](../docs/obligation-lifecycle.md#payment-execution)
+and the [attention policy](../docs/dashboard-attention.md) for the domain rules.
+
+The 12 `fixtures/daily/*.json` cases cover payment and data reminders, activity-only and
 integration-health-only messages, long names/lists, multiple ledgers/currencies,
 unknown amounts/dates and actual zero values. The Python preview command writes
 `previews/daily-*.html` and `.txt`. These snapshots and the React preview share

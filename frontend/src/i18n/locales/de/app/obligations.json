@@ -139,5 +139,11 @@
   "could_not_check_first_payment": "Es konnte nicht geprüft werden, ob die erste Zahlung bereits existiert.",
   "first_automatic_payment_pending": "Die erste Zahlung wurde noch nicht erstellt. Diese Kategorie erstellt Zahlungsverpflichtungen automatisch nach dem Zahlungsplan.",
   "first_payment_unavailable": "Die erste Zahlung kann nicht geöffnet werden. Prüfe den Zahlungsplan der Kategorie oder deinen Zugriff auf den Arbeitsbereich.",
-  "data_ready_help": "Aktiviere diese Option, wenn Betrag und Fälligkeit bestätigt sind. Du kannst vorhandene Angaben speichern und fehlende Daten später ergänzen."
+  "data_ready_help": "Aktiviere diese Option, wenn Betrag und Fälligkeit bestätigt sind. Du kannst vorhandene Angaben speichern und fehlende Daten später ergänzen.",
+  "payment_execution": "Zahlungsausführung",
+  "payment_execution_manual": "Manuelle Zahlung",
+  "payment_execution_scheduled_transfer": "Bei der Bank geplanter Überweisungsauftrag",
+  "payment_execution_automatic_collection": "Automatischer Einzug",
+  "payment_execution_help": "Geplante und automatische Zahlungen müssen erst nach dem Fälligkeitsdatum geprüft werden. Fehlende Daten und Fehler erfordern weiterhin Aufmerksamkeit.",
+  "verify_payment": "Prüfen Sie, ob die Zahlung eingezogen oder die Überweisung ausgeführt wurde."
 }

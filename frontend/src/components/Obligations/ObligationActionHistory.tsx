@@ -41,6 +41,9 @@ const actionLabels: Record<ObligationActionType, string> = {
 }
 
 const fieldLabels: Record<string, string> = {
+  get payment_execution() {
+    return i18n.t("app:obligations.payment_execution")
+  },
   get lifecycle() {
     return i18n.t("app:obligations.lifecycle")
   },
@@ -125,6 +128,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function formatValue(value: unknown, field?: string): string {
+  if (field === "payment_execution")
+    return i18n.t(
+      value === "scheduled_transfer"
+        ? "app:obligations.payment_execution_scheduled_transfer"
+        : value === "automatic_collection"
+          ? "app:obligations.payment_execution_automatic_collection"
+          : "app:obligations.payment_execution_manual",
+    )
   if (value === null || value === undefined || value === "") return "—"
   if (typeof value === "boolean")
     return value ? i18n.t("app:obligations.yes") : i18n.t("app:obligations.no")
