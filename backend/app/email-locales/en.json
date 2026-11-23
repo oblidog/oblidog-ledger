@@ -163,5 +163,7 @@
   "payment_execution_manual": "Manual payment",
   "payment_execution_scheduled_transfer": "Transfer scheduled in the bank",
   "payment_execution_automatic_collection": "Automatic collection",
-  "section_verify_payment": "Verify payment execution"
+  "section_verify_payment": "Verify payment execution",
+  "weekly_verify_payment": "Verify payment after due date",
+  "weekly_verify_payment_help": "Check whether the automatic collection or scheduled transfer was completed."
 }

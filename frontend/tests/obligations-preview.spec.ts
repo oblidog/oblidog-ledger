@@ -796,6 +796,14 @@ for (const height of [480, 568]) {
     )
     const [modalBox, tabsBox, panelBox, footerBox] = bounds.map((box) => box!)
     expect(panelBox.height).toBeGreaterThanOrEqual(80)
+    expect(footerBox.height).toBeLessThanOrEqual(height * 0.25 + 1)
+    if (await footer.evaluate((el) => el.scrollHeight > el.clientHeight)) {
+      await footer.focus()
+      await page.keyboard.press("End")
+      await expect
+        .poll(() => footer.evaluate((el) => el.scrollTop))
+        .toBeGreaterThan(0)
+    }
     expect(panelBox.y).toBeGreaterThanOrEqual(tabsBox.y + tabsBox.height - 1)
     expect(footerBox.y).toBeGreaterThanOrEqual(panelBox.y + panelBox.height - 1)
     expect(footerBox.y + footerBox.height).toBeLessThanOrEqual(

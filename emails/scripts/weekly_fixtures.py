@@ -10,8 +10,8 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app.email_i18n import EmailLocale, recipient_language  # noqa: E402
-from app.services.weekly_overview_rendering import render_weekly_overview  # noqa: E402
+from app.email_i18n import EmailLocale, recipient_language
+from app.services.weekly_overview_rendering import render_weekly_overview
 
 _AMOUNT_FIELDS = (
     "total_known_amount",
@@ -32,6 +32,10 @@ def weekly_context(raw: dict, language: str) -> dict:
         currencies = []
         for item in ledger["currencies"]:
             values = dict(item)
+            values["verify_payment_count"] = item.get("verify_payment_count", 0)
+            values["verify_payment_known_amount"] = Decimal(
+                item.get("verify_payment_known_amount", "0.00")
+            )
             for field in _AMOUNT_FIELDS:
                 values[field] = (
                     Decimal(item[field]) if item[field] is not None else None
@@ -39,8 +43,14 @@ def weekly_context(raw: dict, language: str) -> dict:
             values["upcoming"] = [
                 SimpleNamespace(
                     category_name=payment["category_name"],
-                    days_until_due=(date.fromisoformat(payment["due_date"]) - date.fromisoformat(raw["report_date"])).days,
-                    needs_preparation=payment.get("needs_preparation", payment["amount"] is None),
+                    payment_execution=payment.get("payment_execution"),
+                    days_until_due=(
+                        date.fromisoformat(payment["due_date"])
+                        - date.fromisoformat(raw["report_date"])
+                    ).days,
+                    needs_preparation=payment.get(
+                        "needs_preparation", payment["amount"] is None
+                    ),
                     due_date=date.fromisoformat(payment["due_date"]),
                     amount=Decimal(payment["amount"])
                     if payment["amount"] is not None

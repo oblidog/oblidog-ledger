@@ -494,7 +494,6 @@ test("create dialog shares value fields, keeps period bounds and refreshes the l
     category_code: "WATR",
     period: { year: 2026, month: 10 },
     data_ready: true,
-    payment_execution: null,
     current_amount: "0",
     issue_date: "2026-10-05",
     due_date: "2026-10-20",

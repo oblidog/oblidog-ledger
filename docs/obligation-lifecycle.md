@@ -160,7 +160,9 @@ including on weekends and public holidays. Dates use `SYSTEM_RUN_TIMEZONE`.
 Errors and data-preparation warnings retain their existing rules. Without a
 due date there is no execution-verification deadline; missing-data reminders
 still apply. See [dashboard attention](dashboard-attention.md) for the full
-selection policy.
+selection policy. Weekly reports label planned payment methods in upcoming
+rows and separate past-due plans requiring verification from ordinary overdue
+amounts. Errors and incomplete-data indicators remain visible.
 
 Planning does not confirm payment, set `paid_at`, or remove amounts from unpaid
 totals, charts, the due calendar, or weekly cash-flow summaries. Payment still

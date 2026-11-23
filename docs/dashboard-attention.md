@@ -69,7 +69,10 @@ date (`today > due_date`, including weekends/holidays), they retain the overdue
 reason and add `verify_payment`; the UI and daily digest ask the user to check
 execution. No date means no execution-verification deadline. Errors and missing
 or incomplete required data retain their existing review rules. Weekly cash-flow
-summaries still include expected upcoming payments and unpaid amounts.
+summaries still include expected upcoming payments and unpaid amounts. Upcoming
+rows label automatic collection and scheduled transfers. Past-due planned
+payments have a separate verification count and known amount; errors stay in
+the ordinary overdue group. Neither group marks a payment paid.
 
 Categories define automatic collection as a default for new obligations only.
 Existing obligations retain their plan when the category changes. Owners/editors

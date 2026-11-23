@@ -248,7 +248,10 @@ export function ObligationDetailsDialog({
           </div>
         )}
         {selected.data && canEdit ? (
-          <DialogFooter className="shrink-0 border-t px-4 py-3 sm:px-6">
+          <DialogFooter
+            tabIndex={0}
+            className="max-h-[25dvh] shrink-0 overflow-y-auto border-t px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6"
+          >
             <div className="flex flex-wrap gap-2">
               {canMarkObligationReady(selected.data) ? (
                 <Button

@@ -59,7 +59,9 @@ in ready state.
 Ready planned payments stay out of Needs attention and daily payment reminders
 through their due date. If still unpaid the next day, they appear with a request
 to check execution. Errors and incomplete data still need review. These
-obligations remain in unpaid totals until payment is confirmed. Scheduled bank
+obligations remain in unpaid totals until payment is confirmed. Weekly reports
+label planned payment methods and separate past-due plans requiring verification
+from ordinary overdue payments. Scheduled bank
 transfers apply to one obligation and never carry into later periods. See
 [payment execution](docs/obligation-lifecycle.md#payment-execution) for the rules.
 

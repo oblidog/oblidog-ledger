@@ -183,5 +183,7 @@
   "payment_execution_manual": "Płatność ręczna",
   "payment_execution_scheduled_transfer": "Przelew zaplanowany w banku",
   "payment_execution_automatic_collection": "Automatyczne pobranie",
-  "section_verify_payment": "Sprawdź realizację płatności"
+  "section_verify_payment": "Sprawdź realizację płatności",
+  "weekly_verify_payment": "Do sprawdzenia po terminie",
+  "weekly_verify_payment_help": "Sprawdź, czy automatyczne pobranie lub zaplanowany przelew zostały zrealizowane."
 }
