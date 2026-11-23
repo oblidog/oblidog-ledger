@@ -500,6 +500,22 @@ test("desktop table keeps compact actions visible without horizontal scrolling",
     "position",
     "static",
   )
+  for (const action of [payment, menu]) {
+    await expect
+      .poll(() =>
+        action.evaluate((button) => {
+          const cell = button.closest("td")
+          if (!cell) return false
+          const buttonBounds = button.getBoundingClientRect()
+          const cellBounds = cell.getBoundingClientRect()
+          return (
+            buttonBounds.left >= cellBounds.left &&
+            buttonBounds.right <= cellBounds.right
+          )
+        }),
+      )
+      .toBe(true)
+  }
 })
 
 test("category picker reopens while focused after selection and Escape", async ({
