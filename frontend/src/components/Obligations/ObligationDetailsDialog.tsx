@@ -74,7 +74,7 @@ export function ObligationDetailsDialog({
       >
         <DialogHeader
           tabIndex={0}
-          className="max-h-[25dvh] shrink-0 overflow-y-auto border-b px-4 py-4 pr-12 text-left focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6 sm:pr-14"
+          className="max-h-[25dvh] shrink-0 flex-col overflow-y-auto border-b px-4 py-4 pr-12 text-left focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6 sm:pr-14"
         >
           <DialogTitle className="break-words [overflow-wrap:anywhere]">
             {selected.data?.name ||
@@ -250,7 +250,7 @@ export function ObligationDetailsDialog({
         {selected.data && canEdit ? (
           <DialogFooter
             tabIndex={0}
-            className="max-h-[25dvh] shrink-0 overflow-y-auto border-t px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6"
+            className="max-h-[25dvh] shrink-0 flex-col overflow-y-auto border-t px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6"
           >
             <div className="flex flex-wrap gap-2">
               {canMarkObligationReady(selected.data) ? (
