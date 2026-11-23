@@ -5612,6 +5612,11 @@ export const UserPublicSchema = {
             ],
             title: 'Language'
         },
+        onboarding_guide_enabled: {
+            type: 'boolean',
+            title: 'Onboarding Guide Enabled',
+            default: true
+        },
         id: {
             type: 'string',
             format: 'uuid',
@@ -5739,6 +5744,11 @@ export const UserUpdateSchema = {
 
 export const UserUpdateMeSchema = {
     properties: {
+        onboarding_guide_enabled: {
+            type: 'boolean',
+            title: 'Onboarding Guide Enabled',
+            default: true
+        },
         language: {
             anyOf: [
                 {

@@ -15,6 +15,7 @@ USER_UPDATE_FIELDS = {
     "session_version",
     "daily_report_enabled",
     "weekly_report_enabled",
+    "onboarding_guide_enabled",
 }
 
 

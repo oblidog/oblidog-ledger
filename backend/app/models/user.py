@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, Integer, String
+from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, Integer, String, true
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -38,6 +38,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     session_version: Mapped[int] = mapped_column(
         Integer, default=1, nullable=False, server_default="1"
+    )
+    onboarding_guide_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=true(), nullable=False
     )
     onboarding_state: Mapped[dict[str, Any] | None] = mapped_column(
         JSON().with_variant(JSONB(), "postgresql"), nullable=True

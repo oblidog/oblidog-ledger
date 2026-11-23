@@ -64,6 +64,7 @@ async function mockWorkspace(
   let ledgers = !empty
   let groups = !empty
   let categories = !empty
+  let guideEnabled = true
   let exists = firstExists
   let savedObligation: ObligationPublic = obligation
   const savedCategory = {
@@ -99,10 +100,14 @@ async function mockWorkspace(
       })
     }
     if (path.endsWith("/users/me")) {
+      if (request.method() === "PATCH") {
+        guideEnabled = request.postDataJSON().onboarding_guide_enabled
+      }
       return send({
         id: viewer ? "viewer" : "owner",
         email: "owner@example.com",
         is_active: true,
+        onboarding_guide_enabled: guideEnabled,
         language,
       })
     }
@@ -248,11 +253,10 @@ test("creates the first recurring payment through the ordinary forms and reopens
     name: "Add your first recurring payment",
   })
   const dialog = page.getByRole("dialog")
-  await guide.getByRole("button", { name: "Hide setup guide" }).click()
-  await page.reload()
-  await expect(guide).toHaveCount(0)
-  await page.getByRole("button", { name: "Show setup guide" }).click()
-  await guide.getByRole("button", { name: "New ledger", exact: true }).click()
+  await expect(
+    page.getByRole("heading", { name: "Create your first ledger" }),
+  ).toBeVisible()
+  await page.getByRole("button", { name: "Create ledger", exact: true }).click()
   await dialog.getByLabel("Name", { exact: true }).fill("Household ledger")
   await dialog
     .getByRole("button", { name: "Create ledger", exact: true })
@@ -324,6 +328,72 @@ test("creates the first recurring payment through the ordinary forms and reopens
   ).toHaveAttribute("href", `${ledgerPath}/integrations`)
   await expect(
     page.getByRole("link", { name: "Open first payment" }),
+  ).toHaveCount(0)
+  await page.reload()
+  await expect(done).toHaveCount(0)
+})
+
+test("keeps the empty ledger action when the guide is disabled and restores it from the profile", async ({
+  page,
+}) => {
+  await mockWorkspace(page, { empty: true })
+  await page.goto("/")
+  await expect(
+    page.getByRole("button", { name: "Create ledger", exact: true }),
+  ).toHaveCount(1)
+  await page.getByRole("button", { name: "Setup guide options" }).click()
+  await page.getByRole("menuitem", { name: "Turn off setup guide" }).click()
+  await expect(
+    page.getByRole("heading", { name: "No ledgers yet" }),
+  ).toBeVisible()
+  await page.reload()
+  await expect(
+    page.getByRole("heading", { name: "No ledgers yet" }),
+  ).toBeVisible()
+  const create = page.getByRole("button", {
+    name: "Create ledger",
+    exact: true,
+  })
+  await expect(create).toHaveCount(1)
+  await create.click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByLabel("Name", { exact: true }).fill("Household ledger")
+  await dialog
+    .getByRole("button", { name: "Create ledger", exact: true })
+    .click()
+  await expect(dialog).toHaveCount(0)
+  const guide = page.getByRole("region", {
+    name: "Add your first recurring payment",
+  })
+  await expect(guide).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Show setup guide" }),
+  ).toHaveCount(0)
+
+  await page.goto("/settings")
+  const preference = page.getByRole("checkbox", { name: "Setup guide" })
+  await expect(preference).not.toBeChecked()
+  await preference.click()
+  await expect(preference).toBeChecked()
+  await page.goto("/")
+  await expect(
+    guide.getByRole("link", { name: "Open categories" }),
+  ).toBeVisible()
+})
+
+test("omits the guide for an already configured ledger", async ({ page }) => {
+  await mockWorkspace(page, { firstExists: true })
+  const setup = page.waitForResponse(
+    (response) =>
+      response.url().includes("/onboarding/dashboard/") && response.ok(),
+  )
+  await page.goto("/")
+  await setup
+  await expect(
+    page.getByRole("heading", { name: "Dashboard", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Your recurring payment is set up" }),
   ).toHaveCount(0)
 })
 

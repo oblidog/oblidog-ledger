@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { AnalyticsDashboard } from "@/components/Analytics/AnalyticsDashboard"
-import { DashboardNextSteps } from "@/components/Onboarding/DashboardNextSteps"
+import {
+  DashboardEmptyLedger,
+  DashboardNextSteps,
+} from "@/components/Onboarding/DashboardNextSteps"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useActiveLedger } from "@/hooks/useActiveLedger"
@@ -21,7 +24,7 @@ export const Route = createFileRoute("/_layout/")({
 function Dashboard() {
   useTranslation()
 
-  const { activeLedger, isLoading, isError } = useActiveLedger()
+  const { activeLedger, isLoading, isError, refetch } = useActiveLedger()
 
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />
@@ -38,26 +41,19 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="max-w-xl truncate text-2xl font-semibold">
-          {i18n.t("app:analytics.dashboard")}
-        </h1>
-        <p className="text-muted-foreground">
-          {i18n.t("app:analytics.select_a_ledger_to_see_its_payment_analytics")}
-        </p>
-      </div>
-      {!isError && <DashboardNextSteps ledger={null} />}
-      <section className="rounded-lg border bg-card p-6 text-card-foreground">
-        <h2 className="text-lg font-medium">
-          {i18n.t("app:analytics.no_ledger_selected")}
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {i18n.t("app:analytics.create_or_select_a_ledger_to_get_started")}
-        </p>
-        <Button className="mt-4" asChild>
-          <a href="/ledgers">{i18n.t("app:analytics.manage_ledgers")}</a>
-        </Button>
-      </section>
+      <h1 className="max-w-xl truncate text-2xl font-bold tracking-tight">
+        {i18n.t("app:analytics.dashboard")}
+      </h1>
+      {isError ? (
+        <div className="space-y-3" role="alert">
+          <p>{i18n.t("app:common.something_went_wrong_please_try_again")}</p>
+          <Button variant="outline" onClick={() => void refetch()}>
+            {i18n.t("app:obligations.try_again")}
+          </Button>
+        </div>
+      ) : (
+        <DashboardEmptyLedger />
+      )}
     </div>
   )
 }

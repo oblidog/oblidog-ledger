@@ -1,35 +1,192 @@
 import { skipToken, useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { type ReactNode, Suspense, useState } from "react"
+import { Ellipsis, Wallet } from "lucide-react"
+import { type ReactNode, Suspense, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type LedgerPublic, OnboardingService } from "@/client"
 import { firstScheduledPaymentSearch } from "@/components/Categories/categoryPresentation"
 import AddLedger from "@/components/Ledgers/AddLedger"
 import { Button } from "@/components/ui/button"
-import { fetchPublicAppConfig } from "@/config"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import useAuth from "@/hooks/useAuth"
 import { useLedgerEditorAccess } from "@/hooks/useLedgerCanEdit"
+import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
+import { useUpdateOnboardingGuide } from "@/hooks/useUpdateOnboardingGuide"
 
-export function DashboardNextSteps({
-  ledger,
-}: {
-  ledger: LedgerPublic | null
-}) {
+function GuideMenu() {
+  const { t } = useTranslation("app")
+  const updateGuide = useUpdateOnboardingGuide()
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-11"
+          aria-label={t("onboarding.options")}
+          disabled={updateGuide.isPending}
+        >
+          <Ellipsis />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={() => updateGuide.mutate(false)}>
+          {t("onboarding.disable")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function DashboardEmptyLedger() {
+  const { t } = useTranslation("app")
   const { user } = useAuth()
-  const config = useQuery({
-    queryKey: ["public-app-config"],
-    queryFn: fetchPublicAppConfig,
-    staleTime: Infinity,
-  })
-  if (!user || !config.data || (config.data.is_demo && !ledger)) return null
+  const { data: config, isPending } = usePublicAppConfig()
+  const showGuide =
+    user && config && !config.is_demo && user.onboarding_guide_enabled !== false
 
-  const storageKey = `oblidog:onboarding:hidden:${user.id}:${ledger?.id ?? "new"}`
+  return (
+    <section
+      aria-labelledby="dashboard-empty-ledger"
+      className="relative flex min-h-64 flex-col items-center justify-center gap-5 rounded-lg border border-dashed px-8 py-12 text-center"
+    >
+      {showGuide && (
+        <div className="absolute right-2 top-2">
+          <GuideMenu />
+        </div>
+      )}
+      <div className="space-y-2">
+        <span className="mx-auto mb-4 grid size-10 place-items-center rounded-lg bg-muted">
+          <Wallet className="size-5" aria-hidden="true" />
+        </span>
+        <h2 id="dashboard-empty-ledger" className="text-lg font-semibold">
+          {t(showGuide ? "onboarding.first_ledger" : "ledgers.no_ledgers_yet")}
+        </h2>
+        {showGuide && (
+          <p className="max-w-sm text-sm text-muted-foreground">
+            {t("onboarding.ledger_help")}
+          </p>
+        )}
+      </div>
+      {isPending ? (
+        <Skeleton className="h-9 w-36" />
+      ) : config && (!config.is_demo || config.demo_writes_enabled) ? (
+        <Suspense fallback={<Skeleton className="h-9 w-36" />}>
+          <AddLedger triggerLabel={t("ledgers.create_ledger")} />
+        </Suspense>
+      ) : (
+        <Button asChild variant="outline">
+          <Link to="/ledgers">{t("analytics.manage_ledgers")}</Link>
+        </Button>
+      )}
+    </section>
+  )
+}
+
+export function DashboardNextSteps({ ledger }: { ledger: LedgerPublic }) {
+  const { user } = useAuth()
+  const { data: config } = usePublicAppConfig()
+  if (!user || !config) return null
+
+  if (config.is_demo) {
+    const storageKey = `oblidog:onboarding:hidden:${user.id}:${ledger.id}`
+    return (
+      <DemoNextStep
+        key={storageKey}
+        storageKey={storageKey}
+        ledgerId={ledger.id}
+      />
+    )
+  }
+
+  if (user.onboarding_guide_enabled === false) return null
+
+  const storageKey = `oblidog:onboarding:started:${user.id}:${ledger.id}`
   return (
     <WorkspaceNextStep
       key={storageKey}
       storageKey={storageKey}
       ledger={ledger}
-      demo={config.data.is_demo}
+    />
+  )
+}
+
+function GuideCard({
+  title,
+  description,
+  action,
+  controls,
+}: {
+  title: string
+  description: string
+  action: ReactNode
+  controls: ReactNode
+}) {
+  return (
+    <section
+      aria-label={title}
+      className="space-y-3 rounded-lg border bg-card p-4"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-semibold">{title}</h2>
+        {controls}
+      </div>
+      <p className="text-sm text-muted-foreground">{description}</p>
+      {action}
+    </section>
+  )
+}
+
+function DemoNextStep({
+  storageKey,
+  ledgerId,
+}: {
+  storageKey: string
+  ledgerId: string
+}) {
+  const { t } = useTranslation("app")
+  const [hidden, setHidden] = useState(
+    () => localStorage.getItem(storageKey) === "1",
+  )
+  const toggle = (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="min-h-11"
+      onClick={() => {
+        if (hidden) localStorage.removeItem(storageKey)
+        else localStorage.setItem(storageKey, "1")
+        setHidden(!hidden)
+      }}
+    >
+      {t(hidden ? "onboarding.show" : "onboarding.hide")}
+    </Button>
+  )
+  if (hidden) return <div className="flex justify-end">{toggle}</div>
+
+  return (
+    <GuideCard
+      title={t("onboarding.demo_title")}
+      description={t("onboarding.demo_help")}
+      controls={toggle}
+      action={
+        <Button asChild variant="outline">
+          <Link
+            to="/ledgers/$ledgerId/categories"
+            params={{ ledgerId }}
+            search={{ setupPreview: true }}
+          >
+            {t("onboarding.open_categories")}
+          </Link>
+        </Button>
+      }
     />
   )
 }
@@ -37,130 +194,123 @@ export function DashboardNextSteps({
 function WorkspaceNextStep({
   storageKey,
   ledger,
-  demo,
 }: {
   storageKey: string
-  ledger: LedgerPublic | null
-  demo: boolean
+  ledger: LedgerPublic
 }) {
-  const { t } = useTranslation(["app"])
-  const canEdit = useLedgerEditorAccess(ledger, !demo)
-  const [hidden, setHidden] = useState(
-    () => localStorage.getItem(storageKey) === "1",
-  )
-  const ledgerId = ledger?.id
+  const { t } = useTranslation("app")
+  const ledgerId = ledger.id
+  const canEdit = useLedgerEditorAccess(ledger)
+  const [showCompletion, setShowCompletion] = useState(false)
   const setup = useQuery({
     queryKey: ["dashboard-setup", storageKey],
-    queryFn:
-      ledgerId && !demo && canEdit && !hidden
-        ? () => OnboardingService.readDashboardSetup({ ledgerId })
-        : skipToken,
+    queryFn: canEdit
+      ? () => OnboardingService.readDashboardSetup({ ledgerId })
+      : skipToken,
     retry: false,
   })
-  if (ledger && !demo && !canEdit) return null
+  const completed =
+    canEdit &&
+    setup.isFetchedAfterMount &&
+    !setup.isError &&
+    setup.data?.completed === true
 
-  function toggleGuide() {
-    if (hidden) localStorage.removeItem(storageKey)
-    else localStorage.setItem(storageKey, "1")
-    setHidden(!hidden)
+  useEffect(() => {
+    if (completed && sessionStorage.getItem(storageKey)) {
+      sessionStorage.removeItem(storageKey)
+      setShowCompletion(true)
+    }
+  }, [completed, storageKey])
+
+  if (!canEdit || setup.isFetching) return null
+
+  function startGuide() {
+    sessionStorage.setItem(storageKey, "1")
   }
 
-  const toggle = (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="min-h-11"
-      onClick={toggleGuide}
-    >
-      {t(hidden ? "app:onboarding.show" : "app:onboarding.hide")}
-    </Button>
-  )
-  if (hidden) return <div className="flex justify-end">{toggle}</div>
-  if (ledgerId && !demo && setup.isFetching) return null
+  if (setup.isError) {
+    return (
+      <GuideCard
+        title={t("onboarding.title")}
+        description={t("onboarding.load_error")}
+        controls={<GuideMenu />}
+        action={
+          <Button variant="outline" onClick={() => void setup.refetch()}>
+            {t("obligations.try_again")}
+          </Button>
+        }
+      />
+    )
+  }
+  if (!setup.data) return null
 
-  let title = t("app:onboarding.title")
-  let description: string
-  let action: ReactNode
-  if (!ledgerId) {
-    description = t("app:onboarding.ledger_help")
-    action = (
-      <Suspense fallback={null}>
-        <AddLedger />
-      </Suspense>
-    )
-  } else if (demo) {
-    title = t("app:onboarding.demo_title")
-    description = t("app:onboarding.demo_help")
-    action = (
-      <Button asChild variant="outline">
-        <Link
-          to="/ledgers/$ledgerId/categories"
-          params={{ ledgerId }}
-          search={{ setupPreview: true }}
-        >
-          {t("app:onboarding.open_categories")}
-        </Link>
-      </Button>
-    )
-  } else if (setup.isError) {
-    description = t("app:onboarding.load_error")
-    action = (
-      <Button variant="outline" onClick={() => void setup.refetch()}>
-        {t("app:obligations.try_again")}
-      </Button>
-    )
-  } else if (!setup.data) {
-    return null
-  } else if (setup.data.completed) {
-    title = t("app:onboarding.completed")
-    description = t("app:onboarding.integration_optional")
-    action = (
-      <Button asChild variant="outline">
-        <Link to="/ledgers/$ledgerId/integrations" params={{ ledgerId }}>
-          {t("app:onboarding.integrations")}
-        </Link>
-      </Button>
-    )
-  } else if (setup.data.payment) {
-    const { category_code, period, automatic } = setup.data.payment
-    description = t(
-      automatic
-        ? "app:onboarding.automatic_help"
-        : "app:onboarding.payment_help",
-    )
-    action = (
-      <Button asChild>
-        <Link
-          to="/ledgers/$ledgerId"
-          params={{ ledgerId }}
-          search={firstScheduledPaymentSearch(category_code, period, automatic)}
-        >
-          {t("app:onboarding.open_first_payment")}
-        </Link>
-      </Button>
-    )
-  } else {
-    description = t("app:onboarding.category_help")
-    action = (
-      <Button asChild>
-        <Link to="/ledgers/$ledgerId/categories" params={{ ledgerId }}>
-          {t("app:onboarding.open_categories")}
-        </Link>
-      </Button>
+  if (setup.data.completed) {
+    if (!showCompletion) return null
+
+    return (
+      <GuideCard
+        title={t("onboarding.completed")}
+        description={t("onboarding.integration_optional")}
+        controls={
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowCompletion(false)}
+          >
+            {t("onboarding.close")}
+          </Button>
+        }
+        action={
+          <Button asChild variant="outline">
+            <Link to="/ledgers/$ledgerId/integrations" params={{ ledgerId }}>
+              {t("onboarding.integrations")}
+            </Link>
+          </Button>
+        }
+      />
     )
   }
 
+  const payment = setup.data.payment
   return (
-    <section
-      aria-label={title}
-      className="space-y-3 rounded-lg border bg-card p-4"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <h2 className="font-semibold">{title}</h2>
-        {toggle}
-      </div>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      {action}
-    </section>
+    <GuideCard
+      title={t("onboarding.title")}
+      description={t(
+        payment
+          ? payment.automatic
+            ? "onboarding.automatic_help"
+            : "onboarding.payment_help"
+          : "onboarding.category_help",
+      )}
+      controls={<GuideMenu />}
+      action={
+        payment ? (
+          <Button asChild>
+            <Link
+              to="/ledgers/$ledgerId"
+              params={{ ledgerId }}
+              search={firstScheduledPaymentSearch(
+                payment.category_code,
+                payment.period,
+                payment.automatic,
+              )}
+              onClick={startGuide}
+            >
+              {t("onboarding.open_first_payment")}
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link
+              to="/ledgers/$ledgerId/categories"
+              params={{ ledgerId }}
+              onClick={startGuide}
+            >
+              {t("onboarding.open_categories")}
+            </Link>
+          </Button>
+        )
+      }
+    />
   )
 }

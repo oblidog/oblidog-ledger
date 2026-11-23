@@ -45,7 +45,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-export function AddLedger() {
+export function AddLedger({ triggerLabel }: { triggerLabel?: string }) {
   useTranslation()
 
   const options = useLedgerPreferenceOptions()
@@ -91,7 +91,7 @@ export function AddLedger() {
       <DialogTrigger asChild>
         <Button>
           <Plus />
-          {i18n.t("app:ledgers.new_ledger")}
+          {triggerLabel ?? i18n.t("app:ledgers.new_ledger")}
         </Button>
       </DialogTrigger>
       <DialogContent>
