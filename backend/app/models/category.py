@@ -113,6 +113,9 @@ class Category(Base):
     recurrence_interval: Mapped[int | None] = mapped_column(nullable=True)
     recurrence_unit: Mapped[RecurrenceUnit | None] = mapped_column(nullable=True)
     first_due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    automatic_collection: Mapped[bool] = mapped_column(
+        default=False, server_default=text("false"), nullable=False
+    )
     currency: Mapped[Currency] = mapped_column(
         String(3), default=Currency.PLN, nullable=False
     )

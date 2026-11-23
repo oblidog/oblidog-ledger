@@ -105,7 +105,7 @@
   "complete_data": "Daten vervollständigen",
   "obligation_updated": "Zahlungsverpflichtung aktualisiert",
   "edit_obligation": "Zahlungsverpflichtung bearbeiten",
-  "update_manually_entered_values_and_notes": "Manuell eingegebene Werte und Notizen aktualisieren.",
+  "update_manually_entered_values_and_notes": "Werte, Notizen und Zahlungsart ändern.",
   "between": "Zwischen",
   "and": "und",
   "save_changes": "Änderungen speichern",
@@ -145,5 +145,7 @@
   "payment_execution_scheduled_transfer": "Bei der Bank geplanter Überweisungsauftrag",
   "payment_execution_automatic_collection": "Automatischer Einzug",
   "payment_execution_help": "Geplante und automatische Zahlungen müssen erst nach dem Fälligkeitsdatum geprüft werden. Fehlende Daten und Fehler erfordern weiterhin Aufmerksamkeit.",
-  "verify_payment": "Prüfen Sie, ob die Zahlung eingezogen oder die Überweisung ausgeführt wurde."
+  "verify_payment": "Prüfen Sie, ob die Zahlung eingezogen oder die Überweisung ausgeführt wurde.",
+  "schedule_transfer": "Überweisung geplant",
+  "undo_scheduled_transfer": "Überweisungsplanung aufheben"
 }

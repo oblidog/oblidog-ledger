@@ -26,6 +26,7 @@ import {
   canMarkObligationPaid,
   canMarkObligationReady,
   canReopenObligation,
+  canScheduleTransfer,
 } from "./obligationLogic"
 import {
   sourceBadgeClasses,
@@ -57,6 +58,7 @@ export function ObligationDetailsDialog({
     actionPending,
     runAction,
     markReady,
+    scheduleTransfer,
     cancel,
     reopen,
     showErrorToast,
@@ -72,7 +74,7 @@ export function ObligationDetailsDialog({
       >
         <DialogHeader
           tabIndex={0}
-          className="max-h-[25dvh] shrink-0 overflow-y-auto border-b px-4 py-4 pr-12 text-left focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6 sm:pr-14"
+          className="max-h-[25dvh] shrink-0 flex-col overflow-y-auto border-b px-4 py-4 pr-12 text-left focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6 sm:pr-14"
         >
           <DialogTitle className="break-words [overflow-wrap:anywhere]">
             {selected.data?.name ||
@@ -108,13 +110,7 @@ export function ObligationDetailsDialog({
             >
               <div className="min-w-0 space-y-4">
                 <ObligationPaymentSummary obligation={selected.data} />
-                <ObligationPaymentExecution
-                  ledgerId={ledgerId}
-                  obligation={selected.data}
-                  canEdit={canEdit && !actionPending}
-                  onError={showErrorToast}
-                  onSuccess={showSuccessToast}
-                />
+                <ObligationPaymentExecution obligation={selected.data} />
                 {selected.data.notes ? (
                   <div className="space-y-1">
                     <p className="text-muted-foreground font-medium">
@@ -252,7 +248,10 @@ export function ObligationDetailsDialog({
           </div>
         )}
         {selected.data && canEdit ? (
-          <DialogFooter className="shrink-0 border-t px-4 py-3 sm:px-6">
+          <DialogFooter
+            tabIndex={0}
+            className="max-h-[25dvh] shrink-0 flex-col overflow-y-auto border-t px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2 sm:px-6"
+          >
             <div className="flex flex-wrap gap-2">
               {canMarkObligationReady(selected.data) ? (
                 <Button
@@ -286,6 +285,24 @@ export function ObligationDetailsDialog({
                 >
                   <CreditCard />
                   {i18n.t("app:obligations.mark_as_paid")}
+                </Button>
+              ) : null}
+              {canScheduleTransfer(selected.data) ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11"
+                  disabled={actionPending}
+                  onClick={() =>
+                    void runAction(scheduleTransfer, selected.data)
+                  }
+                >
+                  <CreditCard />
+                  {i18n.t(
+                    selected.data.payment_execution === "scheduled_transfer"
+                      ? "app:obligations.undo_scheduled_transfer"
+                      : "app:obligations.schedule_transfer",
+                  )}
                 </Button>
               ) : null}
               {canReopenObligation(selected.data) ? (

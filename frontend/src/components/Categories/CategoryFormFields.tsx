@@ -12,8 +12,10 @@ import {
   type SchedulePreviewPublic,
   type SchedulePreviewRequest,
 } from "@/client"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,6 +32,39 @@ import {
 import { i18n } from "@/i18n"
 import { getLocale } from "@/i18n/format"
 import { recurrencePreset } from "./categoryPresentation"
+
+export function AutomaticCollectionField<T extends FieldValues>({
+  control,
+}: {
+  control: Control<T>
+}) {
+  useTranslation()
+  return (
+    <FormField
+      control={control}
+      name={"automatic_collection" as Path<T>}
+      render={({ field }) => (
+        <FormItem>
+          <div className="flex items-center gap-2">
+            <FormControl>
+              <Checkbox
+                checked={field.value === true}
+                onCheckedChange={(value) => field.onChange(value === true)}
+              />
+            </FormControl>
+            <FormLabel>
+              {i18n.t("app:categories.automatic_collection")}
+            </FormLabel>
+          </div>
+          <FormDescription>
+            {i18n.t("app:categories.automatic_collection_help")}
+          </FormDescription>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
 
 export function CurrencyField<T extends FieldValues>({
   control,

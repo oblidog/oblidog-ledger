@@ -13,6 +13,7 @@ from app.domain import (
     CurrentValueSource,
     EffectiveValueSourceMode,
     ObligationLifecycle,
+    PaymentExecution,
     ValueState,
 )
 from app.domain.business_calendar import BusinessCalendar
@@ -81,6 +82,11 @@ def get_or_create_obligation(
             else CurrentValueSource.UNKNOWN
         ),
         currency=category.currency,
+        payment_execution=(
+            PaymentExecution.AUTOMATIC_COLLECTION
+            if category.automatic_collection
+            else None
+        ),
     )
     try:
         with session.begin_nested():

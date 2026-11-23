@@ -92,7 +92,7 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
                 if item["overdue_count"]:
                     assert locale.tr("section_overdue") in body
                     assert locale.amount(item["overdue_known_amount"]) in body
-                else:
+                elif not item.get("verify_payment_count", 0):
                     assert locale.tr("weekly_no_overdue") in body
                 assert (
                     locale.tr("weekly_comparison_unavailable")
@@ -104,7 +104,18 @@ def test_weekly_matrix_preserves_every_metric_and_payment(name, language):
                     or not item["previous_total_is_complete"]
                 ):
                     assert locale.tr("incomplete") in body
+                if item.get("verify_payment_count", 0):
+                    assert locale.tr("weekly_verify_payment") in body
+                    assert locale.amount(item["verify_payment_known_amount"]) in body
+                    assert locale.tr("weekly_verify_payment_help") in body
                 for payment in item["upcoming"]:
+                    if payment.get("payment_execution"):
+                        assert (
+                            locale.tr(
+                                "payment_execution_" + payment["payment_execution"]
+                            )
+                            in body
+                        )
                     assert payment["category_name"] in body
                     assert locale.date(payment["due_date"]) in body
                     assert locale.amount(payment["amount"]) in body
@@ -379,8 +390,9 @@ def obligation(
     amount_state="confirmed",
     due_state="confirmed",
     due=date(2026, 11, 2),
+    execution=None,
 ):
-    from app.domain import ObligationLifecycle, ValueState
+    from app.domain import ObligationLifecycle, PaymentExecution, ValueState
 
     return SimpleNamespace(
         current_amount=Decimal(amount) if amount is not None else None,
@@ -389,6 +401,7 @@ def obligation(
         due_date_state=ValueState(due_state),
         due_date=due,
         category=SimpleNamespace(name="Payment"),
+        payment_execution=PaymentExecution(execution) if execution else None,
     )
 
 
@@ -529,3 +542,128 @@ def test_weekly_progress_rounds_half_up_like_analytics(report_module, paid, tota
     assert summary.paid_percentage == _percentage(Decimal(paid), Decimal(total))
     if paid == "1.00":
         assert summary.paid_percentage == Decimal("0.63")
+
+
+@pytest.mark.parametrize(
+    "execution", [None, "automatic_collection", "scheduled_transfer"]
+)
+@pytest.mark.parametrize("days", [-1, 0, 1, 7, 8])
+@pytest.mark.parametrize("lifecycle", ["ready", "collecting_data", "error", "paid"])
+def test_weekly_plans_label_upcoming_and_separate_verification_without_changing_money(
+    report_module, execution, days, lifecycle
+):
+    from datetime import timedelta
+
+    from app.domain import PaymentExecution
+
+    item = obligation(
+        amount="37",
+        lifecycle=lifecycle,
+        execution=execution,
+        due=date(2026, 11, 2) + timedelta(days=days),
+    )
+    paid = "37" if lifecycle == "paid" else "0"
+    summary = summarize(report_module, [item], total="37", paid=paid)
+    is_past_due = days < 0 and lifecycle != "paid"
+    verify = is_past_due and execution is not None and lifecycle != "error"
+    assert summary.verify_payment_count == int(verify)
+    assert summary.overdue_count == int(is_past_due and not verify)
+    assert summary.verify_payment_known_amount == (
+        Decimal(37) if verify else Decimal(0)
+    )
+    assert summary.overdue_known_amount + summary.verify_payment_known_amount == (
+        Decimal(37) if is_past_due else Decimal(0)
+    )
+    assert summary.total_known_amount == Decimal(37)
+    assert summary.remaining_known_amount == (
+        Decimal(0) if lifecycle == "paid" else Decimal(37)
+    )
+    assert len(summary.upcoming) == int(lifecycle != "paid" and 0 <= days <= 7)
+    if summary.upcoming:
+        assert summary.upcoming[0].payment_execution == (
+            PaymentExecution(execution) if execution else None
+        )
+        assert summary.upcoming[0].needs_preparation == (lifecycle != "ready")
+        assert summary.upcoming_known_amount == Decimal(37)
+
+
+@pytest.mark.parametrize("execution", ["automatic_collection", "scheduled_transfer"])
+def test_weekly_planned_unknown_amount_stays_incomplete_and_requires_verification(
+    report_module, execution
+):
+    item = obligation(
+        amount=None,
+        amount_state="unknown",
+        execution=execution,
+        lifecycle="collecting_data",
+        due=date(2026, 11, 1),
+    )
+    summary = summarize(report_module, [item], total="0", paid="0")
+    assert summary.verify_payment_count == 1
+    assert summary.verify_payment_known_amount == Decimal(0)
+    assert summary.incomplete_count == summary.missing_amount_count == 1
+    assert summary.overdue_count == 0
+
+
+@pytest.mark.parametrize("language", ["pl", "en", "de"])
+def test_weekly_verification_only_is_not_presented_as_no_overdue(language):
+    raw = load_weekly_fixture("planned-payments")
+    html, text = render_weekly_fixture(raw, language)
+    locale = EmailLocale(language)
+    for body in (visible_text(html), text):
+        assert locale.tr("weekly_verify_payment") in body
+        assert locale.amount("74.00") in body
+        assert locale.tr("weekly_no_overdue") not in body
+        assert locale.tr("section_overdue") not in body
+        assert locale.tr("payment_execution_automatic_collection") in body
+        assert locale.tr("payment_execution_scheduled_transfer") in body
+        assert locale.amount("248.00") in body
+
+
+def test_weekly_trimming_keeps_verification_summary_with_production_dataclasses(
+    report_module,
+):
+    from dataclasses import replace
+    from datetime import timedelta
+
+    from app.services.weekly_overview_rendering import render_weekly_overview
+
+    items = [
+        obligation(amount="37", due=date(2026, 11, 1), execution="scheduled_transfer")
+    ]
+    items.extend(
+        obligation(
+            amount="37",
+            due=date(2026, 11, 2) + timedelta(days=day),
+            execution="automatic_collection",
+        )
+        for day in range(7)
+    )
+    summary = summarize(report_module, items, total="296", paid="0")
+
+    def context(currency):
+        return {
+            "project_name": "Oblidog",
+            "report_date": "2026-11-02",
+            "period": "2026-11",
+            "app_url": "https://example.com/ledgers",
+            "ledgers": [
+                report_module.LedgerOverview(ledger_name="Home", currencies=[currency])
+            ],
+        }
+
+    without_payments, _ = render_weekly_overview(
+        context=context(replace(summary, upcoming=[])), language="en"
+    )
+    markup, text = render_weekly_overview(
+        context=context(summary),
+        language="en",
+        html_budget=len(without_payments.encode("utf-8")) + 1000,
+    )
+    for body in (visible_text(markup), text):
+        assert "Verify payment after due date" in body
+        assert "37.00" in body
+        assert "296.00" in body
+        assert "No overdue" not in body
+    assert len(summary.upcoming) == 7
+    assert summary.verify_payment_count == 1

@@ -33,6 +33,7 @@ from app.schemas import (
     ObligationsPublic,
     ObligationUpdate,
 )
+from app.schemas.obligations import ScheduledTransferUpdate
 from app.services import demo_limits
 from app.use_cases import obligations as obligation_use_cases
 from app.use_cases.exceptions import (
@@ -231,7 +232,11 @@ def create_obligation(
                 year=obligation_in.period.year,
                 month=obligation_in.period.month,
             ),
-            payment_execution=obligation_in.payment_execution,
+            payment_execution=(
+                obligation_in.payment_execution
+                if "payment_execution" in obligation_in.model_fields_set
+                else obligation_use_cases.UNSET
+            ),
             data_ready=obligation_in.data_ready,
             current_amount=obligation_in.current_amount,
             issue_date=obligation_in.issue_date,
@@ -510,6 +515,40 @@ def update_obligation(
             code="obligation_invalid_values", status_code=422, detail=str(exc)
         ) from exc
 
+    return to_obligation_public(obligation)
+
+
+@router.patch(
+    "/ledgers/{ledger_id}/obligations/{obligation_key}/scheduled-transfer",
+    response_model=ObligationPublic,
+)
+def set_scheduled_transfer(
+    *,
+    session: SessionDep,
+    actor: CurrentActionActor,
+    obligation_key: str,
+    plan: ScheduledTransferUpdate,
+    ledger: Ledger = Depends(require_ledger_edit_access),
+) -> Any:
+    key = _parse_obligation_key(obligation_key)
+    try:
+        obligation = obligation_use_cases.set_scheduled_transfer(
+            session=session,
+            ledger_id=ledger.id,
+            key=key,
+            scheduled=plan.scheduled,
+            actor=actor,
+        )
+    except ObligationNotFoundError as exc:
+        raise HTTPException(
+            code="obligation_not_found", status_code=404, detail="Obligation not found"
+        ) from exc
+    except ObligationReadOnlyError as exc:
+        raise HTTPException(
+            code="obligation_read_only",
+            status_code=409,
+            detail="Only draft, collecting data and ready obligations without automatic collection can schedule a transfer",
+        ) from exc
     return to_obligation_public(obligation)
 
 

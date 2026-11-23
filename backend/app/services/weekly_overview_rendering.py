@@ -1,6 +1,7 @@
 """Bound weekly HTML without changing calculations or the original selection."""
 
 from collections.abc import Sequence
+from dataclasses import asdict, is_dataclass
 from typing import Any
 
 from app.email_i18n import EmailLocale, Language
@@ -24,7 +25,11 @@ def _take_ledgers(
             payments -= len(upcoming)
             currencies.append(
                 {
-                    **vars(item),
+                    **(
+                        asdict(item)
+                        if is_dataclass(item) and not isinstance(item, type)
+                        else vars(item)
+                    ),
                     "upcoming": upcoming,
                     "upcoming_omitted": len(item.upcoming) - len(upcoming),
                 }

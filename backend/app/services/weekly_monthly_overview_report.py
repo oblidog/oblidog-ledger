@@ -11,7 +11,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
-from app.domain import BillingPeriod, ObligationLifecycle, ValueState
+from app.domain import BillingPeriod, ObligationLifecycle, PaymentExecution, ValueState
 from app.email_i18n import EmailLocale, recipient_language
 from app.models import Ledger, LedgerMembership, Obligation, User
 from app.services.weekly_overview_rendering import render_weekly_overview
@@ -34,6 +34,7 @@ class UpcomingObligation:
     amount: Decimal | None
     days_until_due: int
     needs_preparation: bool
+    payment_execution: PaymentExecution | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,6 +60,8 @@ class CurrencyOverview:
     previous_total_is_complete: bool
     total_change: Decimal | None
     upcoming: list[UpcomingObligation]
+    verify_payment_count: int = 0
+    verify_payment_known_amount: Decimal = Decimal("0.00")
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,12 +248,23 @@ def _summarize_currency(
         item.lifecycle not in {ObligationLifecycle.READY, ObligationLifecycle.PAID}
         for item in obligations
     )
-    overdue = [
+    past_due = [
         item
         for item in obligations
         if item.lifecycle is not ObligationLifecycle.PAID
         and item.due_date is not None
         and item.due_date < report_date
+    ]
+    verification = [
+        item
+        for item in past_due
+        if item.payment_execution is not None
+        and item.lifecycle is not ObligationLifecycle.ERROR
+    ]
+    overdue = [
+        item
+        for item in past_due
+        if item.payment_execution is None or item.lifecycle is ObligationLifecycle.ERROR
     ]
     overdue_known_amount = sum(
         (item.current_amount for item in overdue if item.current_amount is not None),
@@ -263,6 +277,7 @@ def _summarize_currency(
             due_date=item.due_date,
             amount=item.current_amount,
             days_until_due=(item.due_date - report_date).days,
+            payment_execution=item.payment_execution,
             needs_preparation=(
                 item.lifecycle is not ObligationLifecycle.READY
                 or item.current_amount is None
@@ -298,6 +313,15 @@ def _summarize_currency(
         ready_count=ready_count,
         paid_count=paid_count,
         not_ready_count=not_ready_count,
+        verify_payment_count=len(verification),
+        verify_payment_known_amount=sum(
+            (
+                item.current_amount
+                for item in verification
+                if item.current_amount is not None
+            ),
+            Decimal("0.00"),
+        ),
         overdue_count=len(overdue),
         overdue_known_amount=overdue_known_amount,
         paid_percentage=paid_percentage,

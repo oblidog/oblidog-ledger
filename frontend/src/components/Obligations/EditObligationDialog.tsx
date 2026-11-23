@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { type ObligationPublic, ObligationsService } from "@/client"
+import {
+  type ObligationPublic,
+  ObligationsService,
+  type PaymentExecution,
+} from "@/client"
 import {
   Dialog,
   DialogContent,
@@ -12,6 +16,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { i18n } from "@/i18n"
 import { handleError } from "@/utils"
+import { PaymentExecutionField } from "./ObligationPaymentExecution"
 import { ObligationValueFields } from "./ObligationValueFields"
 import { dueDateRange } from "./obligationLogic"
 import { touchDialogClasses } from "./obligationPresentation"
@@ -37,6 +42,9 @@ export function EditObligationDialog({
   const [currentAmount, setCurrentAmount] = useState("")
   const [issueDate, setIssueDate] = useState("")
   const [dueDate, setDueDate] = useState("")
+  const [paymentExecution, setPaymentExecution] =
+    useState<PaymentExecution | null>(obligation.payment_execution ?? null)
+  const originalPaymentExecution = obligation.payment_execution ?? null
   const [notes, setNotes] = useState("")
   const submitLock = useRef(false)
   const queryClient = useQueryClient()
@@ -57,12 +65,14 @@ export function EditObligationDialog({
     setIssueDate(originalIssueDate)
     setDueDate(originalDueDate)
     setNotes(originalNotes)
+    setPaymentExecution(originalPaymentExecution)
   }, [
     open,
     originalCurrentAmount,
     originalDueDate,
     originalIssueDate,
     originalNotes,
+    originalPaymentExecution,
   ])
 
   const dueDateOutOfRange =
@@ -75,7 +85,8 @@ export function EditObligationDialog({
     currentAmount !== originalCurrentAmount ||
     issueDate !== originalIssueDate ||
     dueDate !== originalDueDate ||
-    notes !== originalNotes
+    notes !== originalNotes ||
+    paymentExecution !== originalPaymentExecution
   const mutation = useMutation({
     mutationFn: () => {
       const requestBody: {
@@ -83,6 +94,7 @@ export function EditObligationDialog({
         issue_date?: string | null
         due_date?: string | null
         notes?: string | null
+        payment_execution?: PaymentExecution | null
       } = {}
       if (currentAmount !== originalCurrentAmount) {
         requestBody.current_amount = currentAmount || null
@@ -96,6 +108,8 @@ export function EditObligationDialog({
       if (notes !== originalNotes) {
         requestBody.notes = notes || null
       }
+      if (paymentExecution !== originalPaymentExecution)
+        requestBody.payment_execution = paymentExecution
       return ObligationsService.updateObligation({
         ledgerId,
         obligationKey: obligation.key,
@@ -106,6 +120,9 @@ export function EditObligationDialog({
     onSuccess: () => {
       onSuccess(i18n.t("app:obligations.obligation_updated"))
       onOpenChange(false)
+      void queryClient.invalidateQueries({
+        queryKey: ["analytics", "attention", ledgerId],
+      })
       void queryClient.invalidateQueries({
         queryKey: obligationQueryKeys.actions(ledgerId, obligation.key),
       })
@@ -142,6 +159,11 @@ export function EditObligationDialog({
             dueDateLimits={dueDateLimits}
             notes={notes}
             setNotes={setNotes}
+          />
+          <PaymentExecutionField
+            value={paymentExecution}
+            onChange={setPaymentExecution}
+            disabled={mutation.isPending}
           />
           <LoadingButton
             className="min-h-11 w-full"

@@ -242,10 +242,36 @@ export default function WeeklyOverviewEmail({
                   </TemplateIf>
                   <TemplateIf
                     tokens={tokens}
-                    expression="item.overdue_count == 0"
-                    show={item.overdue_count === 0}
+                    expression="item.overdue_count == 0 and not item.verify_payment_count"
+                    show={
+                      item.overdue_count === 0 && !item.verify_payment_count
+                    }
                   >
                     <Text style={detailStyle}>{t("weekly_no_overdue")}</Text>
+                  </TemplateIf>
+                  <TemplateIf
+                    tokens={tokens}
+                    expression="item.verify_payment_count|default(0) > 0"
+                    show={(item.verify_payment_count ?? 0) > 0}
+                  >
+                    <Text style={{ ...detailStyle, color: "#87531a" }}>
+                      <strong>
+                        {t("weekly_verify_payment")}:{" "}
+                        {v(
+                          "item.verify_payment_count",
+                          item.verify_payment_count ?? 0,
+                        )}
+                      </strong>
+                      {" · "}
+                      {money(
+                        "item.verify_payment_known_amount",
+                        item.verify_payment_known_amount ?? "0.00",
+                      )}{" "}
+                      {currencyName(item)}
+                    </Text>
+                    <Text style={detailStyle}>
+                      {t("weekly_verify_payment_help")}
+                    </Text>
                   </TemplateIf>
                   <MinorHeading>{t("upcoming")}</MinorHeading>
                   <Text style={detailStyle}>
@@ -300,6 +326,22 @@ export default function WeeklyOverviewEmail({
                                   days: obligation.days_until_due,
                                 }),
                         )}
+                        <TemplateIf
+                          tokens={tokens}
+                          expression="obligation.payment_execution"
+                          show={Boolean(obligation.payment_execution)}
+                        >
+                          {" · "}
+                          {v(
+                            "tr('payment_execution_' ~ obligation.payment_execution)",
+                            obligation.payment_execution
+                              ? emailCopy(
+                                  `payment_execution_${obligation.payment_execution}`,
+                                  language,
+                                )
+                              : "",
+                          )}
+                        </TemplateIf>
                         <TemplateIf
                           tokens={tokens}
                           expression="obligation.needs_preparation"

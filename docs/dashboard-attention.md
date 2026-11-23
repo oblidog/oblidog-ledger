@@ -69,12 +69,20 @@ date (`today > due_date`, including weekends/holidays), they retain the overdue
 reason and add `verify_payment`; the UI and daily digest ask the user to check
 execution. No date means no execution-verification deadline. Errors and missing
 or incomplete required data retain their existing review rules. Weekly cash-flow
-summaries still include expected upcoming payments and unpaid amounts.
+summaries still include expected upcoming payments and unpaid amounts. Upcoming
+rows label automatic collection and scheduled transfers. Past-due planned
+payments have a separate verification count and known amount; errors stay in
+the ordinary overdue group. Neither group marks a payment paid.
 
-Owners/editors can set or clear the plan in obligation details only in `DRAFT`
-and `COLLECTING_DATA`. `READY`, `ERROR`, `PAID`, and `CANCELED` retain their plan
-and must be reopened before any PATCH edit, including a plan-only change.
+Categories define automatic collection as a default for new obligations only.
+Existing obligations retain their plan when the category changes. Owners/editors
+can override the payment method in the obligation creation or edit form in
+`DRAFT` and `COLLECTING_DATA`. Bank transfer scheduling and its cancellation are
+also available in `READY` through a separate metadata-only action in the menu
+and details. Automatic collection cannot be replaced by that action. `ERROR`,
+`PAID` and `CANCELED` must be reopened first.
+
 Plan-only updates preserve lifecycle and value certainty and are recorded as
-`values_updated` actions. Integration value updates
-preserve the user-owned plan. Newly generated periods start with no plan; automatic
-inheritance from categories is outside this change.
+`values_updated` actions. Integration value updates preserve the user-owned plan.
+New periods copy the category’s automatic-collection default at creation, never
+an earlier period’s scheduled transfer. See [payment execution](obligation-lifecycle.md#payment-execution).

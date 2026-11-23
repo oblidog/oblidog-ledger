@@ -46,6 +46,7 @@ import { i18n } from "@/i18n"
 import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 import {
+  AutomaticCollectionField,
   CurrencyField,
   obligationModeDescription,
   PaymentScheduleFields,
@@ -102,6 +103,7 @@ export function EditCategoryDialog({
       recurrence_unit: category.recurrence_unit ?? undefined,
       first_due_date: category.first_due_date ?? "",
       currency: category.currency,
+      automatic_collection: category.automatic_collection,
     },
   })
 
@@ -116,6 +118,7 @@ export function EditCategoryDialog({
         recurrence_unit: category.recurrence_unit ?? undefined,
         first_due_date: category.first_due_date ?? "",
         currency: category.currency,
+        automatic_collection: category.automatic_collection,
       })
       setCounterparty(currentCounterparty)
     }
@@ -175,6 +178,7 @@ export function EditCategoryDialog({
                 recurrence_unit: data.recurrence_unit ?? null,
                 first_due_date: data.first_due_date || null,
                 currency: data.currency,
+                automatic_collection: data.automatic_collection,
               }),
             )}
             className="space-y-4"
@@ -305,6 +309,7 @@ export function EditCategoryDialog({
                 )}
               />
               <CurrencyField control={form.control} />
+              <AutomaticCollectionField control={form.control} />
             </div>
             {form.watch("data_source_policy") !== "manual" && (
               <PaymentScheduleFields

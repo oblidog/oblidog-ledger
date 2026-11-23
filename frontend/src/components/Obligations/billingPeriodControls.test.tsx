@@ -140,43 +140,32 @@ test("custom period filter rejects unsupported years", async () => {
 })
 
 test.each([
-  ["ready", true, false],
-  ["error", true, false],
-  ["draft", true, true],
-  ["collecting_data", true, true],
-  ["paid", true, false],
-  ["canceled", true, false],
-  ["ready", false, false],
+  "ready",
+  "error",
+  "draft",
+  "collecting_data",
+  "paid",
+  "canceled",
 ] as const)(
-  "payment planning for %s with write access %s exposes editing: %s",
-  async (lifecycle, canEdit, editable) => {
+  "details show the payment method for %s; editing lives in the edit form",
+  async (lifecycle) => {
     const { ObligationPaymentExecution } = await import(
       "./ObligationPaymentExecution"
     )
-    client = new QueryClient()
     container()
     await act(async () =>
       root!.render(
-        <QueryClientProvider client={client!}>
-          <ObligationPaymentExecution
-            ledgerId="ledger"
-            obligation={
-              {
-                key: "TEST-2026-11",
-                lifecycle,
-                payment_execution: "automatic_collection",
-              } as import("@/client").ObligationPublic
-            }
-            canEdit={canEdit}
-            onSuccess={mock()}
-            onError={mock()}
-          />
-        </QueryClientProvider>,
+        <ObligationPaymentExecution
+          obligation={
+            {
+              lifecycle,
+              payment_execution: "automatic_collection",
+            } as import("@/client").ObligationPublic
+          }
+        />,
       ),
     )
-    expect(browser.document.querySelector('[role="combobox"]') !== null).toBe(
-      editable,
-    )
+    expect(browser.document.querySelector('[role="combobox"]')).toBeNull()
     expect(browser.document.body.textContent).toContain(
       i18n.t("app:obligations.payment_execution_automatic_collection"),
     )
@@ -279,7 +268,154 @@ test.each(["automatic_collection", "scheduled_transfer"] as const)(
     )
     expect(create.mock.calls[1][0].requestBody).toMatchObject({
       category_code: "RENT",
-      payment_execution: null,
+      payment_execution: undefined,
     })
   },
 )
+
+test("edit form saves the payment method without resending financial fields", async () => {
+  const { EditObligationDialog } = await import("./EditObligationDialog")
+  const { ObligationsService } = await import("@/client")
+  const update = spyOn(
+    ObligationsService,
+    "updateObligation",
+  ).mockResolvedValue({} as never)
+  const onSuccess = mock()
+  client = new QueryClient()
+  container()
+  await act(async () =>
+    root!.render(
+      <QueryClientProvider client={client!}>
+        <EditObligationDialog
+          ledgerId="ledger"
+          open
+          obligation={
+            {
+              key: "TEST-2026-11",
+              period: { year: 2026, month: 11 },
+              lifecycle: "collecting_data",
+              current_amount: "37",
+              issue_date: null,
+              due_date: "2026-11-24",
+              notes: null,
+              currency: "PLN",
+              payment_execution: null,
+            } as import("@/client").ObligationPublic
+          }
+          onSuccess={onSuccess}
+          onError={mock()}
+          onOpenChange={mock()}
+        />
+      </QueryClientProvider>,
+    ),
+  )
+  const save = () =>
+    [...browser.document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) =>
+        button.textContent?.trim() === i18n.t("app:obligations.save_changes"),
+    )!
+  expect(save().disabled).toBe(true)
+  await act(async () =>
+    browser.document
+      .querySelector("#obligation-payment-execution")!
+      .dispatchEvent(
+        new browser.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+        }),
+      ),
+  )
+  await act(async () => {
+    const option = [
+      ...browser.document.querySelectorAll<HTMLElement>('[role="option"]'),
+    ].find(
+      (item) =>
+        item.textContent?.trim() ===
+        i18n.t("app:obligations.payment_execution_automatic_collection"),
+    )!
+    option.click()
+  })
+  expect(save().disabled).toBe(false)
+  await act(async () => save().click())
+  expect(update.mock.calls[0][0].requestBody).toEqual({
+    payment_execution: "automatic_collection",
+  })
+  expect(onSuccess).toHaveBeenCalledTimes(1)
+})
+
+test("new obligation shows the category default and allows an explicit manual override", async () => {
+  const { ObligationsService } = await import("@/client")
+  const create = spyOn(
+    ObligationsService,
+    "createObligation",
+  ).mockResolvedValue({} as never)
+  client = new QueryClient({
+    defaultOptions: { queries: { staleTime: Infinity } },
+  })
+  client.setQueryData(categoryQueryKeys.categories("ledger"), {
+    data: [
+      {
+        id: "cat",
+        code: "SUBS",
+        name: "Subscription",
+        data_source_policy: "manual",
+        currency: "PLN",
+        automatic_collection: true,
+      },
+    ],
+    count: 1,
+  })
+  container()
+  await act(async () =>
+    root!.render(
+      <QueryClientProvider client={client!}>
+        <Create
+          ledgerId="ledger"
+          defaultPeriod={{ year: 2026, month: 11 }}
+          firstPayment={{
+            categoryCode: "SUBS",
+            obligationKey: "SUBS-2026-11",
+            onClose: mock(),
+            onResolved: mock(),
+          }}
+          onSuccess={mock()}
+          onError={mock()}
+        />
+      </QueryClientProvider>,
+    ),
+  )
+  expect(
+    browser.document.querySelector("#obligation-payment-execution")
+      ?.textContent,
+  ).toContain(i18n.t("app:obligations.payment_execution_automatic_collection"))
+  await act(async () =>
+    browser.document
+      .querySelector("#obligation-payment-execution")!
+      .dispatchEvent(
+        new browser.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+        }),
+      ),
+  )
+  await act(async () => {
+    const option = [
+      ...browser.document.querySelectorAll<HTMLElement>('[role="option"]'),
+    ].find(
+      (item) =>
+        item.textContent?.trim() ===
+        i18n.t("app:obligations.payment_execution_manual"),
+    )!
+    option.click()
+  })
+  await act(async () =>
+    [...browser.document.querySelectorAll<HTMLButtonElement>("button")]
+      .find(
+        (button) =>
+          button.textContent?.trim() ===
+          i18n.t("app:obligations.create_obligation"),
+      )!
+      .click(),
+  )
+  expect(create.mock.calls[0][0].requestBody.payment_execution).toBeNull()
+})

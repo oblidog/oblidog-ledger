@@ -1,0 +1,62 @@
+{
+  "project_name": "Oblidog",
+  "report_date": "2026-10-19",
+  "period": "2026-10",
+  "app_url": "https://example.com/ledgers?scope=mine&view=monthly",
+  "ledgers": [
+    {
+      "ledger_name": "Household_Custom",
+      "currencies": [
+        {
+          "currency": "PLN",
+          "total_known_amount": "1148.00",
+          "paid_known_amount": "900.00",
+          "remaining_known_amount": "248.00",
+          "ready_count": 5,
+          "paid_count": 1,
+          "not_ready_count": 0,
+          "overdue_count": 0,
+          "overdue_known_amount": "0.00",
+          "paid_percentage": "78.40",
+          "incomplete_count": 0,
+          "total_is_complete": true,
+          "previous_total_known_amount": "1180.00",
+          "previous_total_is_complete": true,
+          "total_change": "-32.00",
+          "upcoming": [
+            {
+              "category_name": "Internet_Custom",
+              "due_date": "2026-10-20",
+              "amount": "37.00",
+              "days_until_due": 1,
+              "needs_preparation": false,
+              "payment_execution": "automatic_collection"
+            },
+            {
+              "category_name": "Insurance_Custom",
+              "due_date": "2026-10-23",
+              "amount": "100.00",
+              "days_until_due": 4,
+              "needs_preparation": false
+            },
+            {
+              "category_name": "Scheduled transfer",
+              "due_date": "2026-10-20",
+              "amount": "37.00",
+              "days_until_due": 1,
+              "needs_preparation": false,
+              "payment_execution": "scheduled_transfer"
+            }
+          ],
+          "missing_amount_count": 0,
+          "unconfirmed_amount_count": 0,
+          "missing_due_date_count": 0,
+          "unconfirmed_due_date_count": 0,
+          "upcoming_known_amount": "174.00",
+          "verify_payment_count": 2,
+          "verify_payment_known_amount": "74.00"
+        }
+      ]
+    }
+  ]
+}

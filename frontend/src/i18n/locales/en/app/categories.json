@@ -217,5 +217,7 @@
   "first_payment": "First payment",
   "first_payment_for": "First payment for {{name}}",
   "set_up_schedule": "Set up schedule",
-  "set_up_schedule_for": "Set up schedule for {{name}}"
+  "set_up_schedule_for": "Set up schedule for {{name}}",
+  "automatic_collection": "Payments collected automatically",
+  "automatic_collection_help": "Default for new obligations. Existing payments stay unchanged. You can override it when editing an obligation."
 }

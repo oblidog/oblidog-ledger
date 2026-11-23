@@ -60,7 +60,8 @@ stateDiagram-v2
 No other transitions are allowed. `READY`, `PAID`, `CANCELED`, and `ERROR`
 cannot be edited through the ordinary `PATCH` endpoint, including requests
 containing only `payment_execution`. Reopen the obligation before changing its
-values or payment plan.
+values or automatic-collection setting. Bank transfer scheduling has a separate
+metadata-only action, including in `READY`.
 
 ## Use cases and their effects
 
@@ -70,6 +71,7 @@ values or payment plan.
 | `create_manual_obligation` | — (creation) | `COLLECTING_DATA`, or `READY` when `data_ready=true` | `lifecycle`, supplied manual values, their `*_state`/`*_source`, `effective_value_source`, `notes`, and optional `payment_execution` |
 | `update_manual_obligation` / `update_integration_obligation` | `DRAFT`, `COLLECTING_DATA` | An edited `DRAFT` moves to `COLLECTING_DATA`; the latter remains unchanged | Supplied values, their `*_state`/`*_source`, `effective_value_source`, and—after an actual draft change—`lifecycle`; manual updates may also change `notes` and `payment_execution` |
 | `update_manual_obligation` with only `payment_execution` | `DRAFT`, `COLLECTING_DATA` | Lifecycle unchanged, including `DRAFT` | Only `payment_execution`; value states and sources are preserved |
+| `set_scheduled_transfer` | `DRAFT`, `COLLECTING_DATA`, `READY`, without automatic collection | Unchanged | Only `payment_execution` (`scheduled_transfer` or `null`); amount/date values, certainty, lifecycle and `paid_at` are preserved |
 | `mark_obligation_ready` | `DRAFT`, `COLLECTING_DATA` | `READY` | `lifecycle`, `amount_state=CONFIRMED`, `due_date_state=CONFIRMED`, and `issue_date_state=CONFIRMED` when `issue_date` is present |
 | `mark_obligation_paid` | `READY`; repeated calls for `PAID` are idempotent | `PAID` | On the first call: `lifecycle`, `paid_at=now(UTC)` |
 | `cancel_obligation` | `COLLECTING_DATA` | `CANCELED` | `lifecycle` |
@@ -88,6 +90,7 @@ All current actions require the ledger's `EDITOR` or `OWNER` role.
 | Endpoint | Use case | Notes |
 | --- | --- | --- |
 | `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}` | `update_manual_obligation` | Only `DRAFT` and `COLLECTING_DATA`, including payment-execution-only requests |
+| `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/scheduled-transfer` | `set_scheduled_transfer` | Body: `{"scheduled": true}` or `{"scheduled": false}`; `DRAFT`, `COLLECTING_DATA`, `READY`; automatic collections rejected |
 | `PATCH /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/ready` | `mark_obligation_ready` | Accepts `DRAFT` and `COLLECTING_DATA`; requires at least an estimated amount and due date |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/mark-paid` | `mark_obligation_paid` | Idempotent for `PAID` |
 | `POST /api/v1/ledgers/{ledger_id}/obligations/{obligation_key}/cancel` | `cancel_obligation` | Only `COLLECTING_DATA` |
@@ -111,12 +114,19 @@ from its lifecycle and from category recurrence:
 
 | Value | Meaning |
 | --- | --- |
-| `null` (default) | The user needs to arrange payment manually |
+| `null` | The user needs to arrange payment manually |
 | `scheduled_transfer` | The transfer has already been scheduled in the bank |
 | `automatic_collection` | The provider is expected to collect payment automatically, for example a subscription |
 
-Choose the execution type in the creation form or in obligation details. The
-existing `due_date` is the only deadline; there is no separate execution date.
+Categories have an `automatic_collection` boolean (default `false`). It is copied
+to newly created obligations, including scheduled and integration-created ones.
+Changing the category affects future creations only; existing obligations keep
+their plan. On creation, omitting `payment_execution` uses this category default,
+while explicit `null` selects manual payment. A scheduled bank transfer is never
+inherited from the category or a previous period.
+
+Choose or override the execution type in the creation or edit form. Details also
+show the current plan. The existing `due_date` is the only deadline; there is no separate execution date.
 For API clients, omit the field to preserve its value on an update, or send
 `null` to return to manual payment. For example, an owner/editor can update a
 draft or collecting-data obligation:
@@ -130,8 +140,16 @@ Content-Type: application/json
 
 The same edit restrictions apply to every field: only `DRAFT` and
 `COLLECTING_DATA` accept this request. `READY`, `ERROR`, `PAID`, and `CANCELED`
-retain their plan and must be reopened before it can be changed. There is no
-separate payment-execution action endpoint. Actual changes are recorded in the
+must be reopened before changing the automatic-collection setting.
+
+Bank transfers can be scheduled or unscheduled through the separate
+`PATCH .../{obligation_key}/scheduled-transfer` action, with body
+`{"scheduled": true}` or `{"scheduled": false}`. It accepts only that boolean
+and works in `DRAFT`, `COLLECTING_DATA` and `READY`, preserving all financial
+values and lifecycle. Obligations with automatic collection reject this action;
+change their payment method in the ordinary edit form first. Owners/editors can
+use the action from the obligation menu or details. Paid, canceled and error
+items reject scheduling. Actual changes are recorded in the
 [action log](obligation-action-log.md) as `values_updated`; identical writes do
 not create another entry. Integration value updates preserve the user's plan.
 
@@ -142,14 +160,16 @@ including on weekends and public holidays. Dates use `SYSTEM_RUN_TIMEZONE`.
 Errors and data-preparation warnings retain their existing rules. Without a
 due date there is no execution-verification deadline; missing-data reminders
 still apply. See [dashboard attention](dashboard-attention.md) for the full
-selection policy.
+selection policy. Weekly reports label planned payment methods in upcoming
+rows and separate past-due plans requiring verification from ordinary overdue
+amounts. Errors and incomplete-data indicators remain visible.
 
 Planning does not confirm payment, set `paid_at`, or remove amounts from unpaid
 totals, charts, the due calendar, or weekly cash-flow summaries. Payment still
 requires a user or integration to mark the obligation paid. Generated periods
-default to `null`; the plan is not inherited from an earlier obligation or its
-category. After successful manual creation, the form resets execution to manual
-for the next entry. A failed save retains the current selection.
+copy the category default at creation, never an earlier period’s scheduled
+transfer. After successful creation or a category change, the form returns to
+the selected category’s default. A failed save retains the current selection.
 
 ## Payment schedule and due-date preview
 
