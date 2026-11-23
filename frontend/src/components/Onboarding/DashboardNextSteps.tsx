@@ -18,6 +18,7 @@ import useAuth from "@/hooks/useAuth"
 import { useLedgerEditorAccess } from "@/hooks/useLedgerCanEdit"
 import { usePublicAppConfig } from "@/hooks/usePublicAppConfig"
 import { useUpdateOnboardingGuide } from "@/hooks/useUpdateOnboardingGuide"
+import { onboardingGuideVersionKey } from "@/lib/onboardingGuide"
 
 function GuideMenu() {
   const { t } = useTranslation("app")
@@ -113,6 +114,7 @@ export function DashboardNextSteps({ ledger }: { ledger: LedgerPublic }) {
     <WorkspaceNextStep
       key={storageKey}
       storageKey={storageKey}
+      versionKey={onboardingGuideVersionKey(user.id)}
       ledger={ledger}
     />
   )
@@ -134,7 +136,7 @@ function GuideCard({
       aria-label={title}
       className="space-y-3 rounded-lg border bg-card p-4"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 className="font-semibold">{title}</h2>
         {controls}
       </div>
@@ -193,9 +195,11 @@ function DemoNextStep({
 
 function WorkspaceNextStep({
   storageKey,
+  versionKey,
   ledger,
 }: {
   storageKey: string
+  versionKey: string
   ledger: LedgerPublic
 }) {
   const { t } = useTranslation("app")
@@ -216,16 +220,19 @@ function WorkspaceNextStep({
     setup.data?.completed === true
 
   useEffect(() => {
-    if (completed && sessionStorage.getItem(storageKey)) {
-      sessionStorage.removeItem(storageKey)
+    if (!completed) return
+
+    const startedVersion = sessionStorage.getItem(storageKey)
+    sessionStorage.removeItem(storageKey)
+    if (startedVersion === (localStorage.getItem(versionKey) ?? "")) {
       setShowCompletion(true)
     }
-  }, [completed, storageKey])
+  }, [completed, storageKey, versionKey])
 
   if (!canEdit || setup.isFetching) return null
 
   function startGuide() {
-    sessionStorage.setItem(storageKey, "1")
+    sessionStorage.setItem(storageKey, localStorage.getItem(versionKey) ?? "")
   }
 
   if (setup.isError) {

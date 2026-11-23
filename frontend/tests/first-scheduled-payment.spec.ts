@@ -381,6 +381,51 @@ test("keeps the empty ledger action when the guide is disabled and restores it f
   ).toBeVisible()
 })
 
+test("forgets a started guide when it is turned off", async ({ page }) => {
+  await mockWorkspace(page)
+  await page.goto("/")
+  await page.getByRole("link", { name: "Open first payment" }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toBeVisible()
+
+  await page.goto("/")
+  const menu = page.getByRole("button", { name: "Setup guide options" })
+  await menu.click()
+  await page.getByRole("menuitem", { name: "Turn off setup guide" }).click()
+  await expect(menu).toHaveCount(0)
+
+  await page.goto(`${ledgerPath}/categories`)
+  await page
+    .getByRole("link", { name: `First payment for ${category.name}` })
+    .click()
+  await dialog
+    .getByRole("button", { name: "Create obligation", exact: true })
+    .click()
+  await expect(
+    dialog.getByRole("heading", { name: category.name }),
+  ).toBeVisible()
+
+  await page.goto("/settings")
+  const preference = page.getByRole("checkbox", { name: "Setup guide" })
+  await expect(preference).not.toBeChecked()
+  await preference.click()
+  await expect(preference).toBeChecked()
+
+  const setup = page.waitForResponse(
+    (response) =>
+      response.url().includes("/onboarding/dashboard/") && response.ok(),
+  )
+  await page.goto("/")
+  await setup
+  const startedKey = `oblidog:onboarding:started:owner:${ledgerId}`
+  await expect
+    .poll(() => page.evaluate((key) => sessionStorage.getItem(key), startedKey))
+    .toBeNull()
+  await expect(
+    page.getByRole("heading", { name: "Your recurring payment is set up" }),
+  ).toHaveCount(0)
+})
+
 test("omits the guide for an already configured ledger", async ({ page }) => {
   await mockWorkspace(page, { firstExists: true })
   const setup = page.waitForResponse(
