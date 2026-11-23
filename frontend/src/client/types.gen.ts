@@ -2712,6 +2712,10 @@ export type UserPublic = {
      */
     language?: 'en' | 'pl' | 'de' | null;
     /**
+     * Onboarding Guide Enabled
+     */
+    onboarding_guide_enabled?: boolean;
+    /**
      * Id
      */
     id: string;
@@ -2779,6 +2783,10 @@ export type UserUpdate = {
  * UserUpdateMe
  */
 export type UserUpdateMe = {
+    /**
+     * Onboarding Guide Enabled
+     */
+    onboarding_guide_enabled?: boolean;
     /**
      * Language
      */

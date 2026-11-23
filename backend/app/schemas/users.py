@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StrictBool
 
 from app.schemas.common import PasswordStr
 
@@ -27,6 +27,7 @@ class UserUpdate(BaseModel):
 
 
 class UserUpdateMe(BaseModel):
+    onboarding_guide_enabled: StrictBool = True
     language: Literal["en", "pl", "de"] | None = None
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
@@ -55,6 +56,7 @@ class UserPublic(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     language: Literal["en", "pl", "de"] | None = None
+    onboarding_guide_enabled: bool = True
     id: uuid.UUID
     created_at: datetime
 

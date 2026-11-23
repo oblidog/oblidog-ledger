@@ -195,6 +195,44 @@ def test_update_user_me(
     assert user_db.full_name == full_name
 
 
+def test_onboarding_guide_preference(
+    client: TestClient, normal_user_token_headers: dict[str, str]
+) -> None:
+    url = f"{settings.API_V1_STR}/users/me"
+    assert client.get(url, headers=normal_user_token_headers).json()[
+        "onboarding_guide_enabled"
+    ]
+
+    disabled = client.patch(
+        url, headers=normal_user_token_headers, json={"onboarding_guide_enabled": False}
+    )
+    assert disabled.status_code == 200
+    assert disabled.json()["onboarding_guide_enabled"] is False
+    assert (
+        client.get(url, headers=normal_user_token_headers).json()[
+            "onboarding_guide_enabled"
+        ]
+        is False
+    )
+
+    profile_update = client.patch(
+        url, headers=normal_user_token_headers, json={"language": "pl"}
+    )
+    assert profile_update.status_code == 200
+    assert profile_update.json()["onboarding_guide_enabled"] is False
+
+    invalid = client.patch(
+        url, headers=normal_user_token_headers, json={"onboarding_guide_enabled": None}
+    )
+    assert invalid.status_code == 422
+
+    enabled = client.patch(
+        url, headers=normal_user_token_headers, json={"onboarding_guide_enabled": True}
+    )
+    assert enabled.status_code == 200
+    assert enabled.json()["onboarding_guide_enabled"] is True
+
+
 def test_update_password_me(client: TestClient, db: Session) -> None:
     email = random_email()
     current_password = random_lower_string()

@@ -17,7 +17,7 @@ export function useActiveLedger() {
       ? null
       : window.localStorage.getItem(LAST_LEDGER_KEY),
   )
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryFn: () => LedgersService.readLedgers(),
     queryKey: ["ledgers"],
   })
@@ -47,6 +47,7 @@ export function useActiveLedger() {
     activeLedgerId,
     isLoading,
     isError,
+    refetch,
     ledgers,
     setLastLedgerId,
   }
