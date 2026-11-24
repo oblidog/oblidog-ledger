@@ -155,10 +155,10 @@ export function EditCategoryDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto"
+        className="max-h-[90vh] overflow-y-auto min-[56rem]:flex min-[56rem]:w-[calc(100%-2rem)] min-[56rem]:max-w-4xl min-[56rem]:flex-col min-[56rem]:gap-0 min-[56rem]:overflow-hidden min-[56rem]:p-0"
         onCloseAutoFocus={onCloseAutoFocus}
       >
-        <DialogHeader>
+        <DialogHeader className="min-[56rem]:shrink-0 min-[56rem]:border-b min-[56rem]:px-6 min-[56rem]:py-5 min-[56rem]:pr-12">
           <DialogTitle>{i18n.t("app:categories.edit_category")}</DialogTitle>
           <DialogDescription>
             {i18n.t(
@@ -181,158 +181,179 @@ export function EditCategoryDialog({
                 automatic_collection: data.automatic_collection,
               }),
             )}
-            className="space-y-4"
+            className="space-y-4 min-[56rem]:flex min-[56rem]:min-h-0 min-[56rem]:flex-col min-[56rem]:space-y-0"
           >
-            <FormField
-              control={form.control}
-              name="category_group_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{i18n.t("app:categories.group")}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder={i18n.t("app:categories.choose_a_group")}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {groups
-                        .filter(
-                          (group) =>
-                            group.is_active ||
-                            group.id === category.category_group_id,
-                        )
-                        .map((group) => (
-                          <SelectItem
-                            key={group.id}
-                            value={group.id}
-                            disabled={!group.is_active}
-                          >
-                            {group.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{i18n.t("app:categories.name")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{i18n.t("app:categories.description")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={i18n.t(
-                        "app:categories.optional_description",
-                      )}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="space-y-2">
-              <p className="text-sm font-medium">
-                {i18n.t("app:categories.code")}
-              </p>
-              <Badge variant="secondary">{category.code}</Badge>
-            </div>
-            <CategoryCounterpartyField
-              value={counterparty}
-              disabled={mutation.isPending}
-              onChange={setCounterparty}
-            />
-            <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="data_source_policy"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {i18n.t("app:categories.category_mode")}
-                    </FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value)
-                        if (
-                          value !== "manual" &&
-                          (!form.getValues("recurrence_interval") ||
-                            !form.getValues("recurrence_unit"))
-                        ) {
-                          form.setValue("recurrence_interval", 1)
-                          form.setValue("recurrence_unit", "month")
-                        }
-                      }}
-                      value={field.value}
-                    >
+            <div className="space-y-4 min-[56rem]:grid min-[56rem]:grid-cols-2 min-[56rem]:items-start min-[56rem]:gap-6 min-[56rem]:space-y-0 min-[56rem]:overflow-y-auto min-[56rem]:px-6 min-[56rem]:py-5">
+              <div className="min-w-0 space-y-4 min-[56rem]:[&_[data-slot=counterparty-search-results]]:static">
+                <h3 className="hidden text-sm font-semibold min-[56rem]:block">
+                  {i18n.t("app:categories.basic_information")}
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="category_group_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{i18n.t("app:categories.group")}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue
+                              placeholder={i18n.t(
+                                "app:categories.choose_a_group",
+                              )}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {groups
+                            .filter(
+                              (group) =>
+                                group.is_active ||
+                                group.id === category.category_group_id,
+                            )
+                            .map((group) => (
+                              <SelectItem
+                                key={group.id}
+                                value={group.id}
+                                disabled={!group.is_active}
+                              >
+                                {group.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{i18n.t("app:categories.name")}</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <Input {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="manual">
-                          {i18n.t("app:categories.manual")}
-                        </SelectItem>
-                        <SelectItem value="automatic">
-                          {i18n.t("app:categories.automatic")}
-                        </SelectItem>
-                        <SelectItem value="hybrid">
-                          {i18n.t("app:categories.hybrid")}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      {obligationModeDescription(field.value)}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {i18n.t("app:categories.description")}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={i18n.t(
+                            "app:categories.optional_description",
+                          )}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">
+                    {i18n.t("app:categories.code")}
+                  </p>
+                  <Badge variant="secondary">{category.code}</Badge>
+                </div>
+                <CategoryCounterpartyField
+                  value={counterparty}
+                  disabled={mutation.isPending}
+                  onChange={setCounterparty}
+                />
+              </div>
+              <div className="min-w-0 space-y-4 min-[56rem]:border-l min-[56rem]:pl-6">
+                <h3 className="hidden text-sm font-semibold min-[56rem]:block">
+                  {i18n.t("app:categories.behavior")}
+                </h3>
+                <div className="grid gap-4 border-t pt-4 sm:grid-cols-2 min-[56rem]:grid-cols-[minmax(0,1fr)_8rem] min-[56rem]:items-start min-[56rem]:border-t-0 min-[56rem]:pt-0">
+                  <FormField
+                    control={form.control}
+                    name="data_source_policy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {i18n.t("app:categories.category_mode")}
+                        </FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value)
+                            if (
+                              value !== "manual" &&
+                              (!form.getValues("recurrence_interval") ||
+                                !form.getValues("recurrence_unit"))
+                            ) {
+                              form.setValue("recurrence_interval", 1)
+                              form.setValue("recurrence_unit", "month")
+                            }
+                          }}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="manual">
+                              {i18n.t("app:categories.manual")}
+                            </SelectItem>
+                            <SelectItem value="automatic">
+                              {i18n.t("app:categories.automatic")}
+                            </SelectItem>
+                            <SelectItem value="hybrid">
+                              {i18n.t("app:categories.hybrid")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {obligationModeDescription(field.value)}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <CurrencyField control={form.control} />
+                  <div className="min-[56rem]:col-span-2">
+                    <AutomaticCollectionField control={form.control} />
+                  </div>
+                </div>
+                {form.watch("data_source_policy") !== "manual" && (
+                  <PaymentScheduleFields
+                    ledgerId={ledgerId}
+                    control={form.control}
+                    onPresetChange={(preset) => {
+                      if (preset === "monthly") {
+                        form.setValue("recurrence_interval", 1)
+                        form.setValue("recurrence_unit", "month")
+                      } else if (preset === "every-two-months") {
+                        form.setValue("recurrence_interval", 2)
+                        form.setValue("recurrence_unit", "month")
+                      } else if (preset === "yearly") {
+                        form.setValue("recurrence_interval", 1)
+                        form.setValue("recurrence_unit", "year")
+                      } else {
+                        form.setValue("recurrence_interval", 3)
+                        form.setValue("recurrence_unit", "month")
+                      }
+                    }}
+                  />
                 )}
-              />
-              <CurrencyField control={form.control} />
-              <AutomaticCollectionField control={form.control} />
+              </div>
             </div>
-            {form.watch("data_source_policy") !== "manual" && (
-              <PaymentScheduleFields
-                ledgerId={ledgerId}
-                control={form.control}
-                onPresetChange={(preset) => {
-                  if (preset === "monthly") {
-                    form.setValue("recurrence_interval", 1)
-                    form.setValue("recurrence_unit", "month")
-                  } else if (preset === "every-two-months") {
-                    form.setValue("recurrence_interval", 2)
-                    form.setValue("recurrence_unit", "month")
-                  } else if (preset === "yearly") {
-                    form.setValue("recurrence_interval", 1)
-                    form.setValue("recurrence_unit", "year")
-                  } else {
-                    form.setValue("recurrence_interval", 3)
-                    form.setValue("recurrence_unit", "month")
-                  }
-                }}
-              />
-            )}
-            <DialogFooter>
+            <DialogFooter className="min-[56rem]:shrink-0 min-[56rem]:border-t min-[56rem]:px-6 min-[56rem]:py-4">
               <LoadingButton type="submit" loading={mutation.isPending}>
                 {i18n.t("app:categories.save_changes")}
               </LoadingButton>

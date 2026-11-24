@@ -282,3 +282,73 @@ test("can reopen category actions after saving a category edit", async ({
     page.getByRole("menuitem", { name: "Edit category" }),
   ).toBeVisible()
 })
+
+test("category edit adapts its fields and save action to the viewport", async ({
+  isMobile,
+  page,
+}) => {
+  if (!isMobile) await page.setViewportSize({ width: 980, height: 640 })
+  await workspace(page, "en", "dark")
+  await page.route(/\/api\/v1\/ledgers\/[^/?]+\/categories(?:\?|$)/, (route) =>
+    route.fulfill({
+      json: {
+        data: [
+          {
+            ...electricityCategory,
+            data_source_policy: "automatic",
+            first_due_date: "2026-07-09",
+            recurrence_interval: 1,
+            recurrence_unit: "month",
+          },
+        ],
+        count: 1,
+      },
+    }),
+  )
+  await page.route(/\/categories\/schedule-preview(?:\?|$)/, (route) =>
+    route.fulfill({ json: { due_date: "2026-12-09" } }),
+  )
+  await page.route(/\/api\/v1\/counterparties\/search(?:\?|$)/, (route) =>
+    route.fulfill({
+      json: { items: [{ id: "supplier", name: "Electric Company" }] },
+    }),
+  )
+  await page.goto(`/ledgers/${ledgerId}/categories`)
+  await page
+    .getByRole("button", { name: "More actions for Electricity" })
+    .click()
+  await page.getByRole("menuitem", { name: "Edit category" }).click()
+
+  const dialog = page.getByRole("dialog", { name: "Edit category" })
+  const group = dialog.getByRole("combobox", { name: "Group", exact: true })
+  const mode = dialog.getByRole("combobox", { name: "Category mode" })
+  const save = dialog.getByRole("button", { name: "Save changes" })
+  const nextPayment = dialog.getByText("9 Dec 2026", { exact: true })
+  await expect(nextPayment).toBeVisible()
+
+  const groupBox = await group.boundingBox()
+  const modeBox = await mode.boundingBox()
+  if (!groupBox || !modeBox) throw new Error("Missing category fields")
+  if (!isMobile) {
+    expect(modeBox.x).toBeGreaterThanOrEqual(groupBox.x + groupBox.width)
+    expect(Math.abs(modeBox.y - groupBox.y)).toBeLessThan(2)
+    await expect(save).toBeInViewport({ ratio: 1 })
+    await nextPayment.scrollIntoViewIfNeeded()
+    await expect(save).toBeInViewport({ ratio: 1 })
+    await expect(
+      dialog.getByRole("heading", { name: "Edit category" }),
+    ).toBeInViewport({ ratio: 1 })
+  } else {
+    expect(Math.abs(modeBox.x - groupBox.x)).toBeLessThan(2)
+    expect(modeBox.y).toBeGreaterThan(groupBox.y)
+    await save.scrollIntoViewIfNeeded()
+    await expect(save).toBeInViewport({ ratio: 1 })
+  }
+  await dialog
+    .getByRole("textbox", { name: "Search counterparty" })
+    .fill("elec")
+  await dialog.getByRole("button", { name: "Electric Company" }).click()
+  await expect(
+    dialog.getByText("Electric Company", { exact: true }),
+  ).toBeVisible()
+})
