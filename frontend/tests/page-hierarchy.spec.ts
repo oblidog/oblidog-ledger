@@ -284,10 +284,10 @@ test("can reopen category actions after saving a category edit", async ({
 })
 
 test("category edit adapts its fields and save action to the viewport", async ({
+  isMobile,
   page,
-}, info) => {
-  const desktop = info.project.name === "desktop"
-  if (desktop) await page.setViewportSize({ width: 980, height: 640 })
+}) => {
+  if (!isMobile) await page.setViewportSize({ width: 980, height: 640 })
   await workspace(page, "en", "dark")
   await page.route(/\/api\/v1\/ledgers\/[^/?]+\/categories(?:\?|$)/, (route) =>
     route.fulfill({
@@ -329,7 +329,7 @@ test("category edit adapts its fields and save action to the viewport", async ({
   const groupBox = await group.boundingBox()
   const modeBox = await mode.boundingBox()
   if (!groupBox || !modeBox) throw new Error("Missing category fields")
-  if (desktop) {
+  if (!isMobile) {
     expect(modeBox.x).toBeGreaterThanOrEqual(groupBox.x + groupBox.width)
     expect(Math.abs(modeBox.y - groupBox.y)).toBeLessThan(2)
     await expect(save).toBeInViewport({ ratio: 1 })
