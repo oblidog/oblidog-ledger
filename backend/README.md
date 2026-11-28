@@ -70,9 +70,11 @@ frontend release.
 clients and test tooling. A non-empty explicit Bearer token takes precedence over
 an existing session cookie; invalid Bearer tokens must not fall back to that cookie.
 Cookie-authenticated unsafe requests require the session CSRF token even when
-Origin is absent. If Origin is supplied, it must be trusted, including for Bearer
-requests. Integration connection keys continue to use their
-independent Bearer flow and are not session cookies.
+Origin is absent. OAuth2 credential login at `/login/access-token` is exempt
+from session CSRF validation, including when a browser cookie already exists.
+If Origin is supplied on an unsafe request, it must be trusted, including for
+Bearer requests. Integration connection keys continue to use their independent
+Bearer flow and are not session cookies.
 
 ## Database
 
