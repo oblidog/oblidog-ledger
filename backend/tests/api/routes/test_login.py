@@ -7,6 +7,7 @@ from threading import Barrier
 from unittest.mock import patch
 
 import jwt
+import pytest
 from fastapi.testclient import TestClient
 from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.orm import Session
@@ -154,6 +155,85 @@ def test_explicit_bearer_takes_priority_over_browser_session_cookie(
             headers={"Authorization": "Bearer invalid"},
         )
         assert rejected.status_code == 403
+    finally:
+        client.cookies.clear()
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
+@pytest.mark.parametrize("authorization", [None, "Bearer", "Basic invalid"])
+def test_cookie_unsafe_methods_require_csrf(
+    client: TestClient, method: str, authorization: str | None
+) -> None:
+    try:
+        login = client.post(
+            f"{settings.API_V1_STR}/login/session",
+            data={
+                "username": settings.FIRST_SUPERUSER,
+                "password": settings.FIRST_SUPERUSER_PASSWORD,
+            },
+        )
+        assert login.status_code == 200
+        headers = {}
+        if authorization is not None:
+            headers["Authorization"] = authorization
+        response = client.request(
+            method,
+            f"{settings.API_V1_STR}/login/test-token",
+            headers=headers,
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"] == "Invalid CSRF token"
+    finally:
+        client.cookies.clear()
+
+
+@pytest.mark.parametrize(
+    ("origin", "authorization", "csrf", "expected_status", "expected_detail"),
+    [
+        (None, None, "valid", 200, None),
+        (None, None, "wrong", 403, "Invalid CSRF token"),
+        ("foreign", None, "valid", 403, "Origin is not allowed"),
+        ("foreign", "valid", None, 403, "Origin is not allowed"),
+        (None, "invalid", "valid", 403, "Could not validate credentials"),
+    ],
+)
+def test_browser_session_security_combinations(
+    client: TestClient,
+    origin: str | None,
+    authorization: str | None,
+    csrf: str | None,
+    expected_status: int,
+    expected_detail: str | None,
+) -> None:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    try:
+        access = client.post(
+            f"{settings.API_V1_STR}/login/access-token", data=login_data
+        )
+        assert access.status_code == 200
+        login = client.post(f"{settings.API_V1_STR}/login/session", data=login_data)
+        assert login.status_code == 200
+        headers = {}
+        if origin == "foreign":
+            headers["Origin"] = "https://attacker.example"
+        if authorization == "valid":
+            headers["Authorization"] = f"Bearer {access.json()['access_token']}"
+        elif authorization == "invalid":
+            headers["Authorization"] = "Bearer invalid"
+        if csrf == "valid":
+            headers[CSRF_HEADER_NAME] = login.headers[CSRF_HEADER_NAME]
+        elif csrf == "wrong":
+            headers[CSRF_HEADER_NAME] = "wrong-token"
+
+        response = client.post(
+            f"{settings.API_V1_STR}/login/test-token", headers=headers
+        )
+        assert response.status_code == expected_status
+        if expected_detail is not None:
+            assert response.json()["detail"] == expected_detail
     finally:
         client.cookies.clear()
 
