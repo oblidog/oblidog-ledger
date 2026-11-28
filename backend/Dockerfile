@@ -1,9 +1,10 @@
-FROM python:3.14
+FROM python:3.14-slim
 
 ENV PYTHONUNBUFFERED=1
 
+# Keep curl for Compose health checks and tzdata for named time zones.
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends cron \
+    && apt-get install --yes --no-install-recommends cron curl tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -29,7 +30,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-workspace --package app
+    uv sync --frozen --no-dev --no-install-workspace --package app
 
 COPY ./backend/scripts /app/backend/scripts
 RUN chmod +x /app/backend/scripts/system-run-*.sh
@@ -43,7 +44,7 @@ COPY ./backend/app /app/backend/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --package app
+    uv sync --frozen --no-dev --package app
 
 WORKDIR /app/backend/
 
