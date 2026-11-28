@@ -8,12 +8,13 @@ from unittest.mock import patch
 
 import jwt
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.orm import Session
 
 from app.core import security
-from app.core.browser_auth import CSRF_HEADER_NAME
+from app.core.browser_auth import CSRF_HEADER_NAME, BrowserSessionSecurityMiddleware
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import PasswordResetToken, User
@@ -173,16 +174,31 @@ def test_cookie_unsafe_methods_require_csrf(
             },
         )
         assert login.status_code == 200
-        headers = {}
+        headers: dict[str, str] = {}
         if authorization is not None:
             headers["Authorization"] = authorization
-        response = client.request(
-            method,
-            f"{settings.API_V1_STR}/login/test-token",
-            headers=headers,
-        )
-        assert response.status_code == 403
-        assert response.json()["detail"] == "Invalid CSRF token"
+        # Isolate middleware from routing and database mutations.
+        app = FastAPI()
+        app.add_middleware(BrowserSessionSecurityMiddleware)
+
+        @app.api_route("/protected", methods=[method])
+        def protected() -> dict[str, bool]:
+            return {"reached": True}
+
+        with TestClient(app) as middleware_client:
+            middleware_client.cookies.update(client.cookies)
+            response = middleware_client.request(
+                method, "/protected", headers=headers
+            )
+            assert response.status_code == 403
+            assert response.json()["detail"] == "Invalid CSRF token"
+
+            headers[CSRF_HEADER_NAME] = login.headers[CSRF_HEADER_NAME]
+            accepted = middleware_client.request(
+                method, "/protected", headers=headers
+            )
+            assert accepted.status_code == 200
+            assert accepted.json() == {"reached": True}
     finally:
         client.cookies.clear()
 
@@ -234,6 +250,68 @@ def test_browser_session_security_combinations(
         assert response.status_code == expected_status
         if expected_detail is not None:
             assert response.json()["detail"] == expected_detail
+    finally:
+        client.cookies.clear()
+
+
+def test_bearer_identity_overrides_cookie_identity(
+    client: TestClient, db: Session
+) -> None:
+    password = random_lower_string()
+    user = user_service.create_user(
+        session=db,
+        user_in=UserCreate(email=random_email(), password=password),
+    )
+    try:
+        access = client.post(
+            f"{settings.API_V1_STR}/login/access-token",
+            data={"username": user.email, "password": password},
+        )
+        assert access.status_code == 200
+        login = client.post(
+            f"{settings.API_V1_STR}/login/session",
+            data={
+                "username": settings.FIRST_SUPERUSER,
+                "password": settings.FIRST_SUPERUSER_PASSWORD,
+            },
+        )
+        assert login.status_code == 200
+        cookie_user = client.get(f"{settings.API_V1_STR}/users/me")
+        assert cookie_user.status_code == 200
+        assert cookie_user.json()["id"] != str(user.id)
+
+        response = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={"Authorization": f"Bearer {access.json()['access_token']}"},
+        )
+        assert response.status_code == 200
+        assert response.json()["id"] == str(user.id)
+    finally:
+        client.cookies.clear()
+
+
+def test_empty_bearer_with_valid_csrf_preserves_cookie_session(
+    client: TestClient,
+) -> None:
+    # Characterize existing behavior, not a new authentication policy.
+    try:
+        login = client.post(
+            f"{settings.API_V1_STR}/login/session",
+            data={
+                "username": settings.FIRST_SUPERUSER,
+                "password": settings.FIRST_SUPERUSER_PASSWORD,
+            },
+        )
+        assert login.status_code == 200
+        response = client.post(
+            f"{settings.API_V1_STR}/login/test-token",
+            headers={
+                "Authorization": "Bearer",
+                CSRF_HEADER_NAME: login.headers[CSRF_HEADER_NAME],
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["email"] == settings.FIRST_SUPERUSER
     finally:
         client.cookies.clear()
 
