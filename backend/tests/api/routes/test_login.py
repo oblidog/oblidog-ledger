@@ -187,16 +187,12 @@ def test_cookie_unsafe_methods_require_csrf(
 
         with TestClient(app) as middleware_client:
             middleware_client.cookies.update(client.cookies)
-            response = middleware_client.request(
-                method, "/protected", headers=headers
-            )
+            response = middleware_client.request(method, "/protected", headers=headers)
             assert response.status_code == 403
             assert response.json()["detail"] == "Invalid CSRF token"
 
             headers[CSRF_HEADER_NAME] = login.headers[CSRF_HEADER_NAME]
-            accepted = middleware_client.request(
-                method, "/protected", headers=headers
-            )
+            accepted = middleware_client.request(method, "/protected", headers=headers)
             assert accepted.status_code == 200
             assert accepted.json() == {"reached": True}
     finally:
