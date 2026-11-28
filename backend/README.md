@@ -60,13 +60,18 @@ use separate hostnames as long as both origins are configured.
 
 `SESSION_COOKIE_SAMESITE` defaults to `lax`. `SESSION_COOKIE_SECURE` defaults to
 enabled in staging and production and disabled locally; explicitly enable it
-for HTTPS demo deployments. `SameSite=none` is rejected unless Secure is also
+for HTTPS demo deployments, including Vercel Preview (`SESSION_COOKIE_SECURE=true`).
+`SameSite=none` is rejected unless Secure is also
 enabled. The frontend deletes the legacy `localStorage.access_token` during
 startup. Users therefore sign in again once after upgrading from a bearer-token
 frontend release.
 
 `POST /api/v1/login/access-token` remains available for non-browser user API
-clients and test tooling. Integration connection keys continue to use their
+clients and test tooling. A non-empty explicit Bearer token takes precedence over
+an existing session cookie; invalid Bearer tokens must not fall back to that cookie.
+Cookie-authenticated unsafe requests require the session CSRF token even when
+Origin is absent. If Origin is supplied, it must be trusted, including for Bearer
+requests. Integration connection keys continue to use their
 independent Bearer flow and are not session cookies.
 
 ## Database
