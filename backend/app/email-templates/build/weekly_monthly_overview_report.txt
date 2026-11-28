@@ -9,10 +9,12 @@
 {% if not ledger.currencies %}  {{ tr('no_obligations') }}
 {% endif %}{% for item in ledger.currencies %}{% set currency = item.currency or tr('currency_unspecified') %}  {{ tr('currency') }}: {{ currency }}
 {% if item.overdue_count %}  {{ tr('section_overdue') }}: {{ item.overdue_count }} / {{ fmt_amount(item.overdue_known_amount) }} {{ currency }}
-{% else %}  {{ tr('weekly_no_overdue') }}
+{% elif not item.verify_payment_count %}  {{ tr('weekly_no_overdue') }}
+{% endif %}{% if item.verify_payment_count|default(0) > 0 %}  {{ tr('weekly_verify_payment') }}: {{ item.verify_payment_count }} / {{ fmt_amount(item.verify_payment_known_amount) }} {{ currency }}
+  {{ tr('weekly_verify_payment_help') }}
 {% endif %}  {{ tr('upcoming') }}:
   {{ tr('weekly_upcoming_total') }}: {{ fmt_amount(item.upcoming_known_amount) }} {{ currency }}
-{% for obligation in item.upcoming %}    - {{ fmt_date(obligation.due_date) }}: {{ obligation.category_name }} — {{ fmt_amount(obligation.amount) }} {{ currency }} · {{ tr('weekly_due_today') if obligation.days_until_due == 0 else tr('weekly_due_tomorrow') if obligation.days_until_due == 1 else tr('weekly_due_in', days=obligation.days_until_due) }}{% if obligation.needs_preparation %} · {{ tr('weekly_needs_preparation') }}{% endif %}
+{% for obligation in item.upcoming %}    - {{ fmt_date(obligation.due_date) }}: {{ obligation.category_name }} — {{ fmt_amount(obligation.amount) }} {{ currency }} · {{ tr('weekly_due_today') if obligation.days_until_due == 0 else tr('weekly_due_tomorrow') if obligation.days_until_due == 1 else tr('weekly_due_in', days=obligation.days_until_due) }}{% if obligation.payment_execution %} · {{ tr('payment_execution_' ~ obligation.payment_execution) }}{% endif %}{% if obligation.needs_preparation %} · {{ tr('weekly_needs_preparation') }}{% endif %}
 {% else %}{% if not item.upcoming_omitted %}  {{ tr('none') }}
 {% endif %}{% endfor %}{% if item.upcoming_omitted %}  {{ tr('weekly_upcoming_omitted', shown=item.upcoming|length, total=(item.upcoming|length)+item.upcoming_omitted) }}
 {% endif %}

@@ -1,10 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import {
-  type ObligationPublic,
-  ObligationsService,
-  type PaymentExecution,
-} from "@/client"
+import type { ObligationPublic, PaymentExecution } from "@/client"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -14,52 +9,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { i18n } from "@/i18n"
-import { handleError } from "@/utils"
-import { invalidateObligationAction } from "./obligationQueries"
 
 export function ObligationPaymentExecution({
-  ledgerId,
   obligation,
-  canEdit,
-  onError,
-  onSuccess,
 }: {
-  ledgerId: string
   obligation: ObligationPublic
-  canEdit: boolean
-  onError: (message: string) => void
-  onSuccess: (message: string) => void
 }) {
-  useTranslation()
-  const queryClient = useQueryClient()
-  const mutation = useMutation({
-    mutationFn: (value: PaymentExecution | null) =>
-      ObligationsService.updateObligation({
-        ledgerId,
-        obligationKey: obligation.key,
-        requestBody: { payment_execution: value },
-      }),
-    onError: handleError.bind(onError),
-    onSuccess: async () => {
-      await Promise.all([
-        invalidateObligationAction(queryClient, ledgerId, obligation.key),
-        queryClient.invalidateQueries({
-          queryKey: ["analytics", "attention", ledgerId],
-        }),
-      ])
-      onSuccess(i18n.t("app:obligations.obligation_updated"))
-    },
-  })
-  const readOnly =
-    !canEdit ||
-    (obligation.lifecycle !== "draft" &&
-      obligation.lifecycle !== "collecting_data")
   return (
     <PaymentExecutionField
       value={obligation.payment_execution ?? null}
-      readOnly={readOnly}
-      disabled={mutation.isPending}
-      onChange={(value) => mutation.mutate(value)}
+      readOnly
+      onChange={() => {}}
     />
   )
 }
@@ -79,7 +39,7 @@ export function PaymentExecutionField({
   const selected = value ?? "manual"
   return (
     <div className="space-y-2">
-      <Label htmlFor="obligation-payment-execution">
+      <Label htmlFor={readOnly ? undefined : "obligation-payment-execution"}>
         {i18n.t("app:obligations.payment_execution")}
       </Label>
       {readOnly ? (

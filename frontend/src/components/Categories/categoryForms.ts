@@ -21,6 +21,7 @@ export const categoryConfigurationSchema = z.object({
   recurrence_interval: z.number().int().positive().optional(),
   recurrence_unit: z.enum(["month", "year"]).optional(),
   first_due_date: z.string().optional(),
+  automatic_collection: z.boolean().optional(),
   currency: z.enum(["PLN", "EUR", "USD", "GBP", "CHF"]),
 })
 

@@ -1,17 +1,18 @@
 # First recurring payment (#382, #636)
 
-The dashboard guide shows one next action for the active workspace. It opens the
-regular ledger form, the category list, or the First payment action from #635.
-Workspace owners and editors can use it. Hiding the guide is a local browser
-preference scoped to the account and workspace. Showing it again recomputes
-progress from saved data.
+With no ledger, the dashboard shows one empty state that opens the regular
+ledger form. With the guide enabled, that state explains the first step. For an
+existing ledger, owners and editors see the next action. Turning off the guide
+saves the preference on the account and hides it for all ledgers. The profile
+settings can turn it back on.
 
 The API checks for an active recurring category with a payment in one of its
 scheduled billing periods. The lookup returns setup status without loading
-the payment history into the browser. An existing payment completes setup and
-integrations are offered as an optional follow-up. If several schedules are
-waiting for their first payment, a hybrid category takes precedence so manual
-setup can continue immediately.
+the payment history into the browser. Configured ledgers skip the guide. When a
+user follows the guide and then returns to the dashboard after creating a
+recurring payment, they see a one-time confirmation with an optional link to
+integrations. If several schedules are waiting for their first payment, a hybrid
+category takes precedence so manual setup can continue immediately.
 
 The demo guide links to the regular Categories view in the sample ledger and
 explains how to open a saved payment. The guide keeps the category and payment

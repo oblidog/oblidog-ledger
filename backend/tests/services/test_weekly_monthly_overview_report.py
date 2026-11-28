@@ -30,6 +30,7 @@ def _obligation(
         amount_state=amount_state,
         due_date_state=due_date_state,
         category=SimpleNamespace(name=category_name),
+        payment_execution=None,
     )
 
 

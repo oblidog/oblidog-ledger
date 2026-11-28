@@ -60,6 +60,12 @@ class ObligationCreate(BaseModel):
         return self
 
 
+class ScheduledTransferUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scheduled: bool = Field(strict=True)
+
+
 class ObligationUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

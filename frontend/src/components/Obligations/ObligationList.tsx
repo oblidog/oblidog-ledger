@@ -37,7 +37,7 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
             </TableHead>
             <TableHead>{i18n.t("app:obligations.status")}</TableHead>
             {showActions ? (
-              <TableHead className="sticky right-0 z-10 border-l bg-muted px-2">
+              <TableHead className="sticky right-0 z-10 border-l bg-muted px-2 @min-[68rem]:static @min-[68rem]:border-l-0 @min-[68rem]:bg-transparent">
                 <span className="sr-only">
                   {i18n.t("app:obligations.actions")}
                 </span>
@@ -111,8 +111,8 @@ export function ObligationList({ items }: { items: ObligationItemProps[] }) {
                   <ObligationStatus obligation={obligation} />
                 </TableCell>
                 {showActions ? (
-                  <TableCell className="sticky right-0 z-10 w-12 border-l bg-card px-2">
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell className="sticky right-0 z-10 w-px border-l bg-card px-2 @min-[68rem]:static @min-[68rem]:border-l-0 @min-[68rem]:bg-transparent">
+                    <div className="ml-auto flex w-max items-center gap-1">
                       <ObligationActions {...item} inlinePayment />
                     </div>
                   </TableCell>

@@ -51,6 +51,7 @@ import { i18n } from "@/i18n"
 import { useLocalizedForm as useForm } from "@/i18n/useLocalizedForm"
 import { handleError } from "@/utils"
 import {
+  AutomaticCollectionField,
   CurrencyField,
   obligationModeDescription,
   PaymentScheduleFields,
@@ -92,6 +93,7 @@ export function CreateCategoryDialog({
       recurrence_unit: "month",
       first_due_date: "",
       currency: ledger.default_currency,
+      automatic_collection: false,
     },
   })
   useEffect(() => {
@@ -303,6 +305,7 @@ export function CreateCategoryDialog({
                   )}
                 />
                 <CurrencyField control={form.control} />
+                <AutomaticCollectionField control={form.control} />
               </div>
             </section>
             {form.watch("data_source_policy") !== "manual" && (

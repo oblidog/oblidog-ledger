@@ -30,6 +30,7 @@ import {
   canMarkObligationPaid,
   canMarkObligationReady,
   canReopenObligation,
+  canScheduleTransfer,
 } from "./obligationLogic"
 
 export type ObligationItemProps = {
@@ -42,6 +43,7 @@ export type ObligationItemProps = {
   onCancel: () => void
   onMarkPaid: (trigger?: HTMLButtonElement) => void
   onMarkReady: () => void
+  onScheduleTransfer?: () => void
   onReopen: () => void
   onSelect: () => void
 }
@@ -58,6 +60,7 @@ export function ObligationActions({
   onMarkPaid,
   onMarkReady,
   onReopen,
+  onScheduleTransfer,
 }: ObligationItemProps & { inlinePayment?: boolean }) {
   useTranslation()
   const canCancel = canWrite && canCancelObligation(obligation)
@@ -147,6 +150,21 @@ export function ObligationActions({
               >
                 <CreditCard />
                 {i18n.t("app:obligations.mark_as_paid")}
+              </DropdownMenuItem>
+            ) : null}
+            {canWrite &&
+            canScheduleTransfer(obligation) &&
+            onScheduleTransfer ? (
+              <DropdownMenuItem
+                disabled={disabled}
+                onSelect={onScheduleTransfer}
+              >
+                <CreditCard />
+                {i18n.t(
+                  obligation.payment_execution === "scheduled_transfer"
+                    ? "app:obligations.undo_scheduled_transfer"
+                    : "app:obligations.schedule_transfer",
+                )}
               </DropdownMenuItem>
             ) : null}
             {canReopen ? (

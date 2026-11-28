@@ -52,6 +52,26 @@ export function useObligationActions(
       await invalidateObligationAction(queryClient, ledgerId, obligation.key)
     },
   })
+  const scheduleTransfer = useMutation({
+    mutationFn: (obligation: ObligationPublic) =>
+      ObligationsService.setScheduledTransfer({
+        ledgerId,
+        obligationKey: obligation.key,
+        requestBody: {
+          scheduled: obligation.payment_execution !== "scheduled_transfer",
+        },
+      }),
+    onError: handleError.bind(showErrorToast),
+    onSuccess: async (_, obligation) => {
+      showSuccessToast(i18n.t("app:obligations.obligation_updated"))
+      await Promise.all([
+        invalidateObligationAction(queryClient, ledgerId, obligation.key),
+        queryClient.invalidateQueries({
+          queryKey: ["analytics", "attention", ledgerId],
+        }),
+      ])
+    },
+  })
   const markPaid = useMutation({
     mutationFn: (obligation: ObligationPublic) =>
       ObligationsService.markObligationPaid({
@@ -85,6 +105,7 @@ export function useObligationActions(
 
   return {
     markReady,
+    scheduleTransfer,
     reopen,
     cancel,
     markPaid,

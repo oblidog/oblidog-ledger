@@ -282,6 +282,7 @@ def create_category(
             recurrence_unit=category_in.recurrence_unit,
             first_due_date=category_in.first_due_date,
             currency=category_in.currency,
+            automatic_collection=category_in.automatic_collection,
         )
     except CategoryGroupNotFoundError as caught_error:
         raise HTTPException(
@@ -345,6 +346,7 @@ def update_category(
             recurrence_unit=category_in.recurrence_unit,
             first_due_date=category_in.first_due_date,
             currency=category_in.currency,
+            automatic_collection=category_in.automatic_collection,
         )
     except CategoryNotFoundError as caught_error:
         raise HTTPException(

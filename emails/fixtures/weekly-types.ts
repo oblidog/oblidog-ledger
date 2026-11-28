@@ -4,6 +4,7 @@ export type WeeklyPayment = {
   due_date: string
   amount: string | null
   days_until_due: number
+  payment_execution?: "scheduled_transfer" | "automatic_collection" | null
   needs_preparation: boolean
 }
 export type WeeklyCurrency = {
@@ -14,6 +15,8 @@ export type WeeklyCurrency = {
   ready_count: number
   paid_count: number
   not_ready_count: number
+  verify_payment_count?: number
+  verify_payment_known_amount?: string
   overdue_count: number
   overdue_known_amount: string
   paid_percentage: string | null

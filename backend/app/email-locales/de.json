@@ -163,5 +163,7 @@
   "payment_execution_manual": "Manuelle Zahlung",
   "payment_execution_scheduled_transfer": "Bei der Bank geplanter Überweisungsauftrag",
   "payment_execution_automatic_collection": "Automatischer Einzug",
-  "section_verify_payment": "Zahlungsausführung prüfen"
+  "section_verify_payment": "Zahlungsausführung prüfen",
+  "weekly_verify_payment": "Zahlung nach Fälligkeit prüfen",
+  "weekly_verify_payment_help": "Prüfen Sie, ob der automatische Einzug oder die geplante Überweisung ausgeführt wurde."
 }

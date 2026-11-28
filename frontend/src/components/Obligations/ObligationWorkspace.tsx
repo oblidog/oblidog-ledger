@@ -136,6 +136,7 @@ export function ObligationWorkspace({
   )
   const {
     markReady,
+    scheduleTransfer,
     reopen,
     cancel,
     runAction,
@@ -204,6 +205,7 @@ export function ObligationWorkspace({
           setPaymentConfirmation(obligation)
         },
         onMarkReady: () => void runAction(markReady, obligation),
+        onScheduleTransfer: () => void runAction(scheduleTransfer, obligation),
         onReopen: () => void runAction(reopen, obligation),
         onSelect: () => {
           clearDialogSearch("firstPayment")

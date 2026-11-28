@@ -217,5 +217,7 @@
   "first_payment": "Erste Zahlung",
   "first_payment_for": "Erste Zahlung für {{name}}",
   "set_up_schedule": "Zahlungsplan einrichten",
-  "set_up_schedule_for": "Zahlungsplan für {{name}} einrichten"
+  "set_up_schedule_for": "Zahlungsplan für {{name}} einrichten",
+  "automatic_collection": "Zahlungen werden automatisch eingezogen",
+  "automatic_collection_help": "Standard für neue Verpflichtungen. Bestehende Zahlungen bleiben unverändert. In der Bearbeitung einer Verpflichtung kann die Zahlungsart geändert werden."
 }

@@ -105,7 +105,7 @@
   "complete_data": "Uzupełnij dane",
   "obligation_updated": "Zobowiązanie zostało zaktualizowane",
   "edit_obligation": "Edytuj zobowiązanie",
-  "update_manually_entered_values_and_notes": "Zmień ręcznie wprowadzone wartości i notatki.",
+  "update_manually_entered_values_and_notes": "Zmień wartości, notatki i sposób płatności.",
   "between": "Między",
   "and": "a",
   "save_changes": "Zapisz zmiany",
@@ -145,5 +145,7 @@
   "payment_execution_scheduled_transfer": "Przelew zaplanowany w banku",
   "payment_execution_automatic_collection": "Automatyczne pobranie",
   "payment_execution_help": "Płatności zaplanowane i automatyczne wymagają sprawdzenia dopiero po terminie. Brakujące dane i błędy nadal wymagają uwagi.",
-  "verify_payment": "Sprawdź, czy płatność została pobrana lub przelew został zrealizowany."
+  "verify_payment": "Sprawdź, czy płatność została pobrana lub przelew został zrealizowany.",
+  "schedule_transfer": "Przelew zaplanowany",
+  "undo_scheduled_transfer": "Cofnij zaplanowanie"
 }

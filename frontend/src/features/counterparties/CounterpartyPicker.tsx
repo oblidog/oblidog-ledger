@@ -99,7 +99,10 @@ export function CounterpartyPicker({
       </div>
 
       {open && query.trim().length > 0 ? (
-        <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+        <div
+          data-slot="counterparty-search-results"
+          className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+        >
           {query.trim().length < 2 ? (
             <p className="px-3 py-2 text-xs text-muted-foreground">
               {i18n.t("app:counterparties.type_at_least_2_characters")}

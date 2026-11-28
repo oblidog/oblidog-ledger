@@ -698,6 +698,11 @@ export const CategoryCreateSchema = {
             ],
             title: 'First Due Date'
         },
+        automatic_collection: {
+            type: 'boolean',
+            title: 'Automatic Collection',
+            default: false
+        },
         currency: {
             anyOf: [
                 {
@@ -1153,6 +1158,10 @@ export const CategoryPublicSchema = {
             ],
             title: 'First Due Date'
         },
+        automatic_collection: {
+            type: 'boolean',
+            title: 'Automatic Collection'
+        },
         currency: {
             $ref: '#/components/schemas/Currency'
         },
@@ -1199,6 +1208,7 @@ export const CategoryPublicSchema = {
         'recurrence_interval',
         'recurrence_unit',
         'first_due_date',
+        'automatic_collection',
         'currency',
         'archived_at',
         'has_data_schema',
@@ -1274,6 +1284,17 @@ export const CategoryUpdateSchema = {
                 }
             ],
             title: 'First Due Date'
+        },
+        automatic_collection: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Automatic Collection'
         },
         currency: {
             anyOf: [
@@ -4956,6 +4977,21 @@ export const SchedulePreviewRequestSchema = {
     title: 'SchedulePreviewRequest'
 } as const;
 
+export const ScheduledTransferUpdateSchema = {
+    properties: {
+        scheduled: {
+            type: 'boolean',
+            title: 'Scheduled'
+        }
+    },
+    additionalProperties: false,
+    type: 'object',
+    required: [
+        'scheduled'
+    ],
+    title: 'ScheduledTransferUpdate'
+} as const;
+
 export const SetScheduleSchema = {
     properties: {
         revision: {
@@ -5576,6 +5612,11 @@ export const UserPublicSchema = {
             ],
             title: 'Language'
         },
+        onboarding_guide_enabled: {
+            type: 'boolean',
+            title: 'Onboarding Guide Enabled',
+            default: true
+        },
         id: {
             type: 'string',
             format: 'uuid',
@@ -5703,6 +5744,11 @@ export const UserUpdateSchema = {
 
 export const UserUpdateMeSchema = {
     properties: {
+        onboarding_guide_enabled: {
+            type: 'boolean',
+            title: 'Onboarding Guide Enabled',
+            default: true
+        },
         language: {
             anyOf: [
                 {

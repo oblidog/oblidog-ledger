@@ -105,7 +105,7 @@
   "complete_data": "Complete data",
   "obligation_updated": "Obligation updated",
   "edit_obligation": "Edit obligation",
-  "update_manually_entered_values_and_notes": "Update manually entered values and notes.",
+  "update_manually_entered_values_and_notes": "Update values, notes and payment method.",
   "between": "Between",
   "and": "and",
   "save_changes": "Save changes",
@@ -145,5 +145,7 @@
   "payment_execution_scheduled_transfer": "Transfer scheduled in the bank",
   "payment_execution_automatic_collection": "Automatic collection",
   "payment_execution_help": "Scheduled and automatic payments require checking only after the due date. Missing data and errors still need attention.",
-  "verify_payment": "Check whether the payment was collected or the transfer was executed."
+  "verify_payment": "Check whether the payment was collected or the transfer was executed.",
+  "schedule_transfer": "Transfer scheduled",
+  "undo_scheduled_transfer": "Undo scheduled transfer"
 }
