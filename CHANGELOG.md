@@ -1,3 +1,15 @@
+## v0.26.0 (2026-11-28)
+
+### Feat
+
+- **onboarding**: simplify the empty dashboard and persist guide visibility (#688)
+- separate planned payment workflows and reflect them in weekly reports (#687)
+
+### Fix
+
+- **categories**: improve the desktop edit dialog layout (#690)
+- **obligations**: keep desktop actions within their column (#689)
+
 ## v0.25.0 (2026-11-22)
 
 ### Feat
